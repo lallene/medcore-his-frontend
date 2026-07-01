@@ -18,10 +18,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=10000
 
+RUN npm install -g sirv-cli
+
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 10000
 
-CMD ["node", "build/index.js"]
+CMD ["sh", "-c", "sirv build --single --host 0.0.0.0 --port ${PORT:-10000}"]
