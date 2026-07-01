@@ -34,6 +34,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            PUBLIC_API_URL=https://medcore-his-api-latest.onrender.com
           tags: |
             ghcr.io/${{ github.repository_owner }}/medcore-his-frontend:latest
             ghcr.io/${{ github.repository_owner }}/medcore-his-frontend:${{ github.sha }}

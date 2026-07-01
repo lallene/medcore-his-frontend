@@ -2,24 +2,25 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+ARG PUBLIC_API_URL
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
 
+COPY package*.json ./
 RUN npm ci
 
 COPY . .
-
 RUN npm run build
 
 FROM node:22-alpine
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+ENV PORT=10000
+
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-
-ENV NODE_ENV=production
-ENV PORT=10000
 
 EXPOSE 10000
 
