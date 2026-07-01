@@ -27,3 +27,4 @@ Frontend de MedCore HIS, une plateforme hospitalière moderne pour la gestion de
 npm install
 cp .env.example .env
 npm run dev
+```

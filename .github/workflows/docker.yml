@@ -15,7 +15,6 @@ jobs:
     env:
       PUBLIC_API_URL: https://medcore-his-api-latest.onrender.com
 
-
     permissions:
       contents: read
       packages: write
