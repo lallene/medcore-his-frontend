@@ -10,6 +10,9 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
+    env:
+      PUBLIC_API_URL: https://medcore-his-api-latest.onrender.com
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
