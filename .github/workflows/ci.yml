@@ -10,9 +10,6 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
-    env:
-      PUBLIC_API_URL: https://medcore-his-api-latest.onrender.com
-
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -26,7 +23,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Format check
+      - name: Create env file
+        run: echo "PUBLIC_API_URL=https://medcore-his-api-latest.onrender.com" > .env
+
+      - name: Format and lint
         run: npm run lint
 
       - name: Svelte check
