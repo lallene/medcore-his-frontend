@@ -25,3 +25,23 @@ export interface Dashboard {
 	workflow: WorkflowStats;
 	recentActivities: ActivityItem[];
 }
+
+export interface DashboardResponse {
+	patients: number;
+	insured: number;
+	companies: number;
+	guarantors: number;
+	vouchers: number;
+	validated: number;
+	pending: number;
+	rejected: number;
+	workflow: {
+		draft: number;
+		submitted: number;
+		controlled: number;
+		validated: number;
+		rejected: number;
+		cancelled: number;
+	};
+	recentActivities: ActivityItem[];
+}
