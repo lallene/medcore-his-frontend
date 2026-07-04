@@ -17,7 +17,9 @@ export async function getMedicalExams(): Promise<MedicalExam[]> {
 	return response.data;
 }
 
-export async function createConsultation(payload: CreateConsultationPayload): Promise<Consultation> {
+export async function createConsultation(
+	payload: CreateConsultationPayload
+): Promise<Consultation> {
 	const response = await api.post<Consultation>('/api/consultations', payload);
 	return response.data;
 }
