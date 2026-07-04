@@ -1,37 +1,33 @@
-import type { Consultation, CreateConsultationPayload } from '$lib/types/consultation';
+import { api } from '$lib/api/client';
 
-const STORAGE_KEY = 'medcore_consultations';
+import type {
+	Consultation,
+	ConsultationReason,
+	CreateConsultationPayload,
+	MedicalExam
+} from '$lib/types/consultation';
 
-function readConsultations(): Consultation[] {
-	const raw = localStorage.getItem(STORAGE_KEY);
-	return raw ? (JSON.parse(raw) as Consultation[]) : [];
+export async function getConsultationReasons(): Promise<ConsultationReason[]> {
+	const response = await api.get<ConsultationReason[]>('/api/consultations/reasons');
+	return response.data;
 }
 
-function saveConsultations(consultations: Consultation[]) {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(consultations));
+export async function getMedicalExams(): Promise<MedicalExam[]> {
+	const response = await api.get<MedicalExam[]>('/api/consultations/exams');
+	return response.data;
 }
 
-export async function createConsultation(
-	payload: CreateConsultationPayload
-): Promise<Consultation> {
-	const consultations = readConsultations();
-
-	const consultation: Consultation = {
-		id: Date.now(),
-		...payload,
-		status: 'completed',
-		createdAt: new Date().toISOString()
-	};
-
-	saveConsultations([consultation, ...consultations]);
-
-	return consultation;
+export async function createConsultation(payload: CreateConsultationPayload): Promise<Consultation> {
+	const response = await api.post<Consultation>('/api/consultations', payload);
+	return response.data;
 }
 
 export async function getConsultations(): Promise<Consultation[]> {
-	return readConsultations();
+	const response = await api.get<Consultation[]>('/api/consultations');
+	return response.data;
 }
 
 export async function getPatientConsultations(patientId: number): Promise<Consultation[]> {
-	return readConsultations().filter((item) => item.patientId === patientId);
+	const response = await api.get<Consultation[]>(`/api/patients/${patientId}/consultations`);
+	return response.data;
 }

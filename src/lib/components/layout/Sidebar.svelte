@@ -120,7 +120,7 @@
 	</div>
 
 	<nav class="flex-1 overflow-y-auto px-5 py-7">
-		<div class="mb-7">
+		<div class="mb-8">
 			<div class="mb-3 flex items-center gap-3 px-3">
 				<div class="h-px flex-1 bg-slate-800"></div>
 				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
@@ -136,7 +136,7 @@
 
 					<a
 						href={resolve(item.href)}
-						class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
+						class={`group relative flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm transition-all duration-200 ${
 							active
 								? 'bg-[#0E4C92] text-white shadow-lg'
 								: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
@@ -165,7 +165,7 @@
 			</div>
 		</div>
 
-		<div class="mb-7">
+		<div class="mb-8">
 			<div class="mb-3 flex items-center gap-3 px-3">
 				<div class="h-px flex-1 bg-slate-800"></div>
 				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">Services</p>
@@ -208,7 +208,7 @@
 			</div>
 		</div>
 
-		<div class="mb-7">
+		<div class="mb-8">
 			<div class="mb-3 flex items-center gap-3 px-3">
 				<div class="h-px flex-1 bg-slate-800"></div>
 				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
