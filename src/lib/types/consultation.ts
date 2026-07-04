@@ -76,6 +76,12 @@ export type CreateConsultationPayload = {
 	hospitalizationReason: string;
 	hospitalizationType: string;
 	hospitalizationDuration: number;
+	antecedent?: AntecedentPayload;
+	physicalExams: PhysicalExamPayload[];
+	administeredTreatments: AdministeredTreatmentPayload[];
+	previousMedications: PreviousMedicationPayload[];
+	surgicalHistories: SurgicalHistoryPayload[];
+	gynecoObstetricHistories: GynecoObstetricHistoryPayload[];
 };
 
 export type ConsultationPrescription = {
@@ -92,4 +98,58 @@ export type ConsultationPrescription = {
 	instructions: string;
 	createdAt: string;
 	updatedAt: string;
+};
+
+export type AntecedentPayload = {
+	previousMedication?: string;
+	hasHta?: boolean | null;
+	hasDiabetes?: boolean | null;
+	otherMedical?: string;
+	surgicalHistory?: string;
+	gynecoObstetricHistory?: string;
+	ddr?: string;
+	pregnancyOngoing?: boolean | null;
+	tobacco?: boolean | null;
+	alcohol?: boolean | null;
+	visitType?: string;
+};
+
+export type PhysicalExamArea = {
+	id: number;
+	code: string;
+	category: string;
+	name: string;
+	isActive: boolean;
+};
+
+export type PhysicalExamPayload = {
+	areaId: number;
+	observation: string;
+};
+
+export type AdministeredTreatmentPayload = {
+	presentationId: number;
+	quantity: number;
+	instructions?: string;
+};
+
+export type PreviousMedicationPayload = {
+	presentationId: number;
+	instructions?: string;
+	status?: 'ONGOING' | 'STOPPED';
+};
+
+export type SurgicalHistoryPayload = {
+	procedureName: string;
+	procedureDate?: string;
+	indication?: string;
+	complications?: string;
+	notes?: string;
+};
+
+export type GynecoObstetricHistoryPayload = {
+	eventType: string;
+	eventDate?: string;
+	outcome?: string;
+	notes?: string;
 };

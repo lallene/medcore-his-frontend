@@ -33,3 +33,10 @@ export async function getPatientConsultations(patientId: number): Promise<Consul
 	const response = await api.get<Consultation[]>(`/api/patients/${patientId}/consultations`);
 	return response.data;
 }
+
+import type { PhysicalExamArea } from '$lib/types/consultation';
+
+export async function getPhysicalExamAreas(): Promise<PhysicalExamArea[]> {
+	const response = await api.get<PhysicalExamArea[]>('/api/consultations/physical-exam-areas');
+	return response.data;
+}
