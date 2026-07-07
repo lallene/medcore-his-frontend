@@ -4,7 +4,7 @@
 	import { getPatientMedicalSummary } from '$lib/api/medical-records';
 	import type { PatientMedicalSummary, MedicalTimelineEvent } from '$lib/types/medical-record';
 	import { resolve } from '$app/paths';
-    import { api } from '$lib/api/client';
+	import { api } from '$lib/api/client';
 
 	let loading = $state(true);
 	let error = $state('');
@@ -17,8 +17,8 @@
 		try {
 			summary = await getPatientMedicalSummary(patientId);
 		} catch {
-            error = 'Impossible de charger le dossier médical.';
-        } finally {
+			error = 'Impossible de charger le dossier médical.';
+		} finally {
 			loading = false;
 		}
 	});
@@ -45,31 +45,29 @@
 		return '📌';
 	}
 
-    let openingDocument = $state<string | null>(null);
+	let openingDocument = $state<string | null>(null);
 
-    async function openMedicalDocument(url: string) {
-        openingDocument = url;
+	async function openMedicalDocument(url: string) {
+		openingDocument = url;
 
-        try {
-            const response = await api.get(url, {
-                responseType: 'blob'
-            });
+		try {
+			const response = await api.get(url, {
+				responseType: 'blob'
+			});
 
-            const blobUrl = URL.createObjectURL(
-                new Blob([response.data], { type: 'application/pdf' })
-            );
+			const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
 
-            window.open(blobUrl, '_blank', 'noopener,noreferrer');
+			window.open(blobUrl, '_blank', 'noopener,noreferrer');
 
-            setTimeout(() => {
-                URL.revokeObjectURL(blobUrl);
-            }, 60_000);
-        } catch {
-            error = 'Impossible d’ouvrir le document médical.';
-        } finally {
-            openingDocument = null;
-        }
-    }
+			setTimeout(() => {
+				URL.revokeObjectURL(blobUrl);
+			}, 60_000);
+		} catch {
+			error = 'Impossible d’ouvrir le document médical.';
+		} finally {
+			openingDocument = null;
+		}
+	}
 </script>
 
 <div class="space-y-6 p-6">
@@ -199,25 +197,25 @@
 		<div class="rounded-2xl bg-white shadow-sm">
 			<div class="flex gap-2 border-b border-slate-100 p-4">
 				{#each ['timeline', 'consultations', 'allergies', 'antecedents', 'documents'] as tab (tab)}
-                    <button
-                        class={`rounded-xl px-4 py-2 text-sm font-bold ${
-                            activeTab === tab
-                                ? 'bg-[#0E4C92] text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                        onclick={() => (activeTab = tab)}
-                    >
-                        {tab === 'timeline'
-                            ? 'Chronologie'
-                            : tab === 'consultations'
-                                ? 'Consultations'
-                                : tab === 'allergies'
-                                    ? 'Allergies'
-                                    : tab === 'antecedents'
-                                        ? 'Antécédents'
-                                        : 'Documents'}
-                    </button>
-                {/each}
+					<button
+						class={`rounded-xl px-4 py-2 text-sm font-bold ${
+							activeTab === tab
+								? 'bg-[#0E4C92] text-white'
+								: 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+						}`}
+						onclick={() => (activeTab = tab)}
+					>
+						{tab === 'timeline'
+							? 'Chronologie'
+							: tab === 'consultations'
+								? 'Consultations'
+								: tab === 'allergies'
+									? 'Allergies'
+									: tab === 'antecedents'
+										? 'Antécédents'
+										: 'Documents'}
+					</button>
+				{/each}
 			</div>
 
 			<div class="p-5">
@@ -254,63 +252,67 @@
 					</div>
 				{/if}
 
-                {#if activeTab === 'consultations'}
-                    <div class="space-y-4">
-                        {#each summary.recent_consultations as consultation (consultation.id)}
-                            <div class="rounded-2xl border border-slate-100 p-5">
-                                <div class="flex items-start justify-between gap-4">
-                                    <div>
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <h3 class="font-black text-slate-900">
-                                                {consultation.diagnosis || 'Consultation médicale'}
-                                            </h3>
+				{#if activeTab === 'consultations'}
+					<div class="space-y-4">
+						{#each summary.recent_consultations as consultation (consultation.id)}
+							<div class="rounded-2xl border border-slate-100 p-5">
+								<div class="flex items-start justify-between gap-4">
+									<div>
+										<div class="flex flex-wrap items-center gap-2">
+											<h3 class="font-black text-slate-900">
+												{consultation.diagnosis || 'Consultation médicale'}
+											</h3>
 
-                                            <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-[#0E4C92]">
-                                                {consultation.service}
-                                            </span>
-                                        </div>
+											<span
+												class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-[#0E4C92]"
+											>
+												{consultation.service}
+											</span>
+										</div>
 
-                                        <p class="mt-2 text-sm font-semibold text-slate-500">
-                                            {consultation.doctor_name}
-                                        </p>
-                                    </div>
+										<p class="mt-2 text-sm font-semibold text-slate-500">
+											{consultation.doctor_name}
+										</p>
+									</div>
 
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                                        {consultation.status === 'draft'
-                                            ? 'Brouillon'
-                                            : consultation.status === 'in_progress'
-                                                ? 'En cours'
-                                                : consultation.status === 'completed'
-                                                    ? 'Terminée'
-                                                    : consultation.status}
-                                    </span>
-                                </div>
+									<span
+										class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600"
+									>
+										{consultation.status === 'draft'
+											? 'Brouillon'
+											: consultation.status === 'in_progress'
+												? 'En cours'
+												: consultation.status === 'completed'
+													? 'Terminée'
+													: consultation.status}
+									</span>
+								</div>
 
-                                {#if consultation.observations}
-                                    <div class="mt-4 rounded-xl bg-slate-50 p-4">
-                                        <p class="text-xs font-bold uppercase text-slate-400">Observations</p>
-                                        <p class="mt-1 text-sm text-slate-700">{consultation.observations}</p>
-                                    </div>
-                                {/if}
+								{#if consultation.observations}
+									<div class="mt-4 rounded-xl bg-slate-50 p-4">
+										<p class="text-xs font-bold uppercase text-slate-400">Observations</p>
+										<p class="mt-1 text-sm text-slate-700">{consultation.observations}</p>
+									</div>
+								{/if}
 
-                                {#if consultation.treatment}
-                                    <div class="mt-3">
-                                        <p class="text-xs font-bold uppercase text-slate-400">Traitement</p>
-                                        <p class="mt-1 text-sm text-slate-700">{consultation.treatment}</p>
-                                    </div>
-                                {/if}
+								{#if consultation.treatment}
+									<div class="mt-3">
+										<p class="text-xs font-bold uppercase text-slate-400">Traitement</p>
+										<p class="mt-1 text-sm text-slate-700">{consultation.treatment}</p>
+									</div>
+								{/if}
 
-                                <p class="mt-4 text-xs font-semibold text-slate-400">
-                                    {formatDate(consultation.created_at)}
-                                </p>
-                            </div>
-                        {/each}
+								<p class="mt-4 text-xs font-semibold text-slate-400">
+									{formatDate(consultation.created_at)}
+								</p>
+							</div>
+						{/each}
 
-                        {#if summary.recent_consultations.length === 0}
-                            <p class="text-sm text-slate-500">Aucune consultation enregistrée.</p>
-                        {/if}
-                    </div>
-                {/if}
+						{#if summary.recent_consultations.length === 0}
+							<p class="text-sm text-slate-500">Aucune consultation enregistrée.</p>
+						{/if}
+					</div>
+				{/if}
 
 				{#if activeTab === 'allergies'}
 					<div class="space-y-3">
@@ -344,33 +346,35 @@
 					</div>
 				{/if}
 
-                {#if activeTab === 'documents'}
-                    <div class="grid gap-3 md:grid-cols-2">
-                        {#each summary.documents as document (`${document.consultation_id}-${document.type}`)}
-                            <div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 p-4">
-                                <div>
-                                    <p class="font-black text-slate-900">{document.label}</p>
-                                    <p class="mt-1 text-xs font-semibold text-slate-400">
-                                        Consultation #{document.consultation_id}
-                                    </p>
-                                </div>
+				{#if activeTab === 'documents'}
+					<div class="grid gap-3 md:grid-cols-2">
+						{#each summary.documents as document (`${document.consultation_id}-${document.type}`)}
+							<div
+								class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 p-4"
+							>
+								<div>
+									<p class="font-black text-slate-900">{document.label}</p>
+									<p class="mt-1 text-xs font-semibold text-slate-400">
+										Consultation #{document.consultation_id}
+									</p>
+								</div>
 
-                                <button
-                                    type="button"
-                                    onclick={() => openMedicalDocument(document.url)}
-                                    disabled={openingDocument === document.url}
-                                    class="rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white hover:bg-[#0b3d75] disabled:cursor-wait disabled:opacity-60"
-                                >
-                                    {openingDocument === document.url ? 'Ouverture...' : 'Ouvrir'}
-                                </button>
-                            </div>
-                        {/each}
+								<button
+									type="button"
+									onclick={() => openMedicalDocument(document.url)}
+									disabled={openingDocument === document.url}
+									class="rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white hover:bg-[#0b3d75] disabled:cursor-wait disabled:opacity-60"
+								>
+									{openingDocument === document.url ? 'Ouverture...' : 'Ouvrir'}
+								</button>
+							</div>
+						{/each}
 
-                        {#if summary.documents.length === 0}
-                            <p class="text-sm text-slate-500">Aucun document disponible.</p>
-                        {/if}
-                    </div>
-                {/if}
+						{#if summary.documents.length === 0}
+							<p class="text-sm text-slate-500">Aucun document disponible.</p>
+						{/if}
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}
