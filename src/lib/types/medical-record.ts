@@ -95,10 +95,32 @@ export type MedicalTimelineEvent = {
 };
 
 export type PatientMedicalSummary = {
+	patient_id: number;
 	medical_record: MedicalRecord;
 	alerts: MedicalAlert[];
 	allergies: Allergy[];
 	medical_histories: MedicalHistory[];
 	last_vital_signs: VitalSign | null;
 	timeline: MedicalTimelineEvent[];
+	recent_consultations: MedicalSummaryConsultation[];
+	documents: MedicalSummaryDocument[];
+};
+
+export type MedicalSummaryConsultation = {
+	id: number;
+	patient_id: number;
+	doctor_name: string;
+	service: string;
+	status: string;
+	diagnosis: string;
+	observations: string;
+	treatment: string;
+	created_at: string;
+};
+
+export type MedicalSummaryDocument = {
+	consultation_id: number;
+	type: string;
+	label: string;
+	url: string;
 };
