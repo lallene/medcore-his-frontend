@@ -124,3 +124,206 @@ export type MedicalSummaryDocument = {
 	label: string;
 	url: string;
 };
+
+export type AllergySeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'ANAPHYLAXIS';
+
+export type MedicalRecordStatus = 'ACTIVE' | 'ARCHIVED' | 'CLOSED';
+
+export type MedicalRecordAllergy = {
+	id?: number;
+	category: 'MEDICATION' | 'FOOD' | 'PRODUCT' | 'SUBSTANCE' | 'OTHER';
+	name: string;
+	reaction: string;
+	severity: AllergySeverity;
+	diagnosedAt: string;
+	notes: string;
+};
+
+export type MedicalHistoryItem = {
+	id?: number;
+	disease: string;
+	historyType: 'PAST' | 'CHRONIC';
+	diagnosedAt: string;
+	resolvedAt: string;
+	status: 'ACTIVE' | 'RESOLVED' | 'UNKNOWN';
+	notes: string;
+};
+
+export type SurgicalHistoryItem = {
+	id?: number;
+	procedureName: string;
+	procedureDate: string;
+	facility: string;
+	indication: string;
+	complications: string;
+	notes: string;
+};
+
+export type FamilyHistoryItem = {
+	id?: number;
+	relationship: string;
+	disease: string;
+	ageAtDiagnosis: number | null;
+	notes: string;
+};
+
+export type UsualTreatmentItem = {
+	id?: number;
+	medicationName: string;
+	dosage: string;
+	frequency: string;
+	startDate: string;
+	endDate: string;
+	prescriber: string;
+	status: 'ONGOING' | 'STOPPED';
+	notes: string;
+};
+
+export type VaccinationItem = {
+	id?: number;
+	vaccineName: string;
+	dose: string;
+	administeredDate: string;
+	nextReminderDate: string;
+	status: 'PLANNED' | 'COMPLETED' | 'DELAYED' | 'MISSED';
+	batchNumber: string;
+	center: string;
+};
+
+export type DisabilityItem = {
+	id?: number;
+	type: string;
+	level: string;
+	specialNeeds: string;
+	notes: string;
+};
+
+export type MedicalDeviceItem = {
+	id?: number;
+	type: 'PACEMAKER' | 'PROSTHESIS' | 'IMPLANT' | 'CATHETER' | 'OTHER';
+	name: string;
+	reference: string;
+	implantationDate: string;
+	manufacturer: string;
+	notes: string;
+};
+
+export type VitalRecord = {
+	id?: number;
+	measuredAt: string;
+	weightKg: number | null;
+	heightCm: number | null;
+	bmi: number | null;
+	temperature: number | null;
+	bloodPressureSystolic: number | null;
+	bloodPressureDiastolic: number | null;
+	heartRate: number | null;
+	respiratoryRate: number | null;
+	oxygenSaturation: number | null;
+	bloodGlucose: number | null;
+	waistCircumferenceCm: number | null;
+	painScore: number | null;
+	painLocation: string;
+	painType: string;
+	painDuration: string;
+	measuredBy: string;
+};
+
+export type MedicalDocument = {
+	id?: number;
+	type: 'PRESCRIPTION' | 'CERTIFICATE' | 'REPORT' | 'IMAGE' | 'PDF' | 'OTHER';
+	title: string;
+	documentDate: string;
+	fileReference: string;
+	description: string;
+	uploadedBy: string;
+};
+
+export type EmergencyContact = {
+	lastName: string;
+	firstNames: string;
+	relationship: string;
+	phone: string;
+	email: string;
+	address: string;
+};
+
+export type LegalGuardian = {
+	lastName: string;
+	firstNames: string;
+	relationship: string;
+	phone: string;
+	email: string;
+	address: string;
+};
+
+export type MedicalCoverage = {
+	isInsured: boolean;
+	insuranceName: string;
+	mutualName: string;
+	insuredNumber: string;
+	coverageOrganization: string;
+	coverageRate: number | null;
+};
+
+export type Lifestyle = {
+	smokingStatus: 'NEVER' | 'CURRENT' | 'FORMER' | '';
+	cigarettesPerDay: number | null;
+	alcoholStatus: 'NONE' | 'OCCASIONAL' | 'REGULAR' | '';
+	physicalActivityLevel: 'SEDENTARY' | 'LOW' | 'MODERATE' | 'HIGH' | '';
+	dietDescription: string;
+	notes: string;
+};
+
+export type CommonMedicalRecord = {
+	id?: number;
+	patientId: number;
+
+	recordNumber: string;
+	createdAt: string;
+	facilityName: string;
+	status: MedicalRecordStatus;
+
+	lastName: string;
+	firstNames: string;
+	birthDate: string | null;
+	age: number | null;
+	sex: string;
+	photoReference: string;
+
+	address: string;
+	phone: string;
+	email: string;
+
+	maritalStatus: string;
+	profession: string;
+
+	isMinor: boolean;
+
+	emergencyContact: EmergencyContact;
+	legalGuardian: LegalGuardian;
+	medicalCoverage: MedicalCoverage;
+
+	bloodGroup: string;
+	rhesus: string;
+
+	lifestyle: Lifestyle;
+
+	allergies: MedicalRecordAllergy[];
+	medicalHistories: MedicalHistoryItem[];
+	surgicalHistories: SurgicalHistoryItem[];
+	familyHistories: FamilyHistoryItem[];
+	usualTreatments: UsualTreatmentItem[];
+	vaccinations: VaccinationItem[];
+	disabilities: DisabilityItem[];
+	medicalDevices: MedicalDeviceItem[];
+	vitalsHistory: VitalRecord[];
+	documents: MedicalDocument[];
+
+	updatedAt?: string;
+};
+
+export type UpdateCommonMedicalRecordPayload = Omit<
+	CommonMedicalRecord,
+	'id' | 'patientId' | 'createdAt' | 'updatedAt' | 'age'
+>;

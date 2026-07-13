@@ -2,9 +2,12 @@ import { api } from '$lib/api/client';
 
 import type {
 	Consultation,
+	ConsultationDetail,
 	ConsultationReason,
 	CreateConsultationPayload,
-	MedicalExam
+	MedicalExam,
+	PhysicalExamArea,
+	UpdateConsultationPayload
 } from '$lib/types/consultation';
 
 export async function getConsultationReasons(): Promise<ConsultationReason[]> {
@@ -34,9 +37,25 @@ export async function getPatientConsultations(patientId: number): Promise<Consul
 	return response.data;
 }
 
-import type { PhysicalExamArea } from '$lib/types/consultation';
-
 export async function getPhysicalExamAreas(): Promise<PhysicalExamArea[]> {
 	const response = await api.get<PhysicalExamArea[]>('/api/consultations/physical-exam-areas');
+	return response.data;
+}
+
+export async function getConsultation(consultationId: number): Promise<ConsultationDetail> {
+	const response = await api.get<ConsultationDetail>(`/api/consultations/${consultationId}`);
+
+	return response.data;
+}
+
+export async function updateConsultation(
+	consultationId: number,
+	payload: UpdateConsultationPayload
+): Promise<ConsultationDetail> {
+	const response = await api.put<ConsultationDetail>(
+		`/api/consultations/${consultationId}`,
+		payload
+	);
+
 	return response.data;
 }
