@@ -14,6 +14,7 @@
 		hospitalizationStatusLabel
 	} from '$lib/components/hospitalizations/hospitalization-state';
 	import type { Hospitalization } from '$lib/types/hospitalization';
+	import BedAssignmentPanel from '$lib/components/hospitalizations/BedAssignmentPanel.svelte';
 	let item = $state<Hospitalization | null>(null);
 	let loading = $state(true);
 	let error = $state('');
@@ -102,6 +103,7 @@
 				<p>{item.dischargedAt ? new Date(item.dischargedAt).toLocaleString('fr-FR') : '—'}</p>
 			</div>
 		</section>
+		<BedAssignmentPanel hospitalizationId={item.id} status={item.status} />
 		{#if actions.includes('admit') || actions.includes('cancel')}<div class="flex gap-3">
 				{#if actions.includes('admit')}<button
 						onclick={() => run('admit')}

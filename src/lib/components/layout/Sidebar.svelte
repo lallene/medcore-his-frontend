@@ -23,6 +23,7 @@
 		| '/patients'
 		| '/consultations'
 		| '/hospitalizations'
+		| '/beds'
 		| '/insurance'
 		| '/insurance/vouchers'
 		| '/billing'
@@ -46,6 +47,7 @@
 		{ title: 'Patients', href: '/patients', icon: Users },
 		{ title: 'Consultations', href: '/consultations', icon: HeartPulse, soon: true },
 		{ title: 'Hospitalisations', href: '/hospitalizations', icon: Hospital },
+		{ title: 'Chambres & lits', href: '/beds', icon: Hospital },
 		{ title: 'Assurances', href: '/insurance', icon: Shield },
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
 		{ title: 'Facturation', href: '/billing', icon: CreditCard, soon: true }

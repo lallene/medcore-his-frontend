@@ -9,6 +9,7 @@
 	} from '$lib/components/hospitalizations/hospitalization-state';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import BedAssignmentSummary from '$lib/components/hospitalizations/BedAssignmentSummary.svelte';
 	interface Props {
 		patientId: number;
 		hospitalizations: HospitalizationRecord[];
@@ -79,6 +80,7 @@
 									<p class="mt-2 text-xs text-slate-400">
 										Consultation #{item.sourceConsultationId}
 									</p>
+									<BedAssignmentSummary hospitalizationId={item.id} showHistory={true} />
 								</div>
 							</div>
 							<button
