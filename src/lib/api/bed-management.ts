@@ -8,19 +8,15 @@ import type {
 	BedOverview,
 	Room
 } from '$lib/types/bed-management';
+import type { BedPayload, RoomPayload } from '$lib/types/bed-management';
 
 export async function listRooms(): Promise<Room[]> {
 	return (await api.get<ApiResponse<Room[]>>('/api/rooms')).data.data;
 }
-export async function createRoom(
-	payload: Pick<Room, 'code' | 'name' | 'department' | 'floor' | 'roomType'>
-): Promise<Room> {
+export async function createRoom(payload: RoomPayload): Promise<Room> {
 	return (await api.post<ApiResponse<Room>>('/api/rooms', payload)).data.data;
 }
-export async function updateRoom(
-	id: number,
-	payload: Partial<Pick<Room, 'name' | 'department' | 'floor' | 'roomType' | 'isActive'>>
-): Promise<Room> {
+export async function updateRoom(id: number, payload: Partial<RoomPayload>): Promise<Room> {
 	return (await api.put<ApiResponse<Room>>(`/api/rooms/${id}`, payload)).data.data;
 }
 export async function listBeds(filters: BedFilters = {}): Promise<BedListResult> {
@@ -30,18 +26,10 @@ export async function listBeds(filters: BedFilters = {}): Promise<BedListResult>
 	if (!r.data.meta) throw new Error('Pagination des lits absente.');
 	return { data: r.data.data, meta: r.data.meta };
 }
-export async function createBed(payload: {
-	roomId: number;
-	code: string;
-	label: string;
-	bedType: string;
-}): Promise<Bed> {
+export async function createBed(payload: BedPayload): Promise<Bed> {
 	return (await api.post<ApiResponse<Bed>>('/api/beds', payload)).data.data;
 }
-export async function updateBed(
-	id: number,
-	payload: Partial<Pick<Bed, 'roomId' | 'label' | 'bedType' | 'status' | 'isActive'>>
-): Promise<Bed> {
+export async function updateBed(id: number, payload: Partial<BedPayload>): Promise<Bed> {
 	return (await api.put<ApiResponse<Bed>>(`/api/beds/${id}`, payload)).data.data;
 }
 export async function listBedAssignments(hospitalizationId: number): Promise<BedAssignment[]> {

@@ -10,6 +10,29 @@ export interface Room {
 	floor: string;
 	roomType: string;
 	isActive: boolean;
+	bedCount: number;
+	availableBedCount: number;
+	occupiedBedCount: number;
+	reservedBedCount: number;
+	outOfServiceBedCount: number;
+}
+
+export interface RoomPayload {
+	code: string;
+	name: string;
+	department: string;
+	floor: string;
+	roomType: string;
+	isActive: boolean;
+}
+
+export interface BedPayload {
+	code: string;
+	label: string;
+	roomId: number;
+	bedType: string;
+	isActive: boolean;
+	status?: 'AVAILABLE' | 'OUT_OF_SERVICE';
 }
 export interface Bed {
 	id: number;
