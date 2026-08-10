@@ -9,6 +9,7 @@
 		FileText,
 		FlaskConical,
 		HeartPulse,
+		Hospital,
 		Image,
 		LayoutDashboard,
 		Pill,
@@ -21,6 +22,7 @@
 		| '/dashboard'
 		| '/patients'
 		| '/consultations'
+		| '/hospitalizations'
 		| '/insurance'
 		| '/insurance/vouchers'
 		| '/billing'
@@ -43,6 +45,7 @@
 		{ title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
 		{ title: 'Patients', href: '/patients', icon: Users },
 		{ title: 'Consultations', href: '/consultations', icon: HeartPulse, soon: true },
+		{ title: 'Hospitalisations', href: '/hospitalizations', icon: Hospital },
 		{ title: 'Assurances', href: '/insurance', icon: Shield },
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
 		{ title: 'Facturation', href: '/billing', icon: CreditCard, soon: true }

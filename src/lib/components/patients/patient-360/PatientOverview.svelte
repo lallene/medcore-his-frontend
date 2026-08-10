@@ -18,6 +18,7 @@
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { PatientInsuranceView } from '$lib/types/insurance';
+	import type { Hospitalization } from '$lib/types/hospitalization';
 
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import InfoBlock from '$lib/components/patients/InfoBlock.svelte';
@@ -32,9 +33,10 @@
 		summary: PatientSummary | null;
 		consultations: PatientConsultation[];
 		insurance: PatientInsuranceView;
+		hospitalizations: Hospitalization[];
 	}
 
-	let { patient, summary, consultations, insurance }: Props = $props();
+	let { patient, summary, consultations, insurance, hospitalizations }: Props = $props();
 
 	const insuranceStatus = $derived(insurance.status);
 
@@ -50,9 +52,7 @@
 
 	const consultationCount = $derived(consultations.length);
 
-	const hospitalizationCount = $derived(
-		consultations.filter((consultation) => consultation.hospitalizationRequired).length
-	);
+	const hospitalizationCount = $derived(hospitalizations.length);
 
 	const prescriptionCount = $derived(
 		consultations.reduce(

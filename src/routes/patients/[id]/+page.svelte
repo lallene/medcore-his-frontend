@@ -31,6 +31,7 @@
 	import { getPatient } from '$lib/api/patients';
 	import { getPatientCoverages } from '$lib/api/insurance';
 	import { getClinicalTimeline } from '$lib/api/clinical-timeline';
+	import { listPatientHospitalizations } from '$lib/api/hospitalizations';
 	import PatientConsultations from '$lib/components/patients/patient-360/PatientConsultations.svelte';
 	import PatientHeader from '$lib/components/patients/patient-360/PatientHeader.svelte';
 	import PatientTabs from '$lib/components/patients/patient-360/PatientTabs.svelte';
@@ -41,6 +42,7 @@
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientCoverage } from '$lib/types/insurance';
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
+	import type { Hospitalization } from '$lib/types/hospitalization';
 	import { resolvePatientInsurance } from '$lib/components/patients/patient-360/patient-360-data';
 
 	let activeTab = $state<PatientTab>('overview');
@@ -50,12 +52,13 @@
 	let consultations = $state<PatientConsultation[]>([]);
 	let coverages = $state<PatientCoverage[]>([]);
 	let timelineEvents = $state<ClinicalTimelineEvent[]>([]);
+	let hospitalizations = $state<Hospitalization[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 
 	const consultationCount = $derived(consultations.length);
 
-	const hospitalizationCount = $derived(summary?.statistics.hospitalizations ?? 0);
+	const hospitalizationCount = $derived(hospitalizations.length);
 
 	const prescriptionCount = $derived(
 		consultations.reduce(
@@ -144,18 +147,25 @@
 				throw new Error('Identifiant patient invalide.');
 			}
 
-			const [patientResponse, summaryResponse, consultationsResponse, coveragesResponse] =
-				await Promise.all([
-					getPatient(id),
-					getPatientSummary(id),
-					getPatientConsultations(id),
-					getPatientCoverages(id)
-				]);
+			const [
+				patientResponse,
+				summaryResponse,
+				consultationsResponse,
+				coveragesResponse,
+				hospitalizationsResponse
+			] = await Promise.all([
+				getPatient(id),
+				getPatientSummary(id),
+				getPatientConsultations(id),
+				getPatientCoverages(id),
+				listPatientHospitalizations(id)
+			]);
 
 			patient = patientResponse;
 			summary = summaryResponse;
 			consultations = consultationsResponse;
 			coverages = coveragesResponse;
+			hospitalizations = hospitalizationsResponse;
 			timelineEvents = summaryResponse.medical_record.id
 				? await getClinicalTimeline(summaryResponse.medical_record.id)
 				: [];
@@ -195,21 +205,21 @@
 		<PatientTabs tabs={patientTabs} {activeTab} onSelect={selectTab} />
 
 		{#if activeTab === 'overview'}
-			<PatientOverview patient={p} {summary} {consultations} {insurance} />
+			<PatientOverview patient={p} {summary} {consultations} {insurance} {hospitalizations} />
 		{:else if activeTab === 'consultations'}
 			<PatientConsultations patientId={p.id} {consultations} />
 		{:else if activeTab === 'medical-record'}
-			<PatientMedicalRecord patient={p} {summary} {consultations} />
+			<PatientMedicalRecord patient={p} {summary} {consultations} {hospitalizations} />
 		{:else if activeTab === 'exams'}
 			<PatientExams patientId={p.id} {consultations} />
 		{:else if activeTab === 'prescriptions'}
 			<PatientPrescriptions patientId={p.id} {consultations} />
 		{:else if activeTab === 'hospitalizations'}
-			<PatientHospitalizations patientId={p.id} {consultations} />
+			<PatientHospitalizations patientId={p.id} {hospitalizations} />
 		{:else if activeTab === 'insurance'}
 			<PatientInsurance patient={p} {insurance} />
 		{:else if activeTab === 'billing'}
-			<PatientBilling patient={p} {consultations} />
+			<PatientBilling patient={p} {consultations} {hospitalizations} />
 		{:else if activeTab === 'documents'}
 			<PatientDocuments {consultations} {summary} />
 		{:else if activeTab === 'timeline'}

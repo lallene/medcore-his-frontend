@@ -18,6 +18,7 @@
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientSummary } from '$lib/types/patient-summary';
+	import type { Hospitalization } from '$lib/types/hospitalization';
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -27,9 +28,10 @@
 		patient: Patient;
 		summary: PatientSummary | null;
 		consultations: PatientConsultation[];
+		hospitalizations: Hospitalization[];
 	}
 
-	let { patient, summary, consultations }: Props = $props();
+	let { patient, summary, consultations, hospitalizations }: Props = $props();
 
 	const completedConsultations = $derived(
 		consultations.filter((consultation) => consultation.status === 'completed')
@@ -66,10 +68,6 @@
 
 	const totalExams = $derived(
 		consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
-	);
-
-	const hospitalizations = $derived(
-		consultations.filter((consultation) => consultation.hospitalizationRequired)
 	);
 
 	const diagnoses = $derived.by(() => {

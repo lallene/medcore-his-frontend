@@ -6,6 +6,7 @@
 
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
 	import type { Patient } from '$lib/types/patient';
+	import type { Hospitalization } from '$lib/types/hospitalization';
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -14,9 +15,10 @@
 	interface Props {
 		patient: Patient;
 		consultations: PatientConsultation[];
+		hospitalizations: Hospitalization[];
 	}
 
-	let { patient, consultations }: Props = $props();
+	let { patient, consultations, hospitalizations }: Props = $props();
 
 	const coverageRate = $derived(
 		patient.isAssure ? Math.max(0, Math.min(patient.tauxCouverture ?? 0, 100)) : 0
@@ -37,9 +39,7 @@
 		consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
 	);
 
-	const hospitalizationCount = $derived(
-		consultations.filter((consultation) => consultation.hospitalizationRequired).length
-	);
+	const hospitalizationCount = $derived(hospitalizations.length);
 
 	function openBilling(): void {
 		void goto(resolve('/billing'));

@@ -15,6 +15,13 @@
 	import { PUBLIC_API_URL } from '$env/static/public';
 
 	import { getConsultation } from '$lib/api/consultations';
+	import {
+		createHospitalization,
+		getHospitalizationByConsultation
+	} from '$lib/api/hospitalizations';
+	import type { Hospitalization } from '$lib/types/hospitalization';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ClinicalContextForm from '$lib/components/consultations/ClinicalContextForm.svelte';
 
 	type WorkspaceTab =
@@ -32,6 +39,8 @@
 
 	let loading = $state(true);
 	let error = $state('');
+	let hospitalization = $state<Hospitalization | null>(null);
+	let hospitalizationLoading = $state(false);
 
 	const hasPrescriptions = $derived(Boolean(consultation && consultation.prescriptions.length > 0));
 
@@ -169,9 +178,31 @@
 		}
 	}
 
+	async function refreshHospitalization() {
+		hospitalization = await getHospitalizationByConsultation(consultationId);
+	}
+
+	async function createAdmission() {
+		if (!consultation || hospitalizationLoading) return;
+		hospitalizationLoading = true;
+		error = '';
+		try {
+			hospitalization = await createHospitalization({
+				patientId: consultation.patientId,
+				sourceConsultationId: consultation.id,
+				admissionDiagnosis: consultation.diagnosis
+			});
+		} catch (err: unknown) {
+			error = err instanceof Error ? err.message : 'Impossible de créer l’admission.';
+		} finally {
+			hospitalizationLoading = false;
+		}
+	}
+
 	onMount(async () => {
 		try {
 			consultation = await getConsultation(consultationId);
+			await refreshHospitalization();
 		} catch {
 			error = 'Impossible de charger la consultation.';
 		} finally {
@@ -247,6 +278,39 @@
 				medicalRecordId = recordId;
 			}}
 		/>
+	{/if}
+	{#if consultation?.hospitalizationRequired}
+		<section class="rounded-2xl border border-red-200 bg-red-50 p-5">
+			<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+				<div>
+					<p class="text-xs font-black uppercase tracking-wide text-red-600">
+						Hospitalisation recommandée
+					</p>
+					<p class="mt-1 font-bold text-slate-900">
+						{consultation.hospitalizationReason || 'Motif non renseigné'}
+					</p>
+					<p class="mt-1 text-sm text-slate-600">
+						Cette décision clinique ne constitue pas encore une admission.
+					</p>
+				</div>
+				{#if hospitalization}
+					<button
+						type="button"
+						onclick={() => goto(resolve(`/hospitalizations/${hospitalization?.id}`))}
+						class="rounded-xl bg-white px-4 py-2 text-sm font-black text-red-700 shadow-sm"
+						>Ouvrir {hospitalization.admissionNumber} · {hospitalization.status}</button
+					>
+				{:else}
+					<button
+						type="button"
+						disabled={hospitalizationLoading}
+						onclick={createAdmission}
+						class="rounded-xl bg-red-700 px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+						>{hospitalizationLoading ? 'Création...' : 'Créer l’admission'}</button
+					>
+				{/if}
+			</div>
+		</section>
 	{/if}
 
 	{#if medicalRecordId !== null}
