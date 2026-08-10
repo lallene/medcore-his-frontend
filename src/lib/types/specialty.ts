@@ -28,7 +28,6 @@ export type ConsultationSpecialtyResponse = {
 export type UpsertConsultationSpecialtyPayload = {
 	specialtyCode: SpecialtyCode;
 	data: Record<string, unknown>;
-	userId: number;
 };
 
 export type SpecialtyOption = {
@@ -51,5 +50,4 @@ export type ConsultationSpecialty = {
 export type SaveConsultationSpecialtyPayload = {
 	specialtyCode: SpecialtyCode;
 	data: Record<string, unknown>;
-	userId?: number;
 };

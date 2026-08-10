@@ -23,11 +23,10 @@
 
 	type Props = {
 		consultationId: number;
-		userId?: number;
 		service?: string;
 	};
 
-	let { consultationId, userId = 1, service = '' }: Props = $props();
+	let { consultationId, service = '' }: Props = $props();
 
 	let specialtyCode = $state<SpecialtyCode>('GENERAL_MEDICINE');
 	let specialtyData = $state<Record<string, unknown>>({});
@@ -177,8 +176,7 @@
 		try {
 			const response = await saveConsultationSpecialty(consultationId, {
 				specialtyCode,
-				data: specialtyData,
-				userId
+				data: specialtyData
 			});
 
 			specialtyData = response.data;

@@ -1,6 +1,6 @@
 import { api } from '$lib/api/client';
 import type { ApiResponse } from '$lib/types/api';
-import type { InsuranceCompany } from '$lib/types/insurance';
+import type { InsuranceCompany, PatientCoverage } from '$lib/types/insurance';
 
 export async function getInsuranceCompanies(): Promise<InsuranceCompany[]> {
 	const response = await api.get<ApiResponse<InsuranceCompany[]>>('/api/insurance/companies');
@@ -9,5 +9,12 @@ export async function getInsuranceCompanies(): Promise<InsuranceCompany[]> {
 
 export async function getInsuranceCompany(id: number): Promise<InsuranceCompany> {
 	const response = await api.get<ApiResponse<InsuranceCompany>>(`/api/insurance/companies/${id}`);
+	return response.data.data;
+}
+
+export async function getPatientCoverages(patientId: number): Promise<PatientCoverage[]> {
+	const response = await api.get<ApiResponse<PatientCoverage[]>>(
+		`/api/insurance/coverages/patient/${patientId}`
+	);
 	return response.data.data;
 }

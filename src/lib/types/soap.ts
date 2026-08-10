@@ -48,6 +48,4 @@ export type UpsertConsultationSOAPPayload = {
 	followUpPlan: string;
 	patientAdvice: string;
 	disposition: string;
-
-	userId: number;
 };

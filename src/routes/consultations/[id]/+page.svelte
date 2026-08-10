@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import ConsultationWorkspace from '$lib/components/consultations/ConsultationWorkspace.svelte';
 
-	let consultationId = $derived(Number($page.params.id));
+	const consultationId = $derived(Number(page.params.id));
 </script>
 
 <svelte:head>
@@ -36,5 +36,5 @@
 		</a>
 	</div>
 
-	<ConsultationWorkspace {consultationId} userId={1} />
+	<ConsultationWorkspace {consultationId} />
 </div>

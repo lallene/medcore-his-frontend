@@ -1,15 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Plus, Save, Trash2, CheckCircle2, FlaskConical } from 'lucide-svelte';
 
 	import { getMedicalExams, updateConsultation } from '$lib/api/consultations';
+	import { formSnapshot, isFormDirty, uniquePositiveIDs } from './form-sync';
 
 	import type { ConsultationExam, MedicalExam } from '$lib/types/consultation';
 
 	type Props = {
 		consultationId: number;
 		initialExams?: ConsultationExam[];
-		onSaved?: () => void;
+		onSaved?: () => void | Promise<void>;
 	};
 
 	let { consultationId, initialExams = [], onSaved }: Props = $props();
@@ -21,6 +22,9 @@
 	let saving = $state(false);
 	let error = $state('');
 	let success = $state('');
+	let pendingExamIds = $state<number[] | null>(null);
+	let sourceFingerprint = '';
+	let baseline = '';
 
 	const activeExams = $derived(exams.filter((exam) => exam.isActive));
 
@@ -32,11 +36,32 @@
 
 	const availableExams = $derived(activeExams.filter((exam) => !selectedExamIds.includes(exam.id)));
 
+	function normalizedExamIds(values: Array<{ id: number }>): number[] {
+		return uniquePositiveIDs(values.map((exam) => exam.id));
+	}
+
+	function hydrateExamIds(ids: number[]): void {
+		selectedExamIds = [...new Set(ids)];
+		baseline = formSnapshot(selectedExamIds);
+		pendingExamIds = null;
+	}
+
+	$effect(() => {
+		const incomingIds = normalizedExamIds(initialExams);
+		const incomingFingerprint = formSnapshot(incomingIds);
+		if (incomingFingerprint === sourceFingerprint) return;
+		const dirty = untrack(() => isFormDirty(selectedExamIds, baseline));
+		if (!sourceFingerprint || !dirty) {
+			hydrateExamIds(incomingIds);
+			sourceFingerprint = incomingFingerprint;
+		} else {
+			pendingExamIds = incomingIds;
+		}
+	});
+
 	onMount(async () => {
 		try {
 			exams = await getMedicalExams();
-
-			selectedExamIds = initialExams.map((exam) => exam.id);
 		} catch {
 			error = 'Impossible de charger le référentiel des examens.';
 		} finally {
@@ -66,12 +91,15 @@
 		saving = true;
 
 		try {
-			await updateConsultation(consultationId, {
+			const saved = await updateConsultation(consultationId, {
 				examIds: selectedExamIds
 			});
+			const savedIDs = normalizedExamIds(saved.exams);
+			hydrateExamIds(savedIDs);
+			sourceFingerprint = formSnapshot(savedIDs);
 
 			success = 'Examens enregistrés avec succès.';
-			onSaved?.();
+			await onSaved?.();
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible d’enregistrer les examens.';
 		} finally {
@@ -117,6 +145,24 @@
 		>
 			<CheckCircle2 size={19} />
 			{success}
+		</div>
+	{/if}
+
+	{#if pendingExamIds}
+		<div
+			class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+		>
+			<span>Des examens plus récents sont disponibles ; votre sélection locale est conservée.</span>
+			<button
+				type="button"
+				class="font-bold underline"
+				onclick={() => {
+					if (pendingExamIds) {
+						hydrateExamIds(pendingExamIds);
+						sourceFingerprint = JSON.stringify(pendingExamIds);
+					}
+				}}>Charger la version serveur</button
+			>
 		</div>
 	{/if}
 

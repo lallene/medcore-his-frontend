@@ -3,6 +3,7 @@ export type ClinicalTimelineSeverity = 'info' | 'low' | 'medium' | 'high' | 'cri
 export type ClinicalTimelineEvent = {
 	id: number;
 	medical_record_id: number;
+	patient_id: number;
 
 	event_type: string;
 	category: string;
@@ -10,8 +11,9 @@ export type ClinicalTimelineEvent = {
 	title: string;
 	description: string;
 
-	source_type: string;
-	source_id: number;
+	department_id: number | null;
+	reference_type: string;
+	reference_id: number | null;
 
 	severity: ClinicalTimelineSeverity | string;
 

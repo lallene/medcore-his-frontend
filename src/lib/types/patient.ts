@@ -22,3 +22,27 @@ export interface CreatePatientPayload {
 	telephone: string;
 	quartier?: string;
 }
+
+export interface PatientListMeta {
+	limit: number;
+	page: number;
+	total: number;
+	totalPages: number;
+}
+
+export interface PatientListResponse {
+	data: Patient[];
+	meta: PatientListMeta;
+}
+
+export interface PatientListMeta {
+	limit: number;
+	page: number;
+	total: number;
+	totalPages: number;
+}
+
+export interface PatientListResult {
+	data: Patient[];
+	meta: PatientListMeta;
+}

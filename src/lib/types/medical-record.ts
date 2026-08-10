@@ -125,27 +125,29 @@ export type MedicalSummaryDocument = {
 	url: string;
 };
 
-export type AllergySeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'ANAPHYLAXIS';
-
 export type MedicalRecordStatus = 'ACTIVE' | 'ARCHIVED' | 'CLOSED';
 
 export type MedicalRecordAllergy = {
 	id?: number;
-	category: 'MEDICATION' | 'FOOD' | 'PRODUCT' | 'SUBSTANCE' | 'OTHER';
+	category: string;
 	name: string;
 	reaction: string;
-	severity: AllergySeverity;
+	severity: string;
 	diagnosedAt: string;
 	notes: string;
+	isActive: boolean;
 };
 
 export type MedicalHistoryItem = {
 	id?: number;
 	disease: string;
-	historyType: 'PAST' | 'CHRONIC';
+	historyType: string;
 	diagnosedAt: string;
 	resolvedAt: string;
-	status: 'ACTIVE' | 'RESOLVED' | 'UNKNOWN';
+	status: string;
+	severity: string;
+	description: string;
+	comment: string;
 	notes: string;
 };
 
@@ -175,7 +177,8 @@ export type UsualTreatmentItem = {
 	startDate: string;
 	endDate: string;
 	prescriber: string;
-	status: 'ONGOING' | 'STOPPED';
+	status: string;
+	isActive: boolean;
 	notes: string;
 };
 
@@ -185,7 +188,7 @@ export type VaccinationItem = {
 	dose: string;
 	administeredDate: string;
 	nextReminderDate: string;
-	status: 'PLANNED' | 'COMPLETED' | 'DELAYED' | 'MISSED';
+	status: string;
 	batchNumber: string;
 	center: string;
 };
@@ -200,16 +203,18 @@ export type DisabilityItem = {
 
 export type MedicalDeviceItem = {
 	id?: number;
-	type: 'PACEMAKER' | 'PROSTHESIS' | 'IMPLANT' | 'CATHETER' | 'OTHER';
+	type: string;
 	name: string;
 	reference: string;
 	implantationDate: string;
 	manufacturer: string;
 	notes: string;
+	isActive: boolean;
 };
 
 export type VitalRecord = {
 	id?: number;
+	consultationId: number | null;
 	measuredAt: string;
 	weightKg: number | null;
 	heightCm: number | null;
@@ -227,14 +232,18 @@ export type VitalRecord = {
 	painType: string;
 	painDuration: string;
 	measuredBy: string;
+	comment: string;
 };
 
 export type MedicalDocument = {
 	id?: number;
-	type: 'PRESCRIPTION' | 'CERTIFICATE' | 'REPORT' | 'IMAGE' | 'PDF' | 'OTHER';
+	consultationId: number | null;
+	type: string;
 	title: string;
-	documentDate: string;
+	documentDate: string | null;
 	fileReference: string;
+	fileName: string;
+	mimeType: string;
 	description: string;
 	uploadedBy: string;
 };
@@ -267,10 +276,10 @@ export type MedicalCoverage = {
 };
 
 export type Lifestyle = {
-	smokingStatus: 'NEVER' | 'CURRENT' | 'FORMER' | '';
+	smokingStatus: string;
 	cigarettesPerDay: number | null;
-	alcoholStatus: 'NONE' | 'OCCASIONAL' | 'REGULAR' | '';
-	physicalActivityLevel: 'SEDENTARY' | 'LOW' | 'MODERATE' | 'HIGH' | '';
+	alcoholStatus: string;
+	physicalActivityLevel: string;
 	dietDescription: string;
 	notes: string;
 };
@@ -278,37 +287,28 @@ export type Lifestyle = {
 export type CommonMedicalRecord = {
 	id?: number;
 	patientId: number;
-
 	recordNumber: string;
 	createdAt: string;
 	facilityName: string;
 	status: MedicalRecordStatus;
-
 	lastName: string;
 	firstNames: string;
 	birthDate: string | null;
 	age: number | null;
 	sex: string;
 	photoReference: string;
-
 	address: string;
 	phone: string;
 	email: string;
-
 	maritalStatus: string;
 	profession: string;
-
 	isMinor: boolean;
-
 	emergencyContact: EmergencyContact;
 	legalGuardian: LegalGuardian;
 	medicalCoverage: MedicalCoverage;
-
 	bloodGroup: string;
 	rhesus: string;
-
 	lifestyle: Lifestyle;
-
 	allergies: MedicalRecordAllergy[];
 	medicalHistories: MedicalHistoryItem[];
 	surgicalHistories: SurgicalHistoryItem[];
@@ -319,11 +319,43 @@ export type CommonMedicalRecord = {
 	medicalDevices: MedicalDeviceItem[];
 	vitalsHistory: VitalRecord[];
 	documents: MedicalDocument[];
-
-	updatedAt?: string;
+	updatedAt: string;
 };
 
-export type UpdateCommonMedicalRecordPayload = Omit<
-	CommonMedicalRecord,
-	'id' | 'patientId' | 'createdAt' | 'updatedAt' | 'age'
->;
+export type MedicalRecordCollectionKey =
+	| 'allergies'
+	| 'medicalHistories'
+	| 'surgicalHistories'
+	| 'familyHistories'
+	| 'usualTreatments'
+	| 'vaccinations'
+	| 'disabilities'
+	| 'medicalDevices'
+	| 'vitalsHistory'
+	| 'documents';
+
+export type MedicalRecordDeletedIDs = Record<MedicalRecordCollectionKey, number[]>;
+
+export type PatchCollection<T extends object> = {
+	upsert: T[];
+	delete_ids: number[];
+};
+
+export type MedicalRecordPatchValue = string | number | boolean | null;
+export type MedicalRecordPatchItem = Record<string, MedicalRecordPatchValue>;
+
+export type UpdateCommonMedicalRecordPatch = {
+	expected_updated_at: string;
+	profile?: Record<string, string>;
+	lifestyle?: Record<string, string>;
+	allergies?: PatchCollection<MedicalRecordPatchItem>;
+	medical_histories?: PatchCollection<MedicalRecordPatchItem>;
+	surgical_histories?: PatchCollection<MedicalRecordPatchItem>;
+	family_medical_histories?: PatchCollection<MedicalRecordPatchItem>;
+	regular_treatments?: PatchCollection<MedicalRecordPatchItem>;
+	vaccinations?: PatchCollection<MedicalRecordPatchItem>;
+	disabilities?: PatchCollection<MedicalRecordPatchItem>;
+	medical_devices?: PatchCollection<MedicalRecordPatchItem>;
+	vital_signs?: PatchCollection<MedicalRecordPatchItem>;
+	documents?: PatchCollection<MedicalRecordPatchItem>;
+};

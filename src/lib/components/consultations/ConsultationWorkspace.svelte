@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { resolve } from '$app/paths';
 
 	import { FileText, FlaskConical, Bed, ClipboardList, Eye } from 'lucide-svelte';
 
@@ -12,19 +11,20 @@
 	import PatientSummaryCard from '$lib/components/consultations/PatientSummaryCard.svelte';
 	import ClinicalTimeline from '$lib/components/medical-record/ClinicalTimeline.svelte';
 
-	import { getConsultation } from '$lib/api/consultations';
 	import type { ConsultationDetail } from '$lib/types/consultation';
 	import { PUBLIC_API_URL } from '$env/static/public';
+
+	import { getConsultation } from '$lib/api/consultations';
+	import ClinicalContextForm from '$lib/components/consultations/ClinicalContextForm.svelte';
 
 	type WorkspaceTab =
 		'clinical' | 'medical-record' | 'soap' | 'specialty' | 'prescriptions' | 'exams' | 'documents';
 
 	type Props = {
 		consultationId: number;
-		userId?: number;
 	};
 
-	let { consultationId, userId = 1 }: Props = $props();
+	let { consultationId }: Props = $props();
 
 	let activeTab = $state<WorkspaceTab>('clinical');
 	let consultation = $state<ConsultationDetail | null>(null);
@@ -161,36 +161,6 @@
 		}
 	});
 
-	const hasVitals = $derived(
-		Boolean(
-			consultation &&
-			(consultation.vitals.temperature !== null ||
-				consultation.vitals.bloodPressureSystolic !== null ||
-				consultation.vitals.bloodPressureDiastolic !== null ||
-				consultation.vitals.heartRate !== null ||
-				consultation.vitals.respiratoryRate !== null ||
-				consultation.vitals.oxygenSaturation !== null ||
-				consultation.vitals.weight !== null ||
-				consultation.vitals.height !== null ||
-				consultation.vitals.bloodGlucose !== null ||
-				consultation.vitals.painScore !== null)
-		)
-	);
-
-	const hasAntecedents = $derived(
-		Boolean(
-			consultation &&
-			(consultation.antecedent.hasHta === true ||
-				consultation.antecedent.hasDiabetes === true ||
-				consultation.antecedent.otherMedical ||
-				consultation.antecedent.surgicalHistory ||
-				consultation.antecedent.gynecoObstetricHistory ||
-				consultation.antecedent.previousMedication ||
-				consultation.antecedent.tobacco === true ||
-				consultation.antecedent.alcohol === true)
-		)
-	);
-
 	async function refreshConsultation() {
 		try {
 			consultation = await getConsultation(consultationId);
@@ -314,205 +284,17 @@
 			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 				<p class="text-sm text-slate-500">Chargement du contexte clinique...</p>
 			</section>
-		{:else if error}
-			<section class="rounded-2xl border border-red-200 bg-red-50 p-6">
-				<p class="text-sm font-semibold text-red-700">
-					{error}
-				</p>
-			</section>
 		{:else if consultation}
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<div class="grid gap-5 lg:grid-cols-3">
-					<div class="rounded-2xl border border-red-100 bg-red-50 p-5">
-						<p class="text-xs font-black uppercase tracking-wide text-red-600">Allergies</p>
-
-						<p class="mt-3 text-sm text-red-800">
-							Consultez le dossier médical pour afficher les allergies actives du patient.
-						</p>
-
-						<a
-							href={resolve(`/patients/${consultation.patientId}/medical-record`)}
-							class="mt-4 inline-flex text-sm font-bold text-red-700 hover:underline"
-						>
-							Ouvrir le dossier médical
-						</a>
-					</div>
-
-					<div class="rounded-2xl border border-amber-100 bg-amber-50 p-5">
-						<p class="text-xs font-black uppercase tracking-wide text-amber-700">Antécédents</p>
-
-						{#if hasAntecedents}
-							<div class="mt-3 space-y-2 text-sm text-amber-950">
-								{#if consultation.antecedent.hasHta === true}
-									<p>
-										<strong>HTA :</strong>
-										Oui
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.hasDiabetes === true}
-									<p>
-										<strong>Diabète :</strong>
-										Oui
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.otherMedical}
-									<p>
-										<strong>Médicaux :</strong>
-										{consultation.antecedent.otherMedical}
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.surgicalHistory}
-									<p>
-										<strong>Chirurgicaux :</strong>
-										{consultation.antecedent.surgicalHistory}
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.gynecoObstetricHistory}
-									<p>
-										<strong>Gynéco-obstétricaux :</strong>
-										{consultation.antecedent.gynecoObstetricHistory}
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.previousMedication}
-									<p>
-										<strong>Traitement antérieur :</strong>
-										{consultation.antecedent.previousMedication}
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.tobacco === true}
-									<p>
-										<strong>Tabac :</strong>
-										Oui
-									</p>
-								{/if}
-
-								{#if consultation.antecedent.alcohol === true}
-									<p>
-										<strong>Alcool :</strong>
-										Oui
-									</p>
-								{/if}
-							</div>
-						{:else}
-							<p class="mt-3 text-sm font-semibold text-amber-900">
-								Aucun antécédent renseigné pour cette consultation.
-							</p>
-						{/if}
-					</div>
-
-					<div class="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-						<p class="text-xs font-black uppercase tracking-wide text-[#0E4C92]">
-							Constantes de la consultation
-						</p>
-
-						{#if hasVitals}
-							<div class="mt-4 grid grid-cols-2 gap-4 text-sm text-blue-950">
-								{#if consultation.vitals.bloodPressureSystolic !== null && consultation.vitals.bloodPressureDiastolic !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Tension</p>
-
-										<p class="font-black">
-											{consultation.vitals.bloodPressureSystolic}/
-											{consultation.vitals.bloodPressureDiastolic}
-											mmHg
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.temperature !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Température</p>
-
-										<p class="font-black">
-											{consultation.vitals.temperature} °C
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.heartRate !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Fréquence cardiaque</p>
-
-										<p class="font-black">
-											{consultation.vitals.heartRate} bpm
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.respiratoryRate !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Fréquence respiratoire</p>
-
-										<p class="font-black">
-											{consultation.vitals.respiratoryRate} cycles/min
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.oxygenSaturation !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">SpO₂</p>
-
-										<p class="font-black">
-											{consultation.vitals.oxygenSaturation} %
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.weight !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Poids</p>
-
-										<p class="font-black">
-											{consultation.vitals.weight} kg
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.height !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Taille</p>
-
-										<p class="font-black">
-											{consultation.vitals.height} cm
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.bloodGlucose !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Glycémie</p>
-
-										<p class="font-black">
-											{consultation.vitals.bloodGlucose}
-										</p>
-									</div>
-								{/if}
-
-								{#if consultation.vitals.painScore !== null}
-									<div>
-										<p class="text-xs font-bold uppercase text-blue-500">Douleur</p>
-
-										<p class="font-black">
-											{consultation.vitals.painScore}/10
-										</p>
-									</div>
-								{/if}
-							</div>
-						{:else}
-							<p class="mt-3 text-sm font-semibold text-blue-900">
-								Aucune constante renseignée pour cette consultation.
-							</p>
-						{/if}
-					</div>
+			{#if consultation.status === 'completed' || consultation.status === 'cancelled'}
+				<div
+					class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"
+				>
+					Cette consultation est {consultation.status === 'completed' ? 'terminée' : 'annulée'} et ne
+					peut plus être modifiée.
 				</div>
-			</section>
+			{:else}
+				<ClinicalContextForm {consultation} onSaved={refreshConsultation} />
+			{/if}
 		{/if}
 	{/if}
 
@@ -520,15 +302,15 @@
 		<CommonMedicalRecordPanel patientId={consultation.patientId} />
 	{/if}
 	{#if activeTab === 'soap'}
-		<SoapForm {consultationId} {userId} />
+		<SoapForm {consultationId} />
 	{/if}
 
 	{#if activeTab === 'specialty' && consultation}
-		<ConsultationSpecialtyPanel {consultationId} {userId} service={consultation.service} />
+		<ConsultationSpecialtyPanel {consultationId} service={consultation.service} />
 	{/if}
 
 	{#if activeTab === 'prescriptions' && consultation}
-		<PrescriptionForm {consultationId} {consultation} />
+		<PrescriptionForm {consultationId} {consultation} onSaved={refreshConsultation} />
 	{/if}
 
 	{#if activeTab === 'exams'}

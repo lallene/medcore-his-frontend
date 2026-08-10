@@ -1,8 +1,9 @@
-export interface ApiResponse<T> {
+export interface ApiResponse<T, M = unknown> {
 	success: boolean;
 	message: string;
 	data: T;
-	timestamp: string;
+	meta?: M;
+	timestamp?: string;
 }
 
 export interface ApiErrorDetail {

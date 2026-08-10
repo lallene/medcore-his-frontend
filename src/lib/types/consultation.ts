@@ -1,5 +1,3 @@
-export type ConsultationStatus = 'draft' | 'in_progress' | 'completed' | 'cancelled';
-
 export type ConsultationReason = {
 	id: number;
 	code: string;
@@ -37,6 +35,34 @@ export type Consultation = {
 	hospitalizationDuration: number;
 	createdAt: string;
 	updatedAt: string;
+};
+
+export type ConsultationListItem = {
+	id: number;
+	patientId: number;
+	patientCode: string;
+	patientRecord: string;
+	patientName: string;
+	doctorName: string;
+	service: string;
+	status: ConsultationStatus;
+	diagnosis: string;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type ConsultationListFilters = {
+	page?: number;
+	limit?: number;
+	patientId?: number;
+	status?: ConsultationStatus | '';
+	service?: string;
+	search?: string;
+};
+
+export type ConsultationListResponse = {
+	data: ConsultationListItem[];
+	meta: { page: number; limit: number; total: number; totalPages: number };
 };
 
 export type CreateConsultationPayload = {
@@ -278,3 +304,10 @@ export type UpdateConsultationPayload = {
 	sickLeaveRequired?: boolean;
 	sickLeaveDays?: number;
 };
+
+export type ConsultationStatus = 'draft' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface UpdateConsultationStatusPayload {
+	status: ConsultationStatus;
+	cancellationReason?: string;
+}

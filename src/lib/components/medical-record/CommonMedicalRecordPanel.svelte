@@ -12,7 +12,12 @@
 		UserRound
 	} from 'lucide-svelte';
 
-	import { getPatientMedicalRecord, updatePatientMedicalRecord } from '$lib/api/medical-record';
+	import {
+		getPatientMedicalRecord,
+		MedicalRecordConflictError,
+		updatePatientMedicalRecord
+	} from '$lib/api/medical-record';
+	import { emptyDeletedIDs } from '$lib/api/medical-record-mapper';
 
 	import type {
 		CommonMedicalRecord,
@@ -27,6 +32,10 @@
 		VitalRecord,
 		MedicalDocument
 	} from '$lib/types/medical-record';
+	import type {
+		MedicalRecordCollectionKey,
+		MedicalRecordDeletedIDs
+	} from '$lib/types/medical-record';
 
 	type SectionId =
 		'identity' | 'coverage' | 'history' | 'treatments' | 'lifestyle' | 'vitals' | 'documents';
@@ -38,12 +47,15 @@
 	let { patientId }: Props = $props();
 
 	let record = $state<CommonMedicalRecord | null>(null);
+	let originalRecord = $state<CommonMedicalRecord | null>(null);
+	let deletedIDs = $state<MedicalRecordDeletedIDs>(emptyDeletedIDs());
 	let activeSection = $state<SectionId>('identity');
 
 	let loading = $state(true);
 	let saving = $state(false);
 	let error = $state('');
 	let success = $state('');
+	let conflict = $state(false);
 
 	const sections = [
 		{
@@ -90,42 +102,61 @@
 		}
 	];
 
-	onMount(async () => {
+	function cloneRecord(value: CommonMedicalRecord): CommonMedicalRecord {
+		return structuredClone(value);
+	}
+
+	async function loadRecord(): Promise<void> {
+		loading = true;
+		error = '';
+		conflict = false;
 		try {
-			record = await getPatientMedicalRecord(patientId);
+			const loaded = await getPatientMedicalRecord(patientId);
+			record = cloneRecord(loaded);
+			originalRecord = cloneRecord(loaded);
+			deletedIDs = emptyDeletedIDs();
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible de charger le dossier médical.';
 		} finally {
 			loading = false;
 		}
-	});
+	}
+
+	onMount(loadRecord);
 
 	async function save() {
-		if (!record) {
+		if (!record || !originalRecord) {
 			return;
 		}
 
 		saving = true;
 		error = '';
 		success = '';
+		conflict = false;
 
 		try {
-			const { id, patientId: _patientId, createdAt, updatedAt, age, ...payload } = record;
-
-			void id;
-			void _patientId;
-			void createdAt;
-			void updatedAt;
-			void age;
-
-			record = await updatePatientMedicalRecord(patientId, payload);
+			const saved = await updatePatientMedicalRecord(patientId, record, originalRecord, deletedIDs);
+			record = cloneRecord(saved);
+			originalRecord = cloneRecord(saved);
+			deletedIDs = emptyDeletedIDs();
 
 			success = 'Dossier médical enregistré avec succès.';
 		} catch (err: unknown) {
-			error = err instanceof Error ? err.message : 'Impossible d’enregistrer le dossier médical.';
+			conflict = err instanceof MedicalRecordConflictError;
+			error =
+				err instanceof MedicalRecordConflictError
+					? err.message
+					: err instanceof Error
+						? err.message
+						: 'Impossible d’enregistrer le dossier médical.';
 		} finally {
 			saving = false;
 		}
+	}
+
+	function markDeleted(collection: MedicalRecordCollectionKey, id?: number): void {
+		if (id === undefined || deletedIDs[collection].includes(id)) return;
+		deletedIDs[collection] = [...deletedIDs[collection], id];
 	}
 
 	function addAllergy() {
@@ -137,7 +168,8 @@
 			reaction: '',
 			severity: 'LOW',
 			diagnosedAt: '',
-			notes: ''
+			notes: '',
+			isActive: true
 		};
 
 		record.allergies = [...record.allergies, item];
@@ -145,13 +177,13 @@
 
 	function removeMedicalHistory(index: number) {
 		if (!record) return;
-
+		markDeleted('medicalHistories', record.medicalHistories[index]?.id);
 		record.medicalHistories = record.medicalHistories.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeSurgicalHistory(index: number) {
 		if (!record) return;
-
+		markDeleted('surgicalHistories', record.surgicalHistories[index]?.id);
 		record.surgicalHistories = record.surgicalHistories.filter(
 			(_, itemIndex) => itemIndex !== index
 		);
@@ -159,49 +191,49 @@
 
 	function removeFamilyHistory(index: number) {
 		if (!record) return;
-
+		markDeleted('familyHistories', record.familyHistories[index]?.id);
 		record.familyHistories = record.familyHistories.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeUsualTreatment(index: number) {
 		if (!record) return;
-
+		markDeleted('usualTreatments', record.usualTreatments[index]?.id);
 		record.usualTreatments = record.usualTreatments.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeVaccination(index: number) {
 		if (!record) return;
-
+		markDeleted('vaccinations', record.vaccinations[index]?.id);
 		record.vaccinations = record.vaccinations.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeDisability(index: number) {
 		if (!record) return;
-
+		markDeleted('disabilities', record.disabilities[index]?.id);
 		record.disabilities = record.disabilities.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeMedicalDevice(index: number) {
 		if (!record) return;
-
+		markDeleted('medicalDevices', record.medicalDevices[index]?.id);
 		record.medicalDevices = record.medicalDevices.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeVitalRecord(index: number) {
 		if (!record) return;
-
+		markDeleted('vitalsHistory', record.vitalsHistory[index]?.id);
 		record.vitalsHistory = record.vitalsHistory.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeDocument(index: number) {
 		if (!record) return;
-
+		markDeleted('documents', record.documents[index]?.id);
 		record.documents = record.documents.filter((_, itemIndex) => itemIndex !== index);
 	}
 
 	function removeAllergy(index: number) {
 		if (!record) return;
-
+		markDeleted('allergies', record.allergies[index]?.id);
 		record.allergies = record.allergies.filter((_, itemIndex) => itemIndex !== index);
 	}
 
@@ -214,6 +246,9 @@
 			diagnosedAt: '',
 			resolvedAt: '',
 			status: 'UNKNOWN',
+			severity: 'medium',
+			description: '',
+			comment: '',
 			notes: ''
 		};
 
@@ -259,6 +294,7 @@
 			endDate: '',
 			prescriber: '',
 			status: 'ONGOING',
+			isActive: true,
 			notes: ''
 		};
 
@@ -303,7 +339,8 @@
 			reference: '',
 			implantationDate: '',
 			manufacturer: '',
-			notes: ''
+			notes: '',
+			isActive: true
 		};
 
 		record.medicalDevices = [...record.medicalDevices, item];
@@ -313,6 +350,7 @@
 		if (!record) return;
 
 		const item: VitalRecord = {
+			consultationId: null,
 			measuredAt: '',
 			weightKg: null,
 			heightCm: null,
@@ -329,7 +367,8 @@
 			painLocation: '',
 			painType: '',
 			painDuration: '',
-			measuredBy: ''
+			measuredBy: '',
+			comment: ''
 		};
 
 		record.vitalsHistory = [...record.vitalsHistory, item];
@@ -350,15 +389,36 @@
 		if (!record) return;
 
 		const item: MedicalDocument = {
+			consultationId: null,
 			type: 'OTHER',
 			title: '',
-			documentDate: '',
+			documentDate: null,
 			fileReference: '',
+			fileName: '',
+			mimeType: '',
 			description: '',
 			uploadedBy: ''
 		};
 
 		record.documents = [...record.documents, item];
+	}
+
+	function formatDisplayDate(value?: string | null): string {
+		if (!value) {
+			return '—';
+		}
+
+		const date = new Date(value);
+
+		if (Number.isNaN(date.getTime())) {
+			return '—';
+		}
+
+		return new Intl.DateTimeFormat('fr-FR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		}).format(date);
 	}
 </script>
 
@@ -390,6 +450,15 @@
 			class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
 		>
 			{error}
+			{#if conflict}
+				<button
+					type="button"
+					onclick={loadRecord}
+					class="ml-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs"
+				>
+					Recharger le dossier
+				</button>
+			{/if}
 		</div>
 	{/if}
 
@@ -454,6 +523,7 @@
 						<input
 							type="text"
 							bind:value={record.facilityName}
+							disabled
 							placeholder="Établissement"
 							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
 						/>
@@ -470,7 +540,7 @@
 
 						<input
 							type="text"
-							value={record.createdAt}
+							value={formatDisplayDate(record.createdAt)}
 							readonly
 							aria-label="Date de création du dossier"
 							class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm"
@@ -675,12 +745,14 @@
 								<input
 									type="email"
 									bind:value={record.emergencyContact.email}
+									disabled
 									placeholder="Email"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
 								/>
 
 								<textarea
 									bind:value={record.emergencyContact.address}
+									disabled
 									rows="2"
 									placeholder="Adresse"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
@@ -723,6 +795,7 @@
 								<input
 									type="email"
 									bind:value={record.legalGuardian.email}
+									disabled
 									placeholder="Email"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
 								/>
@@ -823,6 +896,7 @@
 
 									<textarea
 										bind:value={treatment.notes}
+										disabled
 										rows="2"
 										placeholder="Notes"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-7"
@@ -899,6 +973,7 @@
 									<input
 										type="text"
 										bind:value={vaccination.batchNumber}
+										disabled
 										placeholder="Numéro de lot"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 									/>
@@ -915,6 +990,7 @@
 									<input
 										type="text"
 										bind:value={vaccination.center}
+										disabled
 										placeholder="Centre de vaccination"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-7"
 									/>
@@ -950,6 +1026,7 @@
 								type="number"
 								min="0"
 								bind:value={record.lifestyle.cigarettesPerDay}
+								disabled
 								placeholder="Cigarettes par jour"
 								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
 							/>
@@ -977,6 +1054,7 @@
 
 							<textarea
 								bind:value={record.lifestyle.notes}
+								disabled
 								rows="3"
 								placeholder="Observations"
 								class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
@@ -1033,6 +1111,7 @@
 									<input
 										type="text"
 										bind:value={disability.notes}
+										disabled
 										placeholder="Notes"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 									/>
@@ -1113,6 +1192,7 @@
 									<input
 										type="text"
 										bind:value={device.manufacturer}
+										disabled
 										placeholder="Fabricant"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 									/>
@@ -1204,6 +1284,7 @@
 								<input
 									type="text"
 									bind:value={document.uploadedBy}
+									disabled
 									placeholder="Ajouté par"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 								/>
@@ -1435,6 +1516,7 @@
 								<input
 									type="text"
 									bind:value={surgery.indication}
+									disabled
 									placeholder="Indication"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 								/>
@@ -1510,6 +1592,7 @@
 									type="number"
 									min="0"
 									bind:value={history.ageAtDiagnosis}
+									disabled
 									placeholder="Âge au diagnostic"
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 								/>
@@ -1694,6 +1777,7 @@
 									<input
 										type="text"
 										bind:value={vital.measuredBy}
+										disabled
 										placeholder="Mesuré par"
 										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 									/>

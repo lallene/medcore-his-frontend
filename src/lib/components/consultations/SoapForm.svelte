@@ -4,10 +4,9 @@
 
 	type Props = {
 		consultationId: number;
-		userId?: number;
 	};
 
-	let { consultationId, userId = 1 }: Props = $props();
+	let { consultationId }: Props = $props();
 
 	let loading = $state(true);
 	let saving = $state(false);
@@ -103,10 +102,7 @@
 		success = '';
 
 		try {
-			await saveConsultationSOAP(consultationId, {
-				...form,
-				userId
-			});
+			await saveConsultationSOAP(consultationId, form);
 
 			success = 'Note clinique SOAP enregistrée avec succès.';
 		} catch {

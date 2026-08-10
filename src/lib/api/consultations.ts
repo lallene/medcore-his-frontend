@@ -3,11 +3,14 @@ import { api } from '$lib/api/client';
 import type {
 	Consultation,
 	ConsultationDetail,
+	ConsultationListFilters,
+	ConsultationListResponse,
 	ConsultationReason,
 	CreateConsultationPayload,
 	MedicalExam,
 	PhysicalExamArea,
-	UpdateConsultationPayload
+	UpdateConsultationPayload,
+	UpdateConsultationStatusPayload
 } from '$lib/types/consultation';
 
 export async function getConsultationReasons(): Promise<ConsultationReason[]> {
@@ -27,8 +30,12 @@ export async function createConsultation(
 	return response.data;
 }
 
-export async function getConsultations(): Promise<Consultation[]> {
-	const response = await api.get<Consultation[]>('/api/consultations');
+export async function getConsultations(
+	filters: ConsultationListFilters = {}
+): Promise<ConsultationListResponse> {
+	const response = await api.get<ConsultationListResponse>('/api/consultations', {
+		params: filters
+	});
 	return response.data;
 }
 
@@ -54,6 +61,18 @@ export async function updateConsultation(
 ): Promise<ConsultationDetail> {
 	const response = await api.put<ConsultationDetail>(
 		`/api/consultations/${consultationId}`,
+		payload
+	);
+
+	return response.data;
+}
+
+export async function updateConsultationStatus(
+	consultationId: number,
+	payload: UpdateConsultationStatusPayload
+): Promise<ConsultationDetail> {
+	const response = await api.patch<ConsultationDetail>(
+		`/api/consultations/${consultationId}/status`,
 		payload
 	);
 

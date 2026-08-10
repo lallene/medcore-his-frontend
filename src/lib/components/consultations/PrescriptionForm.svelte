@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Plus, Save, Trash2, CheckCircle2, Info } from 'lucide-svelte';
 
 	import { getMedicationPresentations } from '$lib/api/pharmacy';
 	import { updateConsultation } from '$lib/api/consultations';
+	import { formSnapshot, isFormDirty } from './form-sync';
 
 	import type { MedicationPresentation } from '$lib/types/pharmacy';
 	import type { ConsultationDetail } from '$lib/types/consultation';
@@ -11,6 +12,7 @@
 	type Props = {
 		consultationId: number;
 		consultation: ConsultationDetail;
+		onSaved?: () => void | Promise<void>;
 	};
 
 	type PrescriptionFormItem = {
@@ -21,7 +23,7 @@
 		instructions: string;
 	};
 
-	let { consultationId, consultation }: Props = $props();
+	let { consultationId, consultation, onSaved }: Props = $props();
 
 	let presentations = $state<MedicationPresentation[]>([]);
 	let prescriptions = $state<PrescriptionFormItem[]>([]);
@@ -30,6 +32,10 @@
 	let saving = $state(false);
 	let error = $state('');
 	let success = $state('');
+	let pendingPrescriptions = $state<PrescriptionFormItem[] | null>(null);
+	let pendingFingerprint = '';
+	let sourceFingerprint = '';
+	let baseline = '';
 
 	const durationUnits = [
 		{ value: 'jour', label: 'jour' },
@@ -76,6 +82,53 @@
 			unit: match[2]?.trim() || 'jours'
 		};
 	}
+
+	function prescriptionDrafts(value: ConsultationDetail): PrescriptionFormItem[] {
+		if (value.prescriptions.length === 0) return [createEmptyPrescription()];
+		return value.prescriptions.map((prescription) => {
+			const duration = parseDuration(prescription.duration);
+			return {
+				presentationId: prescription.presentationId ?? 0,
+				quantity: prescription.quantity,
+				durationValue: duration.value,
+				durationUnit: duration.unit,
+				instructions: prescription.instructions
+			};
+		});
+	}
+
+	function consultationPrescriptionFingerprint(value: ConsultationDetail): string {
+		return formSnapshot(
+			value.prescriptions.map((item) => ({
+				id: item.id,
+				presentationId: item.presentationId,
+				quantity: item.quantity,
+				duration: item.duration,
+				instructions: item.instructions
+			}))
+		);
+	}
+
+	function hydratePrescriptions(items: PrescriptionFormItem[]): void {
+		prescriptions = structuredClone(items);
+		baseline = formSnapshot(prescriptions);
+		pendingPrescriptions = null;
+		pendingFingerprint = '';
+	}
+
+	$effect(() => {
+		const incoming = consultation;
+		const incomingFingerprint = consultationPrescriptionFingerprint(incoming);
+		if (incomingFingerprint === sourceFingerprint) return;
+		const dirty = untrack(() => isFormDirty(prescriptions, baseline));
+		if (!sourceFingerprint || !dirty) {
+			hydratePrescriptions(prescriptionDrafts(incoming));
+			sourceFingerprint = incomingFingerprint;
+		} else {
+			pendingPrescriptions = prescriptionDrafts(incoming);
+			pendingFingerprint = incomingFingerprint;
+		}
+	});
 
 	function presentationLabel(presentation: MedicationPresentation): string {
 		return [
@@ -127,7 +180,7 @@
 		saving = true;
 
 		try {
-			await updateConsultation(consultationId, {
+			const saved = await updateConsultation(consultationId, {
 				prescriptions: prescriptions.map((prescription) => ({
 					presentationId: prescription.presentationId ?? 0,
 					quantity: prescription.quantity,
@@ -135,8 +188,11 @@
 					instructions: prescription.instructions.trim()
 				}))
 			});
+			hydratePrescriptions(prescriptionDrafts(saved));
+			sourceFingerprint = consultationPrescriptionFingerprint(saved);
 
 			success = 'Prescriptions enregistrées avec succès.';
+			await onSaved?.();
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Impossible d’enregistrer les prescriptions.';
 		} finally {
@@ -147,22 +203,6 @@
 	onMount(async () => {
 		try {
 			presentations = await getMedicationPresentations();
-
-			if (consultation.prescriptions.length > 0) {
-				prescriptions = consultation.prescriptions.map((prescription) => {
-					const duration = parseDuration(prescription.duration);
-
-					return {
-						presentationId: prescription.presentationId ?? 0,
-						quantity: prescription.quantity,
-						durationValue: duration.value,
-						durationUnit: duration.unit,
-						instructions: prescription.instructions
-					};
-				});
-			} else {
-				prescriptions = [createEmptyPrescription()];
-			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Impossible de charger les médicaments.';
 		} finally {
@@ -222,6 +262,26 @@
 			<CheckCircle2 size={19} />
 
 			{success}
+		</div>
+	{/if}
+
+	{#if pendingPrescriptions}
+		<div
+			class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+		>
+			<span
+				>Des prescriptions plus récentes sont disponibles ; votre saisie locale est conservée.</span
+			>
+			<button
+				type="button"
+				class="font-bold underline"
+				onclick={() => {
+					if (pendingPrescriptions) {
+						hydratePrescriptions(pendingPrescriptions);
+						sourceFingerprint = pendingFingerprint;
+					}
+				}}>Charger la version serveur</button
+			>
 		</div>
 	{/if}
 

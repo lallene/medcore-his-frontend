@@ -100,7 +100,7 @@
 	}
 
 	function eventSearchValue(event: ClinicalTimelineEvent): string {
-		return [event.event_type, event.category, event.source_type, event.title, event.description]
+		return [event.event_type, event.category, event.reference_type, event.title, event.description]
 			.join(' ')
 			.toLowerCase();
 	}
@@ -465,11 +465,11 @@
 														</span>
 													{/if}
 
-													{#if event.source_type}
+													{#if event.reference_type}
 														<span
 															class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-500"
 														>
-															Source : {event.source_type}
+															Source : {event.reference_type}
 														</span>
 													{/if}
 												</div>
