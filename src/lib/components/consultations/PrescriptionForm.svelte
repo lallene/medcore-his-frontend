@@ -2,11 +2,15 @@
 	import { onMount, untrack } from 'svelte';
 	import { Plus, Save, Trash2, CheckCircle2, Info } from 'lucide-svelte';
 
-	import { getMedicationPresentations } from '$lib/api/pharmacy';
+	import {
+		getMedicationPresentations,
+		getPresentationAvailability,
+		getPrescriptionDispensationStatus
+	} from '$lib/api/pharmacy';
 	import { updateConsultation } from '$lib/api/consultations';
 	import { formSnapshot, isFormDirty } from './form-sync';
 
-	import type { MedicationPresentation } from '$lib/types/pharmacy';
+	import type { MedicationPresentation, PresentationAvailability } from '$lib/types/pharmacy';
 	import type { ConsultationDetail } from '$lib/types/consultation';
 
 	type Props = {
@@ -16,16 +20,20 @@
 	};
 
 	type PrescriptionFormItem = {
+		id?: number;
 		presentationId: number;
 		quantity: number;
 		durationValue: number | null;
 		durationUnit: string;
 		instructions: string;
+		dispensedQuantity: number;
+		fullyDispensed: boolean;
 	};
 
 	let { consultationId, consultation, onSaved }: Props = $props();
 
 	let presentations = $state<MedicationPresentation[]>([]);
+	let availability = $state<PresentationAvailability[]>([]);
 	let prescriptions = $state<PrescriptionFormItem[]>([]);
 
 	let loading = $state(true);
@@ -36,6 +44,9 @@
 	let pendingFingerprint = '';
 	let sourceFingerprint = '';
 	let baseline = '';
+	let dispensationByPrescription = $state<
+		Record<number, { dispensedQuantity: number; isFullyDispensed: boolean }>
+	>({});
 
 	const durationUnits = [
 		{ value: 'jour', label: 'jour' },
@@ -51,7 +62,9 @@
 			quantity: 1,
 			durationValue: null,
 			durationUnit: 'jours',
-			instructions: ''
+			instructions: '',
+			dispensedQuantity: 0,
+			fullyDispensed: false
 		};
 	}
 
@@ -88,11 +101,14 @@
 		return value.prescriptions.map((prescription) => {
 			const duration = parseDuration(prescription.duration);
 			return {
+				id: prescription.id,
 				presentationId: prescription.presentationId ?? 0,
 				quantity: prescription.quantity,
 				durationValue: duration.value,
 				durationUnit: duration.unit,
-				instructions: prescription.instructions
+				instructions: prescription.instructions,
+				dispensedQuantity: dispensationByPrescription[prescription.id]?.dispensedQuantity ?? 0,
+				fullyDispensed: dispensationByPrescription[prescription.id]?.isFullyDispensed ?? false
 			};
 		});
 	}
@@ -104,7 +120,9 @@
 				presentationId: item.presentationId,
 				quantity: item.quantity,
 				duration: item.duration,
-				instructions: item.instructions
+				instructions: item.instructions,
+				dispensedQuantity: dispensationByPrescription[item.id]?.dispensedQuantity ?? 0,
+				fullyDispensed: dispensationByPrescription[item.id]?.isFullyDispensed ?? false
 			}))
 		);
 	}
@@ -131,11 +149,20 @@
 	});
 
 	function presentationLabel(presentation: MedicationPresentation): string {
+		const stock = availability.find((item) => item.presentationId === presentation.id);
+		const status =
+			stock?.stockStatus === 'AVAILABLE'
+				? `Disponible — ${stock.availableQuantity} ${presentation.unit || 'unité(s)'}`
+				: stock?.stockStatus === 'LOW_STOCK'
+					? `Stock faible — ${stock.availableQuantity}`
+					: 'Rupture';
 		return [
 			presentation.medication.name,
+			presentation.medication.genericName ? `DCI : ${presentation.medication.genericName}` : '',
 			presentation.dosage,
 			presentation.form,
-			presentation.route
+			presentation.route,
+			status
 		]
 			.filter(Boolean)
 			.join(' · ');
@@ -182,6 +209,7 @@
 		try {
 			const saved = await updateConsultation(consultationId, {
 				prescriptions: prescriptions.map((prescription) => ({
+					id: prescription.id,
 					presentationId: prescription.presentationId ?? 0,
 					quantity: prescription.quantity,
 					duration: `${prescription.durationValue} ${prescription.durationUnit}`.trim(),
@@ -202,7 +230,41 @@
 
 	onMount(async () => {
 		try {
-			presentations = await getMedicationPresentations();
+			const [reference, stocks, statuses] = await Promise.all([
+				getMedicationPresentations(),
+				getPresentationAvailability(),
+				Promise.all(
+					consultation.prescriptions.map(async (item) => {
+						try {
+							return await getPrescriptionDispensationStatus(item.id);
+						} catch {
+							return null;
+						}
+					})
+				)
+			]);
+			dispensationByPrescription = Object.fromEntries(
+				statuses.filter((item) => item !== null).map((item) => [item.prescriptionId, item])
+			);
+			if (!isFormDirty(prescriptions, baseline))
+				hydratePrescriptions(prescriptionDrafts(consultation));
+			availability = stocks;
+			const rank = (id: number) =>
+				({ AVAILABLE: 0, LOW_STOCK: 1, OUT_OF_STOCK: 2 })[
+					stocks.find((item) => item.presentationId === id)?.stockStatus ?? 'OUT_OF_STOCK'
+				];
+			const existingPresentationIds = new Set(
+				consultation.prescriptions.map((item) => item.presentationId).filter(Boolean)
+			);
+			presentations = reference
+				.filter(
+					(item) =>
+						(item.isActive && item.medication.isActive) || existingPresentationIds.has(item.id)
+				)
+				.sort(
+					(a, b) =>
+						rank(a.id) - rank(b.id) || a.medication.name.localeCompare(b.medication.name, 'fr')
+				);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Impossible de charger les médicaments.';
 		} finally {
@@ -320,6 +382,7 @@
 						<select
 							id={`presentation-${index}`}
 							bind:value={prescription.presentationId}
+							disabled={prescription.dispensedQuantity > 0}
 							class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 						>
 							<option value={0}> Sélectionner un médicament </option>
@@ -330,6 +393,14 @@
 								</option>
 							{/each}
 						</select>
+						{#if prescription.dispensedQuantity > 0}<p
+								class="mt-2 text-xs font-bold text-amber-700"
+							>
+								{prescription.fullyDispensed
+									? 'Dispensée'
+									: `${prescription.dispensedQuantity} / ${prescription.quantity} délivrés`}
+								· Présentation verrouillée
+							</p>{/if}
 					</div>
 
 					<div>
@@ -344,8 +415,13 @@
 							id={`quantity-${index}`}
 							type="number"
 							min="0.01"
+							disabled={prescription.fullyDispensed}
 							step="0.01"
 							bind:value={prescription.quantity}
+							oninput={() => {
+								if (prescription.quantity < prescription.dispensedQuantity)
+									prescription.quantity = prescription.dispensedQuantity;
+							}}
 							class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 						/>
 					</div>
@@ -404,9 +480,10 @@
 						<button
 							type="button"
 							onclick={() => removePrescription(index)}
+							disabled={prescription.dispensedQuantity > 0}
 							aria-label={`Supprimer la prescription ${index + 1}`}
 							title="Supprimer"
-							class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-500 transition hover:border-red-200 hover:bg-red-100 hover:text-red-600"
+							class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-500 transition hover:border-red-200 hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
 						>
 							<Trash2 size={19} />
 						</button>

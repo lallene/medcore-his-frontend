@@ -269,6 +269,7 @@ export type ConsultationVitalsPayload = {
 };
 
 export type PrescriptionPayload = {
+	id?: number;
 	presentationId: number;
 	quantity: number;
 	duration: string;

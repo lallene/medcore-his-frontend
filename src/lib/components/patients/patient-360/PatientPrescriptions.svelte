@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -10,6 +11,16 @@
 	import Card from '$lib/components/ui/Card.svelte';
 
 	import { openConsultationDocument } from '$lib/api/consultation-documents';
+	import {
+		getDispensations,
+		getPharmacyVouchers,
+		getPresentationAvailability
+	} from '$lib/api/pharmacy';
+	import type {
+		Dispensation,
+		PharmacyVoucher,
+		PresentationAvailability
+	} from '$lib/types/pharmacy';
 
 	interface Props {
 		patientId: number;
@@ -33,33 +44,53 @@
 		diagnosis: string;
 		date: string;
 		status: PatientConsultation['status'];
+		presentationId: number | null;
+		genericName: string;
+		dispensedQuantity: number;
+		dispensationDate: string;
+		voucherNumber: string;
 	}
 
 	let { patientId, consultations }: Props = $props();
 
 	let search = $state('');
+	let dispensations = $state<Dispensation[]>([]);
+	let availability = $state<PresentationAvailability[]>([]);
+	let vouchers = $state<PharmacyVoucher[]>([]);
 
 	const prescriptions = $derived.by<PatientPrescriptionItem[]>(() =>
 		consultations
 			.flatMap((consultation) =>
-				(consultation.prescriptions ?? []).map((prescription) => ({
-					key: `${consultation.id}-${prescription.id}`,
-					id: prescription.id,
-					consultationId: consultation.id,
-					medicationName: prescription.medicationName,
-					dosage: prescription.dosage,
-					form: prescription.form,
-					route: prescription.route,
-					quantity: prescription.quantity,
-					frequency: prescription.frequency,
-					duration: prescription.duration,
-					instructions: prescription.instructions,
-					service: consultation.service,
-					doctorName: consultation.doctorName,
-					diagnosis: consultation.diagnosis,
-					date: consultation.startedAt ?? consultation.completedAt ?? consultation.createdAt,
-					status: consultation.status
-				}))
+				(consultation.prescriptions ?? []).map((prescription) => {
+					const delivered = dispensations.filter((item) => item.referenceId === prescription.id);
+					const reference = availability.find(
+						(item) => item.presentationId === prescription.presentationId
+					);
+					return {
+						key: `${consultation.id}-${prescription.id}`,
+						id: prescription.id,
+						consultationId: consultation.id,
+						medicationName: reference?.commercialName ?? prescription.medicationName,
+						dosage: prescription.dosage,
+						form: prescription.form,
+						route: prescription.route,
+						quantity: prescription.quantity,
+						frequency: prescription.frequency,
+						duration: prescription.duration,
+						instructions: prescription.instructions,
+						service: consultation.service,
+						doctorName: consultation.doctorName,
+						diagnosis: consultation.diagnosis,
+						date: consultation.startedAt ?? consultation.completedAt ?? consultation.createdAt,
+						status: consultation.status,
+						presentationId: prescription.presentationId ?? null,
+						genericName: reference?.genericName ?? '',
+						dispensedQuantity: delivered.reduce((total, item) => total + item.quantity, 0),
+						dispensationDate: delivered.at(-1)?.createdAt ?? '',
+						voucherNumber:
+							vouchers.find((item) => item.consultationId === consultation.id)?.number ?? ''
+					};
+				})
 			)
 			.sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime())
 	);
@@ -132,6 +163,19 @@
 			openingPrescriptionConsultationId = null;
 		}
 	}
+
+	onMount(async () => {
+		try {
+			const voucherResult = await getPharmacyVouchers();
+			[dispensations, availability] = await Promise.all([
+				getDispensations(),
+				getPresentationAvailability()
+			]);
+			vouchers = voucherResult.items;
+		} catch {
+			/* lecture pharmacie non autorisée : prescriptions conservées */
+		}
+	});
 </script>
 
 <div class="space-y-6">
@@ -228,9 +272,32 @@
 									<h3 class="text-lg font-black text-slate-900">
 										{prescription.medicationName}
 									</h3>
+									{#if prescription.genericName}<p class="text-sm text-slate-500">
+											DCI : {prescription.genericName}
+										</p>{/if}
 
 									<p class="mt-1 text-sm font-bold text-orange-700">
 										{presentation(prescription)}
+									</p>
+									{#if prescription.voucherNumber}<p
+											class="mt-1 text-xs font-black text-emerald-700"
+										>
+											Bon : {prescription.voucherNumber}
+										</p>{/if}
+									<p
+										class="mt-2 text-sm font-bold"
+										class:text-emerald-700={prescription.dispensedQuantity >= prescription.quantity}
+										class:text-amber-700={prescription.dispensedQuantity > 0 &&
+											prescription.dispensedQuantity < prescription.quantity}
+									>
+										{prescription.dispensedQuantity >= prescription.quantity
+											? `Dispensé : ${prescription.dispensedQuantity}`
+											: prescription.dispensedQuantity > 0
+												? `Partiellement dispensé : ${prescription.dispensedQuantity} / ${prescription.quantity}`
+												: 'Prescrit — non dispensé'}
+										{prescription.dispensationDate
+											? ` · ${formatDate(prescription.dispensationDate)}`
+											: ''}
 									</p>
 
 									<div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
