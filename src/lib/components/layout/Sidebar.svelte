@@ -6,6 +6,7 @@
 		BarChart3,
 		CalendarDays,
 		CreditCard,
+		FileCheck2,
 		FileText,
 		FlaskConical,
 		HeartPulse,
@@ -26,6 +27,7 @@
 		| '/beds'
 		| '/insurance'
 		| '/insurance/vouchers'
+		| '/insurance/authorizations'
 		| '/billing'
 		| '/pharmacy'
 		| '/laboratory'
@@ -50,6 +52,7 @@
 		{ title: 'Chambres & lits', href: '/beds', icon: Hospital },
 		{ title: 'Assurances', href: '/insurance', icon: Shield },
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
+		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
 		{ title: 'Facturation', href: '/billing', icon: CreditCard, soon: true }
 	];
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 
 	import {
@@ -13,7 +14,9 @@
 	} from 'lucide-svelte';
 
 	import type { Patient } from '$lib/types/patient';
-	import type { PatientInsuranceView } from '$lib/types/insurance';
+	import type { InsuranceAuthorization, PatientInsuranceView } from '$lib/types/insurance';
+	import { getInsuranceAuthorizations } from '$lib/api/insurance';
+	import { authorizationStatusLabel } from '$lib/components/insurance/authorization-state';
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -25,6 +28,7 @@
 	}
 
 	let { patient, insurance }: Props = $props();
+	let authorizations = $state<InsuranceAuthorization[]>([]);
 
 	const coverageRate = $derived(insurance.coverageRate);
 
@@ -49,12 +53,21 @@
 	}
 
 	function createVoucher(): void {
-		void goto(resolve(`/patients/${patient.id}/vouchers/create`));
+		void goto(resolve(`/insurance/authorizations?patientId=${patient.id}`));
 	}
 
 	function openVouchers(): void {
-		void goto(resolve('/insurance/vouchers'));
+		void goto(resolve(`/insurance/authorizations?patientId=${patient.id}`));
 	}
+
+	onMount(async () => {
+		try {
+			authorizations = (await getInsuranceAuthorizations({ patientId: patient.id, pageSize: 100 }))
+				.items;
+		} catch {
+			authorizations = [];
+		}
+	});
 </script>
 
 <div class="space-y-6">
@@ -228,33 +241,64 @@
 				</div>
 			</Card>
 
-			<Card title="Bons de prise en charge" subtitle="Gestion des demandes et validations PEC">
-				<div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-					<div
-						class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"
+			<Card
+				title="Décisions PEC par acte"
+				subtitle="Distinctes de la couverture contractuelle ci-dessus"
+			>
+				{#if authorizations.length === 0}<div
+						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
 					>
-						<FilePlus2 size={24} />
-					</div>
+						<div
+							class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"
+						>
+							<FilePlus2 size={24} />
+						</div>
 
-					<h3 class="mt-4 text-lg font-black text-slate-900">Historique des bons PEC</h3>
+						<h3 class="mt-4 text-lg font-black text-slate-900">Aucune décision PEC</h3>
 
-					<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-						Les bons de prise en charge liés à ce patient seront affichés ici après connexion de
-						l’endpoint dédié.
-					</p>
+						<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
+							Les demandes et décisions seront affichées ici acte par acte, sans modifier la
+							couverture.
+						</p>
 
-					<div class="mt-5 flex flex-wrap justify-center gap-2">
-						<Button onclick={createVoucher}>
-							<FilePlus2 size={16} />
-							Nouveau bon PEC
-						</Button>
+						<div class="mt-5 flex flex-wrap justify-center gap-2">
+							<Button onclick={createVoucher}>
+								<FilePlus2 size={16} />
+								Nouvelle demande PEC
+							</Button>
 
-						<Button variant="secondary" onclick={openVouchers}>
-							<WalletCards size={16} />
-							Voir tous les bons
-						</Button>
-					</div>
-				</div>
+							<Button variant="secondary" onclick={openVouchers}>
+								<WalletCards size={16} />
+								Voir les PEC
+							</Button>
+						</div>
+					</div>{:else}<div class="divide-y rounded-2xl border">
+						{#each authorizations as authorization (authorization.id)}<article
+								class="grid gap-2 p-4 md:grid-cols-[1fr_1.2fr_.8fr_.8fr_auto] md:items-center"
+							>
+								<div>
+									<b class="text-violet-800">{authorization.authorizationNumber}</b><small
+										class="block text-slate-500">{authorization.companyName}</small
+									>
+								</div>
+								<div>
+									<b>{authorization.referenceLabel}</b><small class="block text-slate-500"
+										>{authorization.service || '—'}</small
+									>
+								</div>
+								<span>{authorization.requestedAmount?.toLocaleString('fr-FR') ?? '—'} FCFA</span>
+								<div>
+									<b>{authorizationStatusLabel[authorization.status]}</b><small
+										class="block text-slate-500"
+										>Accordé : {authorization.insuranceAmount?.toLocaleString('fr-FR') ??
+											'—'}</small
+									>
+								</div>
+								<button onclick={openVouchers} class="text-sm font-bold text-violet-700"
+									>Ouvrir</button
+								>
+							</article>{/each}
+					</div>{/if}
 			</Card>
 		</div>
 

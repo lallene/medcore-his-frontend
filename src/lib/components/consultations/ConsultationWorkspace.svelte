@@ -25,6 +25,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ClinicalContextForm from '$lib/components/consultations/ClinicalContextForm.svelte';
+	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
 
 	type WorkspaceTab =
 		'clinical' | 'medical-record' | 'soap' | 'specialty' | 'prescriptions' | 'exams' | 'documents';
@@ -279,6 +280,12 @@
 			onRecordLoaded={(recordId) => {
 				medicalRecordId = recordId;
 			}}
+		/>
+		<AuthorizationStatus
+			patientId={consultation.patientId}
+			referenceType="CONSULTATION"
+			referenceId={consultation.id}
+			service={consultation.service}
 		/>
 	{/if}
 	{#if consultation?.hospitalizationRequired}

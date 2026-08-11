@@ -19,6 +19,7 @@
 		laboratorySampleTypes
 	} from '$lib/components/laboratory/state';
 	import type { LaboratoryOrder, LaboratoryResultInput } from '$lib/types/laboratory';
+	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
 	let order = $state<LaboratoryOrder | null>(null),
 		error = $state(''),
 		busy = $state(false),
@@ -106,6 +107,12 @@
 				>
 			</div>
 		</header>
+		<AuthorizationStatus
+			patientId={order.patientId}
+			referenceType="LABORATORY"
+			referenceId={order.id}
+			service={order.service}
+		/>
 		{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{/if}
 		{#if order.sample}
 			<section class="rounded-2xl border bg-white p-6">

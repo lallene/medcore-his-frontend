@@ -18,6 +18,7 @@
 		imagingStatusLabel
 	} from '$lib/components/imaging/state';
 	import type { ImagingOrder, ImagingReportInput } from '$lib/types/imaging';
+	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
 	let order = $state<ImagingOrder | null>(null),
 		error = $state(''),
 		busy = $state(false),
@@ -98,6 +99,12 @@
 
 {#if !order}<p class="p-10 text-center">Chargement...</p>{:else}<div class="space-y-6">
 		<a href={resolve('/imaging')} class="text-sm font-bold text-cyan-700">← Retour à la file</a>
+		<AuthorizationStatus
+			patientId={order.patientId}
+			referenceType="IMAGING"
+			referenceId={order.id}
+			service={order.service}
+		/>
 		<header class="rounded-2xl border bg-white p-6">
 			<div class="flex flex-wrap justify-between gap-3">
 				<div>
