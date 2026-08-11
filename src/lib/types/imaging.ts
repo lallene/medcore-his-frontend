@@ -1,0 +1,80 @@
+export type ImagingStatus =
+	'ORDERED' | 'SCHEDULED' | 'IN_PROGRESS' | 'REPORT_DRAFTED' | 'VALIDATED' | 'CANCELLED';
+export type ImagingModality = 'XRAY' | 'ULTRASOUND' | 'CT' | 'MRI' | 'MAMMOGRAPHY' | 'OTHER';
+export type ImagingReport = {
+	id: number;
+	orderId: number;
+	clinicalIndication: string;
+	technique: string;
+	findings: string;
+	conclusion: string;
+	recommendation: string;
+	documentUrl: string;
+	draftedBy: number;
+	draftedAt: string;
+	validatedBy: number | null;
+	validatedAt: string | null;
+};
+export type ImagingListItem = {
+	id: number;
+	orderNumber: string;
+	patientId: number;
+	patientName: string;
+	patientCode: string;
+	consultationId: number;
+	examCode: string;
+	examName: string;
+	category: string;
+	modality: ImagingModality;
+	service: string;
+	prescriber: string;
+	prescribedAt: string;
+	priority: string;
+	status: ImagingStatus;
+	scheduledAt: string | null;
+	performedAt: string | null;
+};
+export type ImagingOrder = ImagingListItem & {
+	accessionNumber: string;
+	medicalExamId: number;
+	medicalRecordId: number | null;
+	prescribedBy: number;
+	createdBy: number;
+	updatedBy: number;
+	scheduledBy: number | null;
+	scheduleComment: string;
+	performedBy: number | null;
+	technicalNotes: string;
+	contrastUsed: boolean;
+	contrastProduct: string;
+	studyInstanceUid: string;
+	externalViewerUrl: string;
+	cancelledReason: string;
+	createdAt: string;
+	updatedAt: string;
+	report?: ImagingReport;
+};
+export type ImagingFilters = {
+	page?: number;
+	limit?: number;
+	patientId?: number;
+	consultationId?: number;
+	status?: string;
+	priority?: string;
+	modality?: string;
+	service?: string;
+	date?: string;
+	search?: string;
+};
+export type ImagingListResponse = {
+	data: ImagingListItem[];
+	meta: { page: number; limit: number; total: number; totalPages: number };
+};
+export type ImagingReportInput = {
+	clinicalIndication: string;
+	technique: string;
+	findings: string;
+	conclusion: string;
+	recommendation: string;
+	documentUrl: string;
+};

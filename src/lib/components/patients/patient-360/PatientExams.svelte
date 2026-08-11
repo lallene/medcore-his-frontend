@@ -5,8 +5,15 @@
 	import { FlaskConical, Search, Stethoscope } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { getLaboratoryOrder, listLaboratoryOrders } from '$lib/api/laboratory';
+	import { getImagingOrder, listImagingOrders } from '$lib/api/imaging';
 	import { isLaboratoryCategory, laboratoryStatusLabel } from '$lib/components/laboratory/state';
+	import {
+		imagingModalityLabel,
+		imagingStatusLabel,
+		isImagingCategory
+	} from '$lib/components/imaging/state';
 	import type { LaboratoryListItem, LaboratoryOrder } from '$lib/types/laboratory';
+	import type { ImagingListItem, ImagingOrder } from '$lib/types/imaging';
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
 	interface Props {
 		patientId: number;
@@ -15,6 +22,8 @@
 	let { patientId, consultations }: Props = $props();
 	let orders = $state<LaboratoryListItem[]>([]),
 		details = $state<Record<number, LaboratoryOrder>>({}),
+		imagingOrders = $state<ImagingListItem[]>([]),
+		imagingDetails = $state<Record<number, ImagingOrder>>({}),
 		search = $state(''),
 		loading = $state(true),
 		error = $state('');
@@ -23,11 +32,18 @@
 			`${o.examName} ${o.examCode} ${o.requestNumber}`.toLowerCase().includes(search.toLowerCase())
 		)
 	);
+	const filteredImaging = $derived(
+		imagingOrders.filter((o) =>
+			`${o.examName} ${o.examCode} ${o.orderNumber}`.toLowerCase().includes(search.toLowerCase())
+		)
+	);
 	const nonLaboratoryExams = $derived(
 		consultations
 			.flatMap((consultation) =>
 				consultation.exams
-					.filter((exam) => !isLaboratoryCategory(exam.category))
+					.filter(
+						(exam) => !isLaboratoryCategory(exam.category) && !isImagingCategory(exam.category)
+					)
 					.map((exam) => ({
 						key: `${consultation.id}-${exam.id}`,
 						...exam,
@@ -43,9 +59,18 @@
 	);
 	onMount(async () => {
 		try {
-			orders = (await listLaboratoryOrders({ patientId, limit: 100 })).data;
+			const [laboratoryResponse, imagingResponse] = await Promise.all([
+				listLaboratoryOrders({ patientId, limit: 100 }),
+				listImagingOrders({ patientId, limit: 100 })
+			]);
+			orders = laboratoryResponse.data;
+			imagingOrders = imagingResponse.data;
 			const loadedDetails = await Promise.all(orders.map((order) => getLaboratoryOrder(order.id)));
 			details = Object.fromEntries(loadedDetails.map((detail) => [detail.id, detail]));
+			const loadedImaging = await Promise.all(
+				imagingOrders.map((order) => getImagingOrder(order.id))
+			);
+			imagingDetails = Object.fromEntries(loadedImaging.map((detail) => [detail.id, detail]));
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Chargement impossible';
 		} finally {
@@ -62,7 +87,9 @@
 <div class="space-y-6">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[.2em] text-violet-700">Laboratoire réel</p>
+			<p class="text-xs font-black uppercase tracking-[.2em] text-violet-700">
+				Parcours diagnostique réel
+			</p>
 			<h2 class="mt-2 text-2xl font-black">Examens du patient</h2>
 			<p class="text-sm text-slate-500">
 				Prescriptions, prélèvements et résultats issus de {consultations.length} consultation(s).
@@ -75,18 +102,22 @@
 	<div class="grid gap-4 sm:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-5">
 			<p class="text-xs font-black uppercase text-slate-500">Demandes</p>
-			<p class="text-3xl font-black">{orders.length + nonLaboratoryExams.length}</p>
+			<p class="text-3xl font-black">
+				{orders.length + imagingOrders.length + nonLaboratoryExams.length}
+			</p>
 		</div>
 		<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
 			<p class="text-xs font-black uppercase text-blue-600">En cours</p>
 			<p class="text-3xl font-black text-blue-900">
-				{orders.filter((o) => !['VALIDATED', 'CANCELLED', 'REJECTED'].includes(o.status)).length}
+				{orders.filter((o) => !['VALIDATED', 'CANCELLED', 'REJECTED'].includes(o.status)).length +
+					imagingOrders.filter((o) => !['VALIDATED', 'CANCELLED'].includes(o.status)).length}
 			</p>
 		</div>
 		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
 			<p class="text-xs font-black uppercase text-emerald-600">Validés</p>
 			<p class="text-3xl font-black text-emerald-900">
-				{orders.filter((o) => o.status === 'VALIDATED').length}
+				{orders.filter((o) => o.status === 'VALIDATED').length +
+					imagingOrders.filter((o) => o.status === 'VALIDATED').length}
 			</p>
 		</div>
 	</div>
@@ -101,44 +132,84 @@
 			class="p-10 text-center"
 		>
 			Chargement...
-		</p>{:else if filtered.length === 0}<div
+		</p>{:else if filtered.length === 0 && filteredImaging.length === 0 && nonLaboratoryExams.length === 0}<div
 			class="rounded-2xl border border-dashed p-12 text-center"
 		>
 			<FlaskConical class="mx-auto text-slate-300" size={40} />
-			<h3 class="mt-4 font-black">Aucun examen de laboratoire</h3>
-		</div>{:else}<div class="space-y-3">
-			{#each filtered as order (order.id)}
-				{@const detail = details[order.id]}
-				<button
-					onclick={() => goto(resolve(`/laboratory/${order.id}`))}
-					class="flex w-full flex-col justify-between gap-3 rounded-2xl border bg-white p-5 text-left hover:border-violet-300 md:flex-row"
-					><div>
-						<h3 class="font-black">{order.examName}</h3>
-						<p class="text-sm text-slate-500">
-							{order.requestNumber} · {order.examCode} · {order.category || 'Laboratoire'}
-						</p>
-						<p class="mt-2 text-sm">
-							{order.service || '—'} · {order.prescriber || '—'} · {date(order.prescribedAt)}
-						</p>
-					</div>
-					<div>
-						<span class="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700"
-							>{laboratoryStatusLabel(order.status)}</span
-						>{#if order.sampleIdentifier}<p class="mt-2 text-xs text-slate-500">
-								Prélèvement {order.sampleIdentifier}
-							</p>{/if}
-						{#if detail?.status === 'VALIDATED' && detail.results.length}
-							<p class="mt-2 text-xs font-bold text-emerald-700">
-								{detail.results
-									.map((result) =>
-										`${result.parameter} ${result.value || result.numericValue || '—'} ${result.unit || ''}`.trim()
-									)
-									.join(' · ')}
+			<h3 class="mt-4 font-black">Aucun examen</h3>
+		</div>{:else if filtered.length}<section class="space-y-3">
+			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">Laboratoire</h3>
+			<div class="space-y-3">
+				{#each filtered as order (order.id)}
+					{@const detail = details[order.id]}
+					<button
+						onclick={() => goto(resolve(`/laboratory/${order.id}`))}
+						class="flex w-full flex-col justify-between gap-3 rounded-2xl border bg-white p-5 text-left hover:border-violet-300 md:flex-row"
+						><div>
+							<h3 class="font-black">{order.examName}</h3>
+							<p class="text-sm text-slate-500">
+								{order.requestNumber} · {order.examCode} · {order.category || 'Laboratoire'}
 							</p>
-						{/if}
-					</div></button
-				>{/each}
-		</div>{/if}
+							<p class="mt-2 text-sm">
+								{order.service || '—'} · {order.prescriber || '—'} · {date(order.prescribedAt)}
+							</p>
+						</div>
+						<div>
+							<span class="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700"
+								>{laboratoryStatusLabel(order.status)}</span
+							>{#if order.sampleIdentifier}<p class="mt-2 text-xs text-slate-500">
+									Prélèvement {order.sampleIdentifier}
+								</p>{/if}
+							{#if detail?.status === 'VALIDATED' && detail.results.length}
+								<p class="mt-2 text-xs font-bold text-emerald-700">
+									{detail.results
+										.map((result) =>
+											`${result.parameter} ${result.value || result.numericValue || '—'} ${result.unit || ''}`.trim()
+										)
+										.join(' · ')}
+								</p>
+							{/if}
+						</div></button
+					>{/each}
+			</div>
+		</section>{/if}
+	{#if filteredImaging.length}
+		<section class="space-y-3">
+			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">Imagerie</h3>
+			{#each filteredImaging as imagingOrder (imagingOrder.id)}
+				{@const imagingDetail = imagingDetails[imagingOrder.id]}
+				<button
+					onclick={() => goto(resolve(`/imaging/${imagingOrder.id}`))}
+					class="flex w-full items-start justify-between rounded-2xl border border-cyan-100 bg-white p-5 text-left hover:border-cyan-300"
+				>
+					<span
+						><b>{imagingOrder.examName}</b><small class="ml-2 text-slate-500"
+							>{imagingOrder.orderNumber} · {imagingModalityLabel(imagingOrder.modality)}</small
+						>
+						<p class="mt-1 text-sm text-slate-500">
+							{imagingOrder.service} · {imagingOrder.prescriber} · {date(imagingOrder.prescribedAt)}
+						</p>
+						{#if imagingDetail?.report}<p class="mt-2 text-sm">
+								<b>Consultation :</b> #{imagingOrder.consultationId}
+							</p>
+							<p class="mt-1 text-sm">
+								<b>Compte rendu :</b>
+								{imagingDetail.report.findings}
+							</p>
+							<p class="mt-1 text-sm">
+								<b>Conclusion :</b>
+								{imagingDetail.report.conclusion}
+							</p>
+							{#if imagingDetail.report.validatedBy}<small class="text-emerald-700"
+									>Validé par #{imagingDetail.report.validatedBy}</small
+								>{/if}{/if}</span
+					><span class="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700"
+						>{imagingStatusLabel(imagingOrder.status)}</span
+					>
+				</button>
+			{/each}
+		</section>
+	{/if}
 	{#if nonLaboratoryExams.length}
 		<section class="space-y-3">
 			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">

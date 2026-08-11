@@ -8,6 +8,7 @@
 	import ConsultationSpecialtyPanel from '$lib/components/consultations/specialties/ConsultationSpecialtyPanel.svelte';
 	import ExamEditor from '$lib/components/consultations/ExamEditor.svelte';
 	import ConsultationLaboratoryStatus from '$lib/components/consultations/ConsultationLaboratoryStatus.svelte';
+	import ConsultationImagingStatus from '$lib/components/consultations/ConsultationImagingStatus.svelte';
 	import CommonMedicalRecordPanel from '$lib/components/medical-record/CommonMedicalRecordPanel.svelte';
 	import PatientSummaryCard from '$lib/components/consultations/PatientSummaryCard.svelte';
 	import ClinicalTimeline from '$lib/components/medical-record/ClinicalTimeline.svelte';
@@ -390,6 +391,7 @@
 				onSaved={refreshConsultation}
 			/>
 			<ConsultationLaboratoryStatus consultationId={consultation.id} />
+			<ConsultationImagingStatus consultationId={consultation.id} />
 		{/if}
 	{/if}
 
