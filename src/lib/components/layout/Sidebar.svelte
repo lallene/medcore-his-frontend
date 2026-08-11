@@ -55,7 +55,7 @@
 
 	const servicesMenu: MenuItem[] = [
 		{ title: 'Pharmacie', href: '/pharmacy', icon: Pill, soon: true },
-		{ title: 'Laboratoire', href: '/laboratory', icon: FlaskConical, soon: true },
+		{ title: 'Laboratoire', href: '/laboratory', icon: FlaskConical },
 		{ title: 'Imagerie', href: '/imaging', icon: Image, soon: true },
 		{ title: 'Agenda', href: '/agenda', icon: CalendarDays, soon: true }
 	];

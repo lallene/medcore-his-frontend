@@ -1,356 +1,167 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-
-	import { CalendarDays, Eye, FileDown, FlaskConical, Search, Stethoscope } from 'lucide-svelte';
-
-	import type { PatientConsultation } from '$lib/api/patient-consultations';
-
+	import { FlaskConical, Search, Stethoscope } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-
-	import { openConsultationDocument } from '$lib/api/consultation-documents';
-
+	import { getLaboratoryOrder, listLaboratoryOrders } from '$lib/api/laboratory';
+	import { isLaboratoryCategory, laboratoryStatusLabel } from '$lib/components/laboratory/state';
+	import type { LaboratoryListItem, LaboratoryOrder } from '$lib/types/laboratory';
+	import type { PatientConsultation } from '$lib/api/patient-consultations';
 	interface Props {
 		patientId: number;
 		consultations: PatientConsultation[];
 	}
-
-	interface PatientExamItem {
-		key: string;
-		id: number;
-		consultationId: number;
-		code: string;
-		name: string;
-		category: string;
-		isActive: boolean;
-		service: string;
-		doctorName: string;
-		date: string;
-		consultationStatus: PatientConsultation['status'];
-	}
-
 	let { patientId, consultations }: Props = $props();
-
-	let search = $state('');
-	let categoryFilter = $state('all');
-
-	const exams = $derived.by<PatientExamItem[]>(() =>
+	let orders = $state<LaboratoryListItem[]>([]),
+		details = $state<Record<number, LaboratoryOrder>>({}),
+		search = $state(''),
+		loading = $state(true),
+		error = $state('');
+	const filtered = $derived(
+		orders.filter((o) =>
+			`${o.examName} ${o.examCode} ${o.requestNumber}`.toLowerCase().includes(search.toLowerCase())
+		)
+	);
+	const nonLaboratoryExams = $derived(
 		consultations
 			.flatMap((consultation) =>
-				(consultation.exams ?? []).map((exam) => ({
-					key: `${consultation.id}-${exam.id}`,
-					id: exam.id,
-					consultationId: consultation.id,
-					code: exam.code,
-					name: exam.name,
-					category: exam.category,
-					isActive: exam.isActive,
-					service: consultation.service,
-					doctorName: consultation.doctorName,
-					date: consultation.startedAt ?? consultation.completedAt ?? consultation.createdAt,
-					consultationStatus: consultation.status
-				}))
+				consultation.exams
+					.filter((exam) => !isLaboratoryCategory(exam.category))
+					.map((exam) => ({
+						key: `${consultation.id}-${exam.id}`,
+						...exam,
+						consultationId: consultation.id,
+						service: consultation.service,
+						doctorName: consultation.doctorName,
+						date: consultation.startedAt ?? consultation.createdAt
+					}))
 			)
-			.sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime())
+			.filter((exam) =>
+				`${exam.name} ${exam.code} ${exam.category}`.toLowerCase().includes(search.toLowerCase())
+			)
 	);
-
-	const categories = $derived.by(() => [
-		...new Set(
-			exams
-				.map((exam) => exam.category?.trim())
-				.filter((category): category is string => Boolean(category))
-		)
-	]);
-
-	const filteredExams = $derived.by(() => {
-		const query = search.trim().toLowerCase();
-
-		return exams.filter((exam) => {
-			const matchesSearch =
-				query.length === 0 ||
-				exam.name.toLowerCase().includes(query) ||
-				exam.code.toLowerCase().includes(query) ||
-				exam.service.toLowerCase().includes(query) ||
-				exam.doctorName.toLowerCase().includes(query);
-
-			const matchesCategory = categoryFilter === 'all' || exam.category === categoryFilter;
-
-			return matchesSearch && matchesCategory;
-		});
-	});
-
-	const laboratoryCount = $derived(
-		exams.filter((exam) => exam.category?.toLowerCase().includes('laboratoire')).length
-	);
-
-	const imagingCount = $derived(
-		exams.filter((exam) => {
-			const category = exam.category?.toLowerCase() ?? '';
-
-			return category.includes('imagerie') || category.includes('radiologie');
-		}).length
-	);
-
-	function formatDate(value: string): string {
-		const date = new Date(value);
-
-		if (Number.isNaN(date.getTime())) {
-			return 'Date non renseignée';
-		}
-
-		return new Intl.DateTimeFormat('fr-FR', {
-			day: '2-digit',
-			month: 'short',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		}).format(date);
-	}
-
-	function consultationStatusLabel(status: PatientConsultation['status']): string {
-		switch (status) {
-			case 'draft':
-				return 'Brouillon';
-
-			case 'in_progress':
-				return 'En cours';
-
-			case 'completed':
-				return 'Terminée';
-
-			case 'cancelled':
-				return 'Annulée';
-		}
-	}
-
-	function consultationStatusClass(status: PatientConsultation['status']): string {
-		switch (status) {
-			case 'draft':
-				return 'bg-slate-100 text-slate-700';
-
-			case 'in_progress':
-				return 'bg-blue-50 text-blue-700';
-
-			case 'completed':
-				return 'bg-emerald-50 text-emerald-700';
-
-			case 'cancelled':
-				return 'bg-red-50 text-red-700';
-		}
-	}
-
-	function openConsultation(consultationId: number): void {
-		void goto(resolve(`/consultations/${consultationId}`));
-	}
-
-	function createConsultation(): void {
-		void goto(resolve(`/patients/${patientId}/consultations/create`));
-	}
-
-	let openingPdfConsultationId = $state<number | null>(null);
-	async function openExamRequestPdf(consultationId: number): Promise<void> {
-		openingPdfConsultationId = consultationId;
-
+	onMount(async () => {
 		try {
-			await openConsultationDocument(consultationId, 'exam-request');
-		} catch (error) {
-			console.error(error);
+			orders = (await listLaboratoryOrders({ patientId, limit: 100 })).data;
+			const loadedDetails = await Promise.all(orders.map((order) => getLaboratoryOrder(order.id)));
+			details = Object.fromEntries(loadedDetails.map((detail) => [detail.id, detail]));
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Chargement impossible';
 		} finally {
-			openingPdfConsultationId = null;
+			loading = false;
 		}
+	});
+	function date(v: string) {
+		return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(
+			new Date(v)
+		);
 	}
 </script>
 
 <div class="space-y-6">
-	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-violet-700">
-				Explorations médicales
-			</p>
-
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Examens demandés</h2>
-
-			<p class="mt-1 text-sm leading-6 text-slate-500">
-				Examens de laboratoire, d’imagerie et explorations prescrits pendant les consultations.
+			<p class="text-xs font-black uppercase tracking-[.2em] text-violet-700">Laboratoire réel</p>
+			<h2 class="mt-2 text-2xl font-black">Examens du patient</h2>
+			<p class="text-sm text-slate-500">
+				Prescriptions, prélèvements et résultats issus de {consultations.length} consultation(s).
 			</p>
 		</div>
-
-		<Button onclick={createConsultation}>
-			<Stethoscope size={16} />
-			Nouvelle consultation
-		</Button>
+		<Button onclick={() => goto(resolve(`/patients/${patientId}/consultations/create`))}
+			><Stethoscope size={16} />Nouvelle consultation</Button
+		>
 	</div>
-
-	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-		<div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
-			<p class="text-xs font-black uppercase text-violet-500">Total examens</p>
-
-			<p class="mt-2 text-3xl font-black text-violet-900">
-				{exams.length}
-			</p>
+	<div class="grid gap-4 sm:grid-cols-3">
+		<div class="rounded-2xl border bg-white p-5">
+			<p class="text-xs font-black uppercase text-slate-500">Demandes</p>
+			<p class="text-3xl font-black">{orders.length + nonLaboratoryExams.length}</p>
 		</div>
-
 		<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-			<p class="text-xs font-black uppercase text-blue-500">Laboratoire</p>
-
-			<p class="mt-2 text-3xl font-black text-blue-900">
-				{laboratoryCount}
+			<p class="text-xs font-black uppercase text-blue-600">En cours</p>
+			<p class="text-3xl font-black text-blue-900">
+				{orders.filter((o) => !['VALIDATED', 'CANCELLED', 'REJECTED'].includes(o.status)).length}
 			</p>
 		</div>
-
-		<div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
-			<p class="text-xs font-black uppercase text-cyan-600">Imagerie</p>
-
-			<p class="mt-2 text-3xl font-black text-cyan-900">
-				{imagingCount}
-			</p>
-		</div>
-
-		<div class="rounded-2xl border border-slate-200 bg-white p-5">
-			<p class="text-xs font-black uppercase text-slate-400">Consultations concernées</p>
-
-			<p class="mt-2 text-3xl font-black text-slate-900">
-				{new Set(exams.map((exam) => exam.consultationId)).size}
+		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+			<p class="text-xs font-black uppercase text-emerald-600">Validés</p>
+			<p class="text-3xl font-black text-emerald-900">
+				{orders.filter((o) => o.status === 'VALIDATED').length}
 			</p>
 		</div>
 	</div>
-
-	<Card title="Historique des examens" subtitle={`${filteredExams.length} résultat(s) affiché(s)`}>
-		<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-			<div class="relative w-full max-w-xl">
-				<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-
-				<input
-					bind:value={search}
-					placeholder="Rechercher un examen, code, médecin..."
-					class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-violet-500 focus:bg-white"
-				/>
-			</div>
-
-			<select
-				bind:value={categoryFilter}
-				aria-label="Filtrer les examens par catégorie"
-				class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600"
-			>
-				<option value="all">Toutes les catégories</option>
-
-				{#each categories as category (category)}
-					<option value={category}>{category}</option>
-				{/each}
-			</select>
-		</div>
-
-		{#if filteredExams.length === 0}
-			<div
-				class="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center"
-			>
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"
+	<label class="relative block"
+		><Search class="absolute left-3 top-3 text-slate-400" size={18} /><input
+			bind:value={search}
+			placeholder="Rechercher un examen..."
+			class="w-full rounded-xl border bg-white py-3 pl-10 pr-3"
+		/></label
+	>
+	{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{:else if loading}<p
+			class="p-10 text-center"
+		>
+			Chargement...
+		</p>{:else if filtered.length === 0}<div
+			class="rounded-2xl border border-dashed p-12 text-center"
+		>
+			<FlaskConical class="mx-auto text-slate-300" size={40} />
+			<h3 class="mt-4 font-black">Aucun examen de laboratoire</h3>
+		</div>{:else}<div class="space-y-3">
+			{#each filtered as order (order.id)}
+				{@const detail = details[order.id]}
+				<button
+					onclick={() => goto(resolve(`/laboratory/${order.id}`))}
+					class="flex w-full flex-col justify-between gap-3 rounded-2xl border bg-white p-5 text-left hover:border-violet-300 md:flex-row"
+					><div>
+						<h3 class="font-black">{order.examName}</h3>
+						<p class="text-sm text-slate-500">
+							{order.requestNumber} · {order.examCode} · {order.category || 'Laboratoire'}
+						</p>
+						<p class="mt-2 text-sm">
+							{order.service || '—'} · {order.prescriber || '—'} · {date(order.prescribedAt)}
+						</p>
+					</div>
+					<div>
+						<span class="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700"
+							>{laboratoryStatusLabel(order.status)}</span
+						>{#if order.sampleIdentifier}<p class="mt-2 text-xs text-slate-500">
+								Prélèvement {order.sampleIdentifier}
+							</p>{/if}
+						{#if detail?.status === 'VALIDATED' && detail.results.length}
+							<p class="mt-2 text-xs font-bold text-emerald-700">
+								{detail.results
+									.map((result) =>
+										`${result.parameter} ${result.value || result.numericValue || '—'} ${result.unit || ''}`.trim()
+									)
+									.join(' · ')}
+							</p>
+						{/if}
+					</div></button
+				>{/each}
+		</div>{/if}
+	{#if nonLaboratoryExams.length}
+		<section class="space-y-3">
+			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">
+				Autres examens cliniques
+			</h3>
+			{#each nonLaboratoryExams as exam (exam.key)}
+				<button
+					onclick={() => goto(resolve(`/consultations/${exam.consultationId}`))}
+					class="flex w-full items-center justify-between rounded-2xl border bg-white p-5 text-left hover:border-blue-300"
 				>
-					<FlaskConical size={28} />
-				</div>
-
-				<h3 class="mt-5 text-xl font-black text-slate-900">Aucun examen trouvé</h3>
-
-				<p class="mt-2 text-sm text-slate-500">
-					Modifiez vos filtres ou créez une nouvelle consultation.
-				</p>
-			</div>
-		{:else}
-			<div class="space-y-4">
-				{#each filteredExams as exam (exam.key)}
-					<article
-						class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-violet-300 hover:shadow-sm"
+					<span
+						><b>{exam.name}</b><small class="ml-2 text-slate-500"
+							>{exam.code} · {exam.category}</small
+						>
+						<p class="mt-1 text-sm text-slate-500">
+							{exam.service} · {exam.doctorName} · {date(exam.date)}
+						</p></span
 					>
-						<div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-							<div class="flex min-w-0 flex-1 gap-4">
-								<div
-									class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"
-								>
-									<FlaskConical size={21} />
-								</div>
-
-								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-2">
-										<h3 class="text-lg font-black text-slate-900">
-											{exam.name}
-										</h3>
-
-										<span
-											class="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-violet-700"
-										>
-											{exam.category || 'Examen'}
-										</span>
-
-										<span
-											class={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${consultationStatusClass(
-												exam.consultationStatus
-											)}`}
-										>
-											{consultationStatusLabel(exam.consultationStatus)}
-										</span>
-									</div>
-
-									<p class="mt-2 text-sm font-semibold text-slate-500">
-										Code {exam.code || '—'}
-									</p>
-
-									<div class="mt-4 grid gap-4 md:grid-cols-3">
-										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
-												Date
-											</p>
-
-											<p class="mt-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
-												<CalendarDays size={14} />
-												{formatDate(exam.date)}
-											</p>
-										</div>
-
-										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
-												Service
-											</p>
-
-											<p class="mt-1 text-sm font-bold text-slate-700">
-												{exam.service || '—'}
-											</p>
-										</div>
-
-										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
-												Médecin
-											</p>
-
-											<p class="mt-1 text-sm font-bold text-slate-700">
-												{exam.doctorName || '—'}
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="flex shrink-0 flex-wrap gap-2">
-								<Button variant="secondary" onclick={() => openConsultation(exam.consultationId)}>
-									<Eye size={16} />
-									Voir
-								</Button>
-
-								<Button
-									variant="secondary"
-									disabled={openingPdfConsultationId === exam.consultationId}
-									onclick={() => void openExamRequestPdf(exam.consultationId)}
-								>
-									<FileDown size={16} />
-
-									{openingPdfConsultationId === exam.consultationId ? 'Ouverture...' : 'PDF'}
-								</Button>
-							</div>
-						</div>
-					</article>
-				{/each}
-			</div>
-		{/if}
-	</Card>
+					<span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700"
+						>Prescription clinique</span
+					>
+				</button>
+			{/each}
+		</section>
+	{/if}
 </div>
