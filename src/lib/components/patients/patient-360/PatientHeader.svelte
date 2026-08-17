@@ -3,6 +3,8 @@
 	import { resolve } from '$app/paths';
 
 	import type { Patient } from '$lib/types/patient';
+	import type { PatientInsuranceView } from '$lib/types/insurance';
+	import { patientInsuranceBadge } from './patient-360-data';
 
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -10,9 +12,11 @@
 
 	interface Props {
 		patient: Patient;
+		insurance: PatientInsuranceView;
 	}
 
-	let { patient }: Props = $props();
+	let { patient, insurance }: Props = $props();
+	const insuranceBadge = $derived(patientInsuranceBadge(insurance));
 
 	const fullName = $derived(
 		`${patient.nom ?? ''} ${patient.prenoms ?? ''}`.trim() || 'Patient sans identité'
@@ -122,17 +126,21 @@
 
 					<Badge variant="success">Actif</Badge>
 
-					{#if patient.isAssure}
+					{#if insurance.insured}
 						<span
 							class="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-black uppercase tracking-wide backdrop-blur"
+							title={insuranceBadge.detail}
 						>
-							Assuré
+							{insuranceBadge.label}
+							{#if insuranceBadge.detail}<span class="ml-1 normal-case"
+									>· {insuranceBadge.detail}</span
+								>{/if}
 						</span>
 					{:else}
 						<span
 							class="rounded-full border border-amber-200/30 bg-amber-400/20 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-50 backdrop-blur"
 						>
-							Non assuré
+							{insuranceBadge.label}
 						</span>
 					{/if}
 				</div>

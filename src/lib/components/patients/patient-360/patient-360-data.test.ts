@@ -2,9 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import type { ClinicalTimelineEvent } from '../../../types/clinical-timeline.ts';
-import type { PatientCoverage } from '../../../types/insurance.ts';
+import type { InsuranceAuthorization, PatientCoverage } from '../../../types/insurance.ts';
 import type { Patient } from '../../../types/patient.ts';
-import { normalizeMedicalTimeline, resolvePatientInsurance } from './patient-360-data.ts';
+import {
+	insuranceAuthorizationDisplay,
+	normalizeInsuranceAuthorizations,
+	normalizeMedicalTimeline,
+	patientInsuranceBadge,
+	resolvePatientInsurance
+} from './patient-360-data.ts';
 
 const patient: Patient = {
 	id: 7,
@@ -77,6 +83,89 @@ test('uninsured patient without active structured coverage has an explicit empty
 	assert.equal(result.source, 'none');
 	assert.equal(result.insured, false);
 	assert.equal(result.coverageRate, 0);
+});
+
+test('patient badge uses structured insurance even when the legacy flag is false', () => {
+	const insurance = resolvePatientInsurance(
+		{ ...patient, isAssure: false },
+		[coverage({ companyName: "Allianz Côte d'Ivoire" })],
+		new Date(2026, 7, 10)
+	);
+	assert.deepEqual(patientInsuranceBadge(insurance), {
+		label: 'Assuré',
+		detail: "Allianz Côte d'Ivoire"
+	});
+});
+
+function authorization(overrides: Partial<InsuranceAuthorization> = {}): InsuranceAuthorization {
+	return {
+		id: 1,
+		authorizationNumber: 'PEC-000001',
+		patientId: 6,
+		medicalRecordId: 6,
+		patientCoverageId: 7,
+		insuranceCompanyId: 1,
+		guarantorId: 1,
+		referenceType: 'IMAGING',
+		referenceId: 9,
+		referenceLabel: 'Radiographie thoracique',
+		service: 'Imagerie',
+		requestedAmount: 50_000,
+		requestedAt: '2026-08-17T10:00:00Z',
+		status: 'APPROVED',
+		externalReference: 'DEMO-ASSUR-000001',
+		externalDecisionDate: '2026-08-17T11:00:00Z',
+		approvedRate: 70,
+		approvedAmount: 35_000,
+		insuranceAmount: 35_000,
+		patientAmount: 15_000,
+		ceilingAmount: null,
+		rejectionReason: '',
+		comment: '',
+		patientName: 'BAMBA Serge',
+		patientCode: 'PAT-000006',
+		companyName: "Allianz Côte d'Ivoire",
+		memberNumber: 'ALLIANZ-000006',
+		contractRate: 90,
+		guarantorName: '',
+		createdAt: '2026-08-17T10:00:00Z',
+		coveredActs: [],
+		...overrides
+	};
+}
+
+test('approved PEC displays backend decision values without replacing the contractual rate', () => {
+	const item = authorization();
+	const display = insuranceAuthorizationDisplay(item);
+	assert.equal(display.requestedAmount, `${(50_000).toLocaleString('fr-FR')} FCFA`);
+	assert.equal(display.approvedRate, '70 %');
+	assert.equal(display.insuranceAmount, `${(35_000).toLocaleString('fr-FR')} FCFA`);
+	assert.equal(display.patientAmount, `${(15_000).toLocaleString('fr-FR')} FCFA`);
+	assert.equal(display.externalReference, 'DEMO-ASSUR-000001');
+	assert.equal(item.contractRate, 90);
+	assert.equal(item.approvedRate, 70);
+});
+
+test('approved amount is used when the final insurance amount is absent', () => {
+	assert.equal(
+		insuranceAuthorizationDisplay(authorization({ insuranceAmount: null })).insuranceAmount,
+		`${(35_000).toLocaleString('fr-FR')} FCFA`
+	);
+});
+
+test('zero PEC values remain visible and are not replaced by an empty state', () => {
+	const display = insuranceAuthorizationDisplay(
+		authorization({ requestedAmount: 0, approvedRate: 0, insuranceAmount: 0, patientAmount: 0 })
+	);
+	assert.equal(display.requestedAmount, '0 FCFA');
+	assert.equal(display.approvedRate, '0 %');
+	assert.equal(display.insuranceAmount, '0 FCFA');
+	assert.equal(display.patientAmount, '0 FCFA');
+});
+
+test('Patient 360 authorization list removes duplicate PEC entries', () => {
+	const item = authorization();
+	assert.deepEqual(normalizeInsuranceAuthorizations([item, { ...item }]), [item]);
 });
 
 function event(id: number, eventDate: string, category: string): ClinicalTimelineEvent {

@@ -25,6 +25,7 @@
 		InsuranceCompany,
 		PatientCoverage
 	} from '$lib/types/insurance';
+	import ActSelector from '$lib/components/insurance/ActSelector.svelte';
 
 	type Claims = { permissions?: string[] };
 	let claims = $state<Claims | null>(null),
@@ -60,6 +61,7 @@
 	const canSubmit = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.submit'));
 	const canDecide = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.decide'));
 	const canCancel = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.cancel'));
+	const canLink = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.link_act'));
 	const preview = $derived(
 		previewDecision(
 			selected?.requestedAmount ?? 0,
@@ -198,6 +200,16 @@
 			busy = false;
 		}
 	}
+	async function refreshSelected() {
+		if (!selected) return;
+		const selectedId = selected.id;
+		const refreshed = await getInsuranceAuthorizations({
+			patientId: selected.patientId,
+			pageSize: 100
+		});
+		selected = refreshed.items.find((item) => item.id === selectedId) ?? selected;
+		await load();
+	}
 	onMount(() => {
 		const token = localStorage.getItem('medcore_token');
 		if (token)
@@ -213,7 +225,10 @@
 		service = q.get('service') || '';
 		showCreate = Boolean(patientId && referenceId && canCreate);
 		if (showCreate) void loadCoverages();
-		void load();
+		void load().then(() => {
+			const authorizationId = Number(q.get('authorizationId') || 0);
+			if (authorizationId) selected = items.find((item) => item.id === authorizationId) ?? null;
+		});
 	});
 </script>
 
@@ -416,6 +431,30 @@
 				<p><b>Référence externe</b><br />{selected.externalReference || '—'}</p>
 				<p><b>Part assurance</b><br />{money(selected.insuranceAmount)}</p>
 				<p><b>Part patient</b><br />{money(selected.patientAmount)}</p>
+			</section>
+			<section class="mt-5 rounded-xl border p-4">
+				<h3 class="font-black">Actes couverts par cette PEC</h3>
+				<p class="mt-1 text-sm text-slate-500">Acte principal : {selected.referenceLabel}</p>
+				{#if selected.coveredActs?.length}
+					<ul class="mt-3 space-y-2 text-sm">
+						{#each selected.coveredActs as act (act.id)}
+							<li class="rounded-lg bg-violet-50 p-2 font-bold">
+								{act.referenceLabel} · {act.referenceType}
+							</li>
+						{/each}
+					</ul>
+				{:else}<p class="mt-3 text-sm">Aucun acte supplémentaire explicitement couvert.</p>{/if}
+				{#if selected.status !== 'CANCELLED'}
+					<ActSelector
+						authorizationId={selected.id}
+						authorizationNumber={selected.authorizationNumber}
+						patientId={selected.patientId}
+						coverageId={selected.patientCoverageId}
+						patientName={selected.patientName}
+						{canLink}
+						onLinked={refreshSelected}
+					/>
+				{/if}
 			</section>
 			{#if actions.submittable && canSubmit}<section class="mt-5 rounded-xl border p-4">
 					<h3 class="font-black">Envoi au portail assureur</h3>

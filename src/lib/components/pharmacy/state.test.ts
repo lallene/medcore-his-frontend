@@ -142,10 +142,14 @@ test('UX pharmacie couvre file, stock, lots, mouvements, FEFO et état vide', ()
 		'NON ASSURÉ',
 		'Information administrative — aucune décision PEC appliquée',
 		'window.print()',
-		'dispenseVoucherLine'
+		'dispenseVoucherLine',
+		'referenceType="MEDICATION"',
+		'referenceId={line.prescriptionId}',
+		'Patient non assuré'
 	])
 		assert.ok(page.includes(marker), marker);
 	assert.equal(page.includes('Pris en charge'), false);
+	assert.ok(page.indexOf('AuthorizationStatus') < page.indexOf('dispenseLine(line)'));
 });
 
 test('PrescriptionForm utilise la disponibilité backend sans mutation de stock', () => {

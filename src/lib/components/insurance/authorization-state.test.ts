@@ -1,10 +1,45 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import {
 	authorizationActions,
+	authorizationActPresentation,
 	hasAuthorizationPermission,
 	previewDecision
 } from './authorization-state.ts';
+
+test('act lookup controls contextual creation and reuse', () => {
+	assert.deepEqual(authorizationActPresentation('NONE'), {
+		canCreate: true,
+		label: 'Nouvelle PEC nécessaire'
+	});
+	assert.equal(authorizationActPresentation('DIRECT').canCreate, false);
+	assert.equal(authorizationActPresentation('DIRECT').label, 'PEC existante');
+	assert.equal(authorizationActPresentation('COVERED').canCreate, false);
+	assert.equal(authorizationActPresentation('COVERED').label, 'Couvert par une PEC existante');
+});
+
+test('act selector uses readable patient-owned options, search, resolution and RBAC', () => {
+	const selector = readFileSync(new URL('./ActSelector.svelte', import.meta.url), 'utf8');
+	for (const marker of [
+		'CONSULTATION',
+		'LABORATORY',
+		'IMAGING',
+		'HOSPITALIZATION',
+		'MEDICATION',
+		'getEligibleInsuranceActs',
+		'search',
+		'act.label',
+		'act.secondaryLabel',
+		"act.authorizationResolution !== 'NONE'",
+		'existingAuthorizationNumber',
+		'canLink',
+		'Confirmer le rattachement',
+		'selected = null'
+	])
+		assert.ok(selector.includes(marker), marker);
+	assert.equal(selector.includes('type="number"'), false);
+});
 
 test('contract rate is never treated as an act decision', () => {
 	assert.deepEqual(previewDecision(50_000, 'APPROVED', 70, null, null), {

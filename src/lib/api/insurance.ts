@@ -2,12 +2,52 @@ import { api } from '$lib/api/client';
 import type { ApiResponse } from '$lib/types/api';
 import type {
 	AuthorizationFilters,
+	AuthorizationActMatch,
 	AuthorizationPage,
 	AuthorizationStatus,
 	InsuranceAuthorization,
 	InsuranceCompany,
+	EligibleInsuranceAct,
 	PatientCoverage
 } from '$lib/types/insurance';
+
+export async function getEligibleInsuranceActs(filters: {
+	patientId: number;
+	coverageId: number;
+	type: string;
+	search?: string;
+}): Promise<EligibleInsuranceAct[]> {
+	const params = new URLSearchParams();
+	for (const [key, value] of Object.entries(filters))
+		if (value !== undefined) params.set(key, String(value));
+	const response = await api.get<ApiResponse<EligibleInsuranceAct[]>>(
+		`/api/insurance/authorizations/eligible-acts?${params}`
+	);
+	return response.data.data;
+}
+
+export async function getInsuranceAuthorizationForAct(filters: {
+	patientId: number;
+	coverageId: number;
+	referenceType: string;
+	referenceId: number;
+}): Promise<AuthorizationActMatch> {
+	const params = new URLSearchParams(
+		Object.entries(filters).map(([key, value]) => [key, String(value)])
+	);
+	const response = await api.get<ApiResponse<AuthorizationActMatch>>(
+		`/api/insurance/authorizations/for-act?${params}`
+	);
+	return response.data.data;
+}
+
+export async function linkInsuranceAuthorizationAct(
+	id: number,
+	payload: { referenceType: string; referenceId: number }
+) {
+	const response = await api.post(`/api/insurance/authorizations/${id}/acts`, payload);
+	return response.data.data;
+}
 
 export async function getInsuranceCompanies(): Promise<InsuranceCompany[]> {
 	const response = await api.get<ApiResponse<InsuranceCompany[]>>('/api/insurance/companies');

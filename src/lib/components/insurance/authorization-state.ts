@@ -48,3 +48,15 @@ export function hasAuthorizationPermission(
 ) {
 	return Boolean(claims?.permissions?.includes('*') || claims?.permissions?.includes(permission));
 }
+
+export function authorizationActPresentation(match: 'NONE' | 'DIRECT' | 'COVERED') {
+	return {
+		canCreate: match === 'NONE',
+		label:
+			match === 'COVERED'
+				? 'Couvert par une PEC existante'
+				: match === 'DIRECT'
+					? 'PEC existante'
+					: 'Nouvelle PEC nécessaire'
+	};
+}

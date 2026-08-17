@@ -17,6 +17,10 @@
 	import type { InsuranceAuthorization, PatientInsuranceView } from '$lib/types/insurance';
 	import { getInsuranceAuthorizations } from '$lib/api/insurance';
 	import { authorizationStatusLabel } from '$lib/components/insurance/authorization-state';
+	import {
+		insuranceAuthorizationDisplay,
+		normalizeInsuranceAuthorizations
+	} from './patient-360-data';
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -62,8 +66,9 @@
 
 	onMount(async () => {
 		try {
-			authorizations = (await getInsuranceAuthorizations({ patientId: patient.id, pageSize: 100 }))
-				.items;
+			authorizations = normalizeInsuranceAuthorizations(
+				(await getInsuranceAuthorizations({ patientId: patient.id, pageSize: 100 })).items
+			);
 		} catch {
 			authorizations = [];
 		}
@@ -273,30 +278,49 @@
 							</Button>
 						</div>
 					</div>{:else}<div class="divide-y rounded-2xl border">
-						{#each authorizations as authorization (authorization.id)}<article
-								class="grid gap-2 p-4 md:grid-cols-[1fr_1.2fr_.8fr_.8fr_auto] md:items-center"
-							>
-								<div>
-									<b class="text-violet-800">{authorization.authorizationNumber}</b><small
-										class="block text-slate-500">{authorization.companyName}</small
+						{#each authorizations as authorization (authorization.id)}
+							{@const display = insuranceAuthorizationDisplay(authorization)}
+							<article class="space-y-4 p-5">
+								<div class="flex flex-wrap items-start justify-between gap-3">
+									<div>
+										<b class="text-violet-800">{authorization.authorizationNumber}</b>
+										<small class="block text-slate-500">{authorization.companyName}</small>
+										<b class="mt-1 block text-slate-900">{authorization.referenceLabel}</b>
+										<small class="text-slate-500">{authorization.service || '—'}</small>
+									</div>
+									<span
+										class="rounded-full bg-violet-50 px-3 py-1 text-xs font-black text-violet-800"
+										>{authorizationStatusLabel[authorization.status]}</span
 									>
 								</div>
-								<div>
-									<b>{authorization.referenceLabel}</b><small class="block text-slate-500"
-										>{authorization.service || '—'}</small
-									>
-								</div>
-								<span>{authorization.requestedAmount?.toLocaleString('fr-FR') ?? '—'} FCFA</span>
-								<div>
-									<b>{authorizationStatusLabel[authorization.status]}</b><small
-										class="block text-slate-500"
-										>Accordé : {authorization.insuranceAmount?.toLocaleString('fr-FR') ??
-											'—'}</small
-									>
+								<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+									<MiniInfo title="Montant demandé" value={display.requestedAmount} />
+									<MiniInfo title="Taux accordé" value={display.approvedRate} />
+									<MiniInfo title="Part assurance" value={display.insuranceAmount} />
+									<MiniInfo title="Part patient" value={display.patientAmount} />
+									<MiniInfo title="Référence assureur" value={display.externalReference} />
+									<MiniInfo
+										title="Date de décision"
+										value={authorization.externalDecisionDate
+											? formatDate(authorization.externalDecisionDate.slice(0, 10))
+											: '—'}
+									/>
 								</div>
 								<button onclick={openVouchers} class="text-sm font-bold text-violet-700"
-									>Ouvrir</button
+									>Ouvrir la PEC</button
 								>
+								<div class="rounded-xl bg-slate-50 p-3 text-sm">
+									<b>Acte principal :</b>
+									{authorization.referenceLabel}
+									{#if authorization.coveredActs?.length}
+										<p class="mt-2 font-bold">Actes également couverts :</p>
+										<ul class="mt-1 list-disc pl-5">
+											{#each authorization.coveredActs as act (act.id)}<li>
+													{act.referenceLabel}
+												</li>{/each}
+										</ul>
+									{/if}
+								</div>
 							</article>{/each}
 					</div>{/if}
 			</Card>

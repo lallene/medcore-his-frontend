@@ -90,6 +90,38 @@ export interface InsuranceAuthorization {
 	contractRate: number;
 	guarantorName: string;
 	createdAt: string;
+	coveredActs: InsuranceAuthorizationAct[];
+}
+
+export interface InsuranceAuthorizationAct {
+	id: number;
+	insuranceAuthorizationId: number;
+	patientId: number;
+	patientCoverageId: number;
+	referenceType: AuthorizationReferenceType;
+	referenceId: number;
+	relationType: 'COVERED';
+	isActive: boolean;
+	createdBy: number;
+	createdAt: string;
+	referenceLabel: string;
+}
+
+export type AuthorizationActMatch = {
+	matchType: 'NONE' | 'DIRECT' | 'COVERED';
+	authorization?: InsuranceAuthorization;
+};
+
+export interface EligibleInsuranceAct {
+	referenceType: AuthorizationReferenceType;
+	referenceId: number;
+	label: string;
+	secondaryLabel: string;
+	date: string;
+	status: string;
+	authorizationResolution: 'NONE' | 'DIRECT' | 'COVERED';
+	existingAuthorizationId?: number;
+	existingAuthorizationNumber?: string;
 }
 
 export interface AuthorizationPage {

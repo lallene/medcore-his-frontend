@@ -200,7 +200,7 @@
 	{@const insurance = resolvePatientInsurance(p, coverages)}
 
 	<div class="space-y-6">
-		<PatientHeader patient={p} />
+		<PatientHeader patient={p} {insurance} />
 
 		<PatientTabs tabs={patientTabs} {activeTab} onSelect={selectTab} />
 

@@ -1,5 +1,9 @@
 import type { ClinicalTimelineEvent } from '../../../types/clinical-timeline.ts';
-import type { PatientCoverage, PatientInsuranceView } from '../../../types/insurance.ts';
+import type {
+	InsuranceAuthorization,
+	PatientCoverage,
+	PatientInsuranceView
+} from '../../../types/insurance.ts';
 import type { Patient } from '../../../types/patient.ts';
 
 function boundedRate(value: number): number {
@@ -79,6 +83,42 @@ export function resolvePatientInsurance(
 		coverageRate: 0,
 		validFrom: '',
 		validTo: ''
+	};
+}
+
+export function patientInsuranceBadge(insurance: PatientInsuranceView): {
+	label: string;
+	detail: string;
+} {
+	return insurance.insured
+		? { label: 'Assuré', detail: insurance.organization }
+		: { label: 'Non assuré', detail: '' };
+}
+
+export function normalizeInsuranceAuthorizations(
+	authorizations: InsuranceAuthorization[]
+): InsuranceAuthorization[] {
+	const unique = new Map<number, InsuranceAuthorization>();
+	for (const authorization of authorizations) unique.set(authorization.id, authorization);
+	return [...unique.values()];
+}
+
+export function insuranceAuthorizationDisplay(authorization: InsuranceAuthorization): {
+	requestedAmount: string;
+	approvedRate: string;
+	insuranceAmount: string;
+	patientAmount: string;
+	externalReference: string;
+} {
+	const money = (value: number | null): string =>
+		value === null ? '—' : `${value.toLocaleString('fr-FR')} FCFA`;
+
+	return {
+		requestedAmount: money(authorization.requestedAmount),
+		approvedRate: authorization.approvedRate === null ? '—' : `${authorization.approvedRate} %`,
+		insuranceAmount: money(authorization.insuranceAmount ?? authorization.approvedAmount),
+		patientAmount: money(authorization.patientAmount),
+		externalReference: authorization.externalReference || '—'
 	};
 }
 
