@@ -19,6 +19,7 @@
 	} from '$lib/components/imaging/state';
 	import type { ImagingOrder, ImagingReportInput } from '$lib/types/imaging';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
+	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
 	let order = $state<ImagingOrder | null>(null),
 		error = $state(''),
 		busy = $state(false),
@@ -105,6 +106,7 @@
 			referenceId={order.id}
 			service={order.service}
 		/>
+		<BillingActStatus patientId={order.patientId} actType="IMAGING" referenceId={order.id} />
 		<header class="rounded-2xl border bg-white p-6">
 			<div class="flex flex-wrap justify-between gap-3">
 				<div>

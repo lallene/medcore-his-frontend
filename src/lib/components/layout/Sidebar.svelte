@@ -53,7 +53,7 @@
 		{ title: 'Assurances', href: '/insurance', icon: Shield },
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
 		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
-		{ title: 'Facturation', href: '/billing', icon: CreditCard, soon: true }
+		{ title: 'Facturation', href: '/billing', icon: CreditCard }
 	];
 
 	const servicesMenu: MenuItem[] = [

@@ -16,6 +16,7 @@
 	import type { Hospitalization } from '$lib/types/hospitalization';
 	import BedAssignmentPanel from '$lib/components/hospitalizations/BedAssignmentPanel.svelte';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
+	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
 	let item = $state<Hospitalization | null>(null);
 	let loading = $state(true);
 	let error = $state('');
@@ -79,6 +80,7 @@
 			referenceId={item.id}
 			service={item.department}
 		/>
+		<BillingActStatus patientId={item.patientId} actType="HOSPITALIZATION" referenceId={item.id} />
 		{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{/if}
 		<section class="grid gap-4 rounded-2xl border bg-white p-6 md:grid-cols-2">
 			<div>

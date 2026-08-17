@@ -40,6 +40,7 @@
 		stockStatusLabel
 	} from '$lib/components/pharmacy/state';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
+	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
 
 	type Tab = 'queue' | 'stock' | 'medications' | 'families' | 'batches' | 'movements';
 	type Claims = { role?: string; permissions?: string[] };
@@ -679,6 +680,11 @@
 							{:else}<p class="mt-3 rounded-xl bg-slate-100 p-3 text-sm font-bold">
 									Patient non assuré
 								</p>{/if}
+							<BillingActStatus
+								patientId={selectedVoucher.patientId}
+								actType="MEDICATION"
+								referenceId={line.prescriptionId}
+							/>
 							{#if canDispense && line.status !== 'COMPLETED' && selectedVoucher.status !== 'CANCELLED'}<div
 									class="mt-3 flex items-end gap-2 print:hidden"
 								>

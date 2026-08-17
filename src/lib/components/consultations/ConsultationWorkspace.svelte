@@ -26,6 +26,7 @@
 	import { resolve } from '$app/paths';
 	import ClinicalContextForm from '$lib/components/consultations/ClinicalContextForm.svelte';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
+	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
 
 	type WorkspaceTab =
 		'clinical' | 'medical-record' | 'soap' | 'specialty' | 'prescriptions' | 'exams' | 'documents';
@@ -286,6 +287,11 @@
 			referenceType="CONSULTATION"
 			referenceId={consultation.id}
 			service={consultation.service}
+		/>
+		<BillingActStatus
+			patientId={consultation.patientId}
+			actType="CONSULTATION"
+			referenceId={consultation.id}
 		/>
 	{/if}
 	{#if consultation?.hospitalizationRequired}
