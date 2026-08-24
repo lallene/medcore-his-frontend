@@ -14,6 +14,7 @@
 		Image,
 		LayoutDashboard,
 		Pill,
+		ReceiptText,
 		Settings,
 		Shield,
 		Users
@@ -30,6 +31,7 @@
 		| '/insurance/authorizations'
 		| '/billing'
 		| '/cash'
+		| '/receivables'
 		| '/pharmacy'
 		| '/laboratory'
 		| '/imaging'
@@ -55,7 +57,8 @@
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
 		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
 		{ title: 'Facturation', href: '/billing', icon: CreditCard },
-		{ title: 'Caisse', href: '/cash', icon: CreditCard }
+		{ title: 'Caisse', href: '/cash', icon: CreditCard },
+		{ title: 'Créances patients', href: '/receivables', icon: ReceiptText }
 	];
 
 	const servicesMenu: MenuItem[] = [

@@ -4,6 +4,9 @@
 	import { resolve } from '$app/paths';
 	import { ReceiptText } from 'lucide-svelte';
 	import { listPatientInvoices } from '$lib/api/billing';
+	import { listPatientReceivables } from '$lib/api/receivables';
+	import { statusLabel } from '$lib/components/receivables/state';
+	import type { ReceivableItem } from '$lib/types/receivables';
 	import { formatXOF } from '$lib/components/billing/state';
 	import type { Invoice } from '$lib/types/billing';
 	import type { Patient } from '$lib/types/patient';
@@ -16,6 +19,7 @@
 	}
 	let { patient, consultations, hospitalizations }: Props = $props();
 	let invoices = $state<Invoice[]>([]);
+	let receivables = $state<ReceivableItem[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	const totals = $derived(
@@ -34,7 +38,10 @@
 	);
 	onMount(async () => {
 		try {
-			invoices = await listPatientInvoices(patient.id);
+			[invoices, receivables] = await Promise.all([
+				listPatientInvoices(patient.id),
+				listPatientReceivables(patient.id).then((page) => page.items)
+			]);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Historique indisponible';
 		} finally {
@@ -69,6 +76,28 @@
 				<p class="mt-2 text-xl font-black">{formatXOF(Number(item[1]))}</p>
 			</div>{/each}
 	</div>
+	<section class="rounded-2xl border bg-rose-50 p-4">
+		<h3 class="font-black text-rose-900">Créances patient</h3>
+		<p class="text-sm text-rose-700">La part assurance est exclue du reste dû par le patient.</p>
+		<div class="mt-3 grid gap-2 md:grid-cols-3">
+			<p>Total part patient <b>{formatXOF(totals.patient)}</b></p>
+			<p>Total payé <b>{formatXOF(totals.paid)}</b></p>
+			<p>
+				Reste à payer <b>{formatXOF(receivables.reduce((sum, r) => sum + r.patientBalance, 0))}</b>
+			</p>
+		</div>
+		{#each receivables as debt (debt.invoiceId)}<a
+				href={resolve(`/receivables/${debt.invoiceId}`)}
+				class="mt-2 grid gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-5"
+				><b>{debt.invoiceNumber}</b><span>Patient {formatXOF(debt.patientDue)}</span><span
+					>Payé {formatXOF(debt.patientPaid)}</span
+				><span>Reste {formatXOF(debt.patientBalance)}</span><span
+					>{statusLabel[debt.status]} · {debt.dueDate
+						? new Date(debt.dueDate).toLocaleDateString('fr-FR')
+						: 'sans échéance'}</span
+				></a
+			>{:else}<p class="mt-3 text-sm">Aucune créance patient active.</p>{/each}
+	</section>
 	<div class="overflow-x-auto rounded-2xl border bg-white">
 		{#if loading}<p class="p-8 text-center">Chargement…</p>{:else}<table
 				class="w-full text-left text-sm"

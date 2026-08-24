@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
 	import {
 		cashPayment,
@@ -59,6 +60,8 @@
 				)
 			]);
 			closing.countedCashAmount = session.expectedCash;
+			const invoiceId = Number(page.url.searchParams.get('invoiceId') || 0);
+			if (invoiceId) selected = invoices.find((invoice) => invoice.id === invoiceId) ?? null;
 		}
 	}
 	async function open() {
