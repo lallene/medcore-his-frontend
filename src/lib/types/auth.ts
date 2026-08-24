@@ -3,6 +3,9 @@ export interface User {
 	name: string;
 	email: string;
 	role: string;
+	functions?: string[];
+	specialties?: string[];
+	capabilities?: string[];
 }
 
 export interface LoginResponse {

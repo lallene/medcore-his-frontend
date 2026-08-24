@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
+	import { jwtDecode } from 'jwt-decode';
 	import { resolve } from '$app/paths';
 	import { clinicBranding } from '$lib/config/clinic';
 	import {
@@ -38,7 +40,8 @@
 		| '/imaging'
 		| '/agenda'
 		| '/reports'
-		| '/administration';
+		| '/administration'
+		| '/admin/staff';
 
 	type MenuItem = {
 		title: string;
@@ -46,34 +49,127 @@
 		icon: typeof LayoutDashboard;
 		soon?: boolean;
 		badge?: string;
+		permissions?: string[];
 	};
 
 	const workspaceMenu: MenuItem[] = [
-		{ title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-		{ title: 'Patients', href: '/patients', icon: Users },
-		{ title: 'Consultations', href: '/consultations', icon: HeartPulse, soon: true },
-		{ title: 'Hospitalisations', href: '/hospitalizations', icon: Hospital },
-		{ title: 'Chambres & lits', href: '/beds', icon: Hospital },
-		{ title: 'Assurances', href: '/insurance', icon: Shield },
-		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
-		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
-		{ title: 'Facturation', href: '/billing', icon: CreditCard },
-		{ title: 'Caisse', href: '/cash', icon: CreditCard },
-		{ title: 'Créances patients', href: '/receivables', icon: ReceiptText },
-		{ title: 'Créances assureurs', href: '/insurance-receivables', icon: Shield }
+		{
+			title: 'Dashboard',
+			href: '/dashboard',
+			icon: LayoutDashboard,
+			permissions: ['dashboard.read']
+		},
+		{ title: 'Patients', href: '/patients', icon: Users, permissions: ['patients:read'] },
+		{
+			title: 'Consultations',
+			href: '/consultations',
+			icon: HeartPulse,
+			soon: true,
+			permissions: ['consultations.read']
+		},
+		{
+			title: 'Hospitalisations',
+			href: '/hospitalizations',
+			icon: Hospital,
+			permissions: ['hospitalizations.read']
+		},
+		{ title: 'Chambres & lits', href: '/beds', icon: Hospital, permissions: ['beds.read'] },
+		{
+			title: 'Assurances',
+			href: '/insurance',
+			icon: Shield,
+			permissions: ['insurance.company.read', 'insurance.coverage.read']
+		},
+		{
+			title: 'Bons PEC',
+			href: '/insurance/vouchers',
+			icon: FileText,
+			permissions: ['insurance.voucher.read']
+		},
+		{
+			title: 'Autorisations PEC',
+			href: '/insurance/authorizations',
+			icon: FileCheck2,
+			permissions: ['insurance.authorization.read']
+		},
+		{ title: 'Facturation', href: '/billing', icon: CreditCard, permissions: ['billing.read'] },
+		{
+			title: 'Caisse',
+			href: '/cash',
+			icon: CreditCard,
+			permissions: ['cash.session.read', 'cash.payment.create']
+		},
+		{
+			title: 'Créances patients',
+			href: '/receivables',
+			icon: ReceiptText,
+			permissions: ['receivables.read']
+		},
+		{
+			title: 'Créances assureurs',
+			href: '/insurance-receivables',
+			icon: Shield,
+			permissions: ['insurance_receivables.read']
+		}
 	];
 
 	const servicesMenu: MenuItem[] = [
-		{ title: 'Pharmacie', href: '/pharmacy', icon: Pill },
-		{ title: 'Laboratoire', href: '/laboratory', icon: FlaskConical },
-		{ title: 'Imagerie', href: '/imaging', icon: Image },
-		{ title: 'Agenda', href: '/agenda', icon: CalendarDays, soon: true }
+		{
+			title: 'Pharmacie',
+			href: '/pharmacy',
+			icon: Pill,
+			permissions: ['pharmacy.stock.read', 'pharmacy.dispensation.read']
+		},
+		{
+			title: 'Laboratoire',
+			href: '/laboratory',
+			icon: FlaskConical,
+			permissions: ['laboratory.read']
+		},
+		{ title: 'Imagerie', href: '/imaging', icon: Image, permissions: ['imaging.read'] },
+		{
+			title: 'Agenda',
+			href: '/agenda',
+			icon: CalendarDays,
+			soon: true,
+			permissions: ['consultations.read']
+		}
 	];
 
 	const adminMenu: MenuItem[] = [
-		{ title: 'Rapports', href: '/reports', icon: BarChart3 },
-		{ title: 'Administration', href: '/administration', icon: Settings }
+		{ title: 'Rapports', href: '/reports', icon: BarChart3, permissions: ['dashboard.read'] },
+		{ title: 'Administration', href: '/administration', icon: Settings, permissions: ['*'] },
+		{ title: 'Personnel', href: '/admin/staff', icon: Users, permissions: ['staff.read'] }
 	];
+	let permissions = $state<string[]>([]);
+	let staffName = $state('Utilisateur');
+	let staffRole = $state('MedCore HIS');
+	const visible = (item: MenuItem) =>
+		!item.permissions?.length ||
+		item.permissions.some((p) => permissions.includes('*') || permissions.includes(p));
+	onMount(() => {
+		const raw = localStorage.getItem('medcore_token');
+		if (raw)
+			try {
+				permissions = jwtDecode<{ permissions?: string[] }>(raw).permissions ?? [];
+			} catch {
+				permissions = [];
+			}
+		const stored = localStorage.getItem('medcore_user');
+		if (stored)
+			try {
+				const u = JSON.parse(stored) as {
+					name?: string;
+					functions?: string[];
+					specialties?: string[];
+					role?: string;
+				};
+				staffName = u.name ?? staffName;
+				staffRole = u.functions?.[0] ?? u.specialties?.[0] ?? u.role ?? staffRole;
+			} catch {
+				// Compatible avec les anciennes sessions sans profil Staff.
+			}
+	});
 
 	function isActive(href: string) {
 		const pathname = page.url.pathname;
@@ -115,7 +211,7 @@
 			</div>
 
 			<div class="space-y-1">
-				{#each workspaceMenu as item (item.href)}
+				{#each workspaceMenu.filter(visible) as item (item.href)}
 					{@const Icon = item.icon}
 					{@const active = isActive(item.href)}
 
@@ -158,7 +254,7 @@
 			</div>
 
 			<div class="space-y-1">
-				{#each servicesMenu as item (item.href)}
+				{#each servicesMenu.filter(visible) as item (item.href)}
 					{@const Icon = item.icon}
 					{@const active = isActive(item.href)}
 
@@ -203,7 +299,7 @@
 			</div>
 
 			<div class="space-y-1">
-				{#each adminMenu as item (item.href)}
+				{#each adminMenu.filter(visible) as item (item.href)}
 					{@const Icon = item.icon}
 					{@const active = isActive(item.href)}
 
@@ -239,8 +335,8 @@
 				</div>
 
 				<div>
-					<p class="font-bold text-white">Dr Admin</p>
-					<p class="text-sm text-slate-400">Administrateur</p>
+					<p class="font-bold text-white">{staffName}</p>
+					<p class="text-sm text-slate-400">{staffRole}</p>
 				</div>
 			</div>
 
