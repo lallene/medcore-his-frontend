@@ -3,15 +3,24 @@
 	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
 	import { cancelInvoice, getInvoice, issueInvoice, payInvoice } from '$lib/api/billing';
+	import { listInsuranceReceivables } from '$lib/api/insurance-receivables';
 	import { can, formatXOF, paymentAllowed } from '$lib/components/billing/state';
 	import type { Invoice } from '$lib/types/billing';
+	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 	let invoice = $state<Invoice | null>(null);
 	let error = $state('');
 	let permissions = $state<string[]>([]);
+	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
 	let payment = $state({ amount: 0, paymentMethod: 'CASH', reference: '' });
 	async function refresh() {
 		try {
 			invoice = await getInvoice(Number(page.params.id));
+			insuranceReceivables =
+				invoice.insuranceAmount > 0
+					? (await listInsuranceReceivables({ search: invoice.number, limit: 100 })).items.filter(
+							(x) => x.invoiceId === invoice!.id
+						)
+					: [];
 			if (invoice) payment.amount = invoice.balanceAmount;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Facture introuvable';
@@ -144,5 +153,25 @@
 						{new Date(p.paidAt).toLocaleString('fr-FR')} — {p.paymentMethod} —
 						<strong>{formatXOF(p.amount)}</strong>
 					</p>{/each}
+			</section>{/if}
+		{#if invoice.insuranceAmount > 0}<section
+				class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"
+			>
+				<h2 class="font-black text-indigo-900">RECOUVREMENT ASSURANCE</h2>
+				<p class="text-sm text-indigo-700">
+					Le statut payé du patient ne vaut pas règlement assureur.
+				</p>
+				{#each insuranceReceivables as debt (debt.invoiceLineId)}<div
+						class="mt-3 grid gap-2 border-t border-indigo-200 pt-3 md:grid-cols-6"
+					>
+						<span>{debt.companyName}</span><span>{debt.authorizationNumber}</span><span
+							>{debt.description}</span
+						><span>Part {formatXOF(debt.insuranceDue)}</span><span
+							>Réglé {formatXOF(debt.insurancePaid)}</span
+						><span
+							>Reste {formatXOF(debt.insuranceBalance)} · {debt.batchNumber ||
+								'sans bordereau'}</span
+						>
+					</div>{/each}
 			</section>{/if}{/if}
 </div>

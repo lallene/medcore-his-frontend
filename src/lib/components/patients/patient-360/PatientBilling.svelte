@@ -5,8 +5,10 @@
 	import { ReceiptText } from 'lucide-svelte';
 	import { listPatientInvoices } from '$lib/api/billing';
 	import { listPatientReceivables } from '$lib/api/receivables';
+	import { listPatientInsuranceReceivables } from '$lib/api/insurance-receivables';
 	import { statusLabel } from '$lib/components/receivables/state';
 	import type { ReceivableItem } from '$lib/types/receivables';
+	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 	import { formatXOF } from '$lib/components/billing/state';
 	import type { Invoice } from '$lib/types/billing';
 	import type { Patient } from '$lib/types/patient';
@@ -20,6 +22,7 @@
 	let { patient, consultations, hospitalizations }: Props = $props();
 	let invoices = $state<Invoice[]>([]);
 	let receivables = $state<ReceivableItem[]>([]);
+	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	const totals = $derived(
@@ -38,9 +41,10 @@
 	);
 	onMount(async () => {
 		try {
-			[invoices, receivables] = await Promise.all([
+			[invoices, receivables, insuranceReceivables] = await Promise.all([
 				listPatientInvoices(patient.id),
-				listPatientReceivables(patient.id).then((page) => page.items)
+				listPatientReceivables(patient.id).then((page) => page.items),
+				listPatientInsuranceReceivables(patient.id).then((page) => page.items)
 			]);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Historique indisponible';
@@ -97,6 +101,27 @@
 						: 'sans échéance'}</span
 				></a
 			>{:else}<p class="mt-3 text-sm">Aucune créance patient active.</p>{/each}
+	</section>
+	<section class="rounded-2xl border bg-indigo-50 p-4">
+		<h3 class="font-black text-indigo-900">Situation assurance</h3>
+		<p class="text-sm text-indigo-700">Circuit assureur séparé des paiements patient.</p>
+		<div class="mt-3 grid gap-2 md:grid-cols-3">
+			<p>
+				Part assurance <b
+					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceDue, 0))}</b
+				>
+			</p>
+			<p>
+				Réglé par assurance <b
+					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insurancePaid, 0))}</b
+				>
+			</p>
+			<p>
+				Reste assurance <b
+					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceBalance, 0))}</b
+				>
+			</p>
+		</div>
 	</section>
 	<div class="overflow-x-auto rounded-2xl border bg-white">
 		{#if loading}<p class="p-8 text-center">Chargement…</p>{:else}<table

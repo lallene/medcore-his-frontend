@@ -32,6 +32,7 @@
 		| '/billing'
 		| '/cash'
 		| '/receivables'
+		| '/insurance-receivables'
 		| '/pharmacy'
 		| '/laboratory'
 		| '/imaging'
@@ -58,7 +59,8 @@
 		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
 		{ title: 'Facturation', href: '/billing', icon: CreditCard },
 		{ title: 'Caisse', href: '/cash', icon: CreditCard },
-		{ title: 'Créances patients', href: '/receivables', icon: ReceiptText }
+		{ title: 'Créances patients', href: '/receivables', icon: ReceiptText },
+		{ title: 'Créances assureurs', href: '/insurance-receivables', icon: Shield }
 	];
 
 	const servicesMenu: MenuItem[] = [
