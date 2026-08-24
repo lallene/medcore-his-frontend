@@ -33,7 +33,7 @@
 
 	let beds = $state<BedOverview[]>([]),
 		rooms = $state<Room[]>([]),
-		department = $state(''),
+		serviceId = $state<number | null>(null),
 		floorFilter = $state(''),
 		roomTypeFilter = $state(''),
 		status = $state<BedStatus | ''>(''),
@@ -50,10 +50,26 @@
 	let preferredBedRoomId = $state<number | null>(null);
 	const indicators = $derived(bedIndicators(rooms));
 	const grouped = $derived(
-		groupRooms(rooms, beds, department, status, floorFilter, roomTypeFilter)
+		groupRooms(
+			rooms,
+			beds,
+			rooms.find((room) => room.serviceId === serviceId)?.department ?? '',
+			status,
+			floorFilter,
+			roomTypeFilter
+		)
 	);
 	const serviceFilters = $derived(
-		[...new Set(rooms.map((room) => room.department))].sort((a, b) => a.localeCompare(b, 'fr'))
+		[
+			...new Map(
+				rooms
+					.filter((room) => room.serviceId)
+					.map((room) => [
+						room.serviceId,
+						{ id: room.serviceId!, name: room.organizationService?.name ?? room.department }
+					])
+			).values()
+		].sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 	);
 	const floorFilters = $derived(
 		[...new Set(rooms.map((room) => room.floor).filter(Boolean))].sort()
@@ -219,9 +235,10 @@
 	<div class="rounded-2xl border bg-white p-4">
 		<p class="mb-3 text-sm font-black">Filtres</p>
 		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
-			<select bind:value={department} class="rounded-xl border bg-white p-3 text-sm"
-				><option value="">Tous les services</option
-				>{#each serviceFilters as service (service)}<option value={service}>{service}</option
+			<select bind:value={serviceId} class="rounded-xl border bg-white p-3 text-sm"
+				><option value={null}>Tous les services</option
+				>{#each serviceFilters as service (service.id)}<option value={service.id}
+						>{service.name}</option
 					>{/each}</select
 			>
 			<select bind:value={floorFilter} class="rounded-xl border bg-white p-3 text-sm"
@@ -242,7 +259,7 @@
 			>
 			<button
 				onclick={() => {
-					department = '';
+					serviceId = null;
 					floorFilter = '';
 					status = '';
 					roomTypeFilter = '';

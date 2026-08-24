@@ -52,6 +52,7 @@
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import ServiceSelect from '$lib/components/organization/ServiceSelect.svelte';
 
 	import type { MedicationPresentation } from '$lib/types/pharmacy';
 	import type { Patient } from '$lib/types/patient';
@@ -91,7 +92,7 @@
 	let error = $state('');
 
 	let doctorName = $state('Dr Kouassi');
-	let service = $state('Consultation externe');
+	let serviceId = $state<number | null>(null);
 
 	let selectedReasonIds = $state<number[]>([]);
 
@@ -504,6 +505,10 @@
 			error = 'Veuillez sélectionner au moins un motif.';
 			return;
 		}
+		if (!serviceId) {
+			error = 'Veuillez sélectionner un service.';
+			return;
+		}
 
 		submitting = true;
 		error = '';
@@ -512,7 +517,7 @@
 			await createConsultation({
 				patientId: patient.id,
 				doctorName,
-				service,
+				serviceId,
 				reasonIds: selectedReasonIds,
 
 				vitals: {
@@ -645,7 +650,9 @@
 				<div class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs">
 					<span class="text-slate-400">Service</span>
 					<span class="h-3 w-px bg-slate-200"></span>
-					<span class="font-semibold text-slate-700">{service}</span>
+					<div class="min-w-56">
+						<ServiceSelect bind:value={serviceId} capability="consultation" />
+					</div>
 				</div>
 			</div>
 		</section>

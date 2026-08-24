@@ -10,6 +10,9 @@
 		updateStaff
 	} from '$lib/api/staff';
 	import { anyPermission, can, permissionAreas, toggleCode } from '$lib/components/staff/state';
+	import ServiceSelect from '$lib/components/organization/ServiceSelect.svelte';
+	import { listOrganizationServices } from '$lib/api/organization';
+	import type { OrganizationService } from '$lib/types/organization';
 	import type {
 		StaffAuditEvent,
 		StaffCatalog,
@@ -22,10 +25,12 @@
 		users = $state<StaffUserOption[]>([]),
 		permissions = $state<string[]>([]),
 		audit = $state<StaffAuditEvent[]>([]);
+	let organizationServices = $state<OrganizationService[]>([]);
 	let search = $state(''),
 		functionFilter = $state(''),
 		specialtyFilter = $state(''),
 		activeFilter = $state(''),
+		serviceFilter = $state<number | null>(null),
 		editing = $state<StaffProfile | null>(null),
 		showForm = $state(false),
 		showMatrix = $state(false),
@@ -35,6 +40,8 @@
 		employeeCode: '',
 		jobTitle: '',
 		primaryDepartment: '',
+		primaryServiceId: null,
+		secondaryServiceIds: [],
 		professionalNumber: '',
 		active: true,
 		functions: [],
@@ -43,18 +50,21 @@
 	});
 	async function load() {
 		try {
-			const [p, c] = await Promise.all([
+			const [p, c, services] = await Promise.all([
 				listStaff({
 					search,
 					function: functionFilter,
 					specialty: specialtyFilter,
 					active: activeFilter,
+					serviceId: serviceFilter || undefined,
 					limit: 100
 				}),
-				getStaffCatalog()
+				getStaffCatalog(),
+				listOrganizationServices()
 			]);
 			rows = p.items;
 			catalog = c;
+			organizationServices = services;
 			if (can(permissions, 'staff.manage')) users = await listStaffUsers();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Chargement impossible';
@@ -67,6 +77,8 @@
 			employeeCode: '',
 			jobTitle: '',
 			primaryDepartment: '',
+			primaryServiceId: null,
+			secondaryServiceIds: [],
 			professionalNumber: '',
 			active: true,
 			functions: [],
@@ -83,6 +95,8 @@
 			employeeCode: x.employeeCode,
 			jobTitle: x.jobTitle,
 			primaryDepartment: x.primaryDepartment,
+			primaryServiceId: x.primaryServiceId,
+			secondaryServiceIds: x.serviceAssignments.filter((a) => !a.isPrimary).map((a) => a.serviceId),
 			professionalNumber: x.professionalNumber,
 			active: x.active,
 			functions: [...x.functions],
@@ -130,7 +144,7 @@
 		</div>
 	</header>
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
-	<section class="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-5">
+	<section class="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-6">
 		<input
 			bind:value={search}
 			placeholder="Nom, email, code agent"
@@ -149,6 +163,7 @@
 			><option value="">Tous statuts</option><option value="true">Actifs</option><option
 				value="false">Inactifs</option
 			></select
+		><ServiceSelect bind:value={serviceFilter} placeholder="Tous les services" />
 		><button onclick={load} class="rounded-xl bg-slate-900 text-white">Filtrer</button>
 	</section>
 	<section class="overflow-x-auto rounded-2xl border bg-white">
@@ -217,17 +232,30 @@
 					bind:value={form.jobTitle}
 					placeholder="Intitulé"
 					class="rounded-xl border p-3"
-				/><input
-					bind:value={form.primaryDepartment}
-					placeholder="Service principal"
-					class="rounded-xl border p-3"
-				/><input
+				/><ServiceSelect bind:value={form.primaryServiceId} placeholder="Service principal" /><input
 					bind:value={form.professionalNumber}
 					placeholder="Numéro professionnel"
 					class="rounded-xl border p-3"
 				/><label class="flex items-center gap-2"
 					><input type="checkbox" bind:checked={form.active} /> Personnel actif</label
 				>
+			</div>
+			<div class="mt-4">
+				<p class="mb-2 text-sm font-bold">Services secondaires</p>
+				<div class="flex flex-wrap gap-2">
+					{#each organizationServices.filter((s) => s.id !== form.primaryServiceId) as service (service.id)}<label
+							class="rounded-full border px-3 py-2 text-sm"
+							><input
+								type="checkbox"
+								checked={form.secondaryServiceIds.includes(service.id)}
+								onchange={() =>
+									(form.secondaryServiceIds = form.secondaryServiceIds.includes(service.id)
+										? form.secondaryServiceIds.filter((id) => id !== service.id)
+										: [...form.secondaryServiceIds, service.id])}
+							/>
+							{service.name}</label
+						>{/each}
+				</div>
 			</div>
 			{#each [['Fonctions', catalog.functions, 'functions'], ['Spécialités', catalog.specialties, 'specialties'], ['Capacités', catalog.capabilities, 'capabilities']] as group (group[0])}<div
 					class="mt-5"

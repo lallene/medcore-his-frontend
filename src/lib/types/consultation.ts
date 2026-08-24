@@ -19,6 +19,7 @@ export type Consultation = {
 	patientId: number;
 	doctorName: string;
 	service: string;
+	serviceId?: number | null;
 	status: ConsultationStatus;
 	diagnosis: string;
 	observations: string;
@@ -45,6 +46,7 @@ export type ConsultationListItem = {
 	patientName: string;
 	doctorName: string;
 	service: string;
+	serviceId?: number | null;
 	status: ConsultationStatus;
 	diagnosis: string;
 	createdAt: string;
@@ -57,6 +59,7 @@ export type ConsultationListFilters = {
 	patientId?: number;
 	status?: ConsultationStatus | '';
 	service?: string;
+	serviceId?: number;
 	search?: string;
 };
 
@@ -68,7 +71,8 @@ export type ConsultationListResponse = {
 export type CreateConsultationPayload = {
 	patientId: number;
 	doctorName: string;
-	service: string;
+	service?: string;
+	serviceId: number;
 	reasonIds: number[];
 	vitals: ConsultationVitalsPayload;
 	diagnosis: string;

@@ -7,6 +7,14 @@ export interface StaffProfile {
 	employeeCode: string;
 	jobTitle: string;
 	primaryDepartment: string;
+	primaryServiceId: number | null;
+	serviceAssignments: {
+		serviceId: number;
+		isPrimary: boolean;
+		active: boolean;
+		code: string;
+		name: string;
+	}[];
 	professionalNumber: string;
 	active: boolean;
 	functions: string[];
@@ -46,6 +54,8 @@ export interface StaffPayload {
 	employeeCode: string;
 	jobTitle: string;
 	primaryDepartment: string;
+	primaryServiceId: number | null;
+	secondaryServiceIds: number[];
 	professionalNumber: string;
 	active: boolean;
 	functions: string[];

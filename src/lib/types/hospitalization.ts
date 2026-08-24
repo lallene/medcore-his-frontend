@@ -10,6 +10,7 @@ export interface Hospitalization {
 	admissionReason: string;
 	admissionDiagnosis: string;
 	department: string;
+	serviceId?: number | null;
 	status: HospitalizationStatus;
 	admittedAt: string | null;
 	expectedDischargeAt: string | null;
@@ -40,6 +41,7 @@ export interface HospitalizationFilters {
 	patientId?: number;
 	status?: HospitalizationStatus | '';
 	department?: string;
+	serviceId?: number;
 	from?: string;
 	to?: string;
 }

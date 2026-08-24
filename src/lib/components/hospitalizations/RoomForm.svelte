@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { Building2 } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import type { Room, RoomPayload } from '$lib/types/bed-management';
 	import {
 		generateRoomCode,
 		roomFloorOptions,
 		roomFormDraft,
-		roomServiceOptions,
 		roomTypeOptions
 	} from './bed-management-state';
+	import ServiceSelect from '$lib/components/organization/ServiceSelect.svelte';
+	import { listOrganizationServices } from '$lib/api/organization';
+	import type { OrganizationService } from '$lib/types/organization';
 	let {
 		room = null,
 		rooms,
@@ -26,20 +29,16 @@
 	let code = $state(''),
 		name = $state(''),
 		department = $state(''),
+		serviceId = $state<number | null>(null),
 		floor = $state(''),
 		roomType = $state(''),
 		isActive = $state(true),
 		validation = $state(''),
 		hydrated = $state<number | null | undefined>(undefined);
-	const services = $derived(
-		[
-			...new Set([
-				...roomServiceOptions,
-				...rooms.map((item) => item.department),
-				...(room?.department ? [room.department] : [])
-			])
-		].sort((a, b) => a.localeCompare(b, 'fr'))
-	);
+	let services = $state<OrganizationService[]>([]);
+	onMount(() => {
+		void listOrganizationServices().then((items) => (services = items));
+	});
 	$effect(() => {
 		const identity = room?.id ?? null;
 		if (identity === hydrated) return;
@@ -48,21 +47,23 @@
 		code = draft.code;
 		name = draft.name;
 		department = draft.department;
+		serviceId = room?.serviceId ?? null;
 		floor = draft.floor;
 		roomType = draft.roomType;
 		isActive = draft.isActive;
 	});
 	$effect(() => {
 		if (room) return;
+		department = services.find((s) => s.id === serviceId)?.name ?? '';
 		code = generateRoomCode(department, floor, roomType, rooms);
 	});
 	function submit() {
-		if (!code || !name.trim() || !department || !floor || !roomType) {
+		if (!code || !name.trim() || !serviceId || !floor || !roomType) {
 			validation = 'Nom, service, étage et type sont obligatoires.';
 			return;
 		}
 		validation = '';
-		onsubmit({ code, name: name.trim(), department, floor, roomType, isActive });
+		onsubmit({ code, name: name.trim(), department, serviceId, floor, roomType, isActive });
 	}
 </script>
 
@@ -98,13 +99,8 @@
 			/></label
 		>
 		<label class="text-xs font-bold text-slate-700"
-			>Service <span class="text-red-500">*</span><select
-				bind:value={department}
-				class="mt-2 w-full rounded-xl border bg-white p-3 text-sm"
-				><option value="">Sélectionner un service</option
-				>{#each services as service (service)}<option value={service}>{service}</option
-					>{/each}</select
-			></label
+			>Service <span class="text-red-500">*</span>
+			<div class="mt-2"><ServiceSelect bind:value={serviceId} capability="beds" /></div></label
 		>
 		<label class="text-xs font-bold text-slate-700"
 			>Étage <span class="text-red-500">*</span><select

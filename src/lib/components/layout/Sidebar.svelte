@@ -41,7 +41,8 @@
 		| '/agenda'
 		| '/reports'
 		| '/administration'
-		| '/admin/staff';
+		| '/admin/staff'
+		| '/admin/organization';
 
 	type MenuItem = {
 		title: string;
@@ -139,7 +140,13 @@
 	const adminMenu: MenuItem[] = [
 		{ title: 'Rapports', href: '/reports', icon: BarChart3, permissions: ['dashboard.read'] },
 		{ title: 'Administration', href: '/administration', icon: Settings, permissions: ['*'] },
-		{ title: 'Personnel', href: '/admin/staff', icon: Users, permissions: ['staff.read'] }
+		{ title: 'Personnel', href: '/admin/staff', icon: Users, permissions: ['staff.read'] },
+		{
+			title: 'Organisation',
+			href: '/admin/organization',
+			icon: Settings,
+			permissions: ['organization.read']
+		}
 	];
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');

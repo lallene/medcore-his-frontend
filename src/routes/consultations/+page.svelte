@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { getConsultations } from '$lib/api/consultations';
 	import type { ConsultationListItem, ConsultationStatus } from '$lib/types/consultation';
+	import ServiceSelect from '$lib/components/organization/ServiceSelect.svelte';
 
 	let consultations = $state<ConsultationListItem[]>([]);
 	let loading = $state(true);
@@ -14,7 +15,7 @@
 	let totalPages = $state(1);
 	let search = $state('');
 	let status = $state<ConsultationStatus | ''>('');
-	let service = $state('');
+	let serviceId = $state<number | null>(null);
 
 	async function load(): Promise<void> {
 		loading = true;
@@ -24,7 +25,7 @@
 				page,
 				limit,
 				status,
-				service: service.trim() || undefined,
+				serviceId: serviceId || undefined,
 				search: search.trim() || undefined
 			});
 			consultations = result.data;
@@ -87,10 +88,10 @@
 			placeholder="Patient, médecin, diagnostic…"
 			class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
 		/>
-		<input
-			bind:value={service}
-			placeholder="Service"
-			class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+		<ServiceSelect
+			bind:value={serviceId}
+			capability="consultation"
+			placeholder="Tous les services"
 		/>
 		<select bind:value={status} class="rounded-xl border border-slate-200 px-4 py-3 text-sm">
 			<option value="">Tous les statuts</option>

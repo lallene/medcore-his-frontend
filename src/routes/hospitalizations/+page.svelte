@@ -6,18 +6,25 @@
 	import { listHospitalizations } from '$lib/api/hospitalizations';
 	import { hospitalizationStatusLabel } from '$lib/components/hospitalizations/hospitalization-state';
 	import type { Hospitalization, HospitalizationStatus } from '$lib/types/hospitalization';
+	import ServiceSelect from '$lib/components/organization/ServiceSelect.svelte';
 
 	let items = $state<Hospitalization[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	let status = $state<HospitalizationStatus | ''>('');
+	let serviceId = $state<number | null>(null);
 	let page = $state(1);
 	let totalPages = $state(1);
 	async function load() {
 		loading = true;
 		error = '';
 		try {
-			const result = await listHospitalizations({ page, limit: 20, status });
+			const result = await listHospitalizations({
+				page,
+				limit: 20,
+				status,
+				serviceId: serviceId || undefined
+			});
 			items = result.data;
 			totalPages = result.meta.totalPages;
 		} catch (err: unknown) {
@@ -42,6 +49,14 @@
 		<Hospital size={42} />
 	</header>
 	<div class="flex gap-3">
+		<div class="min-w-64">
+			<ServiceSelect
+				bind:value={serviceId}
+				capability="hospitalization"
+				placeholder="Tous les services"
+				onchange={load}
+			/>
+		</div>
 		<select
 			bind:value={status}
 			onchange={load}

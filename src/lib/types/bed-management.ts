@@ -7,6 +7,8 @@ export interface Room {
 	code: string;
 	name: string;
 	department: string;
+	serviceId: number | null;
+	organizationService?: { id: number; code: string; name: string };
 	floor: string;
 	roomType: string;
 	isActive: boolean;
@@ -21,6 +23,7 @@ export interface RoomPayload {
 	code: string;
 	name: string;
 	department: string;
+	serviceId: number;
 	floor: string;
 	roomType: string;
 	isActive: boolean;
@@ -66,6 +69,7 @@ export interface BedFilters {
 	page?: number;
 	limit?: number;
 	department?: string;
+	serviceId?: number;
 	roomId?: number;
 	status?: BedStatus | '';
 	active?: boolean;
