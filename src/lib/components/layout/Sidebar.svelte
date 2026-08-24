@@ -29,6 +29,7 @@
 		| '/insurance/vouchers'
 		| '/insurance/authorizations'
 		| '/billing'
+		| '/cash'
 		| '/pharmacy'
 		| '/laboratory'
 		| '/imaging'
@@ -53,7 +54,8 @@
 		{ title: 'Assurances', href: '/insurance', icon: Shield },
 		{ title: 'Bons PEC', href: '/insurance/vouchers', icon: FileText },
 		{ title: 'Autorisations PEC', href: '/insurance/authorizations', icon: FileCheck2 },
-		{ title: 'Facturation', href: '/billing', icon: CreditCard }
+		{ title: 'Facturation', href: '/billing', icon: CreditCard },
+		{ title: 'Caisse', href: '/cash', icon: CreditCard }
 	];
 
 	const servicesMenu: MenuItem[] = [
