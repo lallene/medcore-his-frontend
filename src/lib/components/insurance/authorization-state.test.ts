@@ -79,3 +79,24 @@ test('final decisions are readonly and RBAC remains granular', () => {
 		false
 	);
 });
+
+test('PEC creation UX hides technical fields and supports contextual multi-act selection', () => {
+	const page = readFileSync(
+		new URL('../../../routes/insurance/authorizations/+page.svelte', import.meta.url),
+		'utf8'
+	);
+	for (const marker of [
+		'Agent demandeur',
+		'getPatientCoverages',
+		'getEligibleInsuranceActs',
+		'selectedActKeys',
+		'coveredActs:',
+		'listBillableActs',
+		"authorizationResolution !== 'NONE'",
+		'Patient non assuré',
+		'contextLocked'
+	])
+		assert.ok(page.includes(marker), marker);
+	for (const forbidden of ['>Patient ID<', '>ID acte<', '>Type d’acte<', '>Service<input'])
+		assert.equal(page.includes(forbidden), false, forbidden);
+});

@@ -81,6 +81,7 @@ export async function createInsuranceAuthorization(payload: {
 	service?: string;
 	requestedAmount?: number | null;
 	comment?: string;
+	coveredActs?: { referenceType: string; referenceId: number }[];
 }): Promise<InsuranceAuthorization> {
 	const response = await api.post<ApiResponse<InsuranceAuthorization>>(
 		'/api/insurance/authorizations',

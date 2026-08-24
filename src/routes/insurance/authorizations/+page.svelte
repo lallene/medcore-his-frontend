@@ -3,6 +3,8 @@
 	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
 	import { Plus, Search, ShieldCheck, X } from 'lucide-svelte';
+	import { getPatients, getPatient } from '$lib/api/patients';
+	import { listBillableActs } from '$lib/api/billing';
 	import {
 		cancelInsuranceAuthorization,
 		createInsuranceAuthorization,
@@ -10,6 +12,7 @@
 		getInsuranceAuthorizations,
 		getInsuranceCompanies,
 		getPatientCoverages,
+		getEligibleInsuranceActs,
 		markInsuranceAuthorizationPending,
 		submitInsuranceAuthorization
 	} from '$lib/api/insurance';
@@ -25,9 +28,17 @@
 		InsuranceCompany,
 		PatientCoverage
 	} from '$lib/types/insurance';
+	import type { EligibleInsuranceAct } from '$lib/types/insurance';
+	import type { Patient } from '$lib/types/patient';
 	import ActSelector from '$lib/components/insurance/ActSelector.svelte';
 
-	type Claims = { permissions?: string[] };
+	type Claims = {
+		permissions?: string[];
+		email?: string;
+		name?: string;
+		firstName?: string;
+		lastName?: string;
+	};
 	let claims = $state<Claims | null>(null),
 		items = $state<InsuranceAuthorization[]>([]),
 		total = $state(0);
@@ -45,11 +56,34 @@
 		showCreate = $state(false);
 	let patientId = $state(0),
 		coverageId = $state(0),
-		createType = $state('CONSULTATION'),
 		referenceId = $state(0),
-		service = $state(''),
 		requestedAmount = $state<number | null>(null),
 		comment = $state('');
+	let createType = $state('CONSULTATION'),
+		contextLocked = $state(false);
+	let patients = $state<Patient[]>([]),
+		patientSearch = $state(''),
+		selectedPatient = $state<Patient | null>(null);
+	let eligibleActs = $state<EligibleInsuranceAct[]>([]),
+		selectedActKeys = $state<string[]>([]);
+	let tariffAmounts = $state<Record<string, number>>({}),
+		loadingCreate = $state(false);
+	const filteredPatients = $derived(
+		patients
+			.filter((p) =>
+				`${p.nom} ${p.prenoms} ${p.codePatient}`.toLowerCase().includes(patientSearch.toLowerCase())
+			)
+			.slice(0, 12)
+	);
+	const selectedCoverage = $derived(coverages.find((c) => c.id === coverageId));
+	const agentLabel = $derived(
+		claims?.name ||
+			[claims?.firstName, claims?.lastName].filter(Boolean).join(' ') ||
+			claims?.email ||
+			'Utilisateur connecté'
+	);
+	const actKey = (act: Pick<EligibleInsuranceAct, 'referenceType' | 'referenceId'>) =>
+		`${act.referenceType}:${act.referenceId}`;
 	let externalReference = $state(''),
 		decisionDate = $state(new Date().toISOString().slice(0, 10)),
 		decisionStatus = $state<AuthorizationStatus>('APPROVED'),
@@ -109,11 +143,68 @@
 			return;
 		}
 		try {
-			coverages = await getPatientCoverages(patientId);
+			coverages = (await getPatientCoverages(patientId)).filter((c) => {
+				const today = new Date().toISOString().slice(0, 10);
+				return (
+					c.isActive && (!c.validFrom || c.validFrom <= today) && (!c.validTo || c.validTo >= today)
+				);
+			});
 			coverageId = coverages.find((c) => c.isPrincipal)?.id ?? coverages[0]?.id ?? 0;
+			await loadEligibleActs();
 		} catch {
 			coverages = [];
 			coverageId = 0;
+		}
+	}
+	async function loadEligibleActs() {
+		eligibleActs = [];
+		selectedActKeys = [];
+		if (!patientId || !coverageId) return;
+		loadingCreate = true;
+		try {
+			const types = ['CONSULTATION', 'LABORATORY', 'IMAGING', 'HOSPITALIZATION', 'MEDICATION'];
+			eligibleActs = (
+				await Promise.all(
+					types.map((type) => getEligibleInsuranceActs({ patientId, coverageId, type }))
+				)
+			).flat();
+			const billable = await listBillableActs(patientId).catch(() => []);
+			tariffAmounts = Object.fromEntries(
+				billable
+					.filter((a) => a.tariff)
+					.map((a) => [`${a.actType}:${a.referenceId}`, a.tariff!.unitPrice * a.quantity])
+			);
+			const contextual = `${createType}:${referenceId}`;
+			if (
+				referenceId &&
+				eligibleActs.some((a) => actKey(a) === contextual && a.authorizationResolution === 'NONE')
+			)
+				selectedActKeys = [contextual];
+			recalculateAmount();
+		} finally {
+			loadingCreate = false;
+		}
+	}
+	function recalculateAmount() {
+		requestedAmount =
+			selectedActKeys.reduce((sum, key) => sum + (tariffAmounts[key] || 0), 0) || null;
+	}
+	async function choosePatient(patient: Patient) {
+		selectedPatient = patient;
+		patientId = patient.id;
+		patientSearch = `${patient.nom} ${patient.prenoms} — ${patient.codePatient}`;
+		await loadCoverages();
+	}
+	async function openCreate() {
+		showCreate = true;
+		if (!contextLocked && !patients.length) {
+			const first = await getPatients(1, 100);
+			const remaining = await Promise.all(
+				Array.from({ length: Math.max(0, first.meta.totalPages - 1) }, (_, index) =>
+					getPatients(index + 2, 100)
+				)
+			);
+			patients = [first, ...remaining].flatMap((result) => result.data);
 		}
 	}
 	function resetCreate() {
@@ -122,19 +213,30 @@
 		requestedAmount = null;
 		comment = '';
 		coverages = [];
+		eligibleActs = [];
+		selectedActKeys = [];
+		selectedPatient = null;
+		patientSearch = '';
+		contextLocked = false;
 	}
 	async function create() {
 		busy = true;
 		error = '';
 		try {
+			const acts = eligibleActs.filter((act) => selectedActKeys.includes(actKey(act)));
+			if (!acts.length) throw new Error('Sélectionnez au moins un acte non couvert.');
+			const primary = acts[0];
 			selected = await createInsuranceAuthorization({
 				patientId,
 				patientCoverageId: coverageId,
-				referenceType: createType,
-				referenceId,
-				service,
+				referenceType: primary.referenceType,
+				referenceId: primary.referenceId,
+				service: primary.secondaryLabel,
 				requestedAmount,
-				comment
+				comment,
+				coveredActs: acts
+					.slice(1)
+					.map((act) => ({ referenceType: act.referenceType, referenceId: act.referenceId }))
 			});
 			resetCreate();
 			await load();
@@ -222,9 +324,14 @@
 		patientId = Number(q.get('patientId') || 0);
 		referenceId = Number(q.get('referenceId') || 0);
 		createType = q.get('referenceType') || 'CONSULTATION';
-		service = q.get('service') || '';
 		showCreate = Boolean(patientId && referenceId && canCreate);
-		if (showCreate) void loadCoverages();
+		contextLocked = showCreate;
+		if (showCreate)
+			void getPatient(patientId).then((p) => {
+				selectedPatient = p;
+				patientSearch = `${p.nom} ${p.prenoms} — ${p.codePatient}`;
+				return loadCoverages();
+			});
 		void load().then(() => {
 			const authorizationId = Number(q.get('authorizationId') || 0);
 			if (authorizationId) selected = items.find((item) => item.id === authorizationId) ?? null;
@@ -243,7 +350,7 @@
 			</p>
 		</div>
 		{#if canCreate}<button
-				onclick={() => (showCreate = true)}
+				onclick={openCreate}
 				class="rounded-xl bg-violet-700 px-4 py-3 font-bold text-white"
 				><Plus class="inline" size={18} /> Nouvelle PEC</button
 			>{/if}
@@ -355,57 +462,103 @@
 				<button type="button" onclick={resetCreate}><X /></button>
 			</header>
 			<div class="grid gap-3 sm:grid-cols-2">
-				<label
-					>Patient ID<input
-						type="number"
-						required
-						bind:value={patientId}
-						onblur={loadCoverages}
-						class="block h-10 w-full rounded-lg border px-3"
-					/></label
-				><label
-					>Couverture<select
-						required
-						bind:value={coverageId}
-						class="block h-10 w-full rounded-lg border px-3"
-						><option value={0}>Choisir</option>{#each coverages as c (c.id)}<option value={c.id}
-								>{c.companyName} · {c.memberNumber} · contrat {c.coverageRate}%</option
-							>{/each}</select
-					></label
-				><label
-					>Type d’acte<select
-						bind:value={createType}
-						class="block h-10 w-full rounded-lg border px-3"
-						>{#each ['CONSULTATION', 'LABORATORY', 'IMAGING', 'HOSPITALIZATION', 'MEDICATION'] as type (type)}<option
-								>{type}</option
-							>{/each}</select
-					></label
-				><label
-					>ID acte<input
-						type="number"
-						required
-						bind:value={referenceId}
-						class="block h-10 w-full rounded-lg border px-3"
-					/></label
-				><label
-					>Service<input
-						bind:value={service}
-						class="block h-10 w-full rounded-lg border px-3"
-					/></label
-				><label
-					>Montant demandé<input
-						type="number"
-						min="0"
-						bind:value={requestedAmount}
-						class="block h-10 w-full rounded-lg border px-3"
-					/></label
-				>
+				<div class="relative sm:col-span-2">
+					<label for="pec-patient" class="font-bold">Patient</label>
+					<input
+						id="pec-patient"
+						bind:value={patientSearch}
+						disabled={contextLocked}
+						placeholder="Rechercher par nom ou code patient"
+						class="mt-1 block h-11 w-full rounded-lg border px-3 disabled:bg-slate-100"
+					/>
+					{#if !contextLocked && patientSearch && !selectedPatient}<div
+							class="absolute z-10 mt-1 max-h-52 w-full overflow-auto rounded-lg border bg-white shadow-xl"
+						>
+							{#each filteredPatients as patient (patient.id)}<button
+									type="button"
+									onclick={() => choosePatient(patient)}
+									class="block w-full border-b px-3 py-2 text-left hover:bg-violet-50"
+									><b>{patient.nom} {patient.prenoms}</b> — {patient.codePatient}{#if patient.age}
+										· {patient.age} ans{/if}</button
+								>{/each}
+						</div>{/if}
+				</div>
+				<div class="rounded-lg bg-slate-50 p-3">
+					<b>Agent demandeur</b>
+					<p>{agentLabel}</p>
+					<small>Identité vérifiée par le backend</small>
+				</div>
+				{#if selectedCoverage}<div class="rounded-lg bg-violet-50 p-3">
+						<b>Assurance</b>
+						<p>{selectedCoverage.companyName}</p>
+						<small
+							>{selectedCoverage.memberNumber} · taux contractuel {selectedCoverage.coverageRate}%
+							(informatif)</small
+						>
+					</div>{:else if selectedPatient}<div class="rounded-lg bg-amber-50 p-3 text-amber-800">
+						<b>Patient non assuré</b>
+						<p>Aucune PEC ne peut être créée sans couverture active.</p>
+					</div>{/if}
+				{#if coverages.length > 1}<label class="sm:col-span-2"
+						>Couverture active<select
+							bind:value={coverageId}
+							onchange={loadEligibleActs}
+							class="mt-1 block h-10 w-full rounded-lg border px-3"
+							>{#each coverages as c (c.id)}<option value={c.id}
+									>{c.companyName} · {c.memberNumber}{c.isPrincipal ? ' · Principale' : ''}</option
+								>{/each}</select
+						></label
+					>{/if}
 			</div>
+			<section class="rounded-xl border p-3">
+				<h3 class="font-black">Actes concernés</h3>
+				{#if loadingCreate}<p class="py-4 text-sm text-slate-500">
+						Chargement des actes du patient…
+					</p>{:else if !coverageId}<p class="py-4 text-sm text-slate-500">
+						Sélectionnez un patient assuré.
+					</p>{:else}<div class="mt-2 max-h-64 space-y-2 overflow-auto">
+						{#each eligibleActs as act (actKey(act))}<label
+								class="flex gap-3 rounded-lg border p-3"
+								class:opacity-60={act.authorizationResolution !== 'NONE'}
+								><input
+									type="checkbox"
+									value={actKey(act)}
+									bind:group={selectedActKeys}
+									onchange={recalculateAmount}
+									disabled={act.authorizationResolution !== 'NONE'}
+								/><span class="min-w-0"
+									><b>{act.label}</b><small class="block text-slate-500"
+										>{act.referenceType} · {act.secondaryLabel || 'Service dérivé de l’acte'} · {act.date
+											? new Date(act.date).toLocaleDateString('fr-FR')
+											: '—'}</small
+									><small class="block font-bold text-violet-700"
+										>{act.authorizationResolution === 'NONE'
+											? tariffAmounts[actKey(act)]
+												? money(tariffAmounts[actKey(act)])
+												: 'Aucune PEC'
+											: `${act.authorizationResolution === 'DIRECT' ? 'Déjà couvert' : 'Couvert'} par ${act.existingAuthorizationNumber}`}</small
+									></span
+								></label
+							>{:else}<p class="py-4 text-sm text-slate-500">
+								Aucun acte clinique éligible.
+							</p>{/each}
+					</div>{/if}
+			</section>
+			<label
+				>Montant demandé <span class="text-xs text-slate-500"
+					>(prérempli depuis la tarification, modifiable)</span
+				><input
+					type="number"
+					min="0"
+					bind:value={requestedAmount}
+					class="mt-1 block h-10 w-full rounded-lg border px-3"
+				/></label
+			>
 			<label
 				>Commentaire<textarea bind:value={comment} class="block w-full rounded-lg border p-3"
 				></textarea></label
 			><button
-				disabled={busy || !coverageId}
+				disabled={busy || !coverageId || selectedActKeys.length === 0}
 				class="rounded-lg bg-violet-700 px-4 py-2 font-bold text-white disabled:opacity-40"
 				>Créer la demande</button
 			>
