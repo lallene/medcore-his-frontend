@@ -2,16 +2,36 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { getTicketKPIs, listTickets } from '$lib/api/ticketing';
-	import { statusLabels } from '$lib/components/ticketing/state';
+	import {
+		statusLabels,
+		supportAssigneeLabel,
+		supportQueueColumns,
+		supportRequesterLabel,
+		supportServiceLabel,
+		supportSlaLabel
+	} from '$lib/components/ticketing/state';
 	import type { Ticket, TicketKPIs } from '$lib/types/ticketing';
-	let tickets = $state<Ticket[]>([]),
-		kpis = $state<TicketKPIs | null>(null),
-		loading = $state(true),
-		error = $state(''),
-		search = $state(''),
-		status = $state(''),
-		priority = $state(''),
-		sla = $state(false);
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import MetricCard from '$lib/components/ui/MetricCard.svelte';
+	import FilterBar from '$lib/components/ui/FilterBar.svelte';
+	import SearchInput from '$lib/components/ui/SearchInput.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+
+	let tickets = $state<Ticket[]>([]);
+	let kpis = $state<TicketKPIs | null>(null);
+	let loading = $state(true);
+	let error = $state('');
+	let search = $state('');
+	let status = $state('');
+	let priority = $state('');
+	let sla = $state(false);
+
 	async function load() {
 		loading = true;
 		try {
@@ -27,68 +47,87 @@
 			loading = false;
 		}
 	}
+
 	onMount(() => {
 		void load();
 	});
 </script>
 
-<div class="space-y-6 p-6">
-	<header>
-		<p class="text-xs font-black uppercase text-violet-700">Service Desk</p>
-		<h1 class="text-3xl font-black">File support</h1>
-		<p class="text-sm text-slate-500">Qualification, SLA et traitement des tickets autorisés.</p>
-	</header>
-	{#if error}<p role="alert" class="rounded-xl bg-red-50 p-3 text-red-700">
-			{error}
-		</p>{/if}{#if kpis}<section class="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
-			{#each [['Ouverts', kpis.open], ['Nouveaux', kpis.newToday], ['P1/P2', kpis.p1p2], ['SLA dépassés', kpis.slaBreached], ['Résolus', kpis.resolved], ['Rouverts', kpis.reopened], ['Réponse moy.', `${Math.round(kpis.averageFirstResponseMinutes)} min`], ['MTTR', `${Math.round(kpis.mttrMinutes)} min`]] as x (x[0])}<div
-					class="rounded-2xl border bg-white p-4"
-				>
-					<small class="font-bold uppercase text-slate-500">{x[0]}</small>
-					<p class="mt-2 text-xl font-black">{x[1]}</p>
-				</div>{/each}
-		</section>{/if}
-	<section class="rounded-2xl border bg-white">
-		<div class="grid gap-3 border-b p-4 md:grid-cols-5">
-			<input
-				aria-label="Recherche"
-				bind:value={search}
-				placeholder="Référence ou sujet"
-				class="rounded-xl border p-3"
-			/><select aria-label="Statut" bind:value={status} class="rounded-xl border p-3"
-				><option value="">Tous statuts</option
-				>{#each Object.entries(statusLabels) as [v, l] (v)}<option value={v}>{l}</option
-					>{/each}</select
-			><select aria-label="Priorité" bind:value={priority} class="rounded-xl border p-3"
-				><option value="">Toutes priorités</option>{#each ['P1', 'P2', 'P3', 'P4'] as v (v)}<option
-						value={v}>{v}</option
-					>{/each}</select
-			><label class="flex items-center gap-2 rounded-xl border p-3"
-				><input type="checkbox" bind:checked={sla} /> SLA dépassé</label
-			><button onclick={load} class="rounded-xl bg-slate-900 font-bold text-white">Filtrer</button>
-		</div>
-		{#if loading}<p class="p-10 text-center">Chargement…</p>{:else}<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-slate-50"
-						><tr
-							><th class="p-3">Ticket</th><th>Demandeur</th><th>Service</th><th>Priorité</th><th
-								>Statut</th
-							><th>Assigné</th></tr
-						></thead
-					><tbody
-						>{#each tickets as t (t.id)}<tr class="border-t"
-								><td class="p-3"
-									><a href={resolve(`/tickets/${t.id}`)} class="font-black text-blue-700"
-										>{t.reference}</a
-									><small class="block">{t.title}</small></td
-								><td>{t.requesterName}</td><td>{t.serviceName || '—'}</td><td>{t.priority}</td><td
-									>{statusLabels[t.status]}</td
-								><td>{t.assignedName || t.assignedQueue || '—'}</td></tr
-							>{:else}<tr
-								><td colspan="6" class="p-10 text-center text-slate-500">Aucun résultat.</td></tr
-							>{/each}</tbody
-					>
+<div class="space-y-6">
+	<PageHeader
+		eyebrow="Service Desk"
+		title="File support"
+		description="Qualification, SLA et traitement des tickets autorisés."
+	/>
+
+	{#if error}
+		<Alert tone="danger">{error}</Alert>
+	{/if}
+
+	{#if kpis}
+		<section class="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
+			{#each [['Ouverts', kpis.open], ['Nouveaux', kpis.newToday], ['P1/P2', kpis.p1p2], ['SLA dépassés', kpis.slaBreached], ['Résolus', kpis.resolved], ['Rouverts', kpis.reopened], ['Réponse moy.', `${Math.round(kpis.averageFirstResponseMinutes)} min`], ['MTTR', `${Math.round(kpis.mttrMinutes)} min`]] as x (x[0])}
+				<MetricCard title={String(x[0])} value={x[1]} />
+			{/each}
+		</section>
+	{/if}
+
+	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+		<FilterBar class="rounded-none border-0 border-b border-border shadow-none">
+			<SearchInput bind:value={search} class="min-w-[12rem] flex-1" />
+			<Select aria-label="Statut" bind:value={status} class="min-w-[10rem]">
+				<option value="">Tous statuts</option>
+				{#each Object.entries(statusLabels) as [value, label] (value)}
+					<option {value}>{label}</option>
+				{/each}
+			</Select>
+			<Select aria-label="Priorité" bind:value={priority} class="min-w-[8rem]">
+				<option value="">Toutes priorités</option>
+				{#each ['P1', 'P2', 'P3', 'P4'] as value (value)}
+					<option {value}>{value}</option>
+				{/each}
+			</Select>
+			<Checkbox bind:checked={sla} label="SLA dépassé" />
+			<Button variant="secondary" onclick={load}>Filtrer</Button>
+		</FilterBar>
+
+		{#if loading}
+			<LoadingState />
+		{:else if tickets.length === 0}
+			<div class="p-4"><EmptyState title="Aucun ticket dans le périmètre" /></div>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm" data-testid="support-queue-table">
+					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+						<tr>
+							{#each supportQueueColumns as column, index (column)}
+								<th class={index === 0 ? 'p-3' : ''}>{column}</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody>
+						{#each tickets as ticket (ticket.id)}
+							<tr class="border-t border-border hover:bg-surface-muted/50">
+								<td class="p-3">
+									<a
+										class="font-bold text-primary hover:underline"
+										href={resolve(`/tickets/${ticket.id}`)}>{ticket.reference}</a
+									>
+								</td>
+								<td>{ticket.title || '—'}</td>
+								<td>{supportRequesterLabel(ticket)}</td>
+								<td>{supportServiceLabel(ticket)}</td>
+								<td><StatusBadge status={ticket.priority} /></td>
+								<td><StatusBadge status={ticket.status} label={statusLabels[ticket.status]} /></td>
+								<td>{supportAssigneeLabel(ticket)}</td>
+								<td class:text-danger={ticket.responseSlaBreached || ticket.resolutionSlaBreached}>
+									{supportSlaLabel(ticket)}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
 				</table>
-			</div>{/if}
+			</div>
+		{/if}
 	</section>
 </div>
