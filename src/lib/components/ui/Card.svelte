@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
 
 	type CardAccent = 'default' | 'medical' | 'success' | 'info' | 'purple' | 'danger';
 
@@ -10,6 +11,7 @@
 		size?: 'default' | 'compact';
 		accent?: CardAccent;
 		icon?: typeof import('lucide-svelte').UserRound;
+		class?: string;
 		children?: Snippet;
 	}
 
@@ -20,27 +22,31 @@
 		size = 'default',
 		accent = 'default',
 		icon,
+		class: className = '',
 		children
 	}: Props = $props();
 
 	const accentClasses: Record<CardAccent, string> = {
 		default: 'bg-slate-100 text-slate-500',
-		medical: 'bg-blue-50 text-[#0E4C92]',
-		success: 'bg-emerald-50 text-[#18B893]',
-		info: 'bg-sky-50 text-blue-500',
-		purple: 'bg-violet-50 text-violet-500',
-		danger: 'bg-rose-50 text-rose-500'
+		medical: 'bg-accent text-primary',
+		success: 'bg-emerald-50 text-success',
+		info: 'bg-sky-50 text-info',
+		purple: 'bg-violet-50 text-violet-600',
+		danger: 'bg-red-50 text-danger'
 	};
 </script>
 
 <div
-	class="overflow-visible rounded-2xl border border-[#E6EDF5] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition-shadow hover:shadow-[0_6px_18px_rgba(15,23,42,0.06)]"
+	class={cn(
+		'overflow-visible rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]',
+		className
+	)}
 >
 	{#if title}
 		<div
 			class={size === 'compact'
-				? 'border-b border-[#EEF3F8] px-4 py-3'
-				: 'border-b border-[#EEF3F8] px-6 py-4'}
+				? 'border-b border-border px-4 py-3'
+				: 'border-b border-border px-6 py-4'}
 		>
 			<div class="flex items-center gap-3">
 				{#if icon}
@@ -51,16 +57,14 @@
 						<Icon size={16} />
 					</div>
 				{/if}
-
 				<div>
 					<h2
 						class={size === 'compact'
-							? 'text-sm font-semibold text-[#172033]'
-							: 'text-lg font-semibold text-[#172033]'}
+							? 'text-sm font-semibold text-slate-900'
+							: 'text-lg font-semibold text-slate-900'}
 					>
 						{title}
 					</h2>
-
 					{#if subtitle}
 						<p
 							class={size === 'compact'
@@ -74,7 +78,6 @@
 			</div>
 		</div>
 	{/if}
-
 	<div class={padding ? (size === 'compact' ? 'p-4' : 'p-6') : ''}>
 		{@render children?.()}
 	</div>

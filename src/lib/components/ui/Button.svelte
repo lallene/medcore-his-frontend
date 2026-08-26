@@ -1,34 +1,42 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
+	import { buttonVariantClasses, type ButtonVariant } from '$lib/design/status';
 
-	type Variant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+	type Size = 'sm' | 'md' | 'lg';
 
 	interface Props {
 		type?: 'button' | 'submit' | 'reset';
-		variant?: Variant;
+		variant?: ButtonVariant;
+		size?: Size;
 		disabled?: boolean;
 		loading?: boolean;
 		fullWidth?: boolean;
-		onclick?: () => void;
+		class?: string;
+		onclick?: (e: MouseEvent) => void;
 		children?: Snippet;
+		'aria-label'?: string;
+		'data-testid'?: string;
 	}
 
 	let {
 		type = 'button',
 		variant = 'primary',
+		size = 'md',
 		disabled = false,
 		loading = false,
 		fullWidth = false,
+		class: className = '',
 		onclick,
-		children
+		children,
+		'aria-label': ariaLabel,
+		'data-testid': testId
 	}: Props = $props();
 
-	const variants: Record<Variant, string> = {
-		primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-		secondary: 'bg-slate-200 hover:bg-slate-300 text-slate-900',
-		success: 'bg-green-600 hover:bg-green-700 text-white',
-		danger: 'bg-red-600 hover:bg-red-700 text-white',
-		ghost: 'bg-transparent hover:bg-slate-100 text-slate-700'
+	const sizes: Record<Size, string> = {
+		sm: 'px-3 py-1.5 text-sm rounded-lg',
+		md: 'px-4 py-2 text-sm rounded-xl',
+		lg: 'px-5 py-3 text-base rounded-xl'
 	};
 </script>
 
@@ -36,14 +44,22 @@
 	{type}
 	disabled={disabled || loading}
 	{onclick}
-	class={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium transition
-	${variants[variant]}
-	${fullWidth ? 'w-full' : ''}
-	${disabled || loading ? 'cursor-not-allowed opacity-60' : ''}`}
+	aria-label={ariaLabel}
+	aria-busy={loading || undefined}
+	data-testid={testId}
+	class={cn(
+		'inline-flex items-center justify-center gap-2 font-semibold transition focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60',
+		buttonVariantClasses[variant],
+		sizes[size],
+		fullWidth && 'w-full',
+		className
+	)}
 >
 	{#if loading}
-		<div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+		<span
+			class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+			aria-hidden="true"
+		></span>
 	{/if}
-
 	{@render children?.()}
 </button>

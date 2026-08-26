@@ -1,24 +1,35 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
+	import { toneBadgeClass, type StatusTone } from '$lib/design/status';
 
-	type Variant = 'primary' | 'success' | 'warning' | 'danger' | 'secondary';
+	type Variant = StatusTone | 'primary' | 'success' | 'warning' | 'danger' | 'secondary';
 
 	interface Props {
 		variant?: Variant;
+		class?: string;
 		children?: Snippet;
 	}
 
-	let { variant = 'primary', children }: Props = $props();
+	let { variant = 'primary', class: className = '', children }: Props = $props();
 
-	const variants: Record<Variant, string> = {
-		primary: 'bg-blue-100 text-blue-700',
-		success: 'bg-green-100 text-green-700',
-		warning: 'bg-amber-100 text-amber-700',
-		danger: 'bg-red-100 text-red-700',
-		secondary: 'bg-slate-100 text-slate-700'
+	const map: Record<string, StatusTone> = {
+		primary: 'primary',
+		success: 'success',
+		warning: 'warning',
+		danger: 'danger',
+		secondary: 'neutral',
+		neutral: 'neutral',
+		info: 'info'
 	};
 </script>
 
-<span class={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${variants[variant]}`}>
+<span
+	class={cn(
+		'inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold',
+		toneBadgeClass(map[variant] ?? 'neutral'),
+		className
+	)}
+>
 	{@render children?.()}
 </span>

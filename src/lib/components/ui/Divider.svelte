@@ -1,1 +1,1 @@
-<hr class="border-slate-200" />
+<hr class="border-0 border-t border-border" />

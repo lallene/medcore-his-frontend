@@ -14,6 +14,8 @@
 	import { getDashboard } from '$lib/api/dashboard';
 	import ActivityTimeline from '$lib/components/dashboard/ActivityTimeline.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import type { DashboardResponse } from '$lib/types/dashboard';
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import ProcessItem from '$lib/components/dashboard/ProcessItem.svelte';
@@ -40,9 +42,9 @@
 </svelte:head>
 
 {#if loading}
-	<p class="text-slate-500">Chargement du Command Center...</p>
+	<LoadingState label="Chargement du Command Center…" />
 {:else if error}
-	<div class="rounded-2xl bg-red-50 p-4 text-red-700">{error}</div>
+	<Alert tone="danger">{error}</Alert>
 {:else if dashboard}
 	<div class="space-y-6">
 		<section

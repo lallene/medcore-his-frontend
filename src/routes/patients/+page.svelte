@@ -23,6 +23,10 @@
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { medcoreColors } from '$lib/design/theme';
 
 	type InsuranceFilter = 'all' | 'insured' | 'uninsured';
 	type SexFilter = 'all' | 'M' | 'F';
@@ -359,7 +363,7 @@
 			detail="Dossiers enregistrés"
 			trend={`${patients.length} sur cette page`}
 			progress={Math.min((patients.length / Math.max(totalPatients, 1)) * 100, 100)}
-			accent="#0E4C92"
+			accent={medcoreColors.primary}
 		/>
 
 		<MetricCard
@@ -369,7 +373,7 @@
 			detail={`${uninsuredPatientsOnPage} non assuré(s)`}
 			trend={`${pageInsuredRate} % de cette page`}
 			progress={pageInsuredRate}
-			accent="#7C3AED"
+			accent={medcoreColors.semantic.info}
 		/>
 
 		<MetricCard
@@ -379,7 +383,7 @@
 			detail={`${insuredPatientsOnPage} assuré(s)`}
 			trend={`${pageUninsuredRate} % de cette page`}
 			progress={pageUninsuredRate}
-			accent="#EA580C"
+			accent={medcoreColors.semantic.warning}
 		/>
 
 		<MetricCard
@@ -389,14 +393,12 @@
 			detail="Accès Patient 360°"
 			trend="Suivi longitudinal"
 			progress={totalPatients > 0 ? 100 : 0}
-			accent="#F59E0B"
+			accent={medcoreColors.brandAccent}
 		/>
 	</div>
 
 	{#if error}
-		<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-			{error}
-		</div>
+		<Alert tone="danger">{error}</Alert>
 	{/if}
 
 	<Card title="Liste des patients" subtitle="Patients enregistrés dans MedCore HIS">
@@ -426,13 +428,7 @@
 						<option value={100}>100 par page</option>
 					</select>
 
-					<button
-						type="button"
-						onclick={resetFilters}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-					>
-						Réinitialiser
-					</button>
+					<Button variant="secondary" onclick={resetFilters}>Réinitialiser</Button>
 				</div>
 			</div>
 
@@ -516,32 +512,16 @@
 		</div>
 
 		{#if loading}
-			<div class="space-y-3">
-				{#each [0, 1, 2, 3, 4] as item (item)}
-					<div class="animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-5">
-						<div class="h-4 w-48 rounded bg-slate-200"></div>
-						<div class="mt-3 h-3 w-full rounded bg-slate-200"></div>
-					</div>
-				{/each}
-			</div>
+			<LoadingState label="Chargement des patients…" />
 		{:else if filteredPatients.length === 0}
-			<div class="rounded-2xl border border-dashed border-slate-300 p-10 text-center">
-				<p class="text-4xl">👤</p>
-
-				<h3 class="mt-4 text-lg font-bold text-slate-900">Aucun patient trouvé</h3>
-
-				<p class="mt-2 text-sm text-slate-500">
-					Modifiez votre recherche ou réinitialisez les filtres.
-				</p>
-
-				<button
-					type="button"
-					onclick={resetFilters}
-					class="mt-5 rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white"
-				>
-					Réinitialiser
-				</button>
-			</div>
+			<EmptyState
+				title="Aucun patient trouvé"
+				description="Modifiez votre recherche ou réinitialisez les filtres."
+			>
+				{#snippet cta()}
+					<Button onclick={resetFilters}>Réinitialiser</Button>
+				{/snippet}
+			</EmptyState>
 		{:else}
 			<div class="overflow-hidden rounded-2xl border border-slate-200">
 				<div

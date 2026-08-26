@@ -45,6 +45,7 @@
 		| '/admin/staff'
 		| '/admin/organization'
 		| '/admin/qa'
+		| '/admin/design-system'
 		| '/tickets'
 		| '/support/tickets';
 
@@ -153,6 +154,12 @@
 			permissions: ['organization.read']
 		},
 		{ title: 'Automated QA', href: '/admin/qa', icon: BarChart3, permissions: ['qa.read'] },
+		{
+			title: 'Design System',
+			href: '/admin/design-system',
+			icon: LayoutDashboard,
+			permissions: ['qa.read']
+		},
 		{
 			title: 'Service Desk',
 			href: '/support/tickets',

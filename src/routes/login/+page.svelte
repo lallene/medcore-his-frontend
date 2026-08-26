@@ -7,18 +7,18 @@
 
 	import {
 		Activity,
-		AlertCircle,
 		Eye,
 		EyeOff,
 		FileText,
 		HeartPulse,
-		Loader2,
 		Lock,
 		Mail,
 		ShieldCheck,
 		Sparkles,
 		Stethoscope
 	} from 'lucide-svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let showPassword = $state(false);
 	let email = $state('admin@medcore.local');
@@ -219,25 +219,19 @@
 					</div>
 
 					{#if error}
-						<div class="flex items-start gap-2 rounded-2xl bg-red-50 p-3 text-sm text-red-700">
-							<AlertCircle size={16} class="mt-0.5 shrink-0" />
-							<span>{error}</span>
-						</div>
+						<Alert tone="danger">{error}</Alert>
 					{/if}
 
-					<button
+					<Button
 						data-testid="qa-login-submit"
 						type="submit"
-						disabled={loading}
-						class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E4C92] py-3.5 font-bold text-white shadow-lg shadow-blue-900/10 transition hover:-translate-y-0.5 hover:bg-[#1565C0] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+						fullWidth
+						size="lg"
+						{loading}
+						class="rounded-2xl py-3.5 shadow-lg shadow-blue-900/10"
 					>
-						{#if loading}
-							<Loader2 size={18} class="animate-spin" />
-							Connexion en cours...
-						{:else}
-							Se connecter
-						{/if}
-					</button>
+						{loading ? 'Connexion en cours...' : 'Se connecter'}
+					</Button>
 				</form>
 
 				<div class="mt-8 rounded-2xl bg-slate-50 p-4">

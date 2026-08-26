@@ -37,6 +37,9 @@
 	import PatientTabs from '$lib/components/patients/patient-360/PatientTabs.svelte';
 	import type { PatientTab, PatientTabItem } from '$lib/components/patients/patient-360/types';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
 
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { Patient } from '$lib/types/patient';
@@ -182,24 +185,20 @@
 </svelte:head>
 
 {#if loading}
-	<div class="flex min-h-[300px] items-center justify-center">
-		<div class="text-center">
-			<div
-				class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[#0E4C92]"
-			></div>
-
-			<p class="mt-4 text-sm font-semibold text-slate-500">Chargement du dossier patient...</p>
-		</div>
-	</div>
+	<LoadingState label="Chargement du dossier patient…" class="min-h-[300px]" />
 {:else if error}
-	<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-		{error}
-	</div>
+	<Alert tone="danger" title="Patient 360°">{error}</Alert>
 {:else if patient}
 	{@const p = patient}
 	{@const insurance = resolvePatientInsurance(p, coverages)}
 
 	<div class="space-y-6">
+		<Breadcrumb
+			items={[
+				{ label: 'Patients', href: '/patients' },
+				{ label: p.codePatient || `Patient #${p.id}` }
+			]}
+		/>
 		<PatientHeader patient={p} {insurance} />
 
 		<PatientTabs tabs={patientTabs} {activeTab} onSelect={selectTab} />
