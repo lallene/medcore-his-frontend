@@ -72,7 +72,9 @@ jobs:
         run: go run ./cmd/migrate && go run ./cmd/seed --demo-full
       - name: Start backend
         working-directory: backend
-        run: go run ./cmd/api > ../backend-qa.log 2>&1 &
+        run: |
+          mkdir -p ../frontend/test-results/logs
+          go run ./cmd/api > ../frontend/test-results/logs/backend-qa.log 2>&1 &
       - name: Wait for backend health
         run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:8080/health && exit 0; sleep 1; done; exit 1
       - name: Frontend quality gate
@@ -83,7 +85,9 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Start frontend
         working-directory: frontend
-        run: npm run preview -- --host 127.0.0.1 --port 4173 > ../frontend-qa.log 2>&1 &
+        run: |
+          mkdir -p test-results/logs
+          npm run preview -- --host 127.0.0.1 --port 4173 > test-results/logs/frontend-qa.log 2>&1 &
       - name: Wait for frontend
         run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:4173/login >/dev/null && exit 0; sleep 1; done; exit 1
       - name: Run Playwright release gate
@@ -95,9 +99,23 @@ jobs:
         if: always() && hashFiles('frontend/test-results/qa-summary.json') != ''
         working-directory: backend
         run: go run ./cmd/qa-import ../frontend/test-results/qa-summary.json
-      - name: Collect service logs
-        if: failure() || steps.playwright.outcome == 'failure'
-        run: mkdir -p frontend/test-results/logs && cp backend-qa.log frontend-qa.log frontend/test-results/logs/
+      - name: Collect QA diagnostics
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+
+          if [ ! -f frontend/test-results/logs/backend-qa.log ]; then
+            echo "backend-qa.log was not generated because the backend start step was not reached or did not create the log." \
+              > frontend/test-results/logs/backend-qa.log
+          fi
+
+          if [ ! -f frontend/test-results/logs/frontend-qa.log ]; then
+            echo "frontend-qa.log was not generated because the frontend start step was not reached or did not create the log." \
+              > frontend/test-results/logs/frontend-qa.log
+          fi
+
+          echo "=== QA evidence ==="
+          find frontend/test-results -maxdepth 3 -type f -print || true
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
