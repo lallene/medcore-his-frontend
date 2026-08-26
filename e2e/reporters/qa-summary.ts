@@ -1,20 +1,11 @@
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, relative } from 'node:path';
+import { finalizeQASummaryTests, type QASummaryAttempt } from '../../src/lib/qa/summary.ts';
 
-type Recorded = {
-	key: string;
-	suite: string;
-	title: string;
-	status: string;
-	duration: number;
-	error: string | null;
-	retryCount: number;
-	artifacts: { type: string; name: string; location: string }[];
-};
 export default class QASummaryReporter implements Reporter {
 	private startedAt = new Date();
-	private tests: Recorded[] = [];
+	private attempts: QASummaryAttempt[] = [];
 	onBegin() {
 		this.startedAt = new Date();
 	}
@@ -28,7 +19,8 @@ export default class QASummaryReporter implements Reporter {
 				name: a.name,
 				location: relative(process.cwd(), a.path!)
 			}));
-		this.tests.push({
+		this.attempts.push({
+			id: test.id,
 			key,
 			suite,
 			title: test.title,
@@ -41,11 +33,12 @@ export default class QASummaryReporter implements Reporter {
 		});
 	}
 	onEnd(result: FullResult) {
+		const tests = finalizeQASummaryTests(this.attempts);
 		const finishedAt = new Date();
-		const passed = this.tests.filter((t) => t.status === 'PASSED').length;
-		const failed = this.tests.filter((t) => t.status === 'FAILED').length;
-		const skipped = this.tests.filter((t) => t.status === 'SKIPPED').length;
-		const notImplemented = this.tests.filter((t) => t.status === 'NOT_IMPLEMENTED').length;
+		const passed = tests.filter((t) => t.status === 'PASSED').length;
+		const failed = tests.filter((t) => t.status === 'FAILED').length;
+		const skipped = tests.filter((t) => t.status === 'SKIPPED').length;
+		const notImplemented = tests.filter((t) => t.status === 'NOT_IMPLEMENTED').length;
 		const output = {
 			runId: process.env.QA_RUN_ID ?? `local-${this.startedAt.toISOString()}`,
 			type: (process.env.QA_SUITE ?? 'smoke').toUpperCase(),
@@ -56,13 +49,13 @@ export default class QASummaryReporter implements Reporter {
 			startedAt: this.startedAt.toISOString(),
 			finishedAt: finishedAt.toISOString(),
 			duration: finishedAt.getTime() - this.startedAt.getTime(),
-			total: this.tests.length,
+			total: tests.length,
 			passed,
 			failed,
 			skipped,
 			notImplemented,
 			status: result.status === 'passed' ? 'PASSED' : 'FAILED',
-			tests: this.tests,
+			tests,
 			artifacts: [
 				{ type: 'HTML_REPORT', name: 'Playwright HTML', location: 'playwright-report/index.html' },
 				{ type: 'JUNIT', name: 'JUnit XML', location: 'test-results/junit.xml' }

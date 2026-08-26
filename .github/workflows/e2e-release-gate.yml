@@ -97,6 +97,22 @@ jobs:
           go run ./cmd/api > ../frontend/test-results/logs/backend-qa.log 2>&1 &
       - name: Wait for backend health
         run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:8080/health && exit 0; sleep 1; done; exit 1
+
+      - name: Verify QA admin authentication
+        run: |
+          echo "=== QA ADMIN USER ==="
+          PGPASSWORD=postgres psql \
+            -h 127.0.0.1 \
+            -U postgres \
+            -d medcore_full_demo \
+            -c "SELECT id,email,is_active,role FROM users WHERE email='admin@medcore.local';"
+
+          echo "=== QA ADMIN LOGIN ==="
+          curl --fail-with-body \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@medcore.local","password":"admin123"}' \
+            http://127.0.0.1:8080/api/auth/login
       - name: Frontend quality gate
         working-directory: frontend
         run: npm ci && npm test && npm run check && npm run lint && npm run build
