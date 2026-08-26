@@ -42,6 +42,7 @@ jobs:
       JWT_SECRET: qa-ci-ephemeral-not-production
       APP_ENV: test
       PORT: '8080'
+      CORS_ORIGIN: http://127.0.0.1:4173
       PUBLIC_API_URL: http://127.0.0.1:8080
       QA_BASE_URL: http://127.0.0.1:4173
       QA_API_URL: http://127.0.0.1:8080
