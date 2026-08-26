@@ -64,12 +64,17 @@ jobs:
         with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Migrate ephemeral QA database
+        working-directory: backend
+        run: go run ./cmd/migrate
       - name: Backend unit and integration gate
         working-directory: backend
-        run: go test ./... && go vet ./...
-      - name: Migrate and seed ephemeral DEMO database
+        run: |
+          go test ./...
+          go vet ./...
+      - name: Seed ephemeral DEMO database
         working-directory: backend
-        run: go run ./cmd/migrate && go run ./cmd/seed --demo-full
+        run: go run ./cmd/seed --demo-full
       - name: Start backend
         working-directory: backend
         run: |
