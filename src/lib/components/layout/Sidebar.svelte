@@ -16,11 +16,13 @@
 		Image,
 		LayoutDashboard,
 		LifeBuoy,
+		ListOrdered,
 		Pill,
 		ReceiptText,
 		Settings,
 		Shield,
-		Users
+		Users,
+		UsersRound
 	} from 'lucide-svelte';
 
 	type MenuHref =
@@ -47,7 +49,11 @@
 		| '/admin/qa'
 		| '/admin/design-system'
 		| '/tickets'
-		| '/support/tickets';
+		| '/support/tickets'
+		| '/queue'
+		| '/queue/reception'
+		| '/queue/triage'
+		| '/queue/doctor';
 
 	type MenuItem = {
 		title: string;
@@ -72,6 +78,36 @@
 			icon: HeartPulse,
 			soon: true,
 			permissions: ['consultations.read']
+		},
+		{
+			title: 'File patients',
+			href: '/queue',
+			icon: ListOrdered,
+			permissions: [
+				'queue.reception.read',
+				'queue.triage.read',
+				'queue.doctor.read',
+				'queue.read.service',
+				'queue.read.all'
+			]
+		},
+		{
+			title: 'Accueil',
+			href: '/queue/reception',
+			icon: UsersRound,
+			permissions: ['queue.reception.read']
+		},
+		{
+			title: 'Pré-triage',
+			href: '/queue/triage',
+			icon: ListOrdered,
+			permissions: ['queue.triage.read']
+		},
+		{
+			title: 'File médecin',
+			href: '/queue/doctor',
+			icon: UsersRound,
+			permissions: ['queue.doctor.read']
 		},
 		{
 			title: 'Hospitalisations',
@@ -242,7 +278,7 @@
 					{@const active = isActive(item.href)}
 
 					<a
-						href={resolve(item.href)}
+						href={resolve(item.href as '/dashboard')}
 						class={`group relative flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm transition-all duration-200 ${
 							active
 								? 'bg-[#0E4C92] text-white shadow-lg'
@@ -285,7 +321,7 @@
 					{@const active = isActive(item.href)}
 
 					<a
-						href={resolve(item.href)}
+						href={resolve(item.href as '/dashboard')}
 						class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
 							active
 								? 'bg-[#0E4C92] text-white shadow-lg'
@@ -330,7 +366,7 @@
 					{@const active = isActive(item.href)}
 
 					<a
-						href={resolve(item.href)}
+						href={resolve(item.href as '/dashboard')}
 						class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
 							active
 								? 'bg-[#0E4C92] text-white shadow-lg'
