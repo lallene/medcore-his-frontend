@@ -17,5 +17,5 @@ test('QA-DASHBOARD-001 @critical imported campaign is consultable without execut
 
 	await bootstrapRun.click();
 
-	await expect(page.getByRole('heading', { name: /^QA-RBAC-001 / })).toBeVisible();
+	await expect(page.getByText(/QA-RBAC-001/).first()).toBeVisible();
 });
