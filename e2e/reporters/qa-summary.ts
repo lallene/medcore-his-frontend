@@ -1,0 +1,75 @@
+import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, relative } from 'node:path';
+
+type Recorded = {
+	key: string;
+	suite: string;
+	title: string;
+	status: string;
+	duration: number;
+	error: string | null;
+	retryCount: number;
+	artifacts: { type: string; name: string; location: string }[];
+};
+export default class QASummaryReporter implements Reporter {
+	private startedAt = new Date();
+	private tests: Recorded[] = [];
+	onBegin() {
+		this.startedAt = new Date();
+	}
+	onTestEnd(test: TestCase, result: TestResult) {
+		const key = test.title.match(/QA-[A-Z]+-\d+/)?.[0] ?? test.id;
+		const suite = test.location.file.split('/e2e/')[1]?.split('/')[0] ?? 'e2e';
+		const artifacts = result.attachments
+			.filter((a) => a.path)
+			.map((a) => ({
+				type: a.name.toUpperCase().replaceAll('-', '_'),
+				name: a.name,
+				location: relative(process.cwd(), a.path!)
+			}));
+		this.tests.push({
+			key,
+			suite,
+			title: test.title,
+			status:
+				result.status === 'passed' ? 'PASSED' : result.status === 'skipped' ? 'SKIPPED' : 'FAILED',
+			duration: result.duration,
+			error: result.error?.message ?? null,
+			retryCount: result.retry,
+			artifacts
+		});
+	}
+	onEnd(result: FullResult) {
+		const finishedAt = new Date();
+		const passed = this.tests.filter((t) => t.status === 'PASSED').length;
+		const failed = this.tests.filter((t) => t.status === 'FAILED').length;
+		const skipped = this.tests.filter((t) => t.status === 'SKIPPED').length;
+		const notImplemented = this.tests.filter((t) => t.status === 'NOT_IMPLEMENTED').length;
+		const output = {
+			runId: process.env.QA_RUN_ID ?? `local-${this.startedAt.toISOString()}`,
+			type: (process.env.QA_SUITE ?? 'smoke').toUpperCase(),
+			commitSha: process.env.GITHUB_SHA ?? 'local',
+			branch: process.env.GITHUB_REF_NAME ?? 'local',
+			environment: process.env.QA_ENVIRONMENT ?? 'local',
+			triggeredBy: process.env.GITHUB_ACTOR ?? 'local',
+			startedAt: this.startedAt.toISOString(),
+			finishedAt: finishedAt.toISOString(),
+			duration: finishedAt.getTime() - this.startedAt.getTime(),
+			total: this.tests.length,
+			passed,
+			failed,
+			skipped,
+			notImplemented,
+			status: result.status === 'passed' ? 'PASSED' : 'FAILED',
+			tests: this.tests,
+			artifacts: [
+				{ type: 'HTML_REPORT', name: 'Playwright HTML', location: 'playwright-report/index.html' },
+				{ type: 'JUNIT', name: 'JUnit XML', location: 'test-results/junit.xml' }
+			]
+		};
+		const path = 'test-results/qa-summary.json';
+		mkdirSync(dirname(path), { recursive: true });
+		writeFileSync(path, JSON.stringify(output, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+	}
+}

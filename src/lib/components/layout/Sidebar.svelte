@@ -42,7 +42,8 @@
 		| '/reports'
 		| '/administration'
 		| '/admin/staff'
-		| '/admin/organization';
+		| '/admin/organization'
+		| '/admin/qa';
 
 	type MenuItem = {
 		title: string;
@@ -146,7 +147,8 @@
 			href: '/admin/organization',
 			icon: Settings,
 			permissions: ['organization.read']
-		}
+		},
+		{ title: 'Automated QA', href: '/admin/qa', icon: BarChart3, permissions: ['qa.read'] }
 	];
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');

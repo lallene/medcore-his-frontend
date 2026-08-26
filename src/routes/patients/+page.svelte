@@ -406,6 +406,7 @@
 					<Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
 
 					<input
+						data-testid="qa-patient-search"
 						bind:value={search}
 						placeholder="Nom, code patient, téléphone, quartier, matricule..."
 						class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"

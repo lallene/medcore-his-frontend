@@ -165,6 +165,7 @@
 							/>
 
 							<input
+								data-testid="qa-login-email"
 								id="email"
 								type="email"
 								autocomplete="username"
@@ -193,6 +194,7 @@
 							/>
 
 							<input
+								data-testid="qa-login-password"
 								id="password"
 								type={showPassword ? 'text' : 'password'}
 								autocomplete="current-password"
@@ -224,6 +226,7 @@
 					{/if}
 
 					<button
+						data-testid="qa-login-submit"
 						type="submit"
 						disabled={loading}
 						class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E4C92] py-3.5 font-bold text-white shadow-lg shadow-blue-900/10 transition hover:-translate-y-0.5 hover:bg-[#1565C0] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"

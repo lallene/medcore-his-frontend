@@ -1,0 +1,113 @@
+name: MedCore QA Release Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Playwright suite
+        required: true
+        default: critical
+        type: choice
+        options: [smoke, critical, full]
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medcore-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medcore_full_demo
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d medcore_full_demo"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/medcore_full_demo?sslmode=disable
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/medcore_full_demo?sslmode=disable
+      JWT_SECRET: qa-ci-ephemeral-not-production
+      APP_ENV: test
+      PORT: '8080'
+      PUBLIC_API_URL: http://127.0.0.1:8080
+      QA_BASE_URL: http://127.0.0.1:4173
+      QA_API_URL: http://127.0.0.1:8080
+      QA_ADMIN_EMAIL: admin@medcore.local
+      QA_ADMIN_PASSWORD: admin123
+      QA_ENVIRONMENT: ci
+      QA_RUN_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
+      QA_SUITE: ${{ inputs.suite || 'critical' }}
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with: { path: frontend }
+      - name: Checkout backend main
+        uses: actions/checkout@v4
+        with:
+          repository: lallene/medcore-his
+          path: backend
+          token: ${{ secrets.MEDCORE_BACKEND_READ_TOKEN || github.token }}
+      - uses: actions/setup-go@v5
+        with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Backend unit and integration gate
+        working-directory: backend
+        run: go test ./... && go vet ./...
+      - name: Migrate and seed ephemeral DEMO database
+        working-directory: backend
+        run: go run ./cmd/migrate && go run ./cmd/seed --demo-full
+      - name: Start backend
+        working-directory: backend
+        run: go run ./cmd/api > ../backend-qa.log 2>&1 &
+      - name: Wait for backend health
+        run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:8080/health && exit 0; sleep 1; done; exit 1
+      - name: Frontend quality gate
+        working-directory: frontend
+        run: npm ci && npm test && npm run check && npm run lint && npm run build
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Start frontend
+        working-directory: frontend
+        run: npm run preview -- --host 127.0.0.1 --port 4173 > ../frontend-qa.log 2>&1 &
+      - name: Wait for frontend
+        run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:4173/login >/dev/null && exit 0; sleep 1; done; exit 1
+      - name: Run Playwright release gate
+        id: playwright
+        continue-on-error: true
+        working-directory: frontend
+        run: npx playwright test
+      - name: Import campaign metadata into ephemeral QA database
+        if: always() && hashFiles('frontend/test-results/qa-summary.json') != ''
+        working-directory: backend
+        run: go run ./cmd/qa-import ../frontend/test-results/qa-summary.json
+      - name: Collect service logs
+        if: failure() || steps.playwright.outcome == 'failure'
+        run: mkdir -p frontend/test-results/logs && cp backend-qa.log frontend-qa.log frontend/test-results/logs/
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: medcore-qa-${{ env.QA_RUN_ID }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+      - name: Enforce Playwright gate
+        if: steps.playwright.outcome == 'failure'
+        run: exit 1

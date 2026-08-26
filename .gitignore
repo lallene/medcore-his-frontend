@@ -17,6 +17,11 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.test
+!.env.qa.example
+
+# QA artifacts
+/playwright-report/
+/test-results/
 
 # Vite
 vite.config.js.timestamp-*
