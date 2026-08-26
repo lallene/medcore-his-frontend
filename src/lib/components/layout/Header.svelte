@@ -1,11 +1,21 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Bell, LogOut, Search } from 'lucide-svelte';
+	import { Bell, LifeBuoy, LogOut, Search } from 'lucide-svelte';
+	import { page } from '$app/state';
 	import { clearSession, user } from '$lib/stores/auth';
 	import { clinicBranding } from '$lib/config/clinic';
+	import { onMount } from 'svelte';
+	import { listTicketNotifications } from '$lib/api/ticketing';
 
 	let now = $state(new Date());
+	let ticketNotifications = $state(0);
+	onMount(() => {
+		if (localStorage.getItem('medcore_token'))
+			void listTicketNotifications()
+				.then((items) => (ticketNotifications = items.filter((item) => !item.readAt).length))
+				.catch(() => (ticketNotifications = 0));
+	});
 
 	setInterval(() => {
 		now = new Date();
@@ -46,10 +56,26 @@
 	</div>
 
 	<div class="flex items-center gap-4">
-		<button class="relative rounded-xl border border-slate-200 p-2 hover:bg-slate-50">
+		<a
+			href={resolve(
+				`/tickets/create?module=${encodeURIComponent(page.url.pathname.split('/')[1] || 'MedCore')}&page=${encodeURIComponent(page.url.pathname)}`
+			)}
+			class="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 2xl:flex"
+			title="Signaler un problème sur cette page"
+		>
+			<LifeBuoy size={18} /> Signaler un problème
+		</a>
+		<a
+			href={resolve('/tickets')}
+			class="relative rounded-xl border border-slate-200 p-2 hover:bg-slate-50"
+			aria-label="Notifications Service Desk"
+		>
 			<Bell size={19} />
-			<span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
-		</button>
+			{#if ticketNotifications > 0}<span
+					class="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-500 px-1 text-center text-xs font-bold text-white"
+					>{ticketNotifications}</span
+				>{/if}
+		</a>
 
 		<div class="text-right">
 			<p class="text-sm font-semibold text-slate-900">{$user?.name ?? 'Administrateur'}</p>

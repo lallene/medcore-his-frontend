@@ -15,6 +15,7 @@
 		Hospital,
 		Image,
 		LayoutDashboard,
+		LifeBuoy,
 		Pill,
 		ReceiptText,
 		Settings,
@@ -43,7 +44,9 @@
 		| '/administration'
 		| '/admin/staff'
 		| '/admin/organization'
-		| '/admin/qa';
+		| '/admin/qa'
+		| '/tickets'
+		| '/support/tickets';
 
 	type MenuItem = {
 		title: string;
@@ -112,7 +115,8 @@
 			href: '/insurance-receivables',
 			icon: Shield,
 			permissions: ['insurance_receivables.read']
-		}
+		},
+		{ title: 'Mes tickets', href: '/tickets', icon: LifeBuoy, permissions: ['ticket.read.own'] }
 	];
 
 	const servicesMenu: MenuItem[] = [
@@ -148,7 +152,13 @@
 			icon: Settings,
 			permissions: ['organization.read']
 		},
-		{ title: 'Automated QA', href: '/admin/qa', icon: BarChart3, permissions: ['qa.read'] }
+		{ title: 'Automated QA', href: '/admin/qa', icon: BarChart3, permissions: ['qa.read'] },
+		{
+			title: 'Service Desk',
+			href: '/support/tickets',
+			icon: LifeBuoy,
+			permissions: ['ticket.read.service', 'ticket.read.all']
+		}
 	];
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');
