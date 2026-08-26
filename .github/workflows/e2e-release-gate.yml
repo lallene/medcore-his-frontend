@@ -127,6 +127,17 @@ jobs:
           npm run preview -- --host 127.0.0.1 --port 4173 > test-results/logs/frontend-qa.log 2>&1 &
       - name: Wait for frontend
         run: for i in {1..60}; do curl --fail --silent http://127.0.0.1:4173/login >/dev/null && exit 0; sleep 1; done; exit 1
+      - name: Bootstrap QA campaign for dashboard
+        working-directory: frontend
+        env:
+          QA_RUN_ID: ${{ env.QA_RUN_ID }}-bootstrap
+          QA_SUITE: smoke
+        run: npx playwright test e2e/rbac/api-rbac.spec.ts
+      - name: Import bootstrap QA campaign
+        working-directory: backend
+        env:
+          QA_RUN_ID: ${{ env.QA_RUN_ID }}-bootstrap
+        run: go run ./cmd/qa-import ../frontend/test-results/qa-summary.json
       - name: Run Playwright release gate
         id: playwright
         continue-on-error: true
