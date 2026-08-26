@@ -60,6 +60,14 @@ jobs:
           repository: lallene/medcore-his
           path: backend
           token: ${{ secrets.MEDCORE_BACKEND_READ_TOKEN || github.token }}
+      - name: Verify backend revision
+        working-directory: backend
+        run: |
+          echo "=== BACKEND REVISION ==="
+          git rev-parse HEAD
+          git log -3 --oneline
+          echo "=== AnyPermission ==="
+          grep -RIn "func AnyPermission" internal/core/rbac || true
       - uses: actions/setup-go@v5
         with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
       - uses: actions/setup-node@v4
