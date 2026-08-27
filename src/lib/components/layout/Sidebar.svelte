@@ -21,6 +21,7 @@
 		ReceiptText,
 		Settings,
 		Shield,
+		Stethoscope,
 		Users,
 		UsersRound
 	} from 'lucide-svelte';
@@ -106,7 +107,7 @@
 		{
 			title: 'File médecin',
 			href: '/queue/doctor',
-			icon: UsersRound,
+			icon: Stethoscope,
 			permissions: ['queue.doctor.read']
 		},
 		{

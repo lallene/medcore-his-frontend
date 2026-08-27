@@ -4,6 +4,7 @@ import type {
 	CancelTicketPayload,
 	CompleteTriagePayload,
 	CreateAppointmentPayload,
+	DoctorWorklistPage,
 	FinanceEvaluation,
 	QueueAppointmentPage,
 	QueueAppointmentRow,
@@ -17,6 +18,9 @@ import type {
 } from '$lib/types/queue';
 
 export const getQueueKPIs = async () => (await api.get<QueueKPIs>('/api/queue/kpis')).data;
+
+export const getDoctorWorklist = async (params: Record<string, string | number> = {}) =>
+	(await api.get<DoctorWorklistPage>('/api/queue/doctor/worklist', { params })).data;
 
 export const listTodayAppointments = async (params: Record<string, string | number> = {}) =>
 	(await api.get<QueueAppointmentPage>('/api/queue/appointments/today', { params })).data;

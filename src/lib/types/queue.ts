@@ -55,14 +55,42 @@ export interface QueueTicket {
 	updatedAt: string;
 }
 
+export interface VitalSummary {
+	id: number;
+	temperatureC?: number;
+	systolicBp?: number;
+	diastolicBp?: number;
+	heartRate?: number;
+	oxygenSaturation?: number;
+	weightKg?: number;
+	heightCm?: number;
+	measuredAt?: string;
+	abnormalTemp: boolean;
+	abnormalBp: boolean;
+	abnormalHr: boolean;
+	abnormalSpo2: boolean;
+}
+
+export interface ClinicalSnippet {
+	label: string;
+	severity?: string;
+}
+
 export interface QueueTicketRow extends QueueTicket {
 	patientCode: string;
 	patientName: string;
+	patientSex?: string;
+	patientAgeYears?: number;
+	patientDob?: string;
+	patientPhone?: string;
 	serviceName: string;
 	expectedDoctorName: string;
+	doctorTakenByName?: string;
+	reason?: string;
 	waitMinutes: number;
 	punctuality?: Punctuality;
 	appointmentTime?: string;
+	vitalSigns?: VitalSummary;
 }
 
 export interface QueueAppointment {
@@ -126,9 +154,29 @@ export interface QueueKPIs {
 	lateAppointments: number;
 }
 
+export interface DoctorWorklistKPIs {
+	toTreat: number;
+	urgent: number;
+	inConsultation: number;
+	avgWaitMinutes: number;
+	completedToday: number;
+	avgConsultationMinutes: number;
+	lastCompletedAt?: string;
+}
+
+export interface DoctorWorklistPage {
+	items: QueueTicketRow[];
+	total: number;
+	page: number;
+	limit: number;
+	kpis: DoctorWorklistKPIs;
+}
+
 export interface QueueTicketDetail {
 	ticket: QueueTicketRow;
 	history: QueueHistory[];
+	allergies?: ClinicalSnippet[];
+	histories?: ClinicalSnippet[];
 }
 
 export interface FinanceEvaluation {

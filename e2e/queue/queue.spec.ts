@@ -302,3 +302,176 @@ test('QA-QUEUE-FULL-001 @full walk-in priority concurrency history', async ({
 	await page.goto('/queue/triage');
 	await expect(page.getByTestId('queue-triage')).toBeVisible();
 });
+
+test('QA-DOCTOR-WL-001 @critical doctor never sees pre-triage via worklist/list/get', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(90_000);
+	const admin = await loginApi(request, adminEmail);
+	const reception = await loginApi(request, receptionEmail);
+	const nurse = await loginApi(request, nurseEmail);
+	const doctor = await loginApi(request, doctorEmail);
+
+	await clearActiveTickets(request, admin, 'P-DEMO-008');
+	const pid = await patientId(request, reception, 'P-DEMO-008');
+	const sid = await serviceId(request, reception);
+
+	// 1. Patient avant triage (walk-in Accueil)
+	const walkIn = await request.post(`${api}/api/queue/check-in/walk-in`, {
+		headers: bearer(reception),
+		data: {
+			patientId: pid,
+			serviceId: sid,
+			identityConfirmed: true,
+			financeOverride: true,
+			financeOverrideNote: 'QA doctor WL visibility',
+			priority: 'HIGH',
+			reason: `QA-DOCTOR-WL-${Date.now()}`
+		}
+	});
+	expect(okCreate(walkIn.status()), await walkIn.text()).toBeTruthy();
+	const ticket = await walkIn.json();
+	expect(ticket.stage).toBe('WAITING_TRIAGE');
+
+	// 2–5. Médecin connecté : worklist + List générique + Get direct → pas de révélation
+	const beforeWL = await request.get(`${api}/api/queue/doctor/worklist?limit=100`, {
+		headers: bearer(doctor)
+	});
+	expect(beforeWL.ok(), await beforeWL.text()).toBeTruthy();
+	const beforeWLBody = await beforeWL.json();
+	expect((beforeWLBody.items ?? []).some((t: { id: number }) => t.id === ticket.id)).toBeFalsy();
+	for (const t of beforeWLBody.items ?? []) {
+		expect(t.stage).not.toBe('WAITING_TRIAGE');
+		expect(t.stage).not.toBe('TRIAGE_IN_PROGRESS');
+	}
+
+	const beforeList = await request.get(`${api}/api/queue/tickets?limit=100`, {
+		headers: bearer(doctor)
+	});
+	expect(beforeList.ok(), await beforeList.text()).toBeTruthy();
+	const beforeListBody = await beforeList.json();
+	expect((beforeListBody.items ?? []).some((t: { id: number }) => t.id === ticket.id)).toBeFalsy();
+	for (const t of beforeListBody.items ?? []) {
+		expect(['WAITING_DOCTOR', 'DOCTOR_IN_PROGRESS']).toContain(t.stage);
+	}
+
+	const forbiddenStage = await request.get(
+		`${api}/api/queue/tickets?stage=WAITING_TRIAGE&limit=50`,
+		{ headers: bearer(doctor) }
+	);
+	expect(forbiddenStage.status(), await forbiddenStage.text()).toBe(400);
+
+	const beforeGet = await request.get(`${api}/api/queue/tickets/${ticket.id}`, {
+		headers: bearer(doctor)
+	});
+	expect([403, 404]).toContain(beforeGet.status());
+
+	// 6. doctor/take avant triage → 409
+	const takeEarly = await request.post(`${api}/api/queue/tickets/${ticket.id}/doctor/take`, {
+		headers: bearer(doctor),
+		data: { createConsultation: true }
+	});
+	expect(takeEarly.status(), await takeEarly.text()).toBe(409);
+
+	// 7–8. Infirmier valide triage → WAITING_DOCTOR
+	expect(
+		(
+			await request.post(`${api}/api/queue/tickets/${ticket.id}/triage/take`, {
+				headers: bearer(nurse)
+			})
+		).ok()
+	).toBeTruthy();
+	expect(
+		(
+			await request.post(`${api}/api/queue/tickets/${ticket.id}/triage/complete`, {
+				headers: bearer(nurse),
+				data: {}
+			})
+		).ok()
+	).toBeTruthy();
+
+	const afterGet = await request.get(`${api}/api/queue/tickets/${ticket.id}`, {
+		headers: bearer(doctor)
+	});
+	expect(afterGet.ok(), await afterGet.text()).toBeTruthy();
+	const afterGetBody = await afterGet.json();
+	expect(afterGetBody.ticket?.stage ?? afterGetBody.stage).toBe('WAITING_DOCTOR');
+
+	// 9. Médecin voit désormais le patient (worklist + List + UI)
+	const afterWL = await request.get(`${api}/api/queue/doctor/worklist?limit=100`, {
+		headers: bearer(doctor)
+	});
+	expect(afterWL.ok(), await afterWL.text()).toBeTruthy();
+	const afterWLBody = await afterWL.json();
+	const row = (afterWLBody.items ?? []).find((t: { id: number }) => t.id === ticket.id);
+	expect(row, 'ticket visible after triage').toBeTruthy();
+	expect(row.stage).toBe('WAITING_DOCTOR');
+
+	const afterList = await request.get(`${api}/api/queue/tickets?limit=100`, {
+		headers: bearer(doctor)
+	});
+	expect(afterList.ok(), await afterList.text()).toBeTruthy();
+	expect(
+		((await afterList.json()).items ?? []).some((t: { id: number }) => t.id === ticket.id)
+	).toBeTruthy();
+
+	await login(doctorEmail, password);
+	await page.goto('/queue/doctor');
+	await expect(page.getByTestId('queue-doctor')).toBeVisible();
+	await expect(page.getByTestId('queue-doctor-kpis')).toBeVisible();
+	await expect(page.getByTestId('queue-doctor-table')).toBeVisible();
+	await expect(page.getByText(ticket.reference)).toBeVisible();
+
+	// Hub /queue ne doit pas exposer de pré-triage (backend List filtré)
+	await page.goto('/queue');
+	await expect(page.getByText(ticket.reference)).toBeVisible();
+
+	await page.goto('/queue/doctor');
+	await page.getByTestId('queue-doctor-row').filter({ hasText: ticket.reference }).click();
+	await expect(page.getByTestId('queue-doctor-panel')).toBeVisible();
+
+	// 10–11. Prise en charge → DOCTOR_IN_PROGRESS
+	await page.getByTestId('queue-doctor-take').click();
+	await expect(page.getByTestId('queue-doctor-in-progress')).toContainText(
+		row.patientName || ticket.reference
+	);
+
+	const detailInProgress = await request.get(`${api}/api/queue/tickets/${ticket.id}`, {
+		headers: bearer(doctor)
+	});
+	expect(detailInProgress.ok()).toBeTruthy();
+	const inProgBody = await detailInProgress.json();
+	expect(inProgBody.ticket?.stage ?? inProgBody.stage).toBe('DOCTOR_IN_PROGRESS');
+
+	const [a, b] = await Promise.all([
+		request.post(`${api}/api/queue/tickets/${ticket.id}/doctor/take`, {
+			headers: bearer(doctor),
+			data: {}
+		}),
+		request.post(`${api}/api/queue/tickets/${ticket.id}/doctor/take`, {
+			headers: bearer(admin),
+			data: {}
+		})
+	]);
+	const statuses = [a.status(), b.status()].sort();
+	expect(statuses).toEqual([409, 409]);
+
+	// 12. Accès dossier patient
+	await page.getByTestId('queue-doctor-open-dossier').click();
+	await expect(page).toHaveURL(new RegExp(`/patients/${pid}`));
+
+	const complete = await request.post(`${api}/api/queue/tickets/${ticket.id}/complete`, {
+		headers: bearer(doctor)
+	});
+	expect(complete.status(), await complete.text()).toBe(200);
+	expect((await complete.json()).stage).toBe('COMPLETED');
+
+	const finalList = await request.get(`${api}/api/queue/doctor/worklist?limit=100`, {
+		headers: bearer(doctor)
+	});
+	expect(
+		((await finalList.json()).items ?? []).some((t: { id: number }) => t.id === ticket.id)
+	).toBeFalsy();
+});
