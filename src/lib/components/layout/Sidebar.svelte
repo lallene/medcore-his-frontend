@@ -46,6 +46,7 @@
 		| '/reports'
 		| '/administration'
 		| '/admin/staff'
+		| '/admin/access'
 		| '/admin/organization'
 		| '/admin/qa'
 		| '/admin/design-system'
@@ -184,6 +185,12 @@
 		{ title: 'Rapports', href: '/reports', icon: BarChart3, permissions: ['dashboard.read'] },
 		{ title: 'Administration', href: '/administration', icon: Settings, permissions: ['*'] },
 		{ title: 'Personnel', href: '/admin/staff', icon: Users, permissions: ['staff.read'] },
+		{
+			title: "Centre d'accès",
+			href: '/admin/access',
+			icon: Shield,
+			permissions: ['rbac.read', 'staff.read', 'staff.manage']
+		},
 		{
 			title: 'Organisation',
 			href: '/admin/organization',
