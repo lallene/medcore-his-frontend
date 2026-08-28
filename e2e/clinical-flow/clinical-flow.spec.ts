@@ -118,11 +118,7 @@ async function walkInCheckInPayload(
 	return { payload, financeStatus };
 }
 
-async function medicalRecordId(
-	request: APIRequestContext,
-	token: string,
-	patientId: number
-) {
+async function medicalRecordId(request: APIRequestContext, token: string, patientId: number) {
 	const res = await request.get(`${api}/api/patients/${patientId}/summary`, {
 		headers: bearer(token)
 	});
@@ -192,13 +188,10 @@ test('QA-CLINICAL-FLOW-001 @smoke @critical full doctor clinical path', async ({
 	await request.post(`${api}/api/queue/tickets/${ticket.id}/triage/take`, {
 		headers: bearer(nurse)
 	});
-	const triageDone = await request.post(
-		`${api}/api/queue/tickets/${ticket.id}/triage/complete`,
-		{
-			headers: bearer(nurse),
-			data: { vitalSignsId: vitals.vitalId }
-		}
-	);
+	const triageDone = await request.post(`${api}/api/queue/tickets/${ticket.id}/triage/complete`, {
+		headers: bearer(nurse),
+		data: { vitalSignsId: vitals.vitalId }
+	});
 	expect(triageDone.ok(), await triageDone.text()).toBeTruthy();
 
 	const preDoctor = await request.get(`${api}/api/queue/tickets/${ticket.id}`, {

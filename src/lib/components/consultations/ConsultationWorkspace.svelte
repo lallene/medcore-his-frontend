@@ -17,7 +17,11 @@
 	import { PUBLIC_API_URL } from '$env/static/public';
 
 	import { getConsultation, updateConsultationStatus } from '$lib/api/consultations';
-	import { completeQueueTicket, getQueueTicket, getQueueTicketByConsultation } from '$lib/api/queue';
+	import {
+		completeQueueTicket,
+		getQueueTicket,
+		getQueueTicketByConsultation
+	} from '$lib/api/queue';
 	import {
 		createHospitalization,
 		getHospitalizationByConsultation
@@ -222,8 +226,7 @@
 		completing = true;
 		error = '';
 		try {
-			let ticketId =
-				consultation.queueTicketId ?? queueTicket?.id ?? initialQueueTicketId;
+			let ticketId = consultation.queueTicketId ?? queueTicket?.id ?? initialQueueTicketId;
 			if (!ticketId) {
 				try {
 					const linked = await getQueueTicketByConsultation(consultationId);
@@ -241,10 +244,7 @@
 				await updateConsultationStatus(consultationId, { status: 'completed' });
 			}
 			consultation = await getConsultation(consultationId);
-			await refreshQueueTicket(
-				consultation?.queueTicketId ?? initialQueueTicketId,
-				consultationId
-			);
+			await refreshQueueTicket(consultation?.queueTicketId ?? initialQueueTicketId, consultationId);
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible de terminer la prise en charge.';
 		} finally {
@@ -284,10 +284,7 @@
 	onMount(async () => {
 		try {
 			consultation = await getConsultation(consultationId);
-			await refreshQueueTicket(
-				consultation?.queueTicketId ?? initialQueueTicketId,
-				consultationId
-			);
+			await refreshQueueTicket(consultation?.queueTicketId ?? initialQueueTicketId, consultationId);
 			await refreshHospitalization();
 		} catch {
 			error = 'Impossible de charger la consultation.';
