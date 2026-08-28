@@ -7,10 +7,13 @@
 	import { clinicBranding } from '$lib/config/clinic';
 	import { onMount } from 'svelte';
 	import { listTicketNotifications } from '$lib/api/ticketing';
+	import { can, getStoredPermissions } from '$lib/rbac/permissions';
 
 	let now = $state(new Date());
 	let ticketNotifications = $state(0);
 	onMount(() => {
+		const perms = getStoredPermissions();
+		if (!can(perms, 'ticket.read.own')) return;
 		if (localStorage.getItem('medcore_token'))
 			void listTicketNotifications()
 				.then((items) => (ticketNotifications = items.filter((item) => !item.readAt).length))

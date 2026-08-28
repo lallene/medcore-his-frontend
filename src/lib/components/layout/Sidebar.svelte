@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { jwtDecode } from 'jwt-decode';
 	import { resolve } from '$app/paths';
 	import { clinicBranding } from '$lib/config/clinic';
 	import {
@@ -25,206 +24,66 @@
 		Users,
 		UsersRound
 	} from 'lucide-svelte';
+	import {
+		adminMenu,
+		filterVisibleNav,
+		type NavHref,
+		type NavItem,
+		workspaceMenu,
+		servicesMenu
+	} from '$lib/rbac/navigation';
+	import { getStoredPermissions } from '$lib/rbac/permissions';
 
-	type MenuHref =
-		| '/dashboard'
-		| '/patients'
-		| '/consultations'
-		| '/hospitalizations'
-		| '/beds'
-		| '/insurance'
-		| '/insurance/vouchers'
-		| '/insurance/authorizations'
-		| '/billing'
-		| '/cash'
-		| '/receivables'
-		| '/insurance-receivables'
-		| '/pharmacy'
-		| '/laboratory'
-		| '/imaging'
-		| '/agenda'
-		| '/reports'
-		| '/administration'
-		| '/admin/staff'
-		| '/admin/access'
-		| '/admin/organization'
-		| '/admin/qa'
-		| '/admin/design-system'
-		| '/tickets'
-		| '/support/tickets'
-		| '/queue'
-		| '/queue/reception'
-		| '/queue/triage'
-		| '/queue/doctor';
+	type MenuHref = NavHref;
 
-	type MenuItem = {
-		title: string;
-		href: MenuHref;
-		icon: typeof LayoutDashboard;
-		soon?: boolean;
-		badge?: string;
-		permissions?: string[];
+	type MenuItem = NavItem & { icon: typeof LayoutDashboard };
+
+	const iconByHref: Record<MenuHref, typeof LayoutDashboard> = {
+		'/dashboard': LayoutDashboard,
+		'/patients': Users,
+		'/consultations': HeartPulse,
+		'/queue': ListOrdered,
+		'/queue/reception': UsersRound,
+		'/queue/triage': ListOrdered,
+		'/queue/doctor': Stethoscope,
+		'/hospitalizations': Hospital,
+		'/beds': Hospital,
+		'/insurance': Shield,
+		'/insurance/vouchers': FileText,
+		'/insurance/authorizations': FileCheck2,
+		'/billing': CreditCard,
+		'/cash': CreditCard,
+		'/receivables': ReceiptText,
+		'/insurance-receivables': Shield,
+		'/tickets': LifeBuoy,
+		'/pharmacy': Pill,
+		'/laboratory': FlaskConical,
+		'/imaging': Image,
+		'/agenda': CalendarDays,
+		'/reports': BarChart3,
+		'/administration': Settings,
+		'/admin/staff': Users,
+		'/admin/access': Shield,
+		'/admin/organization': Settings,
+		'/admin/qa': BarChart3,
+		'/admin/design-system': LayoutDashboard,
+		'/support/tickets': LifeBuoy
 	};
 
-	const workspaceMenu: MenuItem[] = [
-		{
-			title: 'Dashboard',
-			href: '/dashboard',
-			icon: LayoutDashboard,
-			permissions: ['dashboard.read']
-		},
-		{ title: 'Patients', href: '/patients', icon: Users, permissions: ['patients:read'] },
-		{
-			title: 'Consultations',
-			href: '/consultations',
-			icon: HeartPulse,
-			soon: true,
-			permissions: ['consultations.read']
-		},
-		{
-			title: 'File patients',
-			href: '/queue',
-			icon: ListOrdered,
-			permissions: [
-				'queue.reception.read',
-				'queue.triage.read',
-				'queue.doctor.read',
-				'queue.read.service',
-				'queue.read.all'
-			]
-		},
-		{
-			title: 'Accueil',
-			href: '/queue/reception',
-			icon: UsersRound,
-			permissions: ['queue.reception.read']
-		},
-		{
-			title: 'Pré-triage',
-			href: '/queue/triage',
-			icon: ListOrdered,
-			permissions: ['queue.triage.read']
-		},
-		{
-			title: 'File médecin',
-			href: '/queue/doctor',
-			icon: Stethoscope,
-			permissions: ['queue.doctor.read']
-		},
-		{
-			title: 'Hospitalisations',
-			href: '/hospitalizations',
-			icon: Hospital,
-			permissions: ['hospitalizations.read']
-		},
-		{ title: 'Chambres & lits', href: '/beds', icon: Hospital, permissions: ['beds.read'] },
-		{
-			title: 'Assurances',
-			href: '/insurance',
-			icon: Shield,
-			permissions: ['insurance.company.read', 'insurance.coverage.read']
-		},
-		{
-			title: 'Bons PEC',
-			href: '/insurance/vouchers',
-			icon: FileText,
-			permissions: ['insurance.voucher.read']
-		},
-		{
-			title: 'Autorisations PEC',
-			href: '/insurance/authorizations',
-			icon: FileCheck2,
-			permissions: ['insurance.authorization.read']
-		},
-		{ title: 'Facturation', href: '/billing', icon: CreditCard, permissions: ['billing.read'] },
-		{
-			title: 'Caisse',
-			href: '/cash',
-			icon: CreditCard,
-			permissions: ['cash.session.read', 'cash.payment.create']
-		},
-		{
-			title: 'Créances patients',
-			href: '/receivables',
-			icon: ReceiptText,
-			permissions: ['receivables.read']
-		},
-		{
-			title: 'Créances assureurs',
-			href: '/insurance-receivables',
-			icon: Shield,
-			permissions: ['insurance_receivables.read']
-		},
-		{ title: 'Mes tickets', href: '/tickets', icon: LifeBuoy, permissions: ['ticket.read.own'] }
-	];
+	function withIcons(items: NavItem[]): MenuItem[] {
+		return items.map((item) => ({ ...item, icon: iconByHref[item.href] }));
+	}
 
-	const servicesMenu: MenuItem[] = [
-		{
-			title: 'Pharmacie',
-			href: '/pharmacy',
-			icon: Pill,
-			permissions: ['pharmacy.stock.read', 'pharmacy.dispensation.read']
-		},
-		{
-			title: 'Laboratoire',
-			href: '/laboratory',
-			icon: FlaskConical,
-			permissions: ['laboratory.read']
-		},
-		{ title: 'Imagerie', href: '/imaging', icon: Image, permissions: ['imaging.read'] },
-		{
-			title: 'Agenda',
-			href: '/agenda',
-			icon: CalendarDays,
-			soon: true,
-			permissions: ['consultations.read']
-		}
-	];
-
-	const adminMenu: MenuItem[] = [
-		{ title: 'Rapports', href: '/reports', icon: BarChart3, permissions: ['dashboard.read'] },
-		{ title: 'Administration', href: '/administration', icon: Settings, permissions: ['*'] },
-		{ title: 'Personnel', href: '/admin/staff', icon: Users, permissions: ['staff.read'] },
-		{
-			title: "Centre d'accès",
-			href: '/admin/access',
-			icon: Shield,
-			permissions: ['rbac.read', 'staff.read', 'staff.manage']
-		},
-		{
-			title: 'Organisation',
-			href: '/admin/organization',
-			icon: Settings,
-			permissions: ['organization.read']
-		},
-		{ title: 'Automated QA', href: '/admin/qa', icon: BarChart3, permissions: ['qa.read'] },
-		{
-			title: 'Design System',
-			href: '/admin/design-system',
-			icon: LayoutDashboard,
-			permissions: ['qa.read']
-		},
-		{
-			title: 'Service Desk',
-			href: '/support/tickets',
-			icon: LifeBuoy,
-			permissions: ['ticket.read.service', 'ticket.read.all']
-		}
-	];
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');
 	let staffRole = $state('MedCore HIS');
-	const visible = (item: MenuItem) =>
-		!item.permissions?.length ||
-		item.permissions.some((p) => permissions.includes('*') || permissions.includes(p));
+
+	const visibleWorkspace = $derived(filterVisibleNav(workspaceMenu, permissions));
+	const visibleServices = $derived(filterVisibleNav(servicesMenu, permissions));
+	const visibleAdmin = $derived(filterVisibleNav(adminMenu, permissions));
+
 	onMount(() => {
-		const raw = localStorage.getItem('medcore_token');
-		if (raw)
-			try {
-				permissions = jwtDecode<{ permissions?: string[] }>(raw).permissions ?? [];
-			} catch {
-				permissions = [];
-			}
+		permissions = getStoredPermissions();
 		const stored = localStorage.getItem('medcore_user');
 		if (stored)
 			try {
@@ -271,130 +130,138 @@
 		</div>
 	</div>
 	<nav class="flex-1 overflow-y-auto px-5 py-7">
-		<div class="mb-8">
-			<div class="mb-3 flex items-center gap-3 px-3">
-				<div class="h-px flex-1 bg-slate-800"></div>
-				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-					Workspace
-				</p>
-				<div class="h-px flex-1 bg-slate-800"></div>
-			</div>
+		{#if visibleWorkspace.length > 0}
+			<div class="mb-8">
+				<div class="mb-3 flex items-center gap-3 px-3">
+					<div class="h-px flex-1 bg-slate-800"></div>
+					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+						Workspace
+					</p>
+					<div class="h-px flex-1 bg-slate-800"></div>
+				</div>
 
-			<div class="space-y-1">
-				{#each workspaceMenu.filter(visible) as item (item.href)}
-					{@const Icon = item.icon}
-					{@const active = isActive(item.href)}
+				<div class="space-y-1">
+					{#each withIcons(visibleWorkspace) as item (item.href)}
+						{@const Icon = item.icon}
+						{@const active = isActive(item.href)}
 
-					<a
-						href={resolve(item.href as '/dashboard')}
-						class={`group relative flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm transition-all duration-200 ${
-							active
-								? 'bg-[#0E4C92] text-white shadow-lg'
-								: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-						}`}
-					>
-						{#if active}
-							<span
-								class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-							></span>
-						{/if}
+						<a
+							href={resolve(item.href as '/dashboard')}
+							class={`group relative flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm transition-all duration-200 ${
+								active
+									? 'bg-[#0E4C92] text-white shadow-lg'
+									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
+							}`}
+						>
+							{#if active}
+								<span
+									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
+								></span>
+							{/if}
 
-						<span class="flex items-center gap-3">
-							<Icon size={20} />
-							<span class="font-medium">{item.title}</span>
-						</span>
-
-						{#if item.soon}
-							<span
-								class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
-							>
-								v2
+							<span class="flex items-center gap-3">
+								<Icon size={20} />
+								<span class="font-medium">{item.title}</span>
 							</span>
-						{/if}
-					</a>
-				{/each}
+
+							{#if item.soon}
+								<span
+									class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
+								>
+									v2
+								</span>
+							{/if}
+						</a>
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/if}
 
-		<div class="mb-8">
-			<div class="mb-3 flex items-center gap-3 px-3">
-				<div class="h-px flex-1 bg-slate-800"></div>
-				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">Services</p>
-				<div class="h-px flex-1 bg-slate-800"></div>
-			</div>
+		{#if visibleServices.length > 0}
+			<div class="mb-8">
+				<div class="mb-3 flex items-center gap-3 px-3">
+					<div class="h-px flex-1 bg-slate-800"></div>
+					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+						Services
+					</p>
+					<div class="h-px flex-1 bg-slate-800"></div>
+				</div>
 
-			<div class="space-y-1">
-				{#each servicesMenu.filter(visible) as item (item.href)}
-					{@const Icon = item.icon}
-					{@const active = isActive(item.href)}
+				<div class="space-y-1">
+					{#each withIcons(visibleServices) as item (item.href)}
+						{@const Icon = item.icon}
+						{@const active = isActive(item.href)}
 
-					<a
-						href={resolve(item.href as '/dashboard')}
-						class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
-							active
-								? 'bg-[#0E4C92] text-white shadow-lg'
-								: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-						}`}
-					>
-						{#if active}
-							<span
-								class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-							></span>
-						{/if}
+						<a
+							href={resolve(item.href as '/dashboard')}
+							class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
+								active
+									? 'bg-[#0E4C92] text-white shadow-lg'
+									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
+							}`}
+						>
+							{#if active}
+								<span
+									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
+								></span>
+							{/if}
 
-						<span class="flex items-center gap-3">
-							<Icon size={20} />
-							<span class="font-medium">{item.title}</span>
-						</span>
-
-						{#if item.soon}
-							<span
-								class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
-							>
-								v2
+							<span class="flex items-center gap-3">
+								<Icon size={20} />
+								<span class="font-medium">{item.title}</span>
 							</span>
-						{/if}
-					</a>
-				{/each}
+
+							{#if item.soon}
+								<span
+									class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
+								>
+									v2
+								</span>
+							{/if}
+						</a>
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/if}
 
-		<div class="mb-8">
-			<div class="mb-3 flex items-center gap-3 px-3">
-				<div class="h-px flex-1 bg-slate-800"></div>
-				<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-					Administration
-				</p>
-				<div class="h-px flex-1 bg-slate-800"></div>
+		{#if visibleAdmin.length > 0}
+			<div class="mb-8">
+				<div class="mb-3 flex items-center gap-3 px-3">
+					<div class="h-px flex-1 bg-slate-800"></div>
+					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+						Administration
+					</p>
+					<div class="h-px flex-1 bg-slate-800"></div>
+				</div>
+
+				<div class="space-y-1">
+					{#each withIcons(visibleAdmin) as item (item.href)}
+						{@const Icon = item.icon}
+						{@const active = isActive(item.href)}
+
+						<a
+							href={resolve(item.href as '/dashboard')}
+							class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
+								active
+									? 'bg-[#0E4C92] text-white shadow-lg'
+									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
+							}`}
+						>
+							{#if active}
+								<span
+									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
+								></span>
+							{/if}
+
+							<span class="flex items-center gap-3">
+								<Icon size={20} />
+								<span class="font-medium">{item.title}</span>
+							</span>
+						</a>
+					{/each}
+				</div>
 			</div>
-
-			<div class="space-y-1">
-				{#each adminMenu.filter(visible) as item (item.href)}
-					{@const Icon = item.icon}
-					{@const active = isActive(item.href)}
-
-					<a
-						href={resolve(item.href as '/dashboard')}
-						class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
-							active
-								? 'bg-[#0E4C92] text-white shadow-lg'
-								: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-						}`}
-					>
-						{#if active}
-							<span
-								class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-							></span>
-						{/if}
-
-						<span class="flex items-center gap-3">
-							<Icon size={20} />
-							<span class="font-medium">{item.title}</span>
-						</span>
-					</a>
-				{/each}
-			</div>
-		</div>
+		{/if}
 	</nav>
 
 	<div class="border-t border-slate-800 p-4">

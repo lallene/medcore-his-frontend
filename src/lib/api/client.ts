@@ -23,3 +23,25 @@ api.interceptors.request.use((config) => {
 
 	return config;
 });
+
+api.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		if (axios.isAxiosError(error)) {
+			const status = error.response?.status;
+			if (status === 403) {
+				error.message = 'ACCESS_DENIED';
+			} else if (status === 401) {
+				error.message = 'UNAUTHORIZED';
+			} else if (
+				error.response?.data &&
+				typeof error.response.data === 'object' &&
+				'message' in error.response.data &&
+				typeof (error.response.data as { message?: string }).message === 'string'
+			) {
+				error.message = (error.response.data as { message: string }).message;
+			}
+		}
+		return Promise.reject(error);
+	}
+);

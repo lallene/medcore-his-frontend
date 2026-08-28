@@ -34,7 +34,7 @@ test('staff administration covers list filters edit multi-dimensions audit inact
 		assert.match(page, new RegExp(marker));
 });
 test('navigation is permission-driven for clinical financial and staff modules', () => {
-	const sidebar = readFileSync(new URL('../layout/Sidebar.svelte', import.meta.url), 'utf8');
+	const nav = readFileSync(new URL('../../rbac/navigation.ts', import.meta.url), 'utf8');
 	for (const permission of [
 		'consultations.read',
 		'cash.session.read',
@@ -44,5 +44,5 @@ test('navigation is permission-driven for clinical financial and staff modules',
 		'insurance_receivables.read',
 		'staff.read'
 	])
-		assert.match(sidebar, new RegExp(permission.replace('.', '\\.')));
+		assert.match(nav, new RegExp(permission.replace('.', '\\.')));
 });

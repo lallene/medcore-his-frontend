@@ -4,6 +4,8 @@
 	import { clinicBranding } from '$lib/config/clinic';
 	import { login } from '$lib/api/auth';
 	import { setSession } from '$lib/stores/auth';
+	import { defaultLandingRoute } from '$lib/rbac/navigation';
+	import { jwtDecode } from 'jwt-decode';
 
 	import {
 		Activity,
@@ -33,7 +35,8 @@
 		try {
 			const session = await login({ email, password });
 			setSession(session.token, session.user);
-			await goto(resolve('/dashboard'));
+			const perms = jwtDecode<{ permissions?: string[] }>(session.token).permissions ?? [];
+			await goto(resolve(defaultLandingRoute(perms) as '/dashboard'));
 		} catch {
 			error = 'Email ou mot de passe incorrect.';
 		} finally {

@@ -16,21 +16,37 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
 	import type { DashboardResponse } from '$lib/types/dashboard';
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import ProcessItem from '$lib/components/dashboard/ProcessItem.svelte';
 	import ScheduleItem from '$lib/components/dashboard/ScheduleItem.svelte';
 	import AlertItem from '$lib/components/dashboard/AlertItem.svelte';
+	import {
+		can,
+		getStoredPermissions,
+		isAccessDeniedError,
+		resolveUserErrorMessage
+	} from '$lib/rbac/permissions';
 
 	let dashboard = $state<DashboardResponse | null>(null);
 	let loading = $state(true);
 	let error = $state('');
+	let accessDenied = $state(false);
 
 	onMount(async () => {
+		const perms = getStoredPermissions();
+		if (!can(perms, 'dashboard.read')) {
+			accessDenied = true;
+			loading = false;
+			return;
+		}
 		try {
 			dashboard = await getDashboard();
-		} catch {
-			error = 'Impossible de charger le dashboard.';
+		} catch (e) {
+			if (isAccessDeniedError(e)) accessDenied = true;
+			else error = resolveUserErrorMessage(e, 'Impossible de charger le dashboard.');
 		} finally {
 			loading = false;
 		}
@@ -43,6 +59,11 @@
 
 {#if loading}
 	<LoadingState label="Chargement du Command Center…" />
+{:else if accessDenied}
+	<AccessDenied
+		title="Tableau de bord non disponible"
+		description="Votre profil n'inclut pas l'accès au tableau de bord exécutif. Utilisez le menu pour accéder à vos modules autorisés."
+	/>
 {:else if error}
 	<Alert tone="danger">{error}</Alert>
 {:else if dashboard}
@@ -238,4 +259,9 @@
 			</div>
 		</div>
 	</div>
+{:else}
+	<EmptyState
+		title="Aucun indicateur disponible"
+		description="Le tableau de bord n'a pas pu être chargé pour votre profil."
+	/>
 {/if}

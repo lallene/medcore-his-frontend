@@ -13,10 +13,8 @@ export const test = base.extend<Fixtures>({
 				await page.goto('/login');
 				await page.getByTestId('qa-login-email').fill(email);
 				await page.getByTestId('qa-login-password').fill(password);
-				await Promise.all([
-					page.waitForURL(/\/dashboard/),
-					page.getByTestId('qa-login-submit').click()
-				]);
+				await page.getByTestId('qa-login-submit').click();
+				await page.waitForURL((url) => !url.pathname.endsWith('/login'));
 			}
 		);
 	},

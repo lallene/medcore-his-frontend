@@ -1,3 +1,5 @@
+import { canAny } from '../../rbac/permissions.ts';
+
 export function accessLevelLabel(level: string) {
 	switch (level) {
 		case 'WILDCARD':
@@ -31,30 +33,17 @@ export function sourceLabel(source: string, sourceName?: string) {
 }
 
 export function canAccessCenter(permissions: string[]) {
-	return (
-		permissions.includes('*') ||
-		permissions.includes('rbac.read') ||
-		permissions.includes('staff.read') ||
-		permissions.includes('staff.manage')
-	);
+	return canAny(permissions, ['rbac.read', 'staff.read', 'staff.manage']);
 }
 
 export function canManageAccess(permissions: string[]) {
-	return (
-		permissions.includes('*') ||
-		permissions.includes('rbac.user.manage') ||
-		permissions.includes('staff.manage')
-	);
+	return canAny(permissions, ['rbac.user.manage', 'staff.manage']);
 }
 
 export function canManageOverrides(permissions: string[]) {
-	return (
-		permissions.includes('*') ||
-		permissions.includes('rbac.override.manage') ||
-		permissions.includes('staff.manage')
-	);
+	return canAny(permissions, ['rbac.override.manage', 'staff.manage']);
 }
 
 export function canManageMatrix(permissions: string[]) {
-	return permissions.includes('*') || permissions.includes('rbac.matrix.manage');
+	return canAny(permissions, ['rbac.matrix.manage']);
 }
