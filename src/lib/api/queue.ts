@@ -52,8 +52,19 @@ export const completeTriage = async (id: number, payload: CompleteTriagePayload 
 export const takeDoctor = async (id: number, payload: TakeDoctorPayload = {}) =>
 	(await api.post<QueueTicketRow>(`/api/queue/tickets/${id}/doctor/take`, payload)).data;
 
-export const completeQueueTicket = async (id: number) =>
-	(await api.post<QueueTicketRow>(`/api/queue/tickets/${id}/complete`)).data;
+export interface CompleteQueuePayload {
+	disposition?: string;
+	dispositionNote?: string;
+}
+
+export const completeQueueTicket = async (id: number, payload: CompleteQueuePayload = {}) =>
+	(await api.post<QueueTicketRow>(`/api/queue/tickets/${id}/complete`, payload)).data;
+
+export const getQueueTicketByConsultation = async (consultationId: number) =>
+	(await api.get<QueueTicketRow>(`/api/queue/tickets/by-consultation/${consultationId}`)).data;
+
+export const getPatientActiveQueueTicket = async (patientId: number) =>
+	(await api.get<QueueTicketRow>(`/api/queue/patients/${patientId}/active-ticket`)).data;
 
 export const cancelQueueTicket = async (id: number, payload: CancelTicketPayload = {}) =>
 	(await api.post<QueueTicketRow>(`/api/queue/tickets/${id}/cancel`, payload)).data;

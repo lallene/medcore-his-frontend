@@ -4,6 +4,12 @@
 	import ConsultationWorkspace from '$lib/components/consultations/ConsultationWorkspace.svelte';
 
 	const consultationId = $derived(Number(page.params.id));
+	const initialQueueTicketId = $derived.by(() => {
+		const raw = page.url.searchParams.get('queueTicket');
+		if (!raw) return undefined;
+		const n = Number(raw);
+		return Number.isInteger(n) && n > 0 ? n : undefined;
+	});
 </script>
 
 <svelte:head>
@@ -36,5 +42,5 @@
 		</a>
 	</div>
 
-	<ConsultationWorkspace {consultationId} />
+	<ConsultationWorkspace {consultationId} {initialQueueTicketId} />
 </div>

@@ -16,7 +16,8 @@
 	import type { ConsultationDetail } from '$lib/types/consultation';
 	import { PUBLIC_API_URL } from '$env/static/public';
 
-	import { getConsultation } from '$lib/api/consultations';
+	import { getConsultation, updateConsultationStatus } from '$lib/api/consultations';
+	import { completeQueueTicket, getQueueTicket, getQueueTicketByConsultation } from '$lib/api/queue';
 	import {
 		createHospitalization,
 		getHospitalizationByConsultation
@@ -27,15 +28,19 @@
 	import ClinicalContextForm from '$lib/components/consultations/ClinicalContextForm.svelte';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
 	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
+	import ClinicalFlowContextBar from '$lib/components/clinical/ClinicalFlowContextBar.svelte';
+	import type { QueueTicketRow } from '$lib/types/queue';
+	import { canAny, getStoredPermissions } from '$lib/rbac/permissions';
 
 	type WorkspaceTab =
 		'clinical' | 'medical-record' | 'soap' | 'specialty' | 'prescriptions' | 'exams' | 'documents';
 
 	type Props = {
 		consultationId: number;
+		initialQueueTicketId?: number;
 	};
 
-	let { consultationId }: Props = $props();
+	let { consultationId, initialQueueTicketId }: Props = $props();
 
 	let activeTab = $state<WorkspaceTab>('clinical');
 	let consultation = $state<ConsultationDetail | null>(null);
@@ -45,6 +50,21 @@
 	let error = $state('');
 	let hospitalization = $state<Hospitalization | null>(null);
 	let hospitalizationLoading = $state(false);
+	let queueTicket = $state<QueueTicketRow | null>(null);
+	let completing = $state(false);
+	let disposition = $state('DISCHARGED');
+	let dispositionNote = $state('');
+
+	const dispositionOptions = [
+		{ value: 'DISCHARGED', label: 'Sortie / retour domicile' },
+		{ value: 'HOSPITALIZED', label: 'Hospitalisation' },
+		{ value: 'OBSERVATION', label: 'Observation' },
+		{ value: 'TRANSFERRED', label: 'Transfert' },
+		{ value: 'REFERRED', label: 'Orientation / avis' },
+		{ value: 'OTHER', label: 'Autre' }
+	];
+
+	const canCompleteCare = canAny(getStoredPermissions(), ['queue.doctor.take']);
 
 	const hasPrescriptions = $derived(Boolean(consultation && consultation.prescriptions.length > 0));
 
@@ -174,6 +194,64 @@
 		}
 	});
 
+	async function refreshQueueTicket(ticketId?: number | null, consultId?: number) {
+		const cid = consultId ?? consultationId;
+		if (ticketId) {
+			try {
+				const detail = await getQueueTicket(ticketId);
+				queueTicket = detail.ticket;
+				return;
+			} catch {
+				// fallback reverse lookup
+			}
+		}
+		if (cid) {
+			try {
+				queueTicket = await getQueueTicketByConsultation(cid);
+			} catch {
+				queueTicket = null;
+			}
+		} else {
+			queueTicket = null;
+		}
+	}
+
+	async function completeCare() {
+		if (!consultation || completing) return;
+		if (consultation.status === 'completed' || consultation.status === 'cancelled') return;
+		completing = true;
+		error = '';
+		try {
+			let ticketId =
+				consultation.queueTicketId ?? queueTicket?.id ?? initialQueueTicketId;
+			if (!ticketId) {
+				try {
+					const linked = await getQueueTicketByConsultation(consultationId);
+					ticketId = linked.id;
+				} catch {
+					ticketId = undefined;
+				}
+			}
+			if (ticketId) {
+				await completeQueueTicket(ticketId, {
+					disposition,
+					dispositionNote: dispositionNote.trim() || undefined
+				});
+			} else {
+				await updateConsultationStatus(consultationId, { status: 'completed' });
+			}
+			consultation = await getConsultation(consultationId);
+			await refreshQueueTicket(
+				consultation?.queueTicketId ?? initialQueueTicketId,
+				consultationId
+			);
+		} catch (err: unknown) {
+			error = err instanceof Error ? err.message : 'Impossible de terminer la prise en charge.';
+		} finally {
+			completing = false;
+		}
+	}
+
 	async function refreshConsultation() {
 		try {
 			consultation = await getConsultation(consultationId);
@@ -206,6 +284,10 @@
 	onMount(async () => {
 		try {
 			consultation = await getConsultation(consultationId);
+			await refreshQueueTicket(
+				consultation?.queueTicketId ?? initialQueueTicketId,
+				consultationId
+			);
 			await refreshHospitalization();
 		} catch {
 			error = 'Impossible de charger la consultation.';
@@ -216,6 +298,7 @@
 </script>
 
 <div class="space-y-5">
+	<ClinicalFlowContextBar ticket={queueTicket} {patientName} {consultationId} />
 	<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 		<div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
 			{#if loading}
@@ -256,22 +339,44 @@
 					</p>
 				</div>
 
-				<div class="flex flex-wrap gap-2">
-					<button
-						type="button"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-					>
-						Enregistrer le brouillon
-					</button>
-
-					<button
-						type="button"
-						disabled={consultation.status === 'completed' || consultation.status === 'cancelled'}
-						class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						Terminer la consultation
-					</button>
-				</div>
+				{#if canCompleteCare}
+					<div class="flex flex-col gap-3 xl:items-end">
+						<div class="flex flex-wrap items-end gap-2">
+							<label class="text-xs font-semibold text-slate-500">
+								Décision
+								<select
+									class="mt-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+									bind:value={disposition}
+									data-testid="consultation-complete-disposition"
+								>
+									{#each dispositionOptions as opt (opt.value)}
+										<option value={opt.value}>{opt.label}</option>
+									{/each}
+								</select>
+							</label>
+							<input
+								type="text"
+								placeholder="Note (optionnelle)"
+								class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+								bind:value={dispositionNote}
+								data-testid="consultation-complete-note"
+							/>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<button
+								type="button"
+								disabled={completing ||
+									consultation.status === 'completed' ||
+									consultation.status === 'cancelled'}
+								onclick={() => void completeCare()}
+								class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+								data-testid="consultation-complete-care"
+							>
+								{completing ? 'Clôture…' : 'Terminer la prise en charge'}
+							</button>
+						</div>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</section>

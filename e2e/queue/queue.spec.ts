@@ -432,11 +432,9 @@ test('QA-DOCTOR-WL-001 @critical doctor never sees pre-triage via worklist/list/
 	await page.getByTestId('queue-doctor-row').filter({ hasText: ticket.reference }).click();
 	await expect(page.getByTestId('queue-doctor-panel')).toBeVisible();
 
-	// 10–11. Prise en charge → DOCTOR_IN_PROGRESS
+	// 10–11. Prise en charge → DOCTOR_IN_PROGRESS puis redirection consultation (LOT 22)
 	await page.getByTestId('queue-doctor-take').click();
-	await expect(page.getByTestId('queue-doctor-in-progress')).toContainText(
-		row.patientName || ticket.reference
-	);
+	await expect(page).toHaveURL(new RegExp(`/consultations/\\d+`));
 
 	const detailInProgress = await request.get(`${api}/api/queue/tickets/${ticket.id}`, {
 		headers: bearer(doctor)
@@ -458,8 +456,8 @@ test('QA-DOCTOR-WL-001 @critical doctor never sees pre-triage via worklist/list/
 	const statuses = [a.status(), b.status()].sort();
 	expect(statuses).toEqual([409, 409]);
 
-	// 12. Accès dossier patient
-	await page.getByTestId('queue-doctor-open-dossier').click();
+	// 12. Accès dossier patient (depuis consultation après prise en charge LOT 22)
+	await page.getByTestId('clinical-flow-back-patient').click();
 	await expect(page).toHaveURL(new RegExp(`/patients/${pid}`));
 
 	const complete = await request.post(`${api}/api/queue/tickets/${ticket.id}/complete`, {

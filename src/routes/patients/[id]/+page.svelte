@@ -40,6 +40,7 @@
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
+	import PatientActiveCareBanner from '$lib/components/patients/patient-360/PatientActiveCareBanner.svelte';
 
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { Patient } from '$lib/types/patient';
@@ -200,6 +201,7 @@
 			]}
 		/>
 		<PatientHeader patient={p} {insurance} />
+		<PatientActiveCareBanner patientId={p.id} />
 
 		<PatientTabs tabs={patientTabs} {activeTab} onSelect={selectTab} />
 

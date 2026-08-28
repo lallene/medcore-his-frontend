@@ -255,6 +255,8 @@ export type ConsultationDetail = {
 
 	soap: import('$lib/types/soap').ConsultationSOAP | null;
 
+	queueTicketId?: number | null;
+
 	createdAt: string;
 	updatedAt: string;
 };

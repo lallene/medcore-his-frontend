@@ -3,6 +3,8 @@ import { assertSafeQARun } from './src/lib/qa/policy';
 
 const environment = process.env.QA_ENVIRONMENT ?? 'local';
 const suite = process.env.QA_SUITE ?? 'smoke';
+const baseURL = process.env.QA_BASE_URL ?? 'http://127.0.0.1:4173';
+const skipWebServer = process.env.QA_SKIP_WEB_SERVER === '1';
 assertSafeQARun(environment, suite);
 
 export default defineConfig({
@@ -29,10 +31,21 @@ export default defineConfig({
 		['./e2e/reporters/qa-summary.ts']
 	],
 	use: {
-		baseURL: process.env.QA_BASE_URL ?? 'http://127.0.0.1:4173',
+		baseURL,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
 		video: 'retain-on-failure',
 		...devices['Desktop Chrome']
-	}
+	},
+	webServer: skipWebServer
+		? undefined
+		: {
+				command: 'npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
+				url: `${baseURL}/login`,
+				reuseExistingServer: true,
+				timeout: 120_000,
+				env: {
+					PUBLIC_API_URL: process.env.PUBLIC_API_URL ?? 'http://127.0.0.1:8080'
+				}
+			}
 });

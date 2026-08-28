@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
 		completeQueueTicket,
@@ -51,6 +52,7 @@
 	let lastRefresh = $state('');
 	let staffName = $state('Médecin');
 	let staffService = $state('Service clinique');
+	let currentUserId = $state<number | null>(null);
 
 	const displayWaiting = $derived.by(() => {
 		const base = filterDoctorWorklist(tickets, {
@@ -136,7 +138,11 @@
 		actingId = id;
 		error = '';
 		try {
-			await takeDoctor(id, { createConsultation: true });
+			const taken = await takeDoctor(id, { createConsultation: true });
+			if (taken.consultationId) {
+				await goto(resolve(`/consultations/${taken.consultationId}?queueTicket=${id}`));
+				return;
+			}
 			await load();
 			selectedId = id;
 			await loadPanel(id);
@@ -165,10 +171,12 @@
 		if (stored) {
 			try {
 				const u = JSON.parse(stored) as {
+					id?: number;
 					name?: string;
 					functions?: string[];
 					specialties?: string[];
 				};
+				currentUserId = u.id ?? null;
 				staffName = u.name ?? staffName;
 				staffService = u.functions?.[0] ?? u.specialties?.[0] ?? staffService;
 			} catch {
@@ -177,6 +185,14 @@
 		}
 		void load();
 	});
+
+	function isOwnInProgress(ticket: QueueTicketRow): boolean {
+		return (
+			ticket.stage === 'DOCTOR_IN_PROGRESS' &&
+			currentUserId != null &&
+			ticket.doctorTakenBy === currentUserId
+		);
+	}
 </script>
 
 <div class="space-y-5" data-testid="queue-doctor">
@@ -572,6 +588,17 @@
 								onclick={() => take(selected.id)}>Prendre en charge</Button
 							>
 						{:else if selected.stage === 'DOCTOR_IN_PROGRESS'}
+							{#if isOwnInProgress(selected) && selected.consultationId}
+								<a href={resolve(`/consultations/${selected.consultationId}`)} class="block">
+									<Button
+										fullWidth
+										data-testid="queue-doctor-continue"
+										loading={actingId === selected.id}
+									>
+										Continuer la consultation
+									</Button>
+								</a>
+							{/if}
 							<Button
 								fullWidth
 								variant="success"
