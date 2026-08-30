@@ -673,7 +673,9 @@ test('QA-AGENDA-RBAC-001 @critical agenda visibility and action isolation', asyn
 		Buffer.from(reception.split('.')[1], 'base64url').toString('utf8')
 	) as { permissions?: string[] };
 	expect(recPayload.permissions ?? []).toContain('schedule.read.service');
+	expect(recPayload.permissions ?? []).toContain('appointment.create.service');
 	expect(recPayload.permissions ?? []).not.toContain('schedule.read.all');
+	expect(recPayload.permissions ?? []).not.toContain('appointment.create.all');
 	await login(receptionEmail, password);
 	await expect(page.getByRole('link', { name: 'Agenda' })).toBeVisible();
 	await page.goto('/agenda');

@@ -14,7 +14,8 @@ export const SCHEDULE_READ_PERMISSIONS = [
 ] as const;
 
 export const BOOK_PERMISSIONS = [
-	'queue.checkin',
+	'appointment.create.service',
+	'appointment.create.all',
 	'schedule.manage.service',
 	'schedule.manage.all'
 ] as const;

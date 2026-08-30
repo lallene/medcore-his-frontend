@@ -47,8 +47,12 @@ describe('agenda RBAC helpers', () => {
 		assert.equal(canReadAgenda(['*']), true);
 	});
 
-	it('book vs check-in permissions are distinct', () => {
-		assert.equal(canBookAppointment(['queue.checkin']), true);
+	it('book vs check-in permissions are distinct (LOT 23I)', () => {
+		assert.equal(canBookAppointment(['queue.checkin']), false);
+		assert.equal(canBookAppointment(['appointment.create.service']), true);
+		assert.equal(canBookAppointment(['appointment.create.all']), true);
+		assert.equal(canBookAppointment(['schedule.manage.service']), true);
+		assert.equal(canBookAppointment(['schedule.manage.all']), true);
 		assert.equal(canCheckInAppointment(['queue.checkin']), true);
 		assert.equal(canBookAppointment(['appointment.cancel.service']), false);
 		assert.equal(canCheckInAppointment(['schedule.manage.all']), false);
