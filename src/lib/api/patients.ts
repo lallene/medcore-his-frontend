@@ -8,11 +8,16 @@ import type {
 	PatientListResult
 } from '$lib/types/patient';
 
-export async function getPatients(page = 1, limit = 20): Promise<PatientListResult> {
+export async function getPatients(
+	page = 1,
+	limit = 20,
+	search?: string
+): Promise<PatientListResult> {
 	const response = await api.get<ApiResponse<Patient[], PatientListMeta>>('/api/patients', {
 		params: {
 			page,
-			limit
+			limit,
+			...(search?.trim() ? { search: search.trim() } : {})
 		}
 	});
 

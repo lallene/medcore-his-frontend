@@ -12,7 +12,7 @@ export default defineConfig({
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
-	workers: process.env.CI ? 1 : undefined,
+	workers: process.env.CI || process.env.QA_SUITE === 'critical' ? 1 : undefined,
 	timeout: 30_000,
 	grep:
 		suite === 'full'
@@ -40,12 +40,11 @@ export default defineConfig({
 	webServer: skipWebServer
 		? undefined
 		: {
+				// Preview serves the already-built static site. PUBLIC_API_URL must be baked
+				// at `npm run build` time — setting it only here has no effect (LOT 23G.1).
 				command: 'npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
 				url: `${baseURL}/login`,
 				reuseExistingServer: true,
-				timeout: 120_000,
-				env: {
-					PUBLIC_API_URL: process.env.PUBLIC_API_URL ?? 'http://127.0.0.1:8080'
-				}
+				timeout: 120_000
 			}
 });

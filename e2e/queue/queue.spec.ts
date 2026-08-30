@@ -1,7 +1,7 @@
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
-const api = process.env.QA_API_URL ?? 'http://127.0.0.1:8080';
+const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
 const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const receptionEmail = 'demo.accueil@medcore.local';
@@ -76,32 +76,106 @@ test('QA-QUEUE-SMOKE-001 @smoke appointment check-in to doctor queue', async ({
 	request
 }) => {
 	test.setTimeout(90_000);
-	// Bootstrap technique uniquement : libérer un patient déterministe
 	const admin = await loginApi(request, adminEmail);
-	await clearActiveTickets(request, admin, 'P-DEMO-007');
-
 	const reception = await loginApi(request, receptionEmail);
 	const nurse = await loginApi(request, nurseEmail);
 	const doctor = await loginApi(request, doctorEmail);
 
-	const pid = await patientId(request, reception, 'P-DEMO-007');
-	const sid = await serviceId(request, reception);
-	const scheduledAt = new Date(Date.now() + 5 * 60_000).toISOString();
-
-	// ACCUEIL — RDV + check-in + ticket
-	const apptRes = await request.post(`${api}/api/queue/appointments`, {
-		headers: bearer(reception),
-		data: { patientId: pid, serviceId: sid, scheduledAt, reason: `QA-SMOKE-${Date.now()}` }
+	// Dedicated CLEAR patient — avoids P-DEMO pollution / finance blocks.
+	const create = await request.post(`${api}/api/patients`, {
+		headers: bearer(admin),
+		data: {
+			nom: `QAQUEUE-SMOKE-${Date.now()}`,
+			prenoms: 'Fixture',
+			sexe: 'M',
+			dateNaissance: '1990-01-15',
+			telephone: `+22507${String(Date.now()).slice(-8)}`,
+			isAssure: false
+		}
 	});
-	expect(okCreate(apptRes.status()), await apptRes.text()).toBeTruthy();
-	const appt = await apptRes.json();
+	const createBodyText = await create.text();
+	expect(okCreate(create.status()), createBodyText).toBeTruthy();
+	const created = JSON.parse(createBodyText);
+	const pid = (created.data ?? created).id as number;
+	expect(pid).toBeTruthy();
 
-	const checkIn = await request.post(`${api}/api/queue/appointments/${appt.id}/check-in`, {
+	const sid = await serviceId(request, reception);
+	const typesRes = await request.get(`${api}/api/appointment-types?serviceId=${sid}&active=true`, {
+		headers: bearer(reception)
+	});
+	expect(typesRes.ok(), await typesRes.text()).toBeTruthy();
+	const typeId = ((await typesRes.json()).items ?? [])[0]?.id as number;
+	expect(typeId, 'appointment type').toBeTruthy();
+
+	// Prefer past-eligible starts (late check-in allowed) so early-window races don't flake.
+	let appt: { id: number } | null = null;
+	let lastBook = '';
+	for (const prac of [2, 3, 4, 5, 6]) {
+		for (const mins of [90, 120, 150, 180, 210, 240, 300, 360]) {
+			const startAt = new Date(Date.now() - mins * 60_000);
+			startAt.setUTCSeconds(0, 0);
+			const apptRes = await request.post(`${api}/api/appointments`, {
+				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
+				data: {
+					patientId: pid,
+					serviceId: sid,
+					practitionerId: prac,
+					appointmentTypeId: typeId,
+					startAt: startAt.toISOString(),
+					reason: `QA-SMOKE-${Date.now()}`,
+					idempotencyKey: crypto.randomUUID()
+				}
+			});
+			lastBook = await apptRes.text();
+			if (okCreate(apptRes.status())) {
+				appt = JSON.parse(lastBook) as { id: number };
+				break;
+			}
+		}
+		if (appt) break;
+	}
+	if (!appt) {
+		const from = new Date().toISOString();
+		const to = new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString();
+		const avail = await request.get(
+			`${api}/api/availability?serviceId=${sid}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&appointmentTypeId=${typeId}`,
+			{ headers: bearer(reception) }
+		);
+		const slots = ((await avail.json()).slots ?? []) as Array<{
+			startAt: string;
+			practitionerId: number;
+		}>;
+		for (const candidate of slots.slice(0, 40)) {
+			const startMs = Date.parse(candidate.startAt);
+			if (startMs - Date.now() > 50 * 60_000) continue; // keep within ~60m early window
+			const apptRes = await request.post(`${api}/api/appointments`, {
+				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
+				data: {
+					patientId: pid,
+					serviceId: sid,
+					practitionerId: candidate.practitionerId,
+					appointmentTypeId: typeId,
+					startAt: candidate.startAt,
+					reason: `QA-SMOKE-NEAR-${Date.now()}`,
+					idempotencyKey: crypto.randomUUID()
+				}
+			});
+			lastBook = await apptRes.text();
+			if (okCreate(apptRes.status())) {
+				appt = JSON.parse(lastBook) as { id: number };
+				break;
+			}
+		}
+	}
+	expect(appt?.id, `book smoke: ${lastBook}`).toBeTruthy();
+
+	const checkIn = await request.post(`${api}/api/queue/appointments/${appt!.id}/check-in`, {
 		headers: bearer(reception),
 		data: { identityConfirmed: true, financeOverride: true, financeOverrideNote: 'QA smoke' }
 	});
-	expect(okCreate(checkIn.status()), await checkIn.text()).toBeTruthy();
-	const ticket = await checkIn.json();
+	const checkInText = await checkIn.text();
+	expect(okCreate(checkIn.status()), checkInText).toBeTruthy();
+	const ticket = JSON.parse(checkInText);
 	expect(ticket.reference).toMatch(/^Q-\d{4}-\d{6}$/);
 	expect(ticket.stage).toBe('WAITING_TRIAGE');
 

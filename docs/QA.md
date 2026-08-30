@@ -13,7 +13,19 @@ La release gate suit la chaîne `unit → integration → PostgreSQL 17 éphém�
 
 ## Exécution locale
 
-Préparer exclusivement `medcore_full_demo`, démarrer le backend sur `8080` et le frontend sur `4173`, puis définir les variables de `.env.qa.example` dans le shell.
+Préparer `medcore_full_demo`, démarrer un backend **courant** (LOT 23F.1+) et le frontend preview, puis définir les variables de `.env.qa.example` dans le shell.
+
+`PUBLIC_API_URL` est figé au **build** (`$env/static/public`). Pour pointer Playwright vers un backend QA (ex. `:18082`) :
+
+```bash
+# Backend 49fcac8 sur 18082 + fixtures scheduling si besoin:
+#   DATABASE_URL=... go run ./cmd/seed --demo-scheduling
+PUBLIC_API_URL=http://127.0.0.1:18082 QA_API_URL=http://127.0.0.1:18082 npm run test:e2e:scheduling
+```
+
+Ne pas réutiliser un `npm run build` antérieur ciblant `:8080` : le preview servirait encore l’ancienne URL (CORS / 404).
+
+Autres suites :
 
 ```bash
 npm test

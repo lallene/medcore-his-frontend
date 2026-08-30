@@ -97,7 +97,11 @@ export const servicesMenu: NavItem[] = [
 	},
 	{ title: 'Laboratoire', href: '/laboratory', permissions: ['laboratory.read'] },
 	{ title: 'Imagerie', href: '/imaging', permissions: ['imaging.read'] },
-	{ title: 'Agenda', href: '/agenda', soon: true, permissions: ['consultations.read'] }
+	{
+		title: 'Agenda',
+		href: '/agenda',
+		permissions: ['schedule.read.own', 'schedule.read.service', 'schedule.read.all']
+	}
 ];
 
 export const adminMenu: NavItem[] = [
@@ -157,6 +161,10 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/pharmacy', permissions: ['pharmacy.stock.read', 'pharmacy.dispensation.read'] },
 	{ prefix: '/laboratory', permissions: ['laboratory.read'] },
 	{ prefix: '/imaging', permissions: ['imaging.read'] },
+	{
+		prefix: '/agenda',
+		permissions: ['schedule.read.own', 'schedule.read.service', 'schedule.read.all']
+	},
 	{ prefix: '/support/tickets', permissions: ['ticket.read.service', 'ticket.read.all'] },
 	{ prefix: '/tickets', permissions: ['ticket.read.own', 'ticket.read.service', 'ticket.read.all'] }
 ];
@@ -189,6 +197,10 @@ export function defaultLandingRoute(permissions: string[]): string {
 		{ href: '/cash', permissions: ['cash.session.read', 'cash.payment.create'] },
 		{ href: '/billing', permissions: ['billing.read'] },
 		{ href: '/patients', permissions: ['patients:read'] },
+		{
+			href: '/agenda',
+			permissions: ['schedule.read.own', 'schedule.read.service', 'schedule.read.all']
+		},
 		{ href: '/pharmacy', permissions: ['pharmacy.stock.read', 'pharmacy.dispensation.read'] },
 		{ href: '/laboratory', permissions: ['laboratory.read'] },
 		{ href: '/imaging', permissions: ['imaging.read'] },

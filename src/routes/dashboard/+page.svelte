@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import {
 		Activity,
 		AlertTriangle,
@@ -12,16 +13,17 @@
 	} from 'lucide-svelte';
 
 	import { getDashboard } from '$lib/api/dashboard';
+	import { canReadAgenda } from '$lib/components/agenda/state';
 	import ActivityTimeline from '$lib/components/dashboard/ActivityTimeline.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
 	import type { DashboardResponse } from '$lib/types/dashboard';
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import ProcessItem from '$lib/components/dashboard/ProcessItem.svelte';
-	import ScheduleItem from '$lib/components/dashboard/ScheduleItem.svelte';
 	import AlertItem from '$lib/components/dashboard/AlertItem.svelte';
 	import {
 		can,
@@ -230,13 +232,22 @@
 					</div>
 				</Card>
 
-				<Card title="Planning clinique" subtitle="Aperçu de la journée">
-					<div class="space-y-4">
-						<ScheduleItem time="08:00" title="Ouverture admissions" badge="Accueil" />
-						<ScheduleItem time="09:30" title="Consultations externes" badge="Médecine générale" />
-						<ScheduleItem time="11:00" title="Contrôle bons assurance" badge="Assurance" />
-						<ScheduleItem time="15:00" title="Rapport activité journée" badge="Direction" />
-					</div>
+				<Card title="Planning clinique" subtitle="Agenda médical">
+					{#if canReadAgenda(getStoredPermissions())}
+						<div class="space-y-3" data-testid="dashboard-agenda-cta">
+							<p class="text-sm text-slate-600">
+								Consultez les rendez-vous du jour et de la semaine, réservez un créneau et suivez le
+								parcours check-in → file.
+							</p>
+							<a href={resolve('/agenda')}>
+								<Button data-testid="dashboard-open-agenda">Voir l’agenda</Button>
+							</a>
+						</div>
+					{:else}
+						<p class="text-sm text-slate-500">
+							L’agenda médical n’est pas disponible pour votre profil.
+						</p>
+					{/if}
 				</Card>
 			</div>
 

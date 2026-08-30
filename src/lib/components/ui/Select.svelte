@@ -16,6 +16,8 @@
 		name?: string;
 		class?: string;
 		'aria-label'?: string;
+		'data-testid'?: string;
+		onchange?: (e: Event) => void;
 		children?: import('svelte').Snippet;
 	}
 
@@ -29,6 +31,8 @@
 		name = '',
 		class: className = '',
 		'aria-label': ariaLabel,
+		'data-testid': testId,
+		onchange,
 		children
 	}: Props = $props();
 </script>
@@ -39,8 +43,10 @@
 	bind:value
 	{disabled}
 	{required}
+	{onchange}
 	aria-label={ariaLabel}
 	aria-invalid={invalid || undefined}
+	data-testid={testId}
 	class={cn(
 		'w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted',
 		invalid && 'border-danger focus:border-danger focus:ring-danger/15',

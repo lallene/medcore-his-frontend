@@ -70,4 +70,12 @@ describe('rbac navigation', () => {
 		assert.equal(defaultLandingRoute(['*']), '/dashboard');
 		assert.equal(canAccessPath('/admin/access', ['*']), true);
 	});
+
+	it('agenda requires schedule.read not consultations.read', () => {
+		assert.equal(canAccessPath('/agenda', ['consultations.read']), false);
+		assert.equal(canAccessPath('/agenda', ['queue.checkin']), false);
+		assert.equal(canAccessPath('/agenda', ['schedule.read.service']), true);
+		assert.equal(canAccessPath('/agenda', ['schedule.read.own']), true);
+		assert.equal(canAccessPath('/agenda', ['*']), true);
+	});
 });

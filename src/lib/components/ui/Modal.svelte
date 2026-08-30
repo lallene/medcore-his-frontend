@@ -53,11 +53,13 @@
 			aria-labelledby="medcore-modal-title"
 			tabindex="-1"
 			class={cn(
-				'w-full rounded-2xl border border-border bg-surface shadow-[var(--shadow-modal)]',
+				'flex max-h-[min(92vh,880px)] w-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-modal)]',
 				widths[size]
 			)}
 		>
-			<header class="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
+			<header
+				class="flex shrink-0 items-start justify-between gap-3 border-b border-border px-6 py-4"
+			>
 				<div>
 					<h2 id="medcore-modal-title" class="text-lg font-semibold text-slate-900">{title}</h2>
 					{#if description}
@@ -69,10 +71,10 @@
 				</IconButton>
 			</header>
 			{#if children}
-				<div class="px-6 py-5">{@render children()}</div>
+				<div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">{@render children()}</div>
 			{/if}
 			{#if footer}
-				<footer class="flex justify-end gap-2 border-t border-border px-6 py-4">
+				<footer class="flex shrink-0 justify-end gap-2 border-t border-border px-6 py-4">
 					{@render footer()}
 				</footer>
 			{/if}
