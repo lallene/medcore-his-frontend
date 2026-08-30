@@ -21,6 +21,8 @@
 		error?: string;
 		permissions?: string[];
 		acting?: string | null;
+		/** When false, hide the "Ouvrir patient" CTA (e.g. already on Patient 360). Default true. */
+		showOpenPatient?: boolean;
 		onclose?: () => void;
 		onreschedule?: () => void;
 		oncancel?: () => void;
@@ -36,6 +38,7 @@
 		error = '',
 		permissions = [],
 		acting = null,
+		showOpenPatient = true,
 		onclose,
 		onreschedule,
 		oncancel,
@@ -48,6 +51,7 @@
 		appointment ? appointmentActionVisibility(appointment, permissions) : null
 	);
 	const financeBlocked = $derived(isFinanceBlockedMessage(error));
+	const showPatientLink = $derived(Boolean(actions?.openPatient && showOpenPatient));
 </script>
 
 <Modal
@@ -125,7 +129,7 @@
 		{#if appointment && actions}
 			<div class="flex w-full flex-wrap justify-between gap-2">
 				<div class="flex flex-wrap gap-2">
-					{#if actions.openPatient}
+					{#if showPatientLink}
 						<a
 							href={resolve(`/patients/${appointment.patientId}`)}
 							data-testid="agenda-open-patient"

@@ -91,6 +91,22 @@ export function isTerminalAppointment(status: AppointmentStatus): boolean {
 	return status === 'COMPLETED' || status === 'CANCELLED' || status === 'NO_SHOW';
 }
 
+/** LOT 23H — statuses shown in Patient 360 "Upcoming" (excludes terminals). */
+export const UPCOMING_APPOINTMENT_STATUSES: readonly AppointmentStatus[] = [
+	'SCHEDULED',
+	'ARRIVED',
+	'CHECKED_IN',
+	'IN_PROGRESS'
+] as const;
+
+export function isUpcomingAppointmentStatus(status: AppointmentStatus): boolean {
+	return (UPCOMING_APPOINTMENT_STATUSES as readonly string[]).includes(status);
+}
+
+export function filterUpcomingAppointments(items: Appointment[]): Appointment[] {
+	return items.filter((a) => isUpcomingAppointmentStatus(a.status));
+}
+
 export function appointmentActionVisibility(
 	appt: Pick<Appointment, 'status' | 'queueTicketId' | 'hasActiveTicket'>,
 	permissions: string[]

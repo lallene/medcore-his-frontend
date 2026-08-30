@@ -1,5 +1,6 @@
 export type PatientTab =
 	| 'overview'
+	| 'appointments'
 	| 'consultations'
 	| 'medical-record'
 	| 'exams'

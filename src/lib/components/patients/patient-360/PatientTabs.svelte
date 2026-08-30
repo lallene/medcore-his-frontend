@@ -27,6 +27,7 @@
 						: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
 				}`}
 				aria-current={activeTab === tab.id ? 'page' : undefined}
+				data-testid={`patient-360-tab-${tab.id}`}
 			>
 				<TabIcon size={16} />
 

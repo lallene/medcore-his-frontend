@@ -43,6 +43,7 @@ export interface AppointmentListFilters {
 	to: string;
 	serviceId?: number;
 	practitionerId?: number;
+	patientId?: number;
 	status?: AppointmentStatus;
 	appointmentTypeId?: number;
 	page?: number;

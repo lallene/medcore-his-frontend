@@ -35,11 +35,19 @@
 	interface Props {
 		open?: boolean;
 		permissions?: string[];
+		/** When set, patient is preselected and locked (Patient 360 booking). */
+		initialPatient?: Patient | null;
 		onclose?: () => void;
 		onsuccess?: (appt: Appointment) => void;
 	}
 
-	let { open = $bindable(false), permissions = [], onclose, onsuccess }: Props = $props();
+	let {
+		open = $bindable(false),
+		permissions = [],
+		initialPatient = null,
+		onclose,
+		onsuccess
+	}: Props = $props();
 
 	let step = $state(1);
 	let error = $state('');
@@ -50,6 +58,7 @@
 	let patientResults = $state<Patient[]>([]);
 	let patientSearching = $state(false);
 	let selectedPatient = $state<Patient | null>(null);
+	let patientLocked = $state(false);
 	let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
 	let services = $state<OrganizationService[]>([]);
@@ -81,8 +90,9 @@
 		error = '';
 		conflict = false;
 		step = 1;
-		selectedPatient = null;
-		patientQuery = '';
+		patientLocked = Boolean(initialPatient?.id);
+		selectedPatient = initialPatient ?? null;
+		patientQuery = initialPatient ? `${initialPatient.prenoms} ${initialPatient.nom}`.trim() : '';
 		patientResults = [];
 		serviceId = '';
 		typeId = '';
@@ -254,50 +264,63 @@
 		{#if step === 1}
 			<FormSection title="Patient & critères" columns={1}>
 				<FormField label="Patient" required>
-					<Input
-						value={patientQuery}
-						placeholder="Nom, prénom, téléphone, dossier…"
-						data-testid="agenda-patient-search"
-						oninput={(e) => onPatientInput((e.currentTarget as HTMLInputElement).value)}
-					/>
-					{#if patientSearching}
-						<p class="mt-1 text-xs text-slate-500">Recherche…</p>
-					{/if}
-					{#if selectedPatient}
+					{#if patientLocked && selectedPatient}
 						<p
-							class="mt-2 text-sm font-medium text-slate-800"
+							class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800"
 							data-testid="agenda-selected-patient"
+							data-patient-locked="true"
 						>
 							{selectedPatient.prenoms}
 							{selectedPatient.nom}
 							<span class="text-slate-500">({selectedPatient.codePatient})</span>
 						</p>
-					{:else if patientResults.length}
-						<ul class="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
-							{#each patientResults as p (p.id)}
-								<li>
-									<button
-										type="button"
-										class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
-										data-testid="agenda-patient-option"
-										onclick={() => {
-											selectedPatient = p;
-											patientQuery = `${p.prenoms} ${p.nom}`;
-											patientResults = [];
-										}}
-									>
-										{p.prenoms}
-										{p.nom}
-										<span class="text-slate-500">· {p.codePatient}</span>
-									</button>
-								</li>
-							{/each}
-						</ul>
+						<p class="mt-1 text-xs text-slate-500">Patient du dossier — non modifiable.</p>
+					{:else}
+						<Input
+							value={patientQuery}
+							placeholder="Nom, prénom, téléphone, dossier…"
+							data-testid="agenda-patient-search"
+							oninput={(e) => onPatientInput((e.currentTarget as HTMLInputElement).value)}
+						/>
+						{#if patientSearching}
+							<p class="mt-1 text-xs text-slate-500">Recherche…</p>
+						{/if}
+						{#if selectedPatient}
+							<p
+								class="mt-2 text-sm font-medium text-slate-800"
+								data-testid="agenda-selected-patient"
+							>
+								{selectedPatient.prenoms}
+								{selectedPatient.nom}
+								<span class="text-slate-500">({selectedPatient.codePatient})</span>
+							</p>
+						{:else if patientResults.length}
+							<ul class="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
+								{#each patientResults as p (p.id)}
+									<li>
+										<button
+											type="button"
+											class="w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+											data-testid="agenda-patient-option"
+											onclick={() => {
+												selectedPatient = p;
+												patientQuery = `${p.prenoms} ${p.nom}`;
+												patientResults = [];
+											}}
+										>
+											{p.prenoms}
+											{p.nom}
+											<span class="text-slate-500">· {p.codePatient}</span>
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+						<p class="mt-1 text-xs text-slate-500">
+							Nouveau patient ?
+							<a class="text-primary underline" href={resolve('/patients')}>Créer un dossier</a>
+						</p>
 					{/if}
-					<p class="mt-1 text-xs text-slate-500">
-						Nouveau patient ?
-						<a class="text-primary underline" href={resolve('/patients')}>Créer un dossier</a>
-					</p>
 				</FormField>
 
 				<FormField label="Service" required>

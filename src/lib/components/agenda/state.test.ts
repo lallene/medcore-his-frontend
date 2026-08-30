@@ -14,6 +14,8 @@ import {
 	formatAgendaTime,
 	groupSlotsByPeriod,
 	isTerminalAppointment,
+	isUpcomingAppointmentStatus,
+	filterUpcomingAppointments,
 	navigateAnchor,
 	newIdempotencyKey,
 	slotKey,
@@ -21,7 +23,7 @@ import {
 	weekRange,
 	zonedLocalToUtc
 } from './state.ts';
-import type { AvailabilitySlot } from '../../types/scheduling.ts';
+import type { Appointment, AvailabilitySlot } from '../../types/scheduling.ts';
 
 describe('agenda status mapping', () => {
 	it('maps French labels for all statuses', () => {
@@ -203,6 +205,25 @@ describe('availability grouping and booking DTO', () => {
 		assert.equal(payload.reason, 'douleurs');
 		assert.equal('createdBy' in payload, false);
 		assert.equal('actorId' in payload, false);
+	});
+
+	it('classifies upcoming vs terminal statuses for Patient 360', () => {
+		assert.equal(isUpcomingAppointmentStatus('SCHEDULED'), true);
+		assert.equal(isUpcomingAppointmentStatus('ARRIVED'), true);
+		assert.equal(isUpcomingAppointmentStatus('CHECKED_IN'), true);
+		assert.equal(isUpcomingAppointmentStatus('IN_PROGRESS'), true);
+		assert.equal(isUpcomingAppointmentStatus('COMPLETED'), false);
+		assert.equal(isUpcomingAppointmentStatus('CANCELLED'), false);
+		assert.equal(isUpcomingAppointmentStatus('NO_SHOW'), false);
+		const filtered = filterUpcomingAppointments([
+			{ status: 'SCHEDULED' },
+			{ status: 'CANCELLED' },
+			{ status: 'CHECKED_IN' },
+			{ status: 'COMPLETED' }
+		] as Appointment[]);
+		assert.equal(filtered.length, 2);
+		assert.equal(filtered[0].status, 'SCHEDULED');
+		assert.equal(filtered[1].status, 'CHECKED_IN');
 	});
 
 	it('keeps idempotency key stable across retries of same attempt', () => {

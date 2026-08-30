@@ -31,6 +31,7 @@ export const listAppointments = async (filters: AppointmentListFilters) =>
 				to: filters.to,
 				serviceId: filters.serviceId,
 				practitionerId: filters.practitionerId,
+				patientId: filters.patientId,
 				status: filters.status,
 				appointmentTypeId: filters.appointmentTypeId,
 				page: filters.page,

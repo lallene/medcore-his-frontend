@@ -10,8 +10,10 @@
 	import PatientBilling from '$lib/components/patients/patient-360/PatientBilling.svelte';
 	import PatientDocuments from '$lib/components/patients/patient-360/PatientDocuments.svelte';
 	import PatientTimeline from '$lib/components/patients/patient-360/PatientTimeline.svelte';
+	import PatientAppointments from '$lib/components/patients/patient-360/PatientAppointments.svelte';
 	import {
 		Building2,
+		CalendarDays,
 		FileHeart,
 		FileText,
 		FlaskConical,
@@ -41,6 +43,9 @@
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
 	import PatientActiveCareBanner from '$lib/components/patients/patient-360/PatientActiveCareBanner.svelte';
+	import { canReadAgenda } from '$lib/components/agenda/state';
+	import { getStoredPermissions } from '$lib/rbac/permissions';
+	import { browser } from '$app/environment';
 
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { Patient } from '$lib/types/patient';
@@ -59,6 +64,9 @@
 	let hospitalizations = $state<Hospitalization[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let appointmentCount = $state(0);
+
+	const showAppointmentsTab = $derived(browser ? canReadAgenda(getStoredPermissions()) : false);
 
 	const consultationCount = $derived(consultations.length);
 
@@ -83,6 +91,16 @@
 			label: 'Vue générale',
 			icon: LayoutDashboard
 		},
+		...(showAppointmentsTab
+			? [
+					{
+						id: 'appointments' as const,
+						label: 'Rendez-vous',
+						icon: CalendarDays,
+						count: appointmentCount
+					}
+				]
+			: []),
 		{
 			id: 'consultations',
 			label: 'Consultations',
@@ -151,27 +169,39 @@
 				throw new Error('Identifiant patient invalide.');
 			}
 
-			const [
-				patientResponse,
-				summaryResponse,
-				consultationsResponse,
-				coveragesResponse,
-				hospitalizationsResponse
-			] = await Promise.all([
-				getPatient(id),
-				getPatientSummary(id),
-				getPatientConsultations(id),
-				getPatientCoverages(id),
-				listPatientHospitalizations(id)
-			]);
-
+			const patientResponse = await getPatient(id);
 			patient = patientResponse;
+
+			function fallbackOnForbidden<T>(error: unknown, fallback: T): T {
+				if (error instanceof Error && error.message === 'ACCESS_DENIED') {
+					return fallback;
+				}
+
+				throw error;
+			}
+
+			const [summaryResponse, consultationsResponse, coveragesResponse, hospitalizationsResponse] =
+				await Promise.all([
+					getPatientSummary(id).catch((error) => fallbackOnForbidden(error, null)),
+					getPatientConsultations(id).catch((error) =>
+						fallbackOnForbidden(error, [] as PatientConsultation[])
+					),
+					getPatientCoverages(id).catch((error) =>
+						fallbackOnForbidden(error, [] as PatientCoverage[])
+					),
+					listPatientHospitalizations(id).catch((error) =>
+						fallbackOnForbidden(error, [] as Hospitalization[])
+					)
+				]);
+
 			summary = summaryResponse;
-			consultations = consultationsResponse;
-			coverages = coveragesResponse;
-			hospitalizations = hospitalizationsResponse;
-			timelineEvents = summaryResponse.medical_record.id
-				? await getClinicalTimeline(summaryResponse.medical_record.id)
+			consultations = consultationsResponse ?? [];
+			coverages = coveragesResponse ?? [];
+			hospitalizations = hospitalizationsResponse ?? [];
+			timelineEvents = summaryResponse?.medical_record?.id
+				? await getClinicalTimeline(summaryResponse.medical_record.id).catch((error) =>
+							fallbackOnForbidden(error, [] as ClinicalTimelineEvent[])
+						)
 				: [];
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible de charger la fiche patient.';
@@ -207,6 +237,13 @@
 
 		{#if activeTab === 'overview'}
 			<PatientOverview patient={p} {summary} {consultations} {insurance} {hospitalizations} />
+		{:else if activeTab === 'appointments' && showAppointmentsTab}
+			<PatientAppointments
+				patient={p}
+				onCountChange={(n) => {
+					appointmentCount = n;
+				}}
+			/>
 		{:else if activeTab === 'consultations'}
 			<PatientConsultations patientId={p.id} {consultations} />
 		{:else if activeTab === 'medical-record'}
