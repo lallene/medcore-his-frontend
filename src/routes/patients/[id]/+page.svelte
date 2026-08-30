@@ -200,8 +200,8 @@
 			hospitalizations = hospitalizationsResponse ?? [];
 			timelineEvents = summaryResponse?.medical_record?.id
 				? await getClinicalTimeline(summaryResponse.medical_record.id).catch((error) =>
-							fallbackOnForbidden(error, [] as ClinicalTimelineEvent[])
-						)
+						fallbackOnForbidden(error, [] as ClinicalTimelineEvent[])
+					)
 				: [];
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible de charger la fiche patient.';
