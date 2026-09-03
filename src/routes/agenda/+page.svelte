@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import {
 		cancelAppointment,
 		checkInAppointment,
@@ -8,6 +9,7 @@
 		markAppointmentNoShow
 	} from '$lib/api/appointments';
 	import { listOrganizationServices } from '$lib/api/organization';
+	import { getPatient } from '$lib/api/patients';
 	import { listStaff } from '$lib/api/staff';
 	import AgendaDayView from '$lib/components/agenda/AgendaDayView.svelte';
 	import AgendaWeekView from '$lib/components/agenda/AgendaWeekView.svelte';
@@ -23,6 +25,7 @@
 		formatAgendaDayLabel,
 		formatAgendaWeekLabel,
 		navigateAnchor,
+		parseAgendaPatientIdParam,
 		rangeForMode,
 		toRfc3339,
 		type AgendaMode
@@ -44,6 +47,7 @@
 		resolveUserErrorMessage
 	} from '$lib/rbac/permissions';
 	import type { OrganizationService } from '$lib/types/organization';
+	import type { Patient } from '$lib/types/patient';
 	import type { Appointment, AppointmentStatus } from '$lib/types/scheduling';
 
 	const tabs = [
@@ -95,7 +99,13 @@
 	let confirmNoShowOpen = $state(false);
 	let confirmCheckInOpen = $state(false);
 
+	/** LOT 23K — deep-link patient context (booking lock only when canBook). */
+	let deepLinkPatient = $state<Patient | null>(null);
+	let deepLinkNotice = $state('');
+	let deepLinkSeq = 0;
+
 	const canBook = $derived(canBookAppointment(permissions));
+	const bookingInitialPatient = $derived(canBook ? deepLinkPatient : null);
 	const rangeLabel = $derived.by(() => {
 		const { from, to } = rangeForMode(mode === 'mine' ? 'day' : mode, anchor);
 		if (mode === 'week') return formatAgendaWeekLabel(from, to);
@@ -103,6 +113,46 @@
 	});
 
 	const consultationServices = $derived(eligibleServices(services, 'consultation'));
+
+	$effect(() => {
+		const raw = page.url.searchParams.get('patientId');
+		const bookable = canBook;
+		void resolveDeepLinkPatient(raw, bookable);
+	});
+
+	async function resolveDeepLinkPatient(raw: string | null, bookable: boolean) {
+		const seq = ++deepLinkSeq;
+		const id = parseAgendaPatientIdParam(raw);
+		if (id == null) {
+			if (raw != null && String(raw).trim() !== '') {
+				deepLinkPatient = null;
+				deepLinkNotice = 'Identifiant patient invalide — l’agenda reste utilisable.';
+			} else {
+				deepLinkPatient = null;
+				deepLinkNotice = '';
+			}
+			return;
+		}
+		// Deep-link patient context is only for booking preselect/lock — never fetch when read-only.
+		if (!bookable) {
+			deepLinkPatient = null;
+			deepLinkNotice = '';
+			return;
+		}
+		try {
+			const patient = await getPatient(id);
+			if (seq !== deepLinkSeq) return;
+			deepLinkPatient = patient;
+			deepLinkNotice = '';
+		} catch (e) {
+			if (seq !== deepLinkSeq) return;
+			deepLinkPatient = null;
+			deepLinkNotice = resolveUserErrorMessage(
+				e,
+				'Patient introuvable ou inaccessible — l’agenda reste utilisable.'
+			);
+		}
+	}
 
 	onMount(() => {
 		permissions = getStoredPermissions();
@@ -277,6 +327,19 @@
 		{#if error}
 			<Alert tone="danger" title="Erreur">{error}</Alert>
 		{/if}
+		{#if deepLinkNotice}
+			<div data-testid="agenda-deeplink-notice">
+				<Alert tone="warning" title="Contexte patient">{deepLinkNotice}</Alert>
+			</div>
+		{/if}
+		{#if deepLinkPatient && canBook}
+			<div data-testid="agenda-deeplink-patient">
+				<Alert tone="info" title="Patient préselectionné">
+					{deepLinkPatient.prenoms}
+					{deepLinkPatient.nom} — préselectionné pour la réservation (modal non ouvert automatiquement).
+				</Alert>
+			</div>
+		{/if}
 		{#if success}
 			<Alert tone="success" title="Succès">{success}</Alert>
 		{/if}
@@ -404,15 +467,18 @@
 		onrefresh={() => void refreshSelected()}
 	/>
 
-	<AppointmentBookingModal
-		bind:open={bookingOpen}
-		{permissions}
-		onsuccess={async (appt) => {
-			success = `Rendez-vous #${appt.id} créé.`;
-			await loadAppointments();
-			void openDetails(appt);
-		}}
-	/>
+	{#if canBook}
+		<AppointmentBookingModal
+			bind:open={bookingOpen}
+			{permissions}
+			initialPatient={bookingInitialPatient}
+			onsuccess={async (appt) => {
+				success = `Rendez-vous #${appt.id} créé.`;
+				await loadAppointments();
+				void openDetails(appt);
+			}}
+		/>
+	{/if}
 
 	<AppointmentRescheduleModal
 		bind:open={rescheduleOpen}

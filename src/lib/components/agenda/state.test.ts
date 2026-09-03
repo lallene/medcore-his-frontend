@@ -16,6 +16,10 @@ import {
 	isTerminalAppointment,
 	isUpcomingAppointmentStatus,
 	filterUpcomingAppointments,
+	filterHistoryAppointments,
+	isHistoryAppointment,
+	buildAgendaPatientHref,
+	parseAgendaPatientIdParam,
 	navigateAnchor,
 	newIdempotencyKey,
 	slotKey,
@@ -228,6 +232,78 @@ describe('availability grouping and booking DTO', () => {
 		assert.equal(filtered.length, 2);
 		assert.equal(filtered[0].status, 'SCHEDULED');
 		assert.equal(filtered[1].status, 'CHECKED_IN');
+	});
+
+	it('classifies history (LOT 23K): terminals, past SCHEDULED, not today active', () => {
+		const startToday = zonedLocalToUtc(2026, 9, 3, 0, 0, 0, AGENDA_TIMEZONE);
+		const futureCancel = {
+			id: 1,
+			status: 'CANCELLED' as const,
+			scheduledAt: '2026-09-10T10:00:00.000Z'
+		};
+		const completed = {
+			id: 2,
+			status: 'COMPLETED' as const,
+			scheduledAt: '2026-09-02T10:00:00.000Z'
+		};
+		const noShow = {
+			id: 3,
+			status: 'NO_SHOW' as const,
+			scheduledAt: '2026-09-01T10:00:00.000Z'
+		};
+		const pastScheduled = {
+			id: 4,
+			status: 'SCHEDULED' as const,
+			scheduledAt: '2026-09-02T08:00:00.000Z'
+		};
+		const todayActive = {
+			id: 5,
+			status: 'SCHEDULED' as const,
+			scheduledAt: toRfc3339(zonedLocalToUtc(2026, 9, 3, 10, 0, 0, AGENDA_TIMEZONE))
+		};
+		const futureActive = {
+			id: 6,
+			status: 'IN_PROGRESS' as const,
+			scheduledAt: '2026-09-05T10:00:00.000Z'
+		};
+		assert.equal(isHistoryAppointment(futureCancel, startToday), true);
+		assert.equal(isHistoryAppointment(completed, startToday), true);
+		assert.equal(isHistoryAppointment(noShow, startToday), true);
+		assert.equal(isHistoryAppointment(pastScheduled, startToday), true);
+		assert.equal(isHistoryAppointment(todayActive, startToday), false);
+		assert.equal(isHistoryAppointment(futureActive, startToday), false);
+
+		const sorted = filterHistoryAppointments(
+			[pastScheduled, futureCancel, noShow, todayActive, completed] as Appointment[],
+			startToday
+		);
+		assert.equal(sorted.length, 4);
+		assert.equal(sorted[0].id, 1); // future cancel newest scheduledAt among history
+		assert.equal(sorted.map((a) => a.id).includes(5), false);
+		// DESC by scheduledAt
+		for (let i = 1; i < sorted.length; i++) {
+			assert.ok(
+				new Date(sorted[i - 1].scheduledAt).getTime() >= new Date(sorted[i].scheduledAt).getTime()
+			);
+		}
+	});
+
+	it('builds agenda patient deep-link and parses patientId strictly', () => {
+		assert.equal(buildAgendaPatientHref(42), '/agenda?patientId=42');
+		assert.equal(parseAgendaPatientIdParam('42'), 42);
+		assert.equal(parseAgendaPatientIdParam(' 42 '), 42);
+		assert.equal(parseAgendaPatientIdParam(null), null);
+		assert.equal(parseAgendaPatientIdParam(undefined), null);
+		assert.equal(parseAgendaPatientIdParam(''), null);
+		assert.equal(parseAgendaPatientIdParam('   '), null);
+		assert.equal(parseAgendaPatientIdParam('0'), null);
+		assert.equal(parseAgendaPatientIdParam('-1'), null);
+		assert.equal(parseAgendaPatientIdParam('+42'), null);
+		assert.equal(parseAgendaPatientIdParam('42.0'), null);
+		assert.equal(parseAgendaPatientIdParam('1e3'), null);
+		assert.equal(parseAgendaPatientIdParam('1abc'), null);
+		assert.equal(parseAgendaPatientIdParam('abc'), null);
+		assert.equal(parseAgendaPatientIdParam(String(Number.MAX_SAFE_INTEGER + 1)), null);
 	});
 
 	it('keeps idempotency key stable across retries of same attempt', () => {

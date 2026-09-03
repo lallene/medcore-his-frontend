@@ -708,3 +708,71 @@ test('QA-AGENDA-DASHBOARD-001 @smoke dashboard has no fake planning rows', async
 	await expect(page.getByText('Consultations externes')).toHaveCount(0);
 	await expect(page.getByTestId('dashboard-agenda-cta')).toBeVisible();
 });
+
+test('QA-AGENDA-DEEPLINK-001 @critical Patient 360 deep-link preselects patient when booking', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(120_000);
+	const admin = await loginApi(request, adminEmail);
+	const patient = await createQaPatient(request, admin, 'DEEPLINK');
+	await login(adminEmail, password);
+	await page.goto(`/patients/${patient.id}`);
+	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
+	const agendaLink = page.getByTestId('patient-360-open-agenda');
+	await expect(agendaLink).toBeVisible();
+	await expect(agendaLink).toHaveAttribute('href', new RegExp(`patientId=${patient.id}`));
+	await agendaLink.click();
+	await expect(page).toHaveURL(new RegExp(`/agenda\\?patientId=${patient.id}`));
+	await expect(page.getByTestId('agenda-page')).toBeVisible({ timeout: 20_000 });
+	await expect(page.getByTestId('agenda-booking-modal')).toHaveCount(0);
+	await expect(page.getByTestId('agenda-deeplink-patient')).toBeVisible();
+	await page.getByTestId('agenda-new-appointment').click();
+	await expect(page.getByTestId('agenda-booking-modal')).toBeVisible();
+	await expect(page.getByTestId('agenda-selected-patient')).toHaveAttribute(
+		'data-patient-locked',
+		'true'
+	);
+	await expect(page.getByTestId('agenda-patient-search')).toHaveCount(0);
+
+	await page.goto(`/agenda?patientId=${patient.id}`);
+	await expect(page.getByTestId('agenda-deeplink-patient')).toBeVisible({ timeout: 20_000 });
+	await page.getByTestId('agenda-new-appointment').click();
+	await expect(page.getByTestId('agenda-selected-patient')).toHaveAttribute(
+		'data-patient-locked',
+		'true'
+	);
+});
+
+test('QA-AGENDA-DEEPLINK-002 @critical deep-link does not unlock booking without create', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(90_000);
+	const admin = await loginApi(request, adminEmail);
+	const patient = await createQaPatient(request, admin, 'DEEPLINK-RO');
+	await login(doctorEmail, password);
+	await page.goto(`/agenda?patientId=${patient.id}`);
+	await expect(page.getByTestId('agenda-page')).toBeVisible({ timeout: 20_000 });
+	await expect(page.getByTestId('agenda-new-appointment')).toHaveCount(0);
+	await expect(page.getByTestId('agenda-booking-modal')).toHaveCount(0);
+	await expect(page.getByTestId('agenda-deeplink-patient')).toHaveCount(0);
+});
+
+test('QA-AGENDA-DEEPLINK-003 @critical invalid patientId handled gracefully', async ({
+	page,
+	login
+}) => {
+	test.setTimeout(90_000);
+	await login(adminEmail, password);
+	await page.goto('/agenda?patientId=not-a-number');
+	await expect(page.getByTestId('agenda-page')).toBeVisible({ timeout: 20_000 });
+	await expect(page.getByTestId('agenda-deeplink-notice')).toBeVisible();
+	await expect(page.getByTestId('agenda-new-appointment')).toBeVisible();
+	await page.goto('/agenda?patientId=999999999');
+	await expect(page.getByTestId('agenda-page')).toBeVisible({ timeout: 20_000 });
+	await expect(page.getByTestId('agenda-deeplink-notice')).toBeVisible();
+	await expect(page.getByTestId('agenda-deeplink-patient')).toHaveCount(0);
+});

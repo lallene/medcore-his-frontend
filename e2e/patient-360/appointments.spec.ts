@@ -1,8 +1,9 @@
 /**
- * LOT 23H — Patient 360 upcoming appointments E2E.
+ * LOT 23H / 23K — Patient 360 appointments E2E (upcoming + history).
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
+import { bookPastAppointment } from '../agenda/fixtures';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
 const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
@@ -272,4 +273,203 @@ test('QA-P360-APPT-004 @critical appointments tab usable at 375px', async ({
 	await expect(tab).toBeAttached({ timeout: 20_000 });
 	await tab.evaluate((el: HTMLElement) => el.click());
 	await expect(page.getByTestId('patient-360-appointments')).toBeAttached({ timeout: 15_000 });
+	await expect(page.getByTestId('patient-360-appointments-upcoming')).toBeAttached();
+	await expect(page.getByTestId('patient-360-appointments-history')).toBeAttached();
+});
+
+async function cancelAppointmentApi(
+	request: APIRequestContext,
+	token: string,
+	appointmentId: number
+) {
+	const response = await request.post(`${api}/api/appointments/${appointmentId}/cancel`, {
+		headers: { ...bearer(token), 'Idempotency-Key': crypto.randomUUID() },
+		data: { reason: 'QA-360-HISTORY-CANCEL' }
+	});
+	expect([200, 201].includes(response.status()), await response.text()).toBeTruthy();
+}
+
+test('QA-P360-APPT-HISTORY-001 @critical history/upcoming separation and DESC order', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(180_000);
+	const admin = await loginApi(request, adminEmail);
+	const patient = await createPatient(request, admin, 'HIST');
+	const emptyPatient = await createPatient(request, admin, 'HISTEMPTY');
+	const { sid, typeId } = await serviceAndType(request, admin);
+
+	const keep = await bookUpcoming(request, admin, {
+		patientId: patient.id,
+		serviceId: sid,
+		typeId,
+		reason: `QA-360-KEEP-${Date.now()}`
+	});
+	const cancelOlder = await bookUpcoming(request, admin, {
+		patientId: patient.id,
+		serviceId: sid,
+		typeId,
+		reason: `QA-360-CXL-OLD-${Date.now()}`
+	});
+	const cancelNewer = await bookUpcoming(request, admin, {
+		patientId: patient.id,
+		serviceId: sid,
+		typeId,
+		reason: `QA-360-CXL-NEW-${Date.now()}`
+	});
+	await cancelAppointmentApi(request, admin, cancelOlder.id);
+	await cancelAppointmentApi(request, admin, cancelNewer.id);
+
+	let pastId: number | null = null;
+	try {
+		const past = await bookPastAppointment(request, admin, {
+			patientId: patient.id,
+			serviceId: sid,
+			appointmentTypeId: typeId,
+			reason: `QA-360-PAST-${Date.now()}`
+		});
+		// History only for scheduledAt < startOfToday (Paris). Same-day past SCHEDULED stays upcoming.
+		const parisDay = (iso: string) =>
+			new Intl.DateTimeFormat('en-CA', {
+				timeZone: 'Europe/Paris',
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit'
+			}).format(new Date(iso));
+		if (parisDay(past.scheduledAt) < parisDay(new Date().toISOString())) {
+			pastId = past.id;
+		}
+	} catch {
+		/* optional when past book is blocked by availability rules */
+	}
+
+	await login(adminEmail, password);
+	await page.goto(`/patients/${patient.id}`);
+	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
+	await expect(page.getByTestId('patient-360-appointments-upcoming')).toBeVisible({
+		timeout: 20_000
+	});
+	await expect(page.locator(`[data-appointment-id="${keep.id}"]`)).toBeVisible();
+	await expect(
+		page
+			.getByTestId('patient-360-appointment-list')
+			.locator(`[data-appointment-id="${cancelNewer.id}"]`)
+	).toHaveCount(0);
+	await expect(page.getByTestId('patient-360-appointment-history-list')).toBeVisible();
+	await expect(
+		page.locator(
+			`[data-testid="patient-360-history-item"][data-appointment-id="${cancelNewer.id}"]`
+		)
+	).toBeVisible();
+	await expect(
+		page.locator(
+			`[data-testid="patient-360-history-item"][data-appointment-id="${cancelOlder.id}"]`
+		)
+	).toBeVisible();
+	if (pastId != null) {
+		await expect(
+			page.locator(`[data-testid="patient-360-history-item"][data-appointment-id="${pastId}"]`)
+		).toBeVisible();
+		await expect(
+			page.getByTestId('patient-360-appointment-list').locator(`[data-appointment-id="${pastId}"]`)
+		).toHaveCount(0);
+	}
+
+	const historyIds = await page
+		.getByTestId('patient-360-history-item')
+		.evaluateAll((nodes) => nodes.map((n) => Number(n.getAttribute('data-appointment-id'))));
+	const newerIdx = historyIds.indexOf(cancelNewer.id);
+	const olderIdx = historyIds.indexOf(cancelOlder.id);
+	expect(newerIdx).toBeGreaterThanOrEqual(0);
+	expect(olderIdx).toBeGreaterThanOrEqual(0);
+	const newerTime = Date.parse(cancelNewer.scheduledAt);
+	const olderTime = Date.parse(cancelOlder.scheduledAt);
+	if (newerTime >= olderTime) {
+		expect(newerIdx).toBeLessThan(olderIdx);
+	} else {
+		expect(olderIdx).toBeLessThan(newerIdx);
+	}
+
+	await page.goto(`/patients/${emptyPatient.id}`);
+	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
+	await expect(page.getByTestId('patient-360-appointments-history')).toBeVisible({
+		timeout: 20_000
+	});
+	await expect(page.getByText('Aucun historique récent')).toBeVisible();
+});
+
+test('QA-P360-APPT-HISTORY-002 @critical history RBAC isolation and physician own', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(180_000);
+	const admin = await loginApi(request, adminEmail);
+	const patientA = await createPatient(request, admin, 'HISTA');
+	const patientB = await createPatient(request, admin, 'HISTB');
+	const { sid, typeId } = await serviceAndType(request, admin);
+	const apptA = await bookUpcoming(request, admin, {
+		patientId: patientA.id,
+		serviceId: sid,
+		typeId,
+		reason: `QA-360-HIST-A-${Date.now()}`
+	});
+	const apptB = await bookUpcoming(request, admin, {
+		patientId: patientB.id,
+		serviceId: sid,
+		typeId,
+		reason: `QA-360-HIST-B-${Date.now()}`
+	});
+	await cancelAppointmentApi(request, admin, apptA.id);
+	await cancelAppointmentApi(request, admin, apptB.id);
+
+	await login(receptionEmail, password);
+	await page.goto(`/patients/${patientA.id}`);
+	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
+	await expect(
+		page.locator(`[data-testid="patient-360-history-item"][data-appointment-id="${apptA.id}"]`)
+	).toBeVisible({ timeout: 20_000 });
+	await expect(page.locator(`[data-appointment-id="${apptB.id}"]`)).toHaveCount(0);
+
+	const docTok = await loginApi(request, doctorEmail);
+	const payload = JSON.parse(Buffer.from(docTok.split('.')[1], 'base64url').toString('utf8')) as {
+		userId?: number;
+		permissions?: string[];
+	};
+	const ownId = payload.userId as number;
+	const ownPatient = await createPatient(request, admin, 'HISTOWN');
+	const from = new Date().toISOString();
+	const to = new Date(Date.now() + 7 * 24 * 60 * 60_000).toISOString();
+	const avail = await request.get(
+		`${api}/api/availability?serviceId=${sid}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&appointmentTypeId=${typeId}&practitionerId=${ownId}`,
+		{ headers: bearer(admin) }
+	);
+	const slots = ((await avail.json()).slots ?? []) as Array<{
+		startAt: string;
+		practitionerId: number;
+	}>;
+	expect(slots[0]?.startAt, 'own slot').toBeTruthy();
+	const book = await request.post(`${api}/api/appointments`, {
+		headers: { ...bearer(admin), 'Idempotency-Key': crypto.randomUUID() },
+		data: {
+			patientId: ownPatient.id,
+			serviceId: sid,
+			practitionerId: ownId,
+			appointmentTypeId: typeId,
+			startAt: slots[0].startAt,
+			reason: `QA-360-HIST-OWN-${Date.now()}`,
+			idempotencyKey: crypto.randomUUID()
+		}
+	});
+	expect([200, 201].includes(book.status()), await book.text()).toBeTruthy();
+	const ownAppt = await book.json();
+	await cancelAppointmentApi(request, admin, ownAppt.id);
+
+	await login(doctorEmail, password);
+	await page.goto(`/patients/${ownPatient.id}`);
+	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
+	await expect(
+		page.locator(`[data-testid="patient-360-history-item"][data-appointment-id="${ownAppt.id}"]`)
+	).toBeVisible({ timeout: 20_000 });
 });

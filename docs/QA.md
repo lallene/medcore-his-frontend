@@ -19,7 +19,7 @@ Le module Scheduling est release-gated lorsque **tous** ces contrôles passent d
 
 1. **Scheduling PostgreSQL integration gate** — `go test ./internal/modules/patient_queue/ ./internal/core/rbac/ -count=1` avec `TEST_DATABASE_URL` (inclut RBAC 23I, booking, lifecycle, check-in, availability, schedules).
 2. **Frontend unit/static** — `npm test`, `check`, `lint`, `build`.
-3. **Playwright critical** — specs Agenda (`e2e/agenda`) et Patient 360 appointments (`e2e/patient-360`) taguées `@critical` / `@smoke`.
+3. **Playwright critical** — specs Agenda (`e2e/agenda`) et Patient 360 appointments (`e2e/patient-360`) taguées `@critical` / `@smoke` (inclut historique 23K + deep-link Agenda).
 
 `npm run test:e2e:scheduling` reste un **helper local** : rebuild + preview contre une API déjà démarrée (défaut `:18082`), exécute **uniquement** `e2e/agenda/agenda.spec.ts` (pas Patient 360), **sans seed**. Ce n’est pas la release gate CI.
 
@@ -56,7 +56,7 @@ npm run test:e2e:full
 Les suites Playwright sont séparées ainsi :
 
 - **Smoke** : login, dashboard, patients, Patient 360 chrome, consultations, logout (+ `QA-AGENDA-DASHBOARD-001`).
-- **Critical** (défaut release gate) : Smoke + Auth/RBAC + Organization + **Agenda / P360 appointments Scheduling** + autres `@critical`.
+- **Critical** (défaut release gate) : Smoke + Auth/RBAC + Organization + **Agenda / P360 appointments Scheduling** (historique 23K, deep-link) + autres `@critical`.
 - **Full** : toutes les spécifications (`QA_SUITE=full`), nightly / manuel / releases majeures — ne prétend pas couvrir des scénarios `NOT_IMPLEMENTED`.
 
 ## Variables

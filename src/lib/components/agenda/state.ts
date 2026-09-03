@@ -108,6 +108,56 @@ export function filterUpcomingAppointments(items: Appointment[]): Appointment[] 
 	return items.filter((a) => isUpcomingAppointmentStatus(a.status));
 }
 
+/** LOT 23K — terminal statuses always belong in history (including future CANCELLED). */
+export const HISTORY_TERMINAL_STATUSES: readonly AppointmentStatus[] = [
+	'COMPLETED',
+	'CANCELLED',
+	'NO_SHOW'
+] as const;
+
+/**
+ * History (P0): terminal status OR scheduledAt strictly before startOfToday (Paris day).
+ * startOfToday must be the same Europe/Paris day boundary used for upcoming windows.
+ */
+export function isHistoryAppointment(
+	appt: Pick<Appointment, 'status' | 'scheduledAt'>,
+	startOfToday: Date
+): boolean {
+	if (isTerminalAppointment(appt.status)) return true;
+	try {
+		return parseInstant(appt.scheduledAt).getTime() < startOfToday.getTime();
+	} catch {
+		return false;
+	}
+}
+
+export function filterHistoryAppointments(items: Appointment[], startOfToday: Date): Appointment[] {
+	return items
+		.filter((a) => isHistoryAppointment(a, startOfToday))
+		.sort((a, b) => {
+			const ta = parseInstant(a.scheduledAt).getTime();
+			const tb = parseInstant(b.scheduledAt).getTime();
+			if (tb !== ta) return tb - ta;
+			return b.id - a.id;
+		});
+}
+
+/** Agenda deep-link (LOT 23K) — patientId only; no clinical data in URL. */
+export function buildAgendaPatientHref(patientId: number): string {
+	return `/agenda?patientId=${patientId}`;
+}
+
+export function parseAgendaPatientIdParam(raw: string | null | undefined): number | null {
+	if (raw == null) return null;
+	const s = raw.trim();
+	if (s === '') return null;
+	// Positive decimal digits only — reject +, -, decimals, exponents, mixed alphanumerics.
+	if (!/^\d+$/.test(s)) return null;
+	const n = Number(s);
+	if (!Number.isSafeInteger(n) || n <= 0) return null;
+	return n;
+}
+
 export function appointmentActionVisibility(
 	appt: Pick<Appointment, 'status' | 'queueTicketId' | 'hasActiveTicket'>,
 	permissions: string[]
