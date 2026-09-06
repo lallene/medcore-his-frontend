@@ -312,12 +312,25 @@ test('QA-SCHEDULE-EXCEPTION-CREATE-001 @critical create negative exception', asy
 	start.setMinutes(0, 0, 0);
 	start.setHours(9 + (Date.now() % 6), 0, 0, 0);
 	const end = new Date(start.getTime() + 2 * 60 * 60_000);
-	const toLocal = (d: Date) => {
-		const pad = (n: number) => String(n).padStart(2, '0');
-		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	const toParisLocal = (d: Date) => {
+		const parts = Object.fromEntries(
+			new Intl.DateTimeFormat('en-CA', {
+				timeZone: 'Europe/Paris',
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23'
+			})
+				.formatToParts(d)
+				.filter((part) => part.type !== 'literal')
+				.map((part) => [part.type, part.value])
+		);
+		return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 	};
-	await page.getByTestId('exception-form-start').fill(toLocal(start));
-	await page.getByTestId('exception-form-end').fill(toLocal(end));
+	await page.getByTestId('exception-form-start').fill(toParisLocal(start));
+	await page.getByTestId('exception-form-end').fill(toParisLocal(end));
 	await page.getByTestId('exception-form-reason').fill(`QA-EX-ABS-${Date.now()}`);
 	const post = page.waitForResponse(
 		(r) => r.url().includes('/api/schedule-exceptions') && r.request().method() === 'POST',
