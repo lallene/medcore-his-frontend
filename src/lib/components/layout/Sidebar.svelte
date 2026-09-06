@@ -65,6 +65,7 @@
 		'/admin/staff': Users,
 		'/admin/access': Shield,
 		'/admin/organization': Settings,
+		'/admin/scheduling': CalendarDays,
 		'/admin/qa': BarChart3,
 		'/admin/design-system': LayoutDashboard,
 		'/support/tickets': LifeBuoy

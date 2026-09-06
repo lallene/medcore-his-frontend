@@ -144,3 +144,112 @@ export interface AppointmentCheckInResult {
 	createdAt: string;
 	updatedAt: string;
 }
+
+/** LOT 23L — recurring working schedule (backend StaffWorkingSchedule). */
+export interface StaffWorkingSchedule {
+	id: number;
+	practitionerId: number;
+	serviceId: number;
+	weekday: number;
+	startTime: string;
+	endTime: string;
+	validFrom: string;
+	validUntil?: string | null;
+	active: boolean;
+	createdBy: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface ScheduleListResponse {
+	items: StaffWorkingSchedule[];
+	total: number;
+	page: number;
+	limit: number;
+}
+
+export interface ScheduleListFilters {
+	practitionerId?: number;
+	serviceId?: number;
+	weekday?: number;
+	active?: boolean;
+	date?: string;
+	page?: number;
+	limit?: number;
+}
+
+export interface CreateWorkingScheduleRequest {
+	practitionerId: number;
+	serviceId: number;
+	weekday: number;
+	startTime: string;
+	endTime: string;
+	validFrom: string;
+	validUntil?: string | null;
+}
+
+export interface UpdateWorkingScheduleRequest {
+	serviceId?: number;
+	weekday?: number;
+	startTime?: string;
+	endTime?: string;
+	validFrom?: string;
+	validUntil?: string | null;
+	clearUntil?: boolean;
+	active?: boolean;
+}
+
+export type ScheduleExceptionType =
+	'ABSENCE' | 'LEAVE' | 'MEETING' | 'BLOCKED' | 'TRAINING' | 'OTHER' | 'EXTRA_AVAILABILITY';
+
+/** LOT 23L — schedule exception (backend ScheduleException). */
+export interface ScheduleException {
+	id: number;
+	practitionerId: number;
+	serviceId: number;
+	type: ScheduleExceptionType | string;
+	startAt: string;
+	endAt: string;
+	reason: string;
+	active: boolean;
+	cancelledAt?: string | null;
+	createdBy: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface ScheduleExceptionListResponse {
+	items: ScheduleException[];
+	total: number;
+	page: number;
+	limit: number;
+}
+
+export interface ScheduleExceptionListFilters {
+	practitionerId?: number;
+	serviceId?: number;
+	type?: string;
+	active?: boolean;
+	from?: string;
+	to?: string;
+	page?: number;
+	limit?: number;
+}
+
+export interface CreateScheduleExceptionRequest {
+	practitionerId: number;
+	serviceId: number;
+	type: ScheduleExceptionType;
+	startAt: string;
+	endAt: string;
+	reason?: string;
+}
+
+export interface UpdateScheduleExceptionRequest {
+	serviceId?: number;
+	type?: ScheduleExceptionType;
+	startAt?: string;
+	endAt?: string;
+	reason?: string;
+	active?: boolean;
+}

@@ -22,6 +22,7 @@ export type NavHref =
 	| '/admin/staff'
 	| '/admin/access'
 	| '/admin/organization'
+	| '/admin/scheduling'
 	| '/admin/qa'
 	| '/admin/design-system'
 	| '/tickets'
@@ -114,6 +115,16 @@ export const adminMenu: NavItem[] = [
 		permissions: ['rbac.read', 'staff.read', 'staff.manage']
 	},
 	{ title: 'Organisation', href: '/admin/organization', permissions: ['organization.manage'] },
+	{
+		title: 'Plannings',
+		href: '/admin/scheduling',
+		permissions: [
+			'schedule.manage.service',
+			'schedule.manage.all',
+			'schedule.read.service',
+			'schedule.read.all'
+		]
+	},
 	{ title: 'Automated QA', href: '/admin/qa', permissions: ['qa.read'] },
 	{ title: 'Design System', href: '/admin/design-system', permissions: ['qa.read'] },
 	{
@@ -128,6 +139,16 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/admin/access', permissions: ['rbac.read', 'staff.read', 'staff.manage'] },
 	{ prefix: '/admin/staff', permissions: ['staff.read'] },
 	{ prefix: '/admin/organization', permissions: ['organization.read', 'organization.manage'] },
+	{
+		prefix: '/admin/scheduling',
+		permissions: [
+			'schedule.manage.service',
+			'schedule.manage.all',
+			'schedule.read.service',
+			'schedule.read.all',
+			'schedule.read.own'
+		]
+	},
 	{ prefix: '/admin/qa', permissions: ['qa.read'] },
 	{ prefix: '/admin/design-system', permissions: ['qa.read'] },
 	{ prefix: '/dashboard', permissions: ['dashboard.read'] },
