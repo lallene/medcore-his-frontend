@@ -596,9 +596,9 @@ test('QA-APPT-TYPE-MANAGE-ONLY-001 @critical types-only principal reaches Types 
 
 	try {
 		const tok = await loginApi(request, cashierEmail);
-		const payload = JSON.parse(
-			Buffer.from(tok.split('.')[1], 'base64url').toString('utf8')
-		) as { permissions?: string[] };
+		const payload = JSON.parse(Buffer.from(tok.split('.')[1], 'base64url').toString('utf8')) as {
+			permissions?: string[];
+		};
 		const perms = payload.permissions ?? [];
 		expect(perms).toContain('appointment_type.manage');
 		expect(perms.some((p) => p.startsWith('schedule.read.'))).toBeFalsy();
