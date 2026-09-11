@@ -423,44 +423,85 @@ test('QA-SCHEDULE-EXCEPTION-CONFLICT-001 @critical backend 409 surfaced', async 
 	const admin = await loginApi(request, adminEmail);
 	const prac = await generalisteUserId(request);
 	const sid = await serviceId(request, admin);
-	const start = new Date(Date.now() + (20 + (Date.now() % 7)) * 24 * 60 * 60_000);
-	start.setUTCMinutes(0, 0, 0);
-	start.setUTCHours(11, 0, 0, 0);
-	const end = new Date(start.getTime() + 2 * 60 * 60_000);
-	const first = await request.post(`${api}/api/schedule-exceptions`, {
-		headers: bearer(admin),
-		data: {
-			practitionerId: prac,
-			serviceId: sid,
-			type: 'BLOCKED',
-			startAt: start.toISOString(),
-			endAt: end.toISOString(),
-			reason: `QA-CONFLICT-A-${Date.now()}`
-		}
-	});
-	// 201 = seed conflict pair; 409 = prior run already has this range — still usable for UI 409.
-	expect([200, 201, 409].includes(first.status()), await first.text()).toBeTruthy();
+
+	/**
+	 * Europe/Paris wall-clock datetime-local literals only.
+	 * Do not convert API UTC instants with host-local Date getters — that drifts on Ubuntu CI (UTC)
+	 * vs Mac (Paris) and can make the "conflict" window miss the first exception.
+	 */
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const baseDay = 1 + (Date.now() % 20); // 1–20 of a far-future month, avoids seeded exceptions
+	let overlapStart = '';
+	let overlapEnd = '';
 
 	await login(adminEmail, password);
 	await page.goto('/admin/scheduling');
 	await page.getByRole('tab', { name: 'Exceptions' }).click();
+
+	// 1) Create first BLOCKED exception through the admin UI with deterministic Paris strings.
+	let seeded = false;
+	for (let i = 0; i < 25; i++) {
+		const day = baseDay + i;
+		if (day > 28) break;
+		const createdStart = `2037-11-${pad(day)}T10:00`;
+		const createdEnd = `2037-11-${pad(day)}T12:00`;
+		// Partial overlap (same practitioner/service) — stronger than exact-duplicate semantics.
+		overlapStart = `2037-11-${pad(day)}T11:00`;
+		overlapEnd = `2037-11-${pad(day)}T13:00`;
+
+		await page.getByTestId('schedule-admin-exception-create').click();
+		await expect(page.getByTestId('exception-form')).toBeVisible();
+		await fillExceptionPractitioner(page, prac);
+		await page.getByTestId('exception-form-service').selectOption(String(sid));
+		await page.getByTestId('exception-form-type').selectOption('BLOCKED');
+		await page.getByTestId('exception-form-start').fill(createdStart);
+		await page.getByTestId('exception-form-end').fill(createdEnd);
+		await page.getByTestId('exception-form-reason').fill(`QA-CONFLICT-A-${Date.now()}-${i}`);
+
+		const post = page.waitForResponse(
+			(r) => r.url().includes('/api/schedule-exceptions') && r.request().method() === 'POST',
+			{ timeout: 30_000 }
+		);
+		await page.getByTestId('exception-form-submit').click();
+		const status = (await post).status();
+		if ([200, 201].includes(status)) {
+			seeded = true;
+			await expect(page.getByTestId('exception-form')).toHaveCount(0);
+			break;
+		}
+		// This slot is already occupied. Try another day so the test owns
+		// the exception used as the conflict target.
+		if (status === 409) {
+			await page.getByTestId('exception-form').getByRole('button', { name: 'Fermer' }).click();
+			await expect(page.getByTestId('exception-form')).toHaveCount(0);
+			continue;
+		}
+		await expect(page.getByTestId('exception-form')).toBeVisible();
+		await page.getByTestId('exception-form').getByRole('button', { name: 'Fermer' }).click();
+		await expect(page.getByTestId('exception-form')).toHaveCount(0);
+	}
+	expect(seeded, 'first BLOCKED exception seeded via UI').toBeTruthy();
+
+	// 2) Reopen create form and submit a partially overlapping BLOCKED exception (real backend 409).
 	await page.getByTestId('schedule-admin-exception-create').click();
+	await expect(page.getByTestId('exception-form')).toBeVisible();
 	await fillExceptionPractitioner(page, prac);
 	await page.getByTestId('exception-form-service').selectOption(String(sid));
 	await page.getByTestId('exception-form-type').selectOption('BLOCKED');
-	const toLocal = (d: Date) => {
-		const pad = (n: number) => String(n).padStart(2, '0');
-		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	};
-	await page.getByTestId('exception-form-start').fill(toLocal(start));
-	await page.getByTestId('exception-form-end').fill(toLocal(end));
+	await page.getByTestId('exception-form-start').fill(overlapStart);
+	await page.getByTestId('exception-form-end').fill(overlapEnd);
 	await page.getByTestId('exception-form-reason').fill(`QA-CONFLICT-B-${Date.now()}`);
+
+	const conflictPost = page.waitForResponse(
+		(r) => r.url().includes('/api/schedule-exceptions') && r.request().method() === 'POST',
+		{ timeout: 30_000 }
+	);
 	await page.getByTestId('exception-form-submit').click();
+	expect((await conflictPost).status()).toBe(409);
+	await expect(page.getByTestId('exception-form')).toBeVisible();
 	await expect(page.getByTestId('exception-form')).toContainText(
 		/409|conflit|chevauche|overlap|impossible|existe/i,
-		{
-			timeout: 15_000
-		}
+		{ timeout: 15_000 }
 	);
 });
 
