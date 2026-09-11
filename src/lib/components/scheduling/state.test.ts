@@ -1,16 +1,22 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+	canAccessAppointmentTypeCatalog,
+	canAccessScheduleAdministration,
+	canManageAppointmentTypes,
 	canManageSchedule,
 	canReadScheduleAdministration,
 	dateInputToRfc3339Date,
 	datetimeLocalToRfc3339,
+	defaultScheduleAdminTab,
 	isNegativeExceptionType,
 	isPositiveExceptionType,
 	isScheduleExceptionType,
 	normalizeWallClockTime,
 	parseExplicitWeekday,
 	rfc3339ToDatetimeLocal,
+	scheduleAdminVisibleTabs,
+	validateAppointmentTypeDuration,
 	validateExceptionRange,
 	validateRecurringWallClockRange,
 	weekdayLabel
@@ -33,6 +39,42 @@ describe('schedule administration RBAC', () => {
 		assert.equal(canManageSchedule(['appointment.create.all']), false);
 		assert.equal(canManageSchedule(['queue.read.all']), false);
 		assert.equal(canManageSchedule(['queue.checkin']), false);
+	});
+
+	it('canManageAppointmentTypes is dedicated (not schedule/book/org)', () => {
+		assert.equal(canManageAppointmentTypes(['appointment_type.manage']), true);
+		assert.equal(canManageAppointmentTypes(['*']), true);
+		assert.equal(canManageAppointmentTypes(['schedule.manage.all']), false);
+		assert.equal(canManageAppointmentTypes(['schedule.manage.service']), false);
+		assert.equal(canManageAppointmentTypes(['appointment.create.all']), false);
+		assert.equal(canManageAppointmentTypes(['appointment.create.service']), false);
+		assert.equal(canManageAppointmentTypes(['organization.manage']), false);
+		assert.equal(canManageAppointmentTypes(['schedule.read.all']), false);
+		assert.equal(canManageAppointmentTypes(['schedule.read.service']), false);
+		assert.equal(canManageAppointmentTypes(['schedule.read.own']), false);
+	});
+
+	it('types-only manage can access page and Types tab without schedule tabs', () => {
+		const only = ['appointment_type.manage'];
+		assert.equal(canAccessScheduleAdministration(only), true);
+		assert.equal(canReadScheduleAdministration(only), false);
+		assert.equal(canAccessAppointmentTypeCatalog(only), true);
+		assert.equal(defaultScheduleAdminTab(only), 'types');
+		assert.deepEqual(
+			scheduleAdminVisibleTabs(only).map((t) => t.id),
+			['types']
+		);
+	});
+
+	it('schedule readers keep schedules/exceptions/types tabs', () => {
+		const read = ['schedule.read.service'];
+		assert.equal(defaultScheduleAdminTab(read), 'schedules');
+		assert.deepEqual(
+			scheduleAdminVisibleTabs(read).map((t) => t.id),
+			['schedules', 'exceptions', 'types']
+		);
+		assert.equal(canAccessAppointmentTypeCatalog(read), true);
+		assert.equal(canManageAppointmentTypes(read), false);
 	});
 });
 
@@ -83,5 +125,14 @@ describe('schedule administration helpers', () => {
 			null
 		);
 		assert.ok(validateExceptionRange('2026-09-10T12:00:00.000Z', '2026-09-10T08:00:00.000Z'));
+	});
+
+	it('validates appointment type duration bounds', () => {
+		assert.equal(validateAppointmentTypeDuration(30), null);
+		assert.equal(validateAppointmentTypeDuration(5), null);
+		assert.equal(validateAppointmentTypeDuration(480), null);
+		assert.ok(validateAppointmentTypeDuration(4));
+		assert.ok(validateAppointmentTypeDuration(481));
+		assert.ok(validateAppointmentTypeDuration(30.5));
 	});
 });

@@ -122,7 +122,8 @@ export const adminMenu: NavItem[] = [
 			'schedule.manage.service',
 			'schedule.manage.all',
 			'schedule.read.service',
-			'schedule.read.all'
+			'schedule.read.all',
+			'appointment_type.manage'
 		]
 	},
 	{ title: 'Automated QA', href: '/admin/qa', permissions: ['qa.read'] },
@@ -146,7 +147,8 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 			'schedule.manage.all',
 			'schedule.read.service',
 			'schedule.read.all',
-			'schedule.read.own'
+			'schedule.read.own',
+			'appointment_type.manage'
 		]
 	},
 	{ prefix: '/admin/qa', permissions: ['qa.read'] },

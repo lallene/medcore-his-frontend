@@ -65,6 +65,24 @@ export interface AppointmentTypeListResponse {
 	items: AppointmentType[];
 }
 
+/** LOT 23M-B — create body (backend contract). */
+export interface CreateAppointmentTypeRequest {
+	code: string;
+	name: string;
+	defaultDurationMinutes: number;
+	serviceId?: number | null;
+	active?: boolean;
+}
+
+/** LOT 23M-B — PATCH body; code is immutable. */
+export interface UpdateAppointmentTypeRequest {
+	name?: string;
+	defaultDurationMinutes?: number;
+	serviceId?: number;
+	clearServiceId?: boolean;
+	active?: boolean;
+}
+
 export interface AvailabilitySlot {
 	practitionerId: number;
 	serviceId: number;

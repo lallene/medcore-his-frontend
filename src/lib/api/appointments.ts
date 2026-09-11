@@ -5,13 +5,16 @@ import type {
 	AppointmentCheckInResult,
 	AppointmentListFilters,
 	AppointmentListResponse,
+	AppointmentType,
 	AppointmentTypeListResponse,
 	AvailabilityQuery,
 	AvailabilityResponse,
 	BookAppointmentRequest,
 	CancelAppointmentRequest,
+	CreateAppointmentTypeRequest,
 	NoShowAppointmentRequest,
-	RescheduleAppointmentRequest
+	RescheduleAppointmentRequest,
+	UpdateAppointmentTypeRequest
 } from '$lib/types/scheduling';
 
 function cleanParams(params: Record<string, string | number | boolean | undefined>) {
@@ -57,6 +60,16 @@ export const listAppointmentTypes = async (
 			})
 		})
 	).data;
+
+export const createAppointmentType = async (body: CreateAppointmentTypeRequest) =>
+	(await api.post<AppointmentType>('/api/appointment-types', body)).data;
+
+export const updateAppointmentType = async (id: number, body: UpdateAppointmentTypeRequest) =>
+	(await api.patch<AppointmentType>(`/api/appointment-types/${id}`, body)).data;
+
+/** Soft-deactivate (active=false). */
+export const disableAppointmentType = async (id: number) =>
+	(await api.delete<AppointmentType>(`/api/appointment-types/${id}`)).data;
 
 export const getAvailability = async (query: AvailabilityQuery) =>
 	(

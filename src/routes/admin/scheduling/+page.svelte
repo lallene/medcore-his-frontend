@@ -10,17 +10,29 @@
 		updateSchedule,
 		updateScheduleException
 	} from '$lib/api/schedules';
+	import {
+		createAppointmentType,
+		disableAppointmentType,
+		listAppointmentTypes,
+		updateAppointmentType
+	} from '$lib/api/appointments';
 	import { listOrganizationServices } from '$lib/api/organization';
 	import { formatAgendaDateTime, zonedDayKey } from '$lib/components/agenda/state';
 	import { listStaff } from '$lib/api/staff';
 	import {
+		APPOINTMENT_TYPE_MAX_DURATION_MINUTES,
+		APPOINTMENT_TYPE_MIN_DURATION_MINUTES,
 		SCHEDULE_ADMIN_TIMEZONE,
 		WEEKDAY_OPTIONS,
 		EXCEPTION_TYPE_OPTIONS,
+		canAccessAppointmentTypeCatalog,
+		canAccessScheduleAdministration,
+		canManageAppointmentTypes,
 		canManageSchedule,
 		canReadScheduleAdministration,
 		dateInputToRfc3339Date,
 		datetimeLocalToRfc3339,
+		defaultScheduleAdminTab,
 		exceptionTypeLabel,
 		formatWallClockDisplay,
 		isPositiveExceptionType,
@@ -29,6 +41,8 @@
 		parseExplicitWeekday,
 		rfc3339DateToInput,
 		rfc3339ToDatetimeLocal,
+		scheduleAdminVisibleTabs,
+		validateAppointmentTypeDuration,
 		validateExceptionRange,
 		validateRecurringWallClockRange,
 		weekdayLabel
@@ -51,15 +65,12 @@
 	} from '$lib/rbac/permissions';
 	import type { OrganizationService } from '$lib/types/organization';
 	import type {
+		AppointmentType,
 		ScheduleException,
 		ScheduleExceptionType,
-		StaffWorkingSchedule
+		StaffWorkingSchedule,
+		UpdateAppointmentTypeRequest
 	} from '$lib/types/scheduling';
-
-	const tabs = [
-		{ id: 'schedules', label: 'Horaires récurrents' },
-		{ id: 'exceptions', label: 'Exceptions' }
-	];
 
 	let permissions = $state<string[]>([]);
 	let accessDenied = $state(false);
@@ -68,8 +79,15 @@
 	let error = $state('');
 	let success = $state('');
 
+	const canManage = $derived(canManageSchedule(permissions));
+	const canManageTypes = $derived(canManageAppointmentTypes(permissions));
+	const canReadSchedules = $derived(canReadScheduleAdministration(permissions));
+	const canLoadTypes = $derived(canAccessAppointmentTypeCatalog(permissions));
+	const tabs = $derived(scheduleAdminVisibleTabs(permissions));
+
 	let services = $state<OrganizationService[]>([]);
 	let staffOptions = $state<Array<{ userId: number; label: string }>>([]);
+	let formStaffOptions = $state<Array<{ userId: number; label: string }>>([]);
 
 	let filterPractitioner = $state('');
 	let filterService = $state('');
@@ -83,6 +101,21 @@
 	let exFilterService = $state('');
 	let exFilterType = $state('');
 	let exFilterActive = $state('true');
+
+	let appointmentTypes = $state<AppointmentType[]>([]);
+	let typeFilterActive = $state('true');
+	let typeFilterService = $state('');
+	let typeModalOpen = $state(false);
+	let editingType = $state<AppointmentType | null>(null);
+	let typeCode = $state('');
+	let typeName = $state('');
+	let typeDuration = $state('30');
+	let typeService = $state('');
+	let typeClearService = $state(false);
+	let typeFormError = $state('');
+	let typeSaving = $state(false);
+	let confirmDisableTypeOpen = $state(false);
+	let pendingDisableTypeId = $state<number | null>(null);
 
 	let scheduleModalOpen = $state(false);
 	let editingSchedule = $state<StaffWorkingSchedule | null>(null);
@@ -112,16 +145,17 @@
 	let pendingDisableScheduleId = $state<number | null>(null);
 	let pendingCancelExceptionId = $state<number | null>(null);
 
-	const canRead = $derived(canReadScheduleAdministration(permissions));
-	const canManage = $derived(canManageSchedule(permissions));
-
 	function mapErr(e: unknown, fallback: string): string {
 		if (isAccessDeniedError(e)) return 'Action non autorisée (RBAC / périmètre service).';
 		return resolveUserErrorMessage(e, fallback) || fallback;
 	}
 
 	function staffLabel(userId: number): string {
-		return staffOptions.find((s) => s.userId === userId)?.label ?? `#${userId}`;
+		return (
+			staffOptions.find((s) => s.userId === userId)?.label ??
+			formStaffOptions.find((s) => s.userId === userId)?.label ??
+			`#${userId}`
+		);
 	}
 
 	function serviceLabel(serviceId: number): string {
@@ -130,36 +164,88 @@
 
 	onMount(() => {
 		permissions = getStoredPermissions();
-		if (!canReadScheduleAdministration(permissions)) {
+		if (!canAccessScheduleAdministration(permissions)) {
 			accessDenied = true;
 			loading = false;
 			return;
 		}
+		tabValue = defaultScheduleAdminTab(permissions);
 		void bootstrap();
+	});
+
+	$effect(() => {
+		if (tabValue === 'types' && canLoadTypes && !accessDenied && !loading) {
+			void loadAppointmentTypes();
+		}
 	});
 
 	async function bootstrap() {
 		loading = true;
 		error = '';
+		const readSched = canReadScheduleAdministration(permissions);
+		const loadTypes = canAccessAppointmentTypeCatalog(permissions);
 		try {
-			services = await listOrganizationServices(true);
 			try {
-				const page = await listStaff({ active: 'true', limit: 100 });
-				staffOptions = (page.items ?? []).map((s) => ({
-					userId: s.userId,
-					label: s.name || `#${s.userId}`
-				}));
+				services = await listOrganizationServices(true);
 			} catch {
-				staffOptions = [];
+				services = [];
 			}
-			const today = zonedDayKey(new Date(), SCHEDULE_ADMIN_TIMEZONE);
-			schedValidFrom = today;
-			await Promise.all([loadSchedules(), loadExceptions()]);
+			if (readSched) {
+				try {
+					const page = await listStaff({ active: 'true', limit: 100 });
+					staffOptions = (page.items ?? []).map((s) => ({
+						userId: s.userId,
+						label: s.name || `#${s.userId}`
+					}));
+				} catch {
+					staffOptions = [];
+				}
+				const today = zonedDayKey(new Date(), SCHEDULE_ADMIN_TIMEZONE);
+				schedValidFrom = today;
+				await Promise.all([loadSchedules(), loadExceptions()]);
+			}
+			if (loadTypes) {
+				await loadAppointmentTypes();
+			}
 		} catch (e) {
 			if (isAccessDeniedError(e)) accessDenied = true;
 			else error = mapErr(e, 'Impossible de charger l’administration des plannings.');
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadFormStaffForService(serviceId: string) {
+		if (!serviceId) {
+			formStaffOptions = [];
+			return;
+		}
+		try {
+			const page = await listStaff({
+				serviceId: Number(serviceId),
+				active: 'true',
+				limit: 100
+			});
+			formStaffOptions = (page.items ?? []).map((s) => ({
+				userId: s.userId,
+				label: s.name || `#${s.userId}`
+			}));
+		} catch {
+			formStaffOptions = [];
+		}
+	}
+
+	async function onScheduleServiceChange() {
+		await loadFormStaffForService(schedService);
+		if (!formStaffOptions.some((s) => String(s.userId) === schedPractitioner)) {
+			schedPractitioner = '';
+		}
+	}
+
+	async function onExceptionServiceChange() {
+		await loadFormStaffForService(exService);
+		if (!formStaffOptions.some((s) => String(s.userId) === exPractitioner)) {
+			exPractitioner = '';
 		}
 	}
 
@@ -194,9 +280,16 @@
 		exceptions = res.items ?? [];
 	}
 
-	function openCreateSchedule() {
+	async function loadAppointmentTypes() {
+		const res = await listAppointmentTypes({
+			serviceId: typeFilterService ? Number(typeFilterService) : undefined,
+			active: typeFilterActive === '' ? undefined : typeFilterActive === 'true'
+		});
+		appointmentTypes = res.items ?? [];
+	}
+
+	async function openCreateSchedule() {
 		editingSchedule = null;
-		schedPractitioner = staffOptions[0] ? String(staffOptions[0].userId) : '';
 		schedService = services[0] ? String(services[0].id) : '';
 		schedWeekday = '1';
 		schedStart = '08:00';
@@ -204,10 +297,12 @@
 		schedValidFrom = zonedDayKey(new Date(), SCHEDULE_ADMIN_TIMEZONE);
 		schedValidUntil = '';
 		schedFormError = '';
+		await loadFormStaffForService(schedService);
+		schedPractitioner = formStaffOptions[0] ? String(formStaffOptions[0].userId) : '';
 		scheduleModalOpen = true;
 	}
 
-	function openEditSchedule(row: StaffWorkingSchedule) {
+	async function openEditSchedule(row: StaffWorkingSchedule) {
 		editingSchedule = row;
 		schedPractitioner = String(row.practitionerId);
 		schedService = String(row.serviceId);
@@ -217,6 +312,7 @@
 		schedValidFrom = rfc3339DateToInput(row.validFrom);
 		schedValidUntil = rfc3339DateToInput(row.validUntil ?? undefined);
 		schedFormError = '';
+		await loadFormStaffForService(schedService);
 		scheduleModalOpen = true;
 	}
 
@@ -313,9 +409,8 @@
 		}
 	}
 
-	function openCreateException() {
+	async function openCreateException() {
 		editingException = null;
-		exPractitioner = staffOptions[0] ? String(staffOptions[0].userId) : '';
 		exService = services[0] ? String(services[0].id) : '';
 		exType = 'ABSENCE';
 		const startMs = Math.floor((Date.now() + 60 * 60_000) / 60_000) * 60_000;
@@ -324,10 +419,12 @@
 		exEnd = rfc3339ToDatetimeLocal(new Date(endMs).toISOString());
 		exReason = '';
 		exFormError = '';
+		await loadFormStaffForService(exService);
+		exPractitioner = formStaffOptions[0] ? String(formStaffOptions[0].userId) : '';
 		exceptionModalOpen = true;
 	}
 
-	function openEditException(row: ScheduleException) {
+	async function openEditException(row: ScheduleException) {
 		editingException = row;
 		if (!isScheduleExceptionType(row.type)) {
 			error = `Type d’exception non pris en charge : ${row.type}`;
@@ -341,6 +438,7 @@
 		exEnd = rfc3339ToDatetimeLocal(row.endAt);
 		exReason = row.reason ?? '';
 		exFormError = '';
+		await loadFormStaffForService(exService);
 		exceptionModalOpen = true;
 	}
 
@@ -412,6 +510,108 @@
 			pendingCancelExceptionId = null;
 		}
 	}
+
+	function openCreateType() {
+		editingType = null;
+		typeCode = '';
+		typeName = '';
+		typeDuration = '30';
+		typeService = '';
+		typeClearService = false;
+		typeFormError = '';
+		typeModalOpen = true;
+	}
+
+	function openEditType(row: AppointmentType) {
+		editingType = row;
+		typeCode = row.code;
+		typeName = row.name;
+		typeDuration = String(row.defaultDurationMinutes);
+		typeService = row.serviceId != null ? String(row.serviceId) : '';
+		typeClearService = false;
+		typeFormError = '';
+		typeModalOpen = true;
+	}
+
+	async function saveType() {
+		typeFormError = '';
+		const name = typeName.trim();
+		if (!name) {
+			typeFormError = 'Le nom est obligatoire.';
+			return;
+		}
+		const duration = Number(typeDuration);
+		const durationErr = validateAppointmentTypeDuration(duration);
+		if (durationErr) {
+			typeFormError = durationErr;
+			return;
+		}
+		typeSaving = true;
+		try {
+			if (editingType) {
+				const body: UpdateAppointmentTypeRequest = {
+					name,
+					defaultDurationMinutes: duration
+				};
+				if (typeClearService) {
+					body.clearServiceId = true;
+				} else if (typeService) {
+					body.serviceId = Number(typeService);
+				}
+				await updateAppointmentType(editingType.id, body);
+				success = 'Type de rendez-vous mis à jour.';
+			} else {
+				const code = typeCode.trim();
+				if (!code) {
+					typeFormError = 'Le code est obligatoire.';
+					return;
+				}
+				await createAppointmentType({
+					code,
+					name,
+					defaultDurationMinutes: duration,
+					serviceId: typeService ? Number(typeService) : null
+				});
+				success = 'Type de rendez-vous créé.';
+			}
+			typeModalOpen = false;
+			await loadAppointmentTypes();
+		} catch (e) {
+			typeFormError = mapErr(e, 'Enregistrement impossible.');
+		} finally {
+			typeSaving = false;
+		}
+	}
+
+	function askDisableType(id: number) {
+		pendingDisableTypeId = id;
+		confirmDisableTypeOpen = true;
+	}
+
+	async function confirmDisableType() {
+		if (pendingDisableTypeId == null) return;
+		error = '';
+		try {
+			await disableAppointmentType(pendingDisableTypeId);
+			success = 'Type de rendez-vous désactivé.';
+			await loadAppointmentTypes();
+		} catch (e) {
+			error = mapErr(e, 'Désactivation impossible.');
+		} finally {
+			pendingDisableTypeId = null;
+		}
+	}
+
+	async function reactivateType(row: AppointmentType) {
+		error = '';
+		try {
+			await updateAppointmentType(row.id, { active: true });
+			success = 'Type de rendez-vous réactivé.';
+			await loadAppointmentTypes();
+		} catch (e) {
+			error = mapErr(e, 'Réactivation impossible.');
+		}
+	}
 </script>
 
 {#if accessDenied}
@@ -421,7 +621,7 @@
 		<PageHeader
 			eyebrow="Administration"
 			title="Plannings médicaux"
-			description="Horaires récurrents et exceptions (absences / disponibilités supplémentaires). Fuseau Scheduling : {SCHEDULE_ADMIN_TIMEZONE}."
+			description="Horaires récurrents, exceptions (absences / disponibilités supplémentaires) et types de rendez-vous. Fuseau Scheduling : {SCHEDULE_ADMIN_TIMEZONE}."
 		>
 			{#snippet meta()}
 				<p class="text-xs text-slate-500" data-testid="schedule-admin-timezone">
@@ -430,13 +630,19 @@
 			{/snippet}
 			{#snippet actions()}
 				{#if canManage && !loading && tabValue === 'schedules'}
-					<Button data-testid="schedule-admin-create" onclick={openCreateSchedule}
+					<Button data-testid="schedule-admin-create" onclick={() => void openCreateSchedule()}
 						>Nouvel horaire</Button
 					>
 				{/if}
 				{#if canManage && !loading && tabValue === 'exceptions'}
-					<Button data-testid="schedule-admin-exception-create" onclick={openCreateException}
-						>Nouvelle exception</Button
+					<Button
+						data-testid="schedule-admin-exception-create"
+						onclick={() => void openCreateException()}>Nouvelle exception</Button
+					>
+				{/if}
+				{#if canManageTypes && !loading && tabValue === 'types'}
+					<Button data-testid="schedule-admin-type-create" onclick={openCreateType}
+						>Nouveau type</Button
 					>
 				{/if}
 			{/snippet}
@@ -448,11 +654,19 @@
 		{#if success}
 			<Alert tone="success" title="Succès">{success}</Alert>
 		{/if}
-		{#if !canManage && canRead}
+		{#if (tabValue === 'schedules' || tabValue === 'exceptions') && !canManage && canReadSchedules}
 			<Alert tone="info" title="Lecture seule"
 				>Vous pouvez consulter les plannings. La modification nécessite schedule.manage.service ou
 				schedule.manage.all.</Alert
 			>
+		{/if}
+		{#if tabValue === 'types' && !canManageTypes}
+			<div data-testid="schedule-admin-types-readonly">
+				<Alert tone="info" title="Lecture seule"
+					>Vous pouvez consulter les types de rendez-vous. La modification nécessite
+					appointment_type.manage.</Alert
+				>
+			</div>
 		{/if}
 
 		<Tabs {tabs} bind:value={tabValue} />
@@ -554,7 +768,7 @@
 													<Button
 														variant="secondary"
 														data-testid="schedule-row-edit"
-														onclick={() => openEditSchedule(row)}>Modifier</Button
+														onclick={() => void openEditSchedule(row)}>Modifier</Button
 													>
 													{#if row.active}
 														<Button
@@ -573,7 +787,7 @@
 					</div>
 				{/if}
 			</section>
-		{:else}
+		{:else if tabValue === 'exceptions'}
 			<section class="space-y-4" data-testid="schedule-admin-exceptions">
 				<FilterBar>
 					<Select
@@ -668,7 +882,7 @@
 											<Button
 												variant="secondary"
 												data-testid="exception-row-edit"
-												onclick={() => openEditException(row)}>Modifier</Button
+												onclick={() => void openEditException(row)}>Modifier</Button
 											>
 											<Button
 												variant="ghost"
@@ -681,6 +895,91 @@
 							</li>
 						{/each}
 					</ul>
+				{/if}
+			</section>
+		{:else if tabValue === 'types'}
+			<section class="space-y-4" data-testid="schedule-admin-types">
+				<FilterBar>
+					<Select
+						bind:value={typeFilterActive}
+						aria-label="Filtrer actif type"
+						data-testid="type-filter-active"
+						onchange={() => void loadAppointmentTypes()}
+					>
+						<option value="">Tous</option>
+						<option value="true">Actifs</option>
+						<option value="false">Inactifs</option>
+					</Select>
+					<Select
+						bind:value={typeFilterService}
+						aria-label="Filtrer service type"
+						data-testid="type-filter-service"
+						onchange={() => void loadAppointmentTypes()}
+					>
+						<option value="">Tous les services</option>
+						{#each services as s (s.id)}
+							<option value={String(s.id)}>{s.name}</option>
+						{/each}
+					</Select>
+				</FilterBar>
+
+				{#if appointmentTypes.length === 0}
+					<EmptyState
+						title="Aucun type de rendez-vous"
+						description="Aucun type pour ces filtres."
+					/>
+				{:else}
+					<div class="overflow-x-auto rounded-2xl border border-border bg-white">
+						<table class="min-w-full text-left text-sm" data-testid="schedule-admin-type-table">
+							<thead class="border-b bg-slate-50 text-xs uppercase text-slate-500">
+								<tr>
+									<th class="px-4 py-3">Code</th>
+									<th class="px-4 py-3">Nom</th>
+									<th class="px-4 py-3">Durée</th>
+									<th class="px-4 py-3">Service</th>
+									<th class="px-4 py-3">Actif</th>
+									{#if canManageTypes}<th class="px-4 py-3">Actions</th>{/if}
+								</tr>
+							</thead>
+							<tbody>
+								{#each appointmentTypes as row (row.id)}
+									<tr class="border-b last:border-0" data-testid="type-row" data-type-id={row.id}>
+										<td class="px-4 py-3 font-medium">{row.code}</td>
+										<td class="px-4 py-3">{row.name}</td>
+										<td class="px-4 py-3">{row.defaultDurationMinutes} min</td>
+										<td class="px-4 py-3">
+											{row.serviceId != null ? serviceLabel(row.serviceId) : 'Global'}
+										</td>
+										<td class="px-4 py-3">{row.active ? 'Actif' : 'Inactif'}</td>
+										{#if canManageTypes}
+											<td class="px-4 py-3">
+												<div class="flex flex-wrap gap-2">
+													<Button
+														variant="secondary"
+														data-testid="type-row-edit"
+														onclick={() => openEditType(row)}>Modifier</Button
+													>
+													{#if row.active}
+														<Button
+															variant="ghost"
+															data-testid="type-row-disable"
+															onclick={() => askDisableType(row.id)}>Désactiver</Button
+														>
+													{:else}
+														<Button
+															variant="ghost"
+															data-testid="type-row-reactivate"
+															onclick={() => void reactivateType(row)}>Réactiver</Button
+														>
+													{/if}
+												</div>
+											</td>
+										{/if}
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
 				{/if}
 			</section>
 		{/if}
@@ -696,7 +995,7 @@
 			{/if}
 			<label class="block text-sm">
 				<span class="font-medium">Praticien</span>
-				{#if staffOptions.length > 0}
+				{#if formStaffOptions.length > 0}
 					<select
 						class="mt-1 w-full rounded-xl border px-3 py-2"
 						bind:value={schedPractitioner}
@@ -704,7 +1003,7 @@
 						data-testid="schedule-form-practitioner"
 					>
 						<option value="">—</option>
-						{#each staffOptions as s (s.userId)}
+						{#each formStaffOptions as s (s.userId)}
 							<option value={String(s.userId)}>{s.label}</option>
 						{/each}
 					</select>
@@ -726,6 +1025,7 @@
 					class="mt-1 w-full rounded-xl border px-3 py-2"
 					bind:value={schedService}
 					data-testid="schedule-form-service"
+					onchange={() => void onScheduleServiceChange()}
 				>
 					<option value="">—</option>
 					{#each services as s (s.id)}
@@ -807,7 +1107,7 @@
 			{/if}
 			<label class="block text-sm">
 				<span class="font-medium">Praticien</span>
-				{#if staffOptions.length > 0}
+				{#if formStaffOptions.length > 0}
 					<select
 						class="mt-1 w-full rounded-xl border px-3 py-2"
 						bind:value={exPractitioner}
@@ -815,7 +1115,7 @@
 						data-testid="exception-form-practitioner"
 					>
 						<option value="">—</option>
-						{#each staffOptions as s (s.userId)}
+						{#each formStaffOptions as s (s.userId)}
 							<option value={String(s.userId)}>{s.label}</option>
 						{/each}
 					</select>
@@ -837,6 +1137,7 @@
 					class="mt-1 w-full rounded-xl border px-3 py-2"
 					bind:value={exService}
 					data-testid="exception-form-service"
+					onchange={() => void onExceptionServiceChange()}
 				>
 					<option value="">—</option>
 					{#each services as s (s.id)}
@@ -896,6 +1197,79 @@
 		</div>
 	</Modal>
 
+	<Modal
+		bind:open={typeModalOpen}
+		title={editingType ? 'Modifier le type de rendez-vous' : 'Nouveau type de rendez-vous'}
+	>
+		<div class="space-y-3" data-testid="type-form">
+			{#if typeFormError}
+				<Alert tone="danger" title="Erreur">{typeFormError}</Alert>
+			{/if}
+			<label class="block text-sm">
+				<span class="font-medium">Code</span>
+				<input
+					type="text"
+					class="mt-1 w-full rounded-xl border px-3 py-2 {editingType
+						? 'bg-slate-50 text-slate-700'
+						: ''}"
+					bind:value={typeCode}
+					readonly={Boolean(editingType)}
+					data-testid="type-form-code"
+				/>
+			</label>
+			<label class="block text-sm">
+				<span class="font-medium">Nom</span>
+				<input
+					type="text"
+					class="mt-1 w-full rounded-xl border px-3 py-2"
+					bind:value={typeName}
+					data-testid="type-form-name"
+				/>
+			</label>
+			<label class="block text-sm">
+				<span class="font-medium">Durée (minutes)</span>
+				<input
+					type="number"
+					min={APPOINTMENT_TYPE_MIN_DURATION_MINUTES}
+					max={APPOINTMENT_TYPE_MAX_DURATION_MINUTES}
+					class="mt-1 w-full rounded-xl border px-3 py-2"
+					bind:value={typeDuration}
+					data-testid="type-form-duration"
+				/>
+			</label>
+			<label class="block text-sm">
+				<span class="font-medium">Service</span>
+				<select
+					class="mt-1 w-full rounded-xl border px-3 py-2"
+					bind:value={typeService}
+					disabled={typeClearService}
+					data-testid="type-form-service"
+				>
+					<option value="">Global</option>
+					{#each services as s (s.id)}
+						<option value={String(s.id)}>{s.name}</option>
+					{/each}
+				</select>
+			</label>
+			{#if editingType}
+				<label class="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={typeClearService}
+						data-testid="type-form-clear-service"
+					/>
+					<span>Retirer le service (rendre global)</span>
+				</label>
+			{/if}
+			<div class="flex justify-end gap-2 pt-2">
+				<Button variant="secondary" onclick={() => (typeModalOpen = false)}>Fermer</Button>
+				<Button data-testid="type-form-submit" disabled={typeSaving} onclick={() => void saveType()}
+					>{typeSaving ? 'Enregistrement…' : 'Enregistrer'}</Button
+				>
+			</div>
+		</div>
+	</Modal>
+
 	<ConfirmDialog
 		bind:open={confirmDisableScheduleOpen}
 		title="Désactiver cet horaire ?"
@@ -911,5 +1285,13 @@
 		confirmLabel="Annuler l’exception"
 		danger={true}
 		onconfirm={() => void confirmCancelException()}
+	/>
+	<ConfirmDialog
+		bind:open={confirmDisableTypeOpen}
+		title="Désactiver ce type de rendez-vous ?"
+		description="Le type sera désactivé (soft-disable). Les rendez-vous existants ne sont pas modifiés."
+		confirmLabel="Désactiver"
+		danger={true}
+		onconfirm={() => void confirmDisableType()}
 	/>
 {/if}

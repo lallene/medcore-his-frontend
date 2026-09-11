@@ -337,7 +337,15 @@
 				</FormField>
 
 				<FormField label="Type de rendez-vous" required>
-					<Select bind:value={typeId} data-testid="agenda-book-type" disabled={!types.length}>
+					<Select
+						bind:value={typeId}
+						data-testid="agenda-book-type"
+						disabled={!types.length}
+						onchange={() => {
+							selectedSlot = null;
+							slots = [];
+						}}
+					>
 						<option value="">Sélectionner…</option>
 						{#each types as t (t.id)}
 							<option value={String(t.id)}>{t.name} ({t.defaultDurationMinutes} min)</option>

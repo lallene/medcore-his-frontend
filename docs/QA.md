@@ -19,7 +19,7 @@ Le module Scheduling est release-gated lorsque **tous** ces contrôles passent d
 
 1. **Scheduling PostgreSQL integration gate** — `go test ./internal/modules/patient_queue/ ./internal/core/rbac/ -count=1` avec `TEST_DATABASE_URL` (inclut RBAC 23I, booking, lifecycle, check-in, availability, schedules).
 2. **Frontend unit/static** — `npm test`, `check`, `lint`, `build`.
-3. **Playwright critical** — specs Agenda (`e2e/agenda`), Patient 360 appointments (`e2e/patient-360`) et **Schedule Administration** (`e2e/admin/scheduling`) taguées `@critical` / `@smoke` (23G–23L).
+3. **Playwright critical** — specs Agenda (`e2e/agenda`), Patient 360 appointments (`e2e/patient-360`) et **Schedule Administration** (`e2e/admin/scheduling`) taguées `@critical` / `@smoke` (23G–23M-B).
 
 `npm run test:e2e:scheduling` reste un **helper local** : rebuild + preview contre une API déjà démarrée (défaut `:18082`), exécute Agenda + Schedule Administration (`e2e/agenda`, `e2e/admin/scheduling`), **sans seed**. Ce n’est pas la release gate CI.
 
@@ -56,8 +56,24 @@ npm run test:e2e:full
 Les suites Playwright sont séparées ainsi :
 
 - **Smoke** : login, dashboard, patients, Patient 360 chrome, consultations, logout (+ `QA-AGENDA-DASHBOARD-001`).
-- **Critical** (défaut release gate) : Smoke + Auth/RBAC + Organization + **Agenda / P360 / Schedule Admin Scheduling** (23G–23L) + autres `@critical`.
+- **Critical** (défaut release gate) : Smoke + Auth/RBAC + Organization + **Agenda / P360 / Schedule Admin Scheduling** (23G–23M-B) + autres `@critical`.
 - **Full** : toutes les spécifications (`QA_SUITE=full`), nightly / manuel / releases majeures — ne prétend pas couvrir des scénarios `NOT_IMPLEMENTED`.
+
+### LOT 23M-B — Appointment Type catalog (frontend)
+
+Couverture Playwright (`e2e/admin/scheduling.spec.ts`, clés `QA-APPT-TYPE-*` / `QA-SCHEDULE-ADMIN-PRACTITIONER-SCOPE-001`) :
+
+- Accès onglet **Types de RDV** + CTA create pour acteur `appointment_type.manage` / admin.
+- Accueil (`schedule.read.service`) : lecture types, **pas** de CTAs mutate.
+- Principal **uniquement** `appointment_type.manage` (override GRANT sur caissière) : page accessible, onglet Types par défaut, **GET `/api/appointment-types` 2xx** et lignes catalogue visibles, sans appels GET schedules/exceptions, sans AccessDenied (`QA-APPT-TYPE-MANAGE-ONLY-001`).
+- Création, 409 code dupliqué (message visible), édition (code immuable), soft-désactivation, absence du type dans le sélecteur booking, réactivation.
+- Type lié à un service : visible seulement pour ce service en booking.
+- Validation durée client 5–480 (formulaire reste ouvert).
+- Formulaire horaire admin : rechargement staff via `GET /api/staff?serviceId=`.
+
+Contrat list : `GET /api/appointment-types` est autorisé par `schedule.read.own|service|all` **ou** `appointment_type.manage` (un manage-only peut lire le catalogue).
+
+Non couverts en E2E (comportement UI présent, pas de scénario dédié) : réactivation 400 si service lié inactif ; offre explicite des seuls services org actifs (couvert indirectement via `listOrganizationServices(true)` / sélecteurs).
 
 ## Variables
 

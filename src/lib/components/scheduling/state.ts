@@ -21,6 +21,13 @@ export const SCHEDULE_ADMIN_MANAGE_PERMISSIONS = [
 	'schedule.manage.all'
 ] as const;
 
+/** LOT 23M-B — appointment type catalog mutations (GLOBAL). Not schedule.manage / booking. */
+export const APPOINTMENT_TYPE_MANAGE_PERMISSIONS = ['appointment_type.manage'] as const;
+
+/** Backend duration bounds (scheduling.MinDurationMinutes / MaxDurationMinutes). */
+export const APPOINTMENT_TYPE_MIN_DURATION_MINUTES = 5;
+export const APPOINTMENT_TYPE_MAX_DURATION_MINUTES = 480;
+
 export const SCHEDULE_ADMIN_TIMEZONE = AGENDA_TIMEZONE;
 
 export const WEEKDAY_OPTIONS: Array<{ value: number; label: string }> = [
@@ -54,6 +61,61 @@ export function canReadScheduleAdministration(permissions: string[]): boolean {
 /** Schedule Administration mutations — not booking, not queue, not read-only. */
 export function canManageSchedule(permissions: string[]): boolean {
 	return can(permissions, '*') || canAny(permissions, [...SCHEDULE_ADMIN_MANAGE_PERMISSIONS]);
+}
+
+/**
+ * Appointment Type catalog mutations (UX only).
+ * Does NOT include schedule.manage.*, schedule.read.*, appointment.create.*, organization.manage.
+ */
+export function canManageAppointmentTypes(permissions: string[]): boolean {
+	return can(permissions, '*') || canAny(permissions, [...APPOINTMENT_TYPE_MANAGE_PERMISSIONS]);
+}
+
+/** Page access: schedule readers/managers OR appointment-type managers. */
+export function canAccessScheduleAdministration(permissions: string[]): boolean {
+	return canReadScheduleAdministration(permissions) || canManageAppointmentTypes(permissions);
+}
+
+/** Types catalog list/UI: schedule readers OR appointment_type.manage (backend still authoritative). */
+export function canAccessAppointmentTypeCatalog(permissions: string[]): boolean {
+	return canReadScheduleAdministration(permissions) || canManageAppointmentTypes(permissions);
+}
+
+export type ScheduleAdminTabId = 'schedules' | 'exceptions' | 'types';
+
+/** Visible admin tabs — hide schedule/exception tabs when the user cannot read schedules. */
+export function scheduleAdminVisibleTabs(
+	permissions: string[]
+): Array<{ id: ScheduleAdminTabId; label: string }> {
+	const tabs: Array<{ id: ScheduleAdminTabId; label: string }> = [];
+	if (canReadScheduleAdministration(permissions)) {
+		tabs.push({ id: 'schedules', label: 'Horaires récurrents' });
+		tabs.push({ id: 'exceptions', label: 'Exceptions' });
+	}
+	if (canAccessAppointmentTypeCatalog(permissions)) {
+		tabs.push({ id: 'types', label: 'Types de RDV' });
+	}
+	return tabs;
+}
+
+/** Default tab: schedules when readable, otherwise Types de RDV for type managers. */
+export function defaultScheduleAdminTab(permissions: string[]): ScheduleAdminTabId {
+	if (canReadScheduleAdministration(permissions)) return 'schedules';
+	if (canAccessAppointmentTypeCatalog(permissions)) return 'types';
+	return 'schedules';
+}
+
+export function validateAppointmentTypeDuration(minutes: number): string | null {
+	if (!Number.isFinite(minutes) || !Number.isInteger(minutes)) {
+		return 'La durée doit être un entier (minutes).';
+	}
+	if (
+		minutes < APPOINTMENT_TYPE_MIN_DURATION_MINUTES ||
+		minutes > APPOINTMENT_TYPE_MAX_DURATION_MINUTES
+	) {
+		return `La durée doit être entre ${APPOINTMENT_TYPE_MIN_DURATION_MINUTES} et ${APPOINTMENT_TYPE_MAX_DURATION_MINUTES} minutes.`;
+	}
+	return null;
 }
 
 export function weekdayLabel(weekday: number): string {

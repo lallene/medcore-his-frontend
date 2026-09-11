@@ -7,6 +7,7 @@ import {
 	adminEmail,
 	api,
 	bearer,
+	cashierEmail,
 	loginApi,
 	password,
 	receptionEmail,
@@ -526,4 +527,343 @@ test('QA-SCHEDULE-ADMIN-OVERNIGHT-001 @critical overnight recurring rejected in 
 	await page.getByTestId('schedule-form-valid-from').fill('2026-01-01');
 	await page.getByTestId('schedule-form-submit').click();
 	await expect(page.getByTestId('schedule-form')).toContainText(/fin|nuit|après le début/i);
+});
+
+// --- LOT 23M-B Appointment Type catalog ---
+
+async function openTypesTab(page: import('@playwright/test').Page) {
+	await page.getByRole('tab', { name: 'Types de RDV' }).click();
+	await expect(page.getByTestId('schedule-admin-types')).toBeVisible({ timeout: 15_000 });
+}
+
+test('QA-APPT-TYPE-ADMIN-READ-001 @critical manage actor opens Types tab', async ({
+	page,
+	login
+}) => {
+	test.setTimeout(90_000);
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await expect(page.getByTestId('schedule-admin-page')).toBeVisible({ timeout: 20_000 });
+	await openTypesTab(page);
+	await expect(page.getByTestId('schedule-admin-type-create')).toBeVisible();
+});
+
+test('QA-APPT-TYPE-ADMIN-RBAC-001 @critical without manage cannot mutate types', async ({
+	page,
+	login
+}) => {
+	test.setTimeout(90_000);
+	await login(receptionEmail, password);
+	await page.goto('/admin/scheduling');
+	await expect(page.getByTestId('schedule-admin-page')).toBeVisible({ timeout: 20_000 });
+	await openTypesTab(page);
+	await expect(page.getByTestId('schedule-admin-type-create')).toHaveCount(0);
+	await expect(page.getByTestId('type-row-edit')).toHaveCount(0);
+	await expect(page.getByTestId('type-row-disable')).toHaveCount(0);
+	await expect(page.getByTestId('schedule-admin-types-readonly')).toBeVisible();
+	await expect(page.getByTestId('schedule-admin-types-readonly')).toContainText(
+		/appointment_type\.manage/i
+	);
+});
+
+test('QA-APPT-TYPE-MANAGE-ONLY-001 @critical types-only principal reaches Types without schedule APIs', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(120_000);
+	const admin = await loginApi(request, adminEmail);
+	const list = await request.get(`${api}/api/access/users?search=caissiere&limit=10`, {
+		headers: bearer(admin)
+	});
+	expect(list.ok(), await list.text()).toBeTruthy();
+	const items = (await list.json()).items ?? [];
+	const cashier = items.find((u: { email?: string }) =>
+		String(u.email ?? '').includes('caissiere')
+	);
+	expect(cashier?.profileId, 'demo caissiere profile').toBeTruthy();
+	const profileId = cashier.profileId as number;
+
+	const grant = await request.post(`${api}/api/access/users/${profileId}/overrides`, {
+		headers: bearer(admin),
+		data: {
+			permission: 'appointment_type.manage',
+			effect: 'GRANT',
+			reason: 'QA-APPT-TYPE-MANAGE-ONLY-001'
+		}
+	});
+	expect(grant.ok(), await grant.text()).toBeTruthy();
+
+	try {
+		const tok = await loginApi(request, cashierEmail);
+		const payload = JSON.parse(
+			Buffer.from(tok.split('.')[1], 'base64url').toString('utf8')
+		) as { permissions?: string[] };
+		const perms = payload.permissions ?? [];
+		expect(perms).toContain('appointment_type.manage');
+		expect(perms.some((p) => p.startsWith('schedule.read.'))).toBeFalsy();
+		expect(perms.some((p) => p.startsWith('schedule.manage.'))).toBeFalsy();
+
+		const forbiddenScheduleCalls: string[] = [];
+		page.on('request', (req) => {
+			const u = req.url();
+			if (
+				req.method() === 'GET' &&
+				(u.includes('/api/schedules') || u.includes('/api/schedule-exceptions'))
+			) {
+				forbiddenScheduleCalls.push(u);
+			}
+		});
+
+		await login(cashierEmail, password);
+		const typesListGet = page.waitForResponse(
+			(r) => {
+				const u = r.url();
+				return (
+					r.request().method() === 'GET' &&
+					u.includes('/api/appointment-types') &&
+					!/\/api\/appointment-types\/\d+/.test(u)
+				);
+			},
+			{ timeout: 30_000 }
+		);
+		await page.goto('/admin/scheduling');
+		const typesListRes = await typesListGet;
+		expect(typesListRes.ok(), await typesListRes.text()).toBeTruthy();
+		expect(typesListRes.status()).toBeGreaterThanOrEqual(200);
+		expect(typesListRes.status()).toBeLessThan(300);
+
+		await expect(page.getByTestId('access-denied')).toHaveCount(0);
+		await expect(page.getByTestId('schedule-admin-page')).toBeVisible({ timeout: 20_000 });
+		await expect(page.getByTestId('schedule-admin-types')).toBeVisible({ timeout: 15_000 });
+		await expect(page.getByRole('tab', { name: 'Types de RDV' })).toBeVisible();
+		await expect(page.getByRole('tab', { name: 'Horaires récurrents' })).toHaveCount(0);
+		await expect(page.getByRole('tab', { name: 'Exceptions' })).toHaveCount(0);
+		await expect(page.getByTestId('schedule-admin-type-create')).toBeVisible();
+		await expect(page.getByTestId('type-row').first()).toBeVisible({ timeout: 15_000 });
+		expect(await page.getByTestId('type-row').count()).toBeGreaterThan(0);
+		expect(forbiddenScheduleCalls).toEqual([]);
+	} finally {
+		await request.delete(
+			`${api}/api/access/users/${profileId}/overrides/${encodeURIComponent('appointment_type.manage')}`,
+			{ headers: bearer(admin) }
+		);
+	}
+});
+
+test('QA-APPT-TYPE-CREATE-UPDATE-DELETE-001 @critical create edit deactivate reactivate', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(180_000);
+	const admin = await loginApi(request, adminEmail);
+	const sid = await serviceId(request, admin);
+	const suffix = `${Date.now()}`.slice(-8);
+	const code = `QA23MB${suffix}`;
+
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await openTypesTab(page);
+	await page.getByTestId('schedule-admin-type-create').click();
+	await expect(page.getByTestId('type-form')).toBeVisible();
+	await page.getByTestId('type-form-code').fill(code);
+	await page.getByTestId('type-form-name').fill(`QA Type ${suffix}`);
+	await page.getByTestId('type-form-duration').fill('25');
+	await page.getByTestId('type-form-service').selectOption(String(sid));
+	const createPost = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types') && r.request().method() === 'POST',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('type-form-submit').click();
+	expect([200, 201].includes((await createPost).status())).toBeTruthy();
+	await expect(page.locator('[data-testid="type-row"]').filter({ hasText: code })).toBeVisible({
+		timeout: 15_000
+	});
+
+	// Duplicate → 409
+	await page.getByTestId('schedule-admin-type-create').click();
+	await page.getByTestId('type-form-code').fill(code);
+	await page.getByTestId('type-form-name').fill('Dup');
+	await page.getByTestId('type-form-duration').fill('30');
+	const dupPost = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types') && r.request().method() === 'POST',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('type-form-submit').click();
+	expect((await dupPost).status()).toBe(409);
+	await expect(page.getByTestId('type-form')).toBeVisible();
+	await expect(page.getByTestId('type-form')).toContainText(/409|déjà|existe|utilisé|conflit/i);
+	await page.getByTestId('type-form').getByRole('button', { name: 'Fermer' }).click();
+
+	// Edit: code immutable, name/duration
+	const row = page.locator('[data-testid="type-row"]').filter({ hasText: code });
+	await row.getByTestId('type-row-edit').click();
+	await expect(page.getByTestId('type-form-code')).not.toBeEditable();
+	await page.getByTestId('type-form-name').fill(`QA Type edited ${suffix}`);
+	await page.getByTestId('type-form-duration').fill('35');
+	const patch = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types/') && r.request().method() === 'PATCH',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('type-form-submit').click();
+	expect((await patch).ok()).toBeTruthy();
+	await expect(row).toContainText(`QA Type edited ${suffix}`);
+	await expect(row).toContainText('35');
+
+	// Soft deactivate
+	await row.getByTestId('type-row-disable').click();
+	await expect(page.getByRole('heading', { name: /Désactiver ce type/i })).toBeVisible();
+	const del = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types/') && r.request().method() === 'DELETE',
+		{ timeout: 30_000 }
+	);
+	await page
+		.getByLabel('Désactiver ce type de rendez-vous ?')
+		.getByRole('button', { name: 'Désactiver' })
+		.click();
+	expect((await del).ok()).toBeTruthy();
+
+	// Inactive absent from booking selector
+	await page.goto('/agenda');
+	await page.getByTestId('agenda-new-appointment').click();
+	await expect(page.getByTestId('agenda-book-service')).toBeVisible({ timeout: 15_000 });
+	await page.getByTestId('agenda-book-service').selectOption(String(sid));
+	await expect(page.getByTestId('agenda-book-type')).toBeVisible({ timeout: 15_000 });
+	const typeOptions = await page
+		.getByTestId('agenda-book-type')
+		.locator('option')
+		.allTextContents();
+	expect(typeOptions.some((t) => t.includes(code) || t.includes(`edited ${suffix}`))).toBeFalsy();
+
+	// Reactivate path: edit while inactive must not send active=true
+	await page.goto('/admin/scheduling');
+	await openTypesTab(page);
+	await page.getByTestId('type-filter-active').selectOption('false');
+	const inactiveRow = page.locator('[data-testid="type-row"]').filter({ hasText: code });
+	await expect(inactiveRow).toBeVisible({ timeout: 15_000 });
+	await inactiveRow.getByTestId('type-row-edit').click();
+	await page.getByTestId('type-form-name').fill(`QA Type inactive edit ${suffix}`);
+	const inactivePatch = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types/') && r.request().method() === 'PATCH',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('type-form-submit').click();
+	const inactivePatchRes = await inactivePatch;
+	expect(inactivePatchRes.ok()).toBeTruthy();
+	const inactivePatchBody = inactivePatchRes.request().postDataJSON() as {
+		active?: boolean;
+		name?: string;
+	};
+	expect(inactivePatchBody.active).toBeUndefined();
+	expect(inactivePatchBody.name).toBe(`QA Type inactive edit ${suffix}`);
+	await expect(inactiveRow).toContainText(`QA Type inactive edit ${suffix}`);
+	await expect(inactiveRow).toContainText('Inactif');
+
+	const reactivate = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types/') && r.request().method() === 'PATCH',
+		{ timeout: 30_000 }
+	);
+	await inactiveRow.getByTestId('type-row-reactivate').click();
+	const reactivateRes = await reactivate;
+	expect(reactivateRes.ok()).toBeTruthy();
+	expect((reactivateRes.request().postDataJSON() as { active?: boolean }).active).toBe(true);
+});
+
+test('QA-APPT-TYPE-SERVICE-SCOPE-001 @critical service-linked type filtered in booking', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(120_000);
+	const admin = await loginApi(request, adminEmail);
+	const services = await request.get(`${api}/api/organization/services?active=true`, {
+		headers: bearer(admin)
+	});
+	expect(services.ok()).toBeTruthy();
+	const body = await services.json();
+	const items = Array.isArray(body) ? body : (body.data ?? body.items ?? []);
+	const a = items[0];
+	const b = items.find((s: { id: number }) => s.id !== a?.id);
+	expect(a?.id && b?.id).toBeTruthy();
+	const suffix = `${Date.now()}`.slice(-7);
+	const code = `QASVC${suffix}`;
+
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await openTypesTab(page);
+	await page.getByTestId('schedule-admin-type-create').click();
+	await page.getByTestId('type-form-code').fill(code);
+	await page.getByTestId('type-form-name').fill(`Scoped ${suffix}`);
+	await page.getByTestId('type-form-duration').fill('20');
+	await page.getByTestId('type-form-service').selectOption(String(a.id));
+	const post = page.waitForResponse(
+		(r) => r.url().includes('/api/appointment-types') && r.request().method() === 'POST',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('type-form-submit').click();
+	expect([200, 201].includes((await post).status())).toBeTruthy();
+
+	await page.goto('/agenda');
+	await page.getByTestId('agenda-new-appointment').click();
+	await page.getByTestId('agenda-book-service').selectOption(String(a.id));
+	await expect
+		.poll(async () => {
+			const opts = await page.getByTestId('agenda-book-type').locator('option').allTextContents();
+			return opts.some((o) => o.includes(code) || o.includes(`Scoped ${suffix}`));
+		})
+		.toBeTruthy();
+	await page.getByTestId('agenda-book-service').selectOption(String(b.id));
+	await expect
+		.poll(async () => {
+			const optsB = await page.getByTestId('agenda-book-type').locator('option').allTextContents();
+			return optsB.some((o) => o.includes(code));
+		})
+		.toBeFalsy();
+});
+
+test('QA-APPT-TYPE-VALIDATION-001 @critical client duration validation keeps form open', async ({
+	page,
+	login
+}) => {
+	test.setTimeout(90_000);
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await openTypesTab(page);
+	await page.getByTestId('schedule-admin-type-create').click();
+	await page.getByTestId('type-form-code').fill(`QABAD${Date.now()}`.slice(0, 14));
+	await page.getByTestId('type-form-name').fill('Bad duration');
+	await page.getByTestId('type-form-duration').fill('2');
+	await page.getByTestId('type-form-submit').click();
+	await expect(page.getByTestId('type-form')).toBeVisible();
+	await expect(page.getByTestId('type-form')).toContainText(/5|480|durée/i);
+});
+
+test('QA-SCHEDULE-ADMIN-PRACTITIONER-SCOPE-001 @critical form practitioners filter by service', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(120_000);
+	const admin = await loginApi(request, adminEmail);
+	const sid = await serviceId(request, admin);
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await expect(page.getByTestId('schedule-admin-create')).toBeVisible({ timeout: 20_000 });
+	await page.getByTestId('schedule-admin-create').click();
+	await expect(page.getByTestId('schedule-form')).toBeVisible();
+	const staffReq = page.waitForResponse(
+		(r) =>
+			r.url().includes('/api/staff') &&
+			r.url().includes(`serviceId=${sid}`) &&
+			r.request().method() === 'GET',
+		{ timeout: 30_000 }
+	);
+	await page.getByTestId('schedule-form-service').selectOption(String(sid));
+	await staffReq;
+	const pracSelect = page.getByTestId('schedule-form-practitioner');
+	if ((await pracSelect.evaluate((el) => el.tagName)) === 'SELECT') {
+		const opts = await pracSelect.locator('option').count();
+		expect(opts).toBeGreaterThan(0);
+	}
 });
