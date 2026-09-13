@@ -29,6 +29,7 @@
 		canAccessScheduleAdministration,
 		canManageAppointmentTypes,
 		canManageSchedule,
+		canReadAppointmentNotificationAdmin,
 		canReadScheduleAdministration,
 		dateInputToRfc3339Date,
 		datetimeLocalToRfc3339,
@@ -48,6 +49,7 @@
 		weekdayLabel
 	} from '$lib/components/scheduling/state';
 	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
+	import AppointmentNotificationsAdmin from '$lib/components/scheduling/AppointmentNotificationsAdmin.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -82,6 +84,7 @@
 	const canManage = $derived(canManageSchedule(permissions));
 	const canManageTypes = $derived(canManageAppointmentTypes(permissions));
 	const canReadSchedules = $derived(canReadScheduleAdministration(permissions));
+	const canReadNotifications = $derived(canReadAppointmentNotificationAdmin(permissions));
 	const canLoadTypes = $derived(canAccessAppointmentTypeCatalog(permissions));
 	const tabs = $derived(scheduleAdminVisibleTabs(permissions));
 
@@ -982,6 +985,8 @@
 					</div>
 				{/if}
 			</section>
+		{:else if tabValue === 'notifications' && canReadNotifications}
+			<AppointmentNotificationsAdmin />
 		{/if}
 	</div>
 

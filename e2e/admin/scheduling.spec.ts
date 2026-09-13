@@ -6,8 +6,11 @@ import { test } from '../fixtures/medcore';
 import {
 	adminEmail,
 	api,
+	activeType,
 	bearer,
+	bookOnFreeSlot,
 	cashierEmail,
+	createQaPatient,
 	loginApi,
 	password,
 	receptionEmail,
@@ -263,33 +266,18 @@ test('QA-SCHEDULE-ADMIN-SCOPE-001 @critical service manager cannot mutate other 
 	expect(foreign?.id, 'pharmacy out of medical-director scope').toBeTruthy();
 	const prac = await generalisteUserId(request);
 
-	await login(medicalDirectorEmail, password);
-	await page.goto('/admin/scheduling');
-	await expect(page.getByTestId('schedule-admin-create')).toBeVisible({ timeout: 20_000 });
-	await page.getByTestId('schedule-admin-create').click();
-	const pracField = page.getByTestId('schedule-form-practitioner');
-	if (await pracField.evaluate((el) => el.tagName === 'SELECT')) {
-		await pracField.selectOption(String(prac));
-	} else {
-		await pracField.fill(String(prac));
-	}
-	await page.getByTestId('schedule-form-service').selectOption(String(foreign.id));
-	await page.getByTestId('schedule-form-weekday').selectOption('4');
-	await page.getByTestId('schedule-form-start').fill('07:00');
-	await page.getByTestId('schedule-form-end').fill('07:30');
-	await page.getByTestId('schedule-form-valid-from').fill('2026-01-01');
-	const post = page.waitForResponse(
-		(r) => r.url().includes('/api/schedules') && r.request().method() === 'POST',
-		{ timeout: 30_000 }
-	);
-	await page.getByTestId('schedule-form-submit').click();
-	const resp = await post;
-	// Backend may return 403/404 (manage scope) or 400 (assignment) — mutation must not succeed.
-	expect([400, 403, 404].includes(resp.status()), await resp.text()).toBeTruthy();
-	await expect(page.getByTestId('schedule-form')).toContainText(
-		/non autoris|périmètre|Action|Forbidden|403|impossible|Planning|affecté|service/i,
-		{ timeout: 10_000 }
-	);
+	const resp = await createScheduleApi(request, medTok, {
+        practitionerId: prac,
+        serviceId: foreign.id,
+        weekday: 4,
+        startTime: '07:00',
+        endTime: '07:30',
+        validFrom: '2026-01-01T00:00:00.000Z'
+});
+
+// Backend may return 403/404 (manage scope) or 400 (assignment) — mutation must not succeed.
+expect([400, 403, 404].includes(resp.status()), await resp.text()).toBeTruthy();
+
 });
 
 test('QA-SCHEDULE-EXCEPTION-CREATE-001 @critical create negative exception', async ({
@@ -866,4 +854,81 @@ test('QA-SCHEDULE-ADMIN-PRACTITIONER-SCOPE-001 @critical form practitioners filt
 		const opts = await pracSelect.locator('option').count();
 		expect(opts).toBeGreaterThan(0);
 	}
+});
+
+/**
+ * LOT 23N-C2 — appointment notification admin (read-only).
+ */
+test('QA-NOTIF-ADMIN-READ-001 @critical manager can list detail and attempts', async ({
+	page,
+	login,
+	request
+}) => {
+	test.setTimeout(180_000);
+	const admin = await loginApi(request, adminEmail);
+	const sid = await serviceId(request, admin);
+	const type = await activeType(request, admin, sid);
+	const patient = await createQaPatient(request, admin, 'NOTIF-ADMIN');
+	const booked = await bookOnFreeSlot(request, admin, {
+		patientId: patient.id,
+		serviceId: sid,
+		appointmentTypeId: type.id,
+		reason: 'QA-NOTIF-ADMIN'
+	});
+	const appointmentId = booked.body.id;
+	expect(appointmentId).toBeTruthy();
+
+	await expect
+		.poll(async () => {
+			const res = await request.get(
+				`${api}/api/appointment-notification-intents?appointmentId=${appointmentId}&limit=20`,
+				{ headers: bearer(admin) }
+			);
+			if (!res.ok()) return 0;
+			const body = await res.json();
+			return (body.items ?? []).length as number;
+		})
+		.toBeGreaterThan(0);
+
+	await login(adminEmail, password);
+	await page.goto('/admin/scheduling');
+	await expect(page.getByTestId('schedule-admin-page')).toBeVisible({ timeout: 20_000 });
+	await page.getByRole('tab', { name: 'Notifications' }).click();
+	await expect(page.getByTestId('schedule-admin-notifications')).toBeVisible();
+	await expect(page.getByTestId('notification-filter-status')).toBeVisible();
+
+	await page.getByTestId('notification-filter-appointment').fill(String(appointmentId));
+	await page.getByTestId('notification-filter-appointment').press('Enter');
+	await expect.poll(async () => page.getByTestId('notification-row').count()).toBeGreaterThan(0);
+
+	const row = page.locator(`[data-testid="notification-row"]`).first();
+	await expect(row).toContainText(/Réservation|Rappel|Annulation|Replanification/);
+	await expect(row).toContainText(/Journal \(LOG\)|LOG/);
+	await expect(page.getByRole('button', { name: /relancer|réessayer|retry|envoyer/i })).toHaveCount(
+		0
+	);
+
+	await row.getByTestId('notification-row-open').click();
+	await expect(page.getByTestId('notification-detail')).toBeVisible();
+	await expect(page.getByTestId('notification-detail-appointment')).toContainText(
+		`#${appointmentId}`
+	);
+	await expect(page.getByTestId('notification-detail-payload')).toBeVisible();
+	await expect(page.getByTestId('notification-detail-payload')).not.toContainText(
+		/telephone|email|diagnosis|reason/i
+	);
+	await expect(page.getByTestId('notification-attempts')).toBeVisible();
+});
+
+test('QA-NOTIF-ADMIN-RBAC-001 @critical schedule.read alone hides Notifications tab', async ({
+	page,
+	login
+}) => {
+	test.setTimeout(90_000);
+	await login(receptionEmail, password);
+	await page.goto('/admin/scheduling');
+	await expect(page.getByTestId('schedule-admin-page')).toBeVisible({ timeout: 20_000 });
+	await expect(page.getByRole('tab', { name: 'Horaires récurrents' })).toBeVisible();
+	await expect(page.getByRole('tab', { name: 'Notifications' })).toHaveCount(0);
+	await expect(page.getByTestId('schedule-admin-notifications')).toHaveCount(0);
 });

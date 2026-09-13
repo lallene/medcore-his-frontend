@@ -33,6 +33,8 @@ const statusToneByKey: Record<string, StatusTone> = {
 	OPEN: 'info',
 	PENDING: 'warning',
 	WAITING: 'warning',
+	PROCESSING: 'info',
+	SENT: 'success',
 	BREACHED: 'danger',
 	OVERDUE: 'danger',
 

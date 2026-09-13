@@ -71,9 +71,13 @@ export function canManageAppointmentTypes(permissions: string[]): boolean {
 	return can(permissions, '*') || canAny(permissions, [...APPOINTMENT_TYPE_MANAGE_PERMISSIONS]);
 }
 
-/** Page access: schedule readers/managers OR appointment-type managers. */
+/** Page access: any scheduling-admin surface (schedules, types catalog, notifications). */
 export function canAccessScheduleAdministration(permissions: string[]): boolean {
-	return canReadScheduleAdministration(permissions) || canManageAppointmentTypes(permissions);
+	return (
+		canReadScheduleAdministration(permissions) ||
+		canManageAppointmentTypes(permissions) ||
+		canReadAppointmentNotificationAdmin(permissions)
+	);
 }
 
 /** Types catalog list/UI: schedule readers OR appointment_type.manage (backend still authoritative). */
@@ -81,7 +85,23 @@ export function canAccessAppointmentTypeCatalog(permissions: string[]): boolean 
 	return canReadScheduleAdministration(permissions) || canManageAppointmentTypes(permissions);
 }
 
-export type ScheduleAdminTabId = 'schedules' | 'exceptions' | 'types';
+/**
+ * Appointment notification admin read UX (LOT 23N-C2).
+ * Same authority as schedule manage — NOT schedule.read.*.
+ */
+export const APPOINTMENT_NOTIFICATION_ADMIN_PERMISSIONS = [
+	'schedule.manage.service',
+	'schedule.manage.all'
+] as const;
+
+/** Backend-aligned: manage.service | manage.all | * only. */
+export function canReadAppointmentNotificationAdmin(permissions: string[]): boolean {
+	return (
+		can(permissions, '*') || canAny(permissions, [...APPOINTMENT_NOTIFICATION_ADMIN_PERMISSIONS])
+	);
+}
+
+export type ScheduleAdminTabId = 'schedules' | 'exceptions' | 'types' | 'notifications';
 
 /** Visible admin tabs — hide schedule/exception tabs when the user cannot read schedules. */
 export function scheduleAdminVisibleTabs(
@@ -95,14 +115,23 @@ export function scheduleAdminVisibleTabs(
 	if (canAccessAppointmentTypeCatalog(permissions)) {
 		tabs.push({ id: 'types', label: 'Types de RDV' });
 	}
+	if (canReadAppointmentNotificationAdmin(permissions)) {
+		tabs.push({ id: 'notifications', label: 'Notifications' });
+	}
 	return tabs;
 }
 
-/** Default tab: schedules when readable, otherwise Types de RDV for type managers. */
+/**
+ * Default tab must be one of scheduleAdminVisibleTabs.
+ * Preference: schedules → types → notifications (never invent a hidden tab).
+ */
 export function defaultScheduleAdminTab(permissions: string[]): ScheduleAdminTabId {
-	if (canReadScheduleAdministration(permissions)) return 'schedules';
-	if (canAccessAppointmentTypeCatalog(permissions)) return 'types';
-	return 'schedules';
+	const visible = scheduleAdminVisibleTabs(permissions).map((t) => t.id);
+	const preferred: ScheduleAdminTabId[] = ['schedules', 'types', 'notifications'];
+	for (const id of preferred) {
+		if (visible.includes(id)) return id;
+	}
+	return visible[0] ?? 'schedules';
 }
 
 export function validateAppointmentTypeDuration(minutes: number): string | null {
@@ -236,4 +265,46 @@ export function validateExceptionRange(startAt: string, endAt: string): string |
 	if (Number.isNaN(a) || Number.isNaN(b)) return 'Dates/heures invalides.';
 	if (b <= a) return 'La fin doit être strictement après le début.';
 	return null;
+}
+
+/** LOT 23N-C2 — French labels for notification admin (display only). */
+export const NOTIFICATION_KIND_OPTIONS: Array<{ value: string; label: string }> = [
+	{ value: 'BOOKED', label: 'Réservation' },
+	{ value: 'RESCHEDULED', label: 'Replanification' },
+	{ value: 'CANCELLED', label: 'Annulation' },
+	{ value: 'REMINDER_T24H', label: 'Rappel J−1' }
+];
+
+export const NOTIFICATION_CHANNEL_OPTIONS: Array<{ value: string; label: string }> = [
+	{ value: 'LOG', label: 'Journal (LOG)' },
+	{ value: 'EMAIL', label: 'EMAIL (non livré)' },
+	{ value: 'SMS', label: 'SMS (non livré)' }
+];
+
+export const NOTIFICATION_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+	{ value: 'PENDING', label: 'En attente' },
+	{ value: 'PROCESSING', label: 'En cours' },
+	{ value: 'SENT', label: 'Envoyée' },
+	{ value: 'FAILED', label: 'Échec' },
+	{ value: 'SKIPPED', label: 'Ignorée' },
+	{ value: 'CANCELLED', label: 'Annulée' }
+];
+
+export function notificationKindLabel(kind: string): string {
+	return NOTIFICATION_KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind;
+}
+
+export function notificationChannelLabel(channel: string): string {
+	return NOTIFICATION_CHANNEL_OPTIONS.find((o) => o.value === channel)?.label ?? channel;
+}
+
+export function notificationStatusLabel(status: string): string {
+	return NOTIFICATION_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+}
+
+/** Truncate operational attempt errors for UI (not clinical content). */
+export function truncateOperationalError(text: string, max = 160): string {
+	const t = text.trim();
+	if (t.length <= max) return t;
+	return `${t.slice(0, max - 1)}…`;
 }

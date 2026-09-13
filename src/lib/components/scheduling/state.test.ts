@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import {
 	canAccessAppointmentTypeCatalog,
 	canAccessScheduleAdministration,
 	canManageAppointmentTypes,
 	canManageSchedule,
+	canReadAppointmentNotificationAdmin,
 	canReadScheduleAdministration,
 	dateInputToRfc3339Date,
 	datetimeLocalToRfc3339,
@@ -12,10 +14,14 @@ import {
 	isNegativeExceptionType,
 	isPositiveExceptionType,
 	isScheduleExceptionType,
+	notificationChannelLabel,
+	notificationKindLabel,
+	notificationStatusLabel,
 	normalizeWallClockTime,
 	parseExplicitWeekday,
 	rfc3339ToDatetimeLocal,
 	scheduleAdminVisibleTabs,
+	truncateOperationalError,
 	validateAppointmentTypeDuration,
 	validateExceptionRange,
 	validateRecurringWallClockRange,
@@ -75,6 +81,117 @@ describe('schedule administration RBAC', () => {
 		);
 		assert.equal(canAccessAppointmentTypeCatalog(read), true);
 		assert.equal(canManageAppointmentTypes(read), false);
+	});
+
+	it('notification admin tab requires schedule.manage (not schedule.read)', () => {
+		assert.equal(canReadAppointmentNotificationAdmin(['schedule.manage.service']), true);
+		assert.equal(canReadAppointmentNotificationAdmin(['schedule.manage.all']), true);
+		assert.equal(canReadAppointmentNotificationAdmin(['*']), true);
+		assert.equal(canReadAppointmentNotificationAdmin(['schedule.read.all']), false);
+		assert.equal(canReadAppointmentNotificationAdmin(['schedule.read.service']), false);
+		assert.equal(canReadAppointmentNotificationAdmin(['schedule.read.own']), false);
+		assert.equal(canReadAppointmentNotificationAdmin(['appointment_type.manage']), false);
+
+		assert.ok(
+			scheduleAdminVisibleTabs(['schedule.manage.service']).some((t) => t.id === 'notifications')
+		);
+		assert.ok(
+			scheduleAdminVisibleTabs(['schedule.manage.all']).some((t) => t.id === 'notifications')
+		);
+		assert.ok(scheduleAdminVisibleTabs(['*']).some((t) => t.id === 'notifications'));
+		assert.ok(
+			!scheduleAdminVisibleTabs(['schedule.read.all']).some((t) => t.id === 'notifications')
+		);
+		assert.ok(
+			!scheduleAdminVisibleTabs(['schedule.read.service']).some((t) => t.id === 'notifications')
+		);
+		assert.ok(
+			!scheduleAdminVisibleTabs(['schedule.read.own']).some((t) => t.id === 'notifications')
+		);
+	});
+
+	it('page access and default tab stay consistent with visible tabs', () => {
+		const sets: string[][] = [
+			['schedule.read.own'],
+			['schedule.read.service'],
+			['schedule.read.all'],
+			['schedule.manage.service'],
+			['schedule.manage.all'],
+			['*'],
+			['appointment_type.manage'],
+			['schedule.read.service', 'appointment_type.manage'],
+			['schedule.manage.service', 'appointment_type.manage']
+		];
+		for (const perms of sets) {
+			assert.equal(canAccessScheduleAdministration(perms), true, String(perms));
+			const visible = scheduleAdminVisibleTabs(perms).map((t) => t.id);
+			assert.ok(visible.length > 0, String(perms));
+			const def = defaultScheduleAdminTab(perms);
+			assert.ok(visible.includes(def), `${String(perms)} default=${def} visible=${visible}`);
+		}
+
+		// Notification-admin-capable sets can open the page and see Notifications.
+		for (const perms of [['schedule.manage.service'], ['schedule.manage.all'], ['*']]) {
+			assert.equal(canAccessScheduleAdministration(perms), true);
+			assert.equal(canReadAppointmentNotificationAdmin(perms), true);
+			assert.ok(scheduleAdminVisibleTabs(perms).some((t) => t.id === 'notifications'));
+			assert.equal(defaultScheduleAdminTab(perms), 'schedules');
+		}
+
+		// schedule.read.* still cannot see Notifications; default remains schedules.
+		for (const perms of [['schedule.read.own'], ['schedule.read.service'], ['schedule.read.all']]) {
+			assert.equal(canReadAppointmentNotificationAdmin(perms), false);
+			assert.ok(!scheduleAdminVisibleTabs(perms).some((t) => t.id === 'notifications'));
+			assert.equal(defaultScheduleAdminTab(perms), 'schedules');
+		}
+
+		// appointment_type.manage-only unchanged.
+		const onlyTypes = ['appointment_type.manage'];
+		assert.equal(canAccessScheduleAdministration(onlyTypes), true);
+		assert.equal(canReadAppointmentNotificationAdmin(onlyTypes), false);
+		assert.deepEqual(
+			scheduleAdminVisibleTabs(onlyTypes).map((t) => t.id),
+			['types']
+		);
+		assert.equal(defaultScheduleAdminTab(onlyTypes), 'types');
+
+		// Unauthorized sets: no page access / no visible tabs → do not invent a fake surface.
+		assert.equal(canAccessScheduleAdministration(['queue.checkin']), false);
+		assert.deepEqual(scheduleAdminVisibleTabs(['queue.checkin']), []);
+	});
+});
+
+describe('notification admin labels', () => {
+	it('maps kinds, channels, statuses and truncates operational errors', () => {
+		assert.equal(notificationKindLabel('REMINDER_T24H'), 'Rappel J−1');
+		assert.equal(notificationKindLabel('BOOKED'), 'Réservation');
+		assert.equal(notificationChannelLabel('LOG'), 'Journal (LOG)');
+		assert.equal(notificationStatusLabel('PENDING'), 'En attente');
+		assert.equal(notificationStatusLabel('FAILED'), 'Échec');
+		assert.equal(truncateOperationalError('short'), 'short');
+		assert.equal(truncateOperationalError('x'.repeat(200)).endsWith('…'), true);
+		assert.equal(truncateOperationalError('x'.repeat(200)).length, 160);
+	});
+
+	it('long operational errors are display-truncated and not re-exposed raw in the admin UI', () => {
+		const raw =
+			'provider boom secret-token-ABCDEFG ' + 'z'.repeat(220) + ' phone=+221770000000';
+		const shown = truncateOperationalError(raw);
+		assert.notEqual(shown, raw);
+		assert.ok(shown.length < raw.length);
+		assert.equal(shown, truncateOperationalError(raw));
+		assert.ok(!shown.includes('phone=+221770000000'));
+
+		const uiSource = readFileSync(
+			new URL('./AppointmentNotificationsAdmin.svelte', import.meta.url),
+			'utf8'
+		);
+		assert.match(uiSource, /truncateOperationalError\(att\.error\)/);
+		assert.doesNotMatch(uiSource, /title=\{att\.error\}/);
+		assert.doesNotMatch(uiSource, /aria-label=\{att\.error\}/);
+		assert.doesNotMatch(uiSource, /data-[a-zA-Z-]+=\{att\.error\}/);
+		// Text node must use truncated helper only — no bare {att.error} render.
+		assert.doesNotMatch(uiSource, />\s*\{att\.error\}\s*</);
 	});
 });
 
