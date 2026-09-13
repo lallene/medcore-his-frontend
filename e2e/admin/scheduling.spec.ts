@@ -238,8 +238,6 @@ test('QA-SCHEDULE-ADMIN-RBAC-001 @critical read-only actor cannot mutate', async
 });
 
 test('QA-SCHEDULE-ADMIN-SCOPE-001 @critical service manager cannot mutate other service', async ({
-	page,
-	login,
 	request
 }) => {
 	test.setTimeout(120_000);
@@ -267,17 +265,16 @@ test('QA-SCHEDULE-ADMIN-SCOPE-001 @critical service manager cannot mutate other 
 	const prac = await generalisteUserId(request);
 
 	const resp = await createScheduleApi(request, medTok, {
-        practitionerId: prac,
-        serviceId: foreign.id,
-        weekday: 4,
-        startTime: '07:00',
-        endTime: '07:30',
-        validFrom: '2026-01-01T00:00:00.000Z'
-});
+		practitionerId: prac,
+		serviceId: foreign.id,
+		weekday: 4,
+		startTime: '07:00',
+		endTime: '07:30',
+		validFrom: '2026-01-01T00:00:00.000Z'
+	});
 
-// Backend may return 403/404 (manage scope) or 400 (assignment) — mutation must not succeed.
-expect([400, 403, 404].includes(resp.status()), await resp.text()).toBeTruthy();
-
+	// Backend may return 403/404 (manage scope) or 400 (assignment) — mutation must not succeed.
+	expect([400, 403, 404].includes(resp.status()), await resp.text()).toBeTruthy();
 });
 
 test('QA-SCHEDULE-EXCEPTION-CREATE-001 @critical create negative exception', async ({

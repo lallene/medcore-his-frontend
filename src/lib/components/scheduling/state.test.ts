@@ -174,8 +174,7 @@ describe('notification admin labels', () => {
 	});
 
 	it('long operational errors are display-truncated and not re-exposed raw in the admin UI', () => {
-		const raw =
-			'provider boom secret-token-ABCDEFG ' + 'z'.repeat(220) + ' phone=+221770000000';
+		const raw = 'provider boom secret-token-ABCDEFG ' + 'z'.repeat(220) + ' phone=+221770000000';
 		const shown = truncateOperationalError(raw);
 		assert.notEqual(shown, raw);
 		assert.ok(shown.length < raw.length);
