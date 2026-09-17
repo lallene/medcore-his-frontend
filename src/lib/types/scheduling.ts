@@ -36,10 +36,7 @@ export interface Appointment {
 
 /** LOT 23O — series occurrence classification (backend-derived). */
 export type SeriesOccurrenceKind =
-	| 'RULE'
-	| 'EXCEPTION_RESCHEDULED'
-	| 'EXCEPTION_CANCELLED'
-	| 'OPERATIONAL';
+	'RULE' | 'EXCEPTION_RESCHEDULED' | 'EXCEPTION_CANCELLED' | 'OPERATIONAL';
 
 export type AppointmentSeriesStatus = 'ACTIVE' | 'CANCELLED';
 

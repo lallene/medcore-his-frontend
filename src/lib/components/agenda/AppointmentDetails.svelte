@@ -66,9 +66,7 @@
 		appointment ? appointmentActionVisibility(appointment, permissions) : null
 	);
 	const seriesActions = $derived(
-		appointment
-			? seriesActionVisibility(appointment, permissions, series?.status ?? null)
-			: null
+		appointment ? seriesActionVisibility(appointment, permissions, series?.status ?? null) : null
 	);
 	const financeBlocked = $derived(isFinanceBlockedMessage(error));
 	const showPatientLink = $derived(Boolean(actions?.openPatient && showOpenPatient));
@@ -118,7 +116,10 @@
 			</div>
 
 			{#if inSeries && series}
-				<p class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700" data-testid="agenda-series-inline-summary">
+				<p
+					class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700"
+					data-testid="agenda-series-inline-summary"
+				>
 					{formatSeriesRecurrenceSummary(series)}
 					· {series.status === 'ACTIVE' ? 'Active' : 'Annulée'}
 				</p>

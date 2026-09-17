@@ -156,8 +156,7 @@ test('QA-SERIES-002 @critical edit this+future and OCC 409 conflict feedback', a
 	await page.getByTestId('agenda-slot').first().click();
 	const conflictWait = page.waitForResponse(
 		(r) =>
-			r.url().includes(`/api/appointment-series/${series.id}`) &&
-			r.request().method() === 'PATCH',
+			r.url().includes(`/api/appointment-series/${series.id}`) && r.request().method() === 'PATCH',
 		{ timeout: 60_000 }
 	);
 	await clickFooter(page, 'agenda-series-edit-submit');
@@ -167,7 +166,11 @@ test('QA-SERIES-002 @critical edit this+future and OCC 409 conflict feedback', a
 	await clearPatientSchedule(request, admin, patient.id);
 });
 
-test('QA-SERIES-003 @critical cancel entire series from Agenda', async ({ page, login, request }) => {
+test('QA-SERIES-003 @critical cancel entire series from Agenda', async ({
+	page,
+	login,
+	request
+}) => {
 	test.setTimeout(180_000);
 	const admin = await loginApi(request, adminEmail);
 	const patient = await createQaPatient(request, admin, 'SERIES-CANCEL');

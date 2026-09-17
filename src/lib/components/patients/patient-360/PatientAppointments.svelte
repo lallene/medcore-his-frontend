@@ -23,10 +23,7 @@
 		cancelSeriesFromAppointmentForward,
 		loadAppointmentWithSeries
 	} from '$lib/components/agenda/series-actions';
-	import {
-		SERIES_OCC_CONFLICT_FALLBACK,
-		isSeriesOccConflict
-	} from '$lib/components/agenda/series';
+	import { SERIES_OCC_CONFLICT_FALLBACK, isSeriesOccConflict } from '$lib/components/agenda/series';
 	import AppointmentCard from '$lib/components/agenda/AppointmentCard.svelte';
 	import AppointmentDetails from '$lib/components/agenda/AppointmentDetails.svelte';
 	import AppointmentBookingModal from '$lib/components/agenda/AppointmentBookingModal.svelte';
@@ -209,8 +206,7 @@
 		} catch (e) {
 			if (isSeriesOccConflict(e)) {
 				detailsError =
-					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
-					SERIES_OCC_CONFLICT_FALLBACK;
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) || SERIES_OCC_CONFLICT_FALLBACK;
 				await refreshSelected();
 			} else {
 				detailsError = resolveUserErrorMessage(e, 'Annulation future impossible.');
@@ -234,8 +230,7 @@
 		} catch (e) {
 			if (isSeriesOccConflict(e)) {
 				detailsError =
-					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
-					SERIES_OCC_CONFLICT_FALLBACK;
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) || SERIES_OCC_CONFLICT_FALLBACK;
 				await refreshSelected();
 			} else {
 				detailsError = resolveUserErrorMessage(e, 'Annulation de série impossible.');

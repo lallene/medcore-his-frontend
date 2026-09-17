@@ -3,7 +3,12 @@
 	import { getPatients } from '$lib/api/patients';
 	import { listOrganizationServices } from '$lib/api/organization';
 	import { listStaff } from '$lib/api/staff';
-	import { bookAppointment, createAppointmentSeries, getAvailability, listAppointmentTypes } from '$lib/api/appointments';
+	import {
+		bookAppointment,
+		createAppointmentSeries,
+		getAvailability,
+		listAppointmentTypes
+	} from '$lib/api/appointments';
 	import {
 		AGENDA_TIMEZONE,
 		buildBookPayload,
@@ -111,9 +116,7 @@
 			byWeekdays: seriesWeekdays,
 			count: seriesEndMode === 'count' ? count : null,
 			until:
-				seriesEndMode === 'until' && seriesUntilLocal
-					? `${seriesUntilLocal}T23:59:59.000Z`
-					: null,
+				seriesEndMode === 'until' && seriesUntilLocal ? `${seriesUntilLocal}T23:59:59.000Z` : null,
 			timezone: AGENDA_TIMEZONE,
 			anchorStartAt: selectedSlot.startAt
 		});
@@ -572,11 +575,7 @@
 					</div>
 					{#if seriesEndMode === 'count'}
 						<FormField label="Nombre d’occurrences (1–52)" required>
-							<Input
-								type="number"
-								bind:value={seriesCount}
-								data-testid="agenda-series-count"
-							/>
+							<Input type="number" bind:value={seriesCount} data-testid="agenda-series-count" />
 						</FormField>
 					{:else}
 						<FormField label="Jusqu’au" required>
@@ -641,9 +640,7 @@
 						loading={submitting}
 						disabled={!selectedSlot || submitting}
 						data-testid="agenda-book-submit"
-						>{bookingMode === 'recurring'
-							? 'Créer la série'
-							: 'Confirmer la réservation'}</Button
+						>{bookingMode === 'recurring' ? 'Créer la série' : 'Confirmer la réservation'}</Button
 					>
 				{:else}
 					<Button

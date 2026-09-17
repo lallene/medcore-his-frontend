@@ -38,10 +38,7 @@
 		cancelSeriesFromAppointmentForward,
 		loadAppointmentWithSeries
 	} from '$lib/components/agenda/series-actions';
-	import {
-		SERIES_OCC_CONFLICT_FALLBACK,
-		isSeriesOccConflict
-	} from '$lib/components/agenda/series';
+	import { SERIES_OCC_CONFLICT_FALLBACK, isSeriesOccConflict } from '$lib/components/agenda/series';
 	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -317,8 +314,7 @@
 		} catch (e) {
 			if (isSeriesOccConflict(e)) {
 				detailsError =
-					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
-					SERIES_OCC_CONFLICT_FALLBACK;
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) || SERIES_OCC_CONFLICT_FALLBACK;
 				await refreshSelected();
 			} else {
 				detailsError = resolveUserErrorMessage(e, 'Annulation future impossible.');
@@ -342,8 +338,7 @@
 		} catch (e) {
 			if (isSeriesOccConflict(e)) {
 				detailsError =
-					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
-					SERIES_OCC_CONFLICT_FALLBACK;
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) || SERIES_OCC_CONFLICT_FALLBACK;
 				await refreshSelected();
 			} else {
 				detailsError = resolveUserErrorMessage(e, 'Annulation de série impossible.');

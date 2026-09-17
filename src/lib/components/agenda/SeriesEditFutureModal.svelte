@@ -31,13 +31,7 @@
 		onconflict?: () => void;
 	}
 
-	let {
-		open = $bindable(false),
-		appointment,
-		onclose,
-		onsuccess,
-		onconflict
-	}: Props = $props();
+	let { open = $bindable(false), appointment, onclose, onsuccess, onconflict }: Props = $props();
 
 	let loading = $state(false);
 	let submitting = $state(false);
@@ -137,10 +131,8 @@
 			if (status === 409) {
 				conflict = true;
 				error =
-					resolveUserErrorMessage(
-						e,
-						'Conflit de version ou de créneau — données actualisées.'
-					) || 'Conflit — veuillez réessayer.';
+					resolveUserErrorMessage(e, 'Conflit de version ou de créneau — données actualisées.') ||
+					'Conflit — veuillez réessayer.';
 				idempotencyKey = newIdempotencyKey();
 				onconflict?.();
 				if (appointment) await bootstrap(appointment, { preserveConflict: true });
@@ -172,8 +164,8 @@
 				</div>
 			{/if}
 			<p class="text-sm text-slate-600">
-				Série #{series.id} · version {series.version} · à partir de l’occurrence
-				#{appointment?.seriesOccurrenceIndex ?? '—'}
+				Série #{series.id} · version {series.version} · à partir de l’occurrence #{appointment?.seriesOccurrenceIndex ??
+					'—'}
 			</p>
 			<FormField label="Date du nouveau segment">
 				<Input type="date" bind:value={dateLocal} data-testid="agenda-series-edit-date" />
