@@ -11,9 +11,15 @@ import type {
 	AvailabilityResponse,
 	BookAppointmentRequest,
 	CancelAppointmentRequest,
+	CancelAppointmentSeriesFutureRequest,
+	CancelAppointmentSeriesRequest,
+	CreateAppointmentSeriesRequest,
 	CreateAppointmentTypeRequest,
 	NoShowAppointmentRequest,
 	RescheduleAppointmentRequest,
+	SeriesOccurrencesResponse,
+	AppointmentSeries,
+	UpdateAppointmentSeriesRequest,
 	UpdateAppointmentTypeRequest
 } from '$lib/types/scheduling';
 
@@ -162,7 +168,63 @@ export const markAppointmentNoShow = async (
 	return (await api.post<Appointment>(`/api/appointments/${id}/no-show`, body, { headers })).data;
 };
 
-/** Canonical LOT 23F check-in (finance → queue). */
 export const checkInAppointment = async (id: number, payload: AppointmentCheckInRequest) =>
 	(await api.post<AppointmentCheckInResult>(`/api/queue/appointments/${id}/check-in`, payload))
 		.data;
+
+/** LOT 23O — recurring series APIs. */
+export const createAppointmentSeries = async (
+	payload: CreateAppointmentSeriesRequest,
+	opts?: { idempotencyKey?: string }
+) => {
+	const key = opts?.idempotencyKey ?? payload.idempotencyKey;
+	const body = { ...payload, idempotencyKey: key };
+	const headers = key ? { 'Idempotency-Key': key } : undefined;
+	return (await api.post<AppointmentSeries>('/api/appointment-series', body, { headers })).data;
+};
+
+export const getAppointmentSeries = async (id: number) =>
+	(await api.get<AppointmentSeries>(`/api/appointment-series/${id}`)).data;
+
+export const listAppointmentSeriesOccurrences = async (id: number) =>
+	(await api.get<SeriesOccurrencesResponse>(`/api/appointment-series/${id}/occurrences`)).data;
+
+export const updateAppointmentSeries = async (
+	id: number,
+	payload: UpdateAppointmentSeriesRequest,
+	opts?: { idempotencyKey?: string }
+) => {
+	const key = opts?.idempotencyKey ?? payload.idempotencyKey;
+	const body = { ...payload, idempotencyKey: key };
+	const headers = key ? { 'Idempotency-Key': key } : undefined;
+	return (await api.patch<AppointmentSeries>(`/api/appointment-series/${id}`, body, { headers }))
+		.data;
+};
+
+export const cancelAppointmentSeries = async (
+	id: number,
+	payload: CancelAppointmentSeriesRequest,
+	opts?: { idempotencyKey?: string }
+) => {
+	const key = opts?.idempotencyKey ?? payload.idempotencyKey;
+	const body = { ...payload, idempotencyKey: key };
+	const headers = key ? { 'Idempotency-Key': key } : undefined;
+	return (
+		await api.post<AppointmentSeries>(`/api/appointment-series/${id}/cancel`, body, { headers })
+	).data;
+};
+
+export const cancelAppointmentSeriesFuture = async (
+	id: number,
+	payload: CancelAppointmentSeriesFutureRequest,
+	opts?: { idempotencyKey?: string }
+) => {
+	const key = opts?.idempotencyKey ?? payload.idempotencyKey;
+	const body = { ...payload, idempotencyKey: key };
+	const headers = key ? { 'Idempotency-Key': key } : undefined;
+	return (
+		await api.post<AppointmentSeries>(`/api/appointment-series/${id}/cancel-future`, body, {
+			headers
+		})
+	).data;
+};

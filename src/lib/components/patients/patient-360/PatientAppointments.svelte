@@ -4,7 +4,6 @@
 	import {
 		cancelAppointment,
 		checkInAppointment,
-		getAppointment,
 		listAppointments,
 		markAppointmentNoShow
 	} from '$lib/api/appointments';
@@ -19,10 +18,21 @@
 		startOfZonedDay,
 		toRfc3339
 	} from '$lib/components/agenda/state';
+	import {
+		cancelEntireAppointmentSeries,
+		cancelSeriesFromAppointmentForward,
+		loadAppointmentWithSeries
+	} from '$lib/components/agenda/series-actions';
+	import {
+		SERIES_OCC_CONFLICT_FALLBACK,
+		isSeriesOccConflict
+	} from '$lib/components/agenda/series';
 	import AppointmentCard from '$lib/components/agenda/AppointmentCard.svelte';
 	import AppointmentDetails from '$lib/components/agenda/AppointmentDetails.svelte';
 	import AppointmentBookingModal from '$lib/components/agenda/AppointmentBookingModal.svelte';
 	import AppointmentRescheduleModal from '$lib/components/agenda/AppointmentRescheduleModal.svelte';
+	import SeriesDetailModal from '$lib/components/agenda/SeriesDetailModal.svelte';
+	import SeriesEditFutureModal from '$lib/components/agenda/SeriesEditFutureModal.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -30,7 +40,7 @@
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import { getStoredPermissions, resolveUserErrorMessage } from '$lib/rbac/permissions';
 	import type { Patient } from '$lib/types/patient';
-	import type { Appointment } from '$lib/types/scheduling';
+	import type { Appointment, AppointmentSeries } from '$lib/types/scheduling';
 
 	interface Props {
 		patient: Patient;
@@ -50,6 +60,7 @@
 	let history = $state<Appointment[]>([]);
 
 	let selected = $state<Appointment | null>(null);
+	let selectedSeries = $state<AppointmentSeries | null>(null);
 	let detailsOpen = $state(false);
 	let detailsLoading = $state(false);
 	let detailsError = $state('');
@@ -57,7 +68,12 @@
 
 	let bookingOpen = $state(false);
 	let rescheduleOpen = $state(false);
+	let seriesEditOpen = $state(false);
+	let seriesDetailOpen = $state(false);
+	let seriesDetailId = $state<number | null>(null);
 	let confirmCancelOpen = $state(false);
+	let confirmCancelFutureOpen = $state(false);
+	let confirmCancelSeriesOpen = $state(false);
 	let confirmNoShowOpen = $state(false);
 	let confirmCheckInOpen = $state(false);
 
@@ -128,11 +144,14 @@
 
 	async function openDetails(appt: Appointment) {
 		selected = appt;
+		selectedSeries = null;
 		detailsOpen = true;
 		detailsError = '';
 		detailsLoading = true;
 		try {
-			selected = await getAppointment(appt.id);
+			const loaded = await loadAppointmentWithSeries(appt.id);
+			selected = loaded.appointment;
+			selectedSeries = loaded.series;
 		} catch (e) {
 			detailsError = resolveUserErrorMessage(e, 'Détail indisponible.');
 		} finally {
@@ -145,7 +164,9 @@
 		detailsLoading = true;
 		detailsError = '';
 		try {
-			selected = await getAppointment(selected.id);
+			const loaded = await loadAppointmentWithSeries(selected.id);
+			selected = loaded.appointment;
+			selectedSeries = loaded.series;
 			await loadAppointments();
 		} catch (e) {
 			detailsError = resolveUserErrorMessage(e, 'Actualisation impossible.');
@@ -162,8 +183,63 @@
 			selected = await cancelAppointment(selected.id, {});
 			success = 'Rendez-vous annulé.';
 			await loadAppointments();
+			if (selected.seriesId) {
+				const loaded = await loadAppointmentWithSeries(selected.id);
+				selectedSeries = loaded.series;
+			}
 		} catch (e) {
 			detailsError = resolveUserErrorMessage(e, 'Annulation impossible.');
+		} finally {
+			acting = null;
+		}
+	}
+
+	async function doCancelFuture() {
+		if (!selected?.seriesId || !selectedSeries) return;
+		acting = 'cancel-future';
+		detailsError = '';
+		try {
+			selectedSeries = await cancelSeriesFromAppointmentForward(
+				selected.seriesId,
+				selectedSeries.version,
+				selected.id
+			);
+			success = 'Occurrences futures annulées.';
+			await refreshSelected();
+		} catch (e) {
+			if (isSeriesOccConflict(e)) {
+				detailsError =
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
+					SERIES_OCC_CONFLICT_FALLBACK;
+				await refreshSelected();
+			} else {
+				detailsError = resolveUserErrorMessage(e, 'Annulation future impossible.');
+			}
+		} finally {
+			acting = null;
+		}
+	}
+
+	async function doCancelSeries() {
+		if (!selected?.seriesId || !selectedSeries) return;
+		acting = 'cancel-series';
+		detailsError = '';
+		try {
+			selectedSeries = await cancelEntireAppointmentSeries(
+				selected.seriesId,
+				selectedSeries.version
+			);
+			success = 'Série entièrement annulée.';
+			await refreshSelected();
+		} catch (e) {
+			if (isSeriesOccConflict(e)) {
+				detailsError =
+					resolveUserErrorMessage(e, SERIES_OCC_CONFLICT_FALLBACK) ||
+					SERIES_OCC_CONFLICT_FALLBACK;
+				await refreshSelected();
+			} else {
+				detailsError = resolveUserErrorMessage(e, 'Annulation de série impossible.');
+			}
 		} finally {
 			acting = null;
 		}
@@ -190,9 +266,8 @@
 		detailsError = '';
 		try {
 			await checkInAppointment(selected.id, { identityConfirmed: true });
-			selected = await getAppointment(selected.id);
+			await refreshSelected();
 			success = 'Check-in effectué — patient en file d’attente.';
-			await loadAppointments();
 		} catch (e) {
 			detailsError = resolveUserErrorMessage(e, 'Check-in impossible.');
 		} finally {
@@ -297,6 +372,7 @@
 	<AppointmentDetails
 		bind:open={detailsOpen}
 		appointment={selected}
+		series={selectedSeries}
 		loading={detailsLoading}
 		error={detailsError}
 		{permissions}
@@ -307,7 +383,15 @@
 		}}
 		onrefresh={() => void refreshSelected()}
 		onreschedule={() => (rescheduleOpen = true)}
+		onrescheduleFuture={() => (seriesEditOpen = true)}
 		oncancel={() => (confirmCancelOpen = true)}
+		oncancelFuture={() => (confirmCancelFutureOpen = true)}
+		oncancelSeries={() => (confirmCancelSeriesOpen = true)}
+		onviewSeries={() => {
+			if (!selected?.seriesId) return;
+			seriesDetailId = selected.seriesId;
+			seriesDetailOpen = true;
+		}}
 		onnoshow={() => (confirmNoShowOpen = true)}
 		oncheckin={() => (confirmCheckInOpen = true)}
 	/>
@@ -321,6 +405,12 @@
 				success = 'Rendez-vous créé.';
 				await loadAppointments();
 			}}
+			onSeriesSuccess={async (series) => {
+				success = `Série #${series.id} créée (${series.occurrences.length} occurrences).`;
+				await loadAppointments();
+				seriesDetailId = series.id;
+				seriesDetailOpen = true;
+			}}
 		/>
 	{/if}
 
@@ -330,16 +420,44 @@
 		onsuccess={async (updated) => {
 			selected = updated;
 			success = 'Rendez-vous reporté.';
-			await loadAppointments();
+			await refreshSelected();
 		}}
 	/>
 
+	<SeriesEditFutureModal
+		bind:open={seriesEditOpen}
+		appointment={selected}
+		onsuccess={async () => {
+			success = 'Série mise à jour (cette occurrence et suivantes).';
+			await refreshSelected();
+		}}
+		onconflict={() => void refreshSelected()}
+	/>
+
+	<SeriesDetailModal bind:open={seriesDetailOpen} seriesId={seriesDetailId} />
+
 	<ConfirmDialog
 		bind:open={confirmCancelOpen}
-		title="Annuler le rendez-vous ?"
+		title="Annuler ce rendez-vous ?"
 		confirmLabel="Annuler le RDV"
 		danger={true}
 		onconfirm={() => void doCancel()}
+	/>
+	<ConfirmDialog
+		bind:open={confirmCancelFutureOpen}
+		title="Annuler cette occurrence et les suivantes ?"
+		description="Toutes les occurrences planifiées à partir de celle-ci seront annulées. Les occurrences passées / opérationnelles restent intactes."
+		confirmLabel="Annuler le futur"
+		danger={true}
+		onconfirm={() => void doCancelFuture()}
+	/>
+	<ConfirmDialog
+		bind:open={confirmCancelSeriesOpen}
+		title="Annuler toute la série ?"
+		description="Action destructive : toutes les occurrences encore planifiées de la série seront annulées."
+		confirmLabel="Annuler la série"
+		danger={true}
+		onconfirm={() => void doCancelSeries()}
 	/>
 	<ConfirmDialog
 		bind:open={confirmNoShowOpen}

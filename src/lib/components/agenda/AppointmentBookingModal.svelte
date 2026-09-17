@@ -3,7 +3,7 @@
 	import { getPatients } from '$lib/api/patients';
 	import { listOrganizationServices } from '$lib/api/organization';
 	import { listStaff } from '$lib/api/staff';
-	import { bookAppointment, getAvailability, listAppointmentTypes } from '$lib/api/appointments';
+	import { bookAppointment, createAppointmentSeries, getAvailability, listAppointmentTypes } from '$lib/api/appointments';
 	import {
 		AGENDA_TIMEZONE,
 		buildBookPayload,
@@ -15,6 +15,13 @@
 		toRfc3339,
 		zonedLocalToUtc
 	} from '$lib/components/agenda/state';
+	import {
+		SERIES_WEEKDAY_OPTIONS,
+		buildCreateSeriesPayload,
+		formatSeriesRecurrenceSummary,
+		goWeekdayFromIso,
+		validateRecurringCreateInput
+	} from '$lib/components/agenda/series';
 	import AvailabilityPicker from './AvailabilityPicker.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -27,7 +34,12 @@
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import type { Patient } from '$lib/types/patient';
 	import type { OrganizationService } from '$lib/types/organization';
-	import type { Appointment, AppointmentType, AvailabilitySlot } from '$lib/types/scheduling';
+	import type {
+		Appointment,
+		AppointmentSeries,
+		AppointmentType,
+		AvailabilitySlot
+	} from '$lib/types/scheduling';
 	import { eligibleServices } from '$lib/components/organization/state';
 	import { resolveUserErrorMessage } from '$lib/rbac/permissions';
 	import axios from 'axios';
@@ -39,6 +51,7 @@
 		initialPatient?: Patient | null;
 		onclose?: () => void;
 		onsuccess?: (appt: Appointment) => void;
+		onSeriesSuccess?: (series: AppointmentSeries) => void;
 	}
 
 	let {
@@ -46,13 +59,15 @@
 		permissions = [],
 		initialPatient = null,
 		onclose,
-		onsuccess
+		onsuccess,
+		onSeriesSuccess
 	}: Props = $props();
 
 	let step = $state(1);
 	let error = $state('');
 	let conflict = $state(false);
 	let submitting = $state(false);
+	let bookingMode = $state<'single' | 'recurring'>('single');
 
 	let patientQuery = $state('');
 	let patientResults = $state<Patient[]>([]);
@@ -77,9 +92,32 @@
 	let idempotencyKey = $state('');
 	let availSeq = 0;
 
+	let seriesWeekdays = $state<number[]>([]);
+	let seriesInterval = $state('1');
+	let seriesEndMode = $state<'count' | 'until'>('count');
+	let seriesCount = $state('4');
+	let seriesUntilLocal = $state('');
+
 	const consultationServices = $derived(eligibleServices(services, 'consultation'));
 	const selectedType = $derived(types.find((t) => String(t.id) === typeId) ?? null);
 	const canStaff = $derived(canListStaffForAgenda(permissions));
+	const recurrencePreview = $derived.by(() => {
+		if (bookingMode !== 'recurring' || !selectedSlot) return '';
+		const intervalWeeks = Number(seriesInterval) || 1;
+		const count = Number(seriesCount) || 1;
+		return formatSeriesRecurrenceSummary({
+			freq: 'WEEKLY',
+			intervalWeeks,
+			byWeekdays: seriesWeekdays,
+			count: seriesEndMode === 'count' ? count : null,
+			until:
+				seriesEndMode === 'until' && seriesUntilLocal
+					? `${seriesUntilLocal}T23:59:59.000Z`
+					: null,
+			timezone: AGENDA_TIMEZONE,
+			anchorStartAt: selectedSlot.startAt
+		});
+	});
 
 	$effect(() => {
 		if (!open) return;
@@ -90,6 +128,7 @@
 		error = '';
 		conflict = false;
 		step = 1;
+		bookingMode = 'single';
 		patientLocked = Boolean(initialPatient?.id);
 		selectedPatient = initialPatient ?? null;
 		patientQuery = initialPatient ? `${initialPatient.prenoms} ${initialPatient.nom}`.trim() : '';
@@ -101,6 +140,11 @@
 		reason = '';
 		slots = [];
 		selectedSlot = null;
+		seriesWeekdays = [];
+		seriesInterval = '1';
+		seriesEndMode = 'count';
+		seriesCount = '4';
+		seriesUntilLocal = '';
 		idempotencyKey = newIdempotencyKey();
 		const today = startOfZonedDay(new Date());
 		const p = new Intl.DateTimeFormat('en-CA', {
@@ -114,6 +158,21 @@
 			services = await listOrganizationServices(true);
 		} catch (e) {
 			error = resolveUserErrorMessage(e, 'Impossible de charger les services.');
+		}
+	}
+
+	function toggleWeekday(wd: number) {
+		if (seriesWeekdays.includes(wd)) {
+			seriesWeekdays = seriesWeekdays.filter((x) => x !== wd);
+		} else {
+			seriesWeekdays = [...seriesWeekdays, wd].sort((a, b) => a - b);
+		}
+	}
+
+	function onBookingModeChange(mode: 'single' | 'recurring') {
+		bookingMode = mode;
+		if (mode === 'recurring') {
+			practitionerMode = 'specific';
 		}
 	}
 
@@ -189,7 +248,9 @@
 				to: toRfc3339(to),
 				appointmentTypeId: Number(typeId),
 				practitionerId:
-					practitionerMode === 'specific' && practitionerId ? Number(practitionerId) : undefined
+					bookingMode === 'recurring' || (practitionerMode === 'specific' && practitionerId)
+						? Number(practitionerId)
+						: undefined
 			});
 			if (seq !== availSeq) return;
 			slots = res.slots ?? [];
@@ -203,6 +264,11 @@
 	}
 
 	function goAvailability() {
+		if (bookingMode === 'recurring' && dateLocal && seriesWeekdays.length === 0) {
+			const [y, m, d] = dateLocal.split('-').map(Number);
+			const noon = zonedLocalToUtc(y, m, d, 12, 0, 0, AGENDA_TIMEZONE);
+			seriesWeekdays = [goWeekdayFromIso(noon.toISOString())];
+		}
 		step = 2;
 		void loadAvailability();
 	}
@@ -213,6 +279,47 @@
 		error = '';
 		conflict = false;
 		try {
+			if (bookingMode === 'recurring') {
+				const pracId = selectedSlot.practitionerId;
+				let untilIso: string | undefined;
+				if (seriesEndMode === 'until' && seriesUntilLocal) {
+					const [y, m, d] = seriesUntilLocal.split('-').map(Number);
+					untilIso = toRfc3339(zonedLocalToUtc(y, m, d, 23, 59, 59, AGENDA_TIMEZONE));
+				}
+				const validationError = validateRecurringCreateInput({
+					byWeekdays: seriesWeekdays,
+					intervalWeeks: Number(seriesInterval) || 1,
+					endMode: seriesEndMode,
+					count: Number(seriesCount) || 0,
+					untilLocal: seriesUntilLocal,
+					anchorStartAt: selectedSlot.startAt,
+					practitionerId: pracId
+				});
+				if (validationError) {
+					error = validationError;
+					return;
+				}
+				const payload = buildCreateSeriesPayload({
+					patientId: selectedPatient.id,
+					serviceId: Number(serviceId),
+					practitionerId: pracId,
+					appointmentTypeId: Number(typeId),
+					intervalWeeks: Number(seriesInterval) || 1,
+					byWeekdays: seriesWeekdays,
+					endMode: seriesEndMode,
+					count: Number(seriesCount) || 1,
+					untilIso,
+					timezone: AGENDA_TIMEZONE,
+					anchorStartAt: selectedSlot.startAt,
+					idempotencyKey
+				});
+				const created = await createAppointmentSeries(payload, { idempotencyKey });
+				onSeriesSuccess?.(created);
+				open = false;
+				onclose?.();
+				return;
+			}
+
 			const payload = buildBookPayload({
 				patientId: selectedPatient.id,
 				serviceId: Number(serviceId),
@@ -263,6 +370,31 @@
 
 		{#if step === 1}
 			<FormSection title="Patient & critères" columns={1}>
+				<FormField label="Type de réservation" required>
+					<div class="flex flex-wrap gap-3 text-sm" data-testid="agenda-book-mode">
+						<label class="inline-flex items-center gap-2">
+							<input
+								type="radio"
+								name="book-mode"
+								checked={bookingMode === 'single'}
+								onchange={() => onBookingModeChange('single')}
+								data-testid="agenda-book-mode-single"
+							/>
+							Rendez-vous unique
+						</label>
+						<label class="inline-flex items-center gap-2">
+							<input
+								type="radio"
+								name="book-mode"
+								checked={bookingMode === 'recurring'}
+								onchange={() => onBookingModeChange('recurring')}
+								data-testid="agenda-book-mode-recurring"
+							/>
+							Série récurrente
+						</label>
+					</div>
+				</FormField>
+
 				<FormField label="Patient" required>
 					{#if patientLocked && selectedPatient}
 						<p
@@ -355,28 +487,30 @@
 
 				<FormField label="Praticien">
 					<div class="flex flex-wrap gap-3 text-sm">
+						{#if bookingMode === 'single'}
+							<label class="inline-flex items-center gap-2">
+								<input
+									type="radio"
+									name="prac-mode"
+									checked={practitionerMode === 'any'}
+									onchange={() => (practitionerMode = 'any')}
+									data-testid="agenda-prac-any"
+								/>
+								Premier disponible
+							</label>
+						{/if}
 						<label class="inline-flex items-center gap-2">
 							<input
 								type="radio"
 								name="prac-mode"
-								checked={practitionerMode === 'any'}
-								onchange={() => (practitionerMode = 'any')}
-								data-testid="agenda-prac-any"
-							/>
-							Premier disponible
-						</label>
-						<label class="inline-flex items-center gap-2">
-							<input
-								type="radio"
-								name="prac-mode"
-								checked={practitionerMode === 'specific'}
+								checked={practitionerMode === 'specific' || bookingMode === 'recurring'}
 								onchange={() => (practitionerMode = 'specific')}
 								data-testid="agenda-prac-specific"
 							/>
-							Praticien précis
+							Praticien précis{bookingMode === 'recurring' ? ' (requis)' : ''}
 						</label>
 					</div>
-					{#if practitionerMode === 'specific'}
+					{#if practitionerMode === 'specific' || bookingMode === 'recurring'}
 						{#if canStaff && staffOptions.length}
 							<Select
 								class="mt-2"
@@ -399,6 +533,61 @@
 					{/if}
 				</FormField>
 
+				{#if bookingMode === 'recurring'}
+					<FormField label="Jours de récurrence" required>
+						<div class="flex flex-wrap gap-2" data-testid="agenda-series-weekdays">
+							{#each SERIES_WEEKDAY_OPTIONS as wd (wd.value)}
+								<label
+									class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs {seriesWeekdays.includes(
+										wd.value
+									)
+										? 'border-primary bg-blue-50 text-primary'
+										: 'border-border text-slate-700'}"
+								>
+									<input
+										type="checkbox"
+										class="sr-only"
+										checked={seriesWeekdays.includes(wd.value)}
+										onchange={() => toggleWeekday(wd.value)}
+									/>
+									{wd.short}
+								</label>
+							{/each}
+						</div>
+					</FormField>
+					<div class="grid gap-3 sm:grid-cols-2">
+						<FormField label="Intervalle (semaines)" required>
+							<Input
+								type="number"
+								bind:value={seriesInterval}
+								data-testid="agenda-series-interval"
+							/>
+						</FormField>
+						<FormField label="Fin de série" required>
+							<Select bind:value={seriesEndMode} data-testid="agenda-series-end-mode">
+								<option value="count">Nombre d’occurrences</option>
+								<option value="until">Date de fin (until)</option>
+							</Select>
+						</FormField>
+					</div>
+					{#if seriesEndMode === 'count'}
+						<FormField label="Nombre d’occurrences (1–52)" required>
+							<Input
+								type="number"
+								bind:value={seriesCount}
+								data-testid="agenda-series-count"
+							/>
+						</FormField>
+					{:else}
+						<FormField label="Jusqu’au" required>
+							<Input type="date" bind:value={seriesUntilLocal} data-testid="agenda-series-until" />
+						</FormField>
+					{/if}
+					<p class="text-xs text-slate-500">
+						Fuseau série : {AGENDA_TIMEZONE}. Le premier créneau choisi sera l’ancre de la série.
+					</p>
+				{/if}
+
 				<FormField label="Date" required>
 					<Input type="date" bind:value={dateLocal} data-testid="agenda-book-date" />
 				</FormField>
@@ -409,6 +598,14 @@
 			</FormSection>
 		{:else}
 			<FormSection title="Disponibilités" columns={1}>
+				{#if bookingMode === 'recurring' && recurrencePreview}
+					<p
+						class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700"
+						data-testid="agenda-series-preview"
+					>
+						{recurrencePreview}
+					</p>
+				{/if}
 				{#if slotsLoading && !slots.length}
 					<LoadingState label="Interrogation du moteur de disponibilité…" />
 				{:else}
@@ -443,7 +640,10 @@
 						onclick={() => void submit()}
 						loading={submitting}
 						disabled={!selectedSlot || submitting}
-						data-testid="agenda-book-submit">Confirmer la réservation</Button
+						data-testid="agenda-book-submit"
+						>{bookingMode === 'recurring'
+							? 'Créer la série'
+							: 'Confirmer la réservation'}</Button
 					>
 				{:else}
 					<Button
@@ -452,7 +652,12 @@
 							!serviceId ||
 							!typeId ||
 							!dateLocal ||
-							(practitionerMode === 'specific' && !practitionerId)}
+							((practitionerMode === 'specific' || bookingMode === 'recurring') &&
+								!practitionerId) ||
+							(bookingMode === 'recurring' &&
+								(seriesWeekdays.length === 0 ||
+									(seriesEndMode === 'count' && !seriesCount) ||
+									(seriesEndMode === 'until' && !seriesUntilLocal)))}
 						data-testid="agenda-book-next">Voir les disponibilités</Button
 					>
 				{/if}

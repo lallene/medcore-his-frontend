@@ -29,6 +29,101 @@ export interface Appointment {
 	durationMinutes?: number;
 	punctuality?: string;
 	hasActiveTicket: boolean;
+	/** LOT 23O — present when occurrence belongs to a recurring series. */
+	seriesId?: number | null;
+	seriesOccurrenceIndex?: number | null;
+}
+
+/** LOT 23O — series occurrence classification (backend-derived). */
+export type SeriesOccurrenceKind =
+	| 'RULE'
+	| 'EXCEPTION_RESCHEDULED'
+	| 'EXCEPTION_CANCELLED'
+	| 'OPERATIONAL';
+
+export type AppointmentSeriesStatus = 'ACTIVE' | 'CANCELLED';
+
+export interface SeriesOccurrence {
+	id: number;
+	index: number;
+	scheduledAt: string;
+	scheduledEndAt: string;
+	status: AppointmentStatus | string;
+	practitionerId: number;
+	kind: SeriesOccurrenceKind;
+}
+
+export interface AppointmentSeries {
+	id: number;
+	patientId: number;
+	serviceId: number;
+	practitionerId: number;
+	appointmentTypeId?: number | null;
+	freq: string;
+	intervalWeeks: number;
+	byWeekdays: number[];
+	count?: number | null;
+	until?: string | null;
+	timezone: string;
+	anchorStartAt: string;
+	durationMinutes: number;
+	status: AppointmentSeriesStatus;
+	version: number;
+	createdAt: string;
+	updatedAt: string;
+	occurrences: SeriesOccurrence[];
+}
+
+export interface SeriesOccurrencesResponse {
+	seriesId: number;
+	status: AppointmentSeriesStatus;
+	version: number;
+	items: SeriesOccurrence[];
+}
+
+export interface CreateAppointmentSeriesRequest {
+	patientId: number;
+	serviceId: number;
+	practitionerId: number;
+	appointmentTypeId?: number;
+	freq: 'WEEKLY';
+	intervalWeeks: number;
+	byWeekdays: number[];
+	count?: number;
+	until?: string;
+	timezone: string;
+	anchorStartAt: string;
+	idempotencyKey?: string;
+}
+
+export interface UpdateAppointmentSeriesRequest {
+	expectedVersion: number;
+	fromOccurrenceIndex?: number;
+	fromAppointmentId?: number;
+	practitionerId?: number;
+	appointmentTypeId?: number;
+	intervalWeeks?: number;
+	byWeekdays?: number[];
+	count?: number;
+	until?: string;
+	timezone?: string;
+	anchorStartAt?: string;
+	reason?: string;
+	idempotencyKey?: string;
+}
+
+export interface CancelAppointmentSeriesRequest {
+	expectedVersion: number;
+	reason?: string;
+	idempotencyKey?: string;
+}
+
+export interface CancelAppointmentSeriesFutureRequest {
+	expectedVersion: number;
+	fromOccurrenceIndex?: number;
+	fromAppointmentId?: number;
+	reason?: string;
+	idempotencyKey?: string;
 }
 
 export interface AppointmentListResponse {

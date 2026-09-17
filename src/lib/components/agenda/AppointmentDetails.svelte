@@ -7,16 +7,22 @@
 		formatAgendaDateTime,
 		isFinanceBlockedMessage
 	} from '$lib/components/agenda/state';
+	import {
+		formatSeriesRecurrenceSummary,
+		isSeriesAppointment,
+		seriesActionVisibility
+	} from '$lib/components/agenda/series';
 	import AppointmentStatusBadge from './AppointmentStatusBadge.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import type { Appointment } from '$lib/types/scheduling';
+	import type { Appointment, AppointmentSeries } from '$lib/types/scheduling';
 
 	interface Props {
 		open?: boolean;
 		appointment: Appointment | null;
+		series?: AppointmentSeries | null;
 		loading?: boolean;
 		error?: string;
 		permissions?: string[];
@@ -25,7 +31,11 @@
 		showOpenPatient?: boolean;
 		onclose?: () => void;
 		onreschedule?: () => void;
+		onrescheduleFuture?: () => void;
 		oncancel?: () => void;
+		oncancelFuture?: () => void;
+		oncancelSeries?: () => void;
+		onviewSeries?: () => void;
 		onnoshow?: () => void;
 		oncheckin?: () => void;
 		onrefresh?: () => void;
@@ -34,6 +44,7 @@
 	let {
 		open = $bindable(false),
 		appointment,
+		series = null,
 		loading = false,
 		error = '',
 		permissions = [],
@@ -41,7 +52,11 @@
 		showOpenPatient = true,
 		onclose,
 		onreschedule,
+		onrescheduleFuture,
 		oncancel,
+		oncancelFuture,
+		oncancelSeries,
+		onviewSeries,
 		onnoshow,
 		oncheckin,
 		onrefresh
@@ -50,8 +65,14 @@
 	const actions = $derived(
 		appointment ? appointmentActionVisibility(appointment, permissions) : null
 	);
+	const seriesActions = $derived(
+		appointment
+			? seriesActionVisibility(appointment, permissions, series?.status ?? null)
+			: null
+	);
 	const financeBlocked = $derived(isFinanceBlockedMessage(error));
 	const showPatientLink = $derived(Boolean(actions?.openPatient && showOpenPatient));
+	const inSeries = $derived(isSeriesAppointment(appointment));
 </script>
 
 <Modal
@@ -80,10 +101,28 @@
 
 			<div class="flex flex-wrap items-center gap-2">
 				<AppointmentStatusBadge status={appointment.status} />
+				{#if inSeries}
+					<span
+						class="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-800"
+						data-testid="agenda-series-badge"
+					>
+						Récurrente #{appointment.seriesId}
+						{#if appointment.seriesOccurrenceIndex}
+							· occ. {appointment.seriesOccurrenceIndex}
+						{/if}
+					</span>
+				{/if}
 				{#if appointment.queueTicketId}
 					<span class="text-xs text-slate-500">Ticket file #{appointment.queueTicketId}</span>
 				{/if}
 			</div>
+
+			{#if inSeries && series}
+				<p class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700" data-testid="agenda-series-inline-summary">
+					{formatSeriesRecurrenceSummary(series)}
+					· {series.status === 'ACTIVE' ? 'Active' : 'Annulée'}
+				</p>
+			{/if}
 
 			<dl class="grid gap-3 text-sm sm:grid-cols-2">
 				<div>
@@ -126,7 +165,7 @@
 	{/if}
 
 	{#snippet footer()}
-		{#if appointment && actions}
+		{#if appointment && actions && seriesActions}
 			<div class="flex w-full flex-wrap justify-between gap-2">
 				<div class="flex flex-wrap gap-2">
 					{#if showPatientLink}
@@ -137,25 +176,54 @@
 							>Ouvrir patient</a
 						>
 					{/if}
+					{#if seriesActions.viewSeries && onviewSeries}
+						<Button variant="ghost" onclick={onviewSeries} data-testid="agenda-action-view-series"
+							>Voir la série</Button
+						>
+					{/if}
 					{#if onrefresh}
 						<Button variant="ghost" onclick={onrefresh}>Actualiser</Button>
 					{/if}
 				</div>
 				<div class="flex flex-wrap gap-2">
-					{#if actions.reschedule}
+					{#if seriesActions.editThis && onreschedule}
 						<Button
 							variant="secondary"
 							onclick={onreschedule}
 							disabled={acting !== null}
-							data-testid="agenda-action-reschedule">Reporter</Button
+							data-testid="agenda-action-reschedule">Reporter ce RDV</Button
 						>
 					{/if}
-					{#if actions.cancel}
+					{#if seriesActions.editThisAndFuture && onrescheduleFuture}
+						<Button
+							variant="secondary"
+							onclick={onrescheduleFuture}
+							disabled={acting !== null}
+							data-testid="agenda-action-reschedule-future">Modifier ce RDV et suivants</Button
+						>
+					{/if}
+					{#if seriesActions.cancelThis && oncancel}
 						<Button
 							variant="ghost"
 							onclick={oncancel}
 							disabled={acting !== null}
-							data-testid="agenda-action-cancel">Annuler</Button
+							data-testid="agenda-action-cancel">Annuler ce RDV</Button
+						>
+					{/if}
+					{#if seriesActions.cancelThisAndFuture && oncancelFuture}
+						<Button
+							variant="ghost"
+							onclick={oncancelFuture}
+							disabled={acting !== null}
+							data-testid="agenda-action-cancel-future">Annuler ce RDV et suivants</Button
+						>
+					{/if}
+					{#if seriesActions.cancelEntireSeries && oncancelSeries}
+						<Button
+							variant="ghost"
+							onclick={oncancelSeries}
+							disabled={acting !== null}
+							data-testid="agenda-action-cancel-series">Annuler toute la série</Button
 						>
 					{/if}
 					{#if actions.noShow}

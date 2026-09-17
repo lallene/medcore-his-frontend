@@ -45,6 +45,11 @@
 					· {appointment.appointmentTypeName}
 				{/if}
 			</p>
+			{#if appointment.seriesId}
+				<p class="mt-1 text-xs font-medium text-indigo-700" data-testid="agenda-card-series">
+					Récurrente · série #{appointment.seriesId}
+				</p>
+			{/if}
 			{#if appointment.reason}
 				<p class="mt-1 line-clamp-1 text-xs text-slate-500">{appointment.reason}</p>
 			{/if}
