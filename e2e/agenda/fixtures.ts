@@ -462,52 +462,105 @@ export async function pickPatient(page: Page, patient: QaPatient) {
 }
 
 export async function openAppointmentOnAgenda(page: Page, id: number, scheduledAt: string) {
-	const waitAgendaLoad = async () => {
-		await page
-			.waitForResponse(
-				(r) => r.url().includes('/api/appointments') && r.request().method() === 'GET' && r.ok(),
-				{ timeout: 20_000 }
-			)
-			.catch(() => undefined);
-		await expect(page.getByTestId('agenda-day-view')).toBeVisible({ timeout: 20_000 });
-	};
-	const tryCard = async () => {
-		const card = page.locator(`[data-appointment-id="${id}"]`).first();
-		if (await card.count()) {
-			await card.click();
-			await expect(page.getByTestId('agenda-appointment-details')).toBeVisible({
-				timeout: 15_000
-			});
-			return true;
+	const appointmentsListGet = (r: {
+		url: () => string;
+		request: () => { method: () => string };
+		ok: () => boolean;
+	}) => {
+		const url = r.url();
+		if (!url.includes('/api/appointments') || r.request().method() !== 'GET' || !r.ok())
+			return false;
+		// List endpoint only (ignore GET /api/appointments/:id).
+		try {
+			const path = new URL(url).pathname.replace(/\/$/, '');
+			return path.endsWith('/appointments');
+		} catch {
+			return /\/api\/appointments(\?|$)/.test(url);
 		}
-		return false;
 	};
 
+	const loadingLabel = page.getByText('Chargement de l’agenda…');
+
+	/** Wait until Agenda finished loading: day view mounted and loading label gone. */
+	const waitAgendaSettled = async () => {
+		await expect
+			.poll(
+				async () => {
+					const loading = await loadingLabel.count();
+					const dayView = await page.getByTestId('agenda-day-view').count();
+					return loading === 0 && dayView > 0;
+				},
+				{ timeout: 20_000 }
+			)
+			.toBe(true);
+		await expect(page.getByTestId('agenda-day-view')).toBeVisible();
+	};
+
+	/**
+	 * Trigger a navigation action that always issues a list GET.
+	 * Register waitForResponse before the click — no swallow-all catch.
+	 */
+	const navigateAndSettle = async (action: () => Promise<void>) => {
+		const responsePromise = page.waitForResponse(appointmentsListGet, { timeout: 20_000 });
+		await action();
+		await responsePromise;
+		await waitAgendaSettled();
+	};
+
+	/**
+	 * After the day view has settled: wait briefly for the target card.
+	 * Returns false when the settled day simply does not contain the appointment
+	 * (genuine miss / wrong day), not while Agenda is still loading.
+	 */
+	const tryCard = async () => {
+		const card = page.locator(`[data-appointment-id="${id}"]`).first();
+		const appeared = await card
+			.waitFor({ state: 'visible', timeout: 3_000 })
+			.then(() => true)
+			.catch(() => false);
+		if (!appeared) return false;
+		await card.click();
+		await expect(page.getByTestId('agenda-appointment-details')).toBeVisible({
+			timeout: 15_000
+		});
+		return true;
+	};
+
+	// Clearing status may no-op (already "") and skip a fetch — settle via DOM only.
 	await page.getByTestId('agenda-filter-status').selectOption('');
-	await page.getByTestId('agenda-today').click();
-	await waitAgendaLoad();
+	await waitAgendaSettled();
+
+	await navigateAndSettle(async () => {
+		await page.getByTestId('agenda-today').click();
+	});
 
 	const days = parisDayDelta(new Date().toISOString(), scheduledAt);
 	if (days > 0) {
 		for (let i = 0; i < days; i++) {
-			await page.getByTestId('agenda-next').click();
-			await waitAgendaLoad();
+			await navigateAndSettle(async () => {
+				await page.getByTestId('agenda-next').click();
+			});
 		}
 	} else if (days < 0) {
 		for (let i = 0; i < -days; i++) {
-			await page.getByTestId('agenda-prev').click();
-			await waitAgendaLoad();
+			await navigateAndSettle(async () => {
+				await page.getByTestId('agenda-prev').click();
+			});
 		}
 	}
 	if (await tryCard()) return;
 
 	// Small drift buffer (±1 day) if TZ edge cases shift the card
 	for (const dir of ['next', 'prev'] as const) {
-		await page.getByTestId(`agenda-${dir}`).click();
-		await waitAgendaLoad();
+		await navigateAndSettle(async () => {
+			await page.getByTestId(`agenda-${dir}`).click();
+		});
 		if (await tryCard()) return;
-		await page.getByTestId(dir === 'next' ? 'agenda-prev' : 'agenda-next').click();
-		await waitAgendaLoad();
+		await navigateAndSettle(async () => {
+			await page.getByTestId(dir === 'next' ? 'agenda-prev' : 'agenda-next').click();
+		});
+		// Critical: after restoring the original day, check the settled view again.
+		if (await tryCard()) return;
 	}
 
 	throw new Error(
