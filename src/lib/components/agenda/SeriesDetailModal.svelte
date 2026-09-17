@@ -109,6 +109,8 @@
 	{/if}
 
 	{#snippet footer()}
-		<Button variant="ghost" onclick={() => (open = false)}>Fermer</Button>
+		<Button variant="ghost" data-testid="agenda-series-detail-close" onclick={() => (open = false)}
+			>Fermer</Button
+		>
 	{/snippet}
 </Modal>

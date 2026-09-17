@@ -655,8 +655,7 @@
 							((practitionerMode === 'specific' || bookingMode === 'recurring') &&
 								!practitionerId) ||
 							(bookingMode === 'recurring' &&
-								(seriesWeekdays.length === 0 ||
-									(seriesEndMode === 'count' && !seriesCount) ||
+								((seriesEndMode === 'count' && !seriesCount) ||
 									(seriesEndMode === 'until' && !seriesUntilLocal)))}
 						data-testid="agenda-book-next">Voir les disponibilités</Button
 					>

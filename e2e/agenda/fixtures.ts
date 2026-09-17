@@ -514,3 +514,124 @@ export async function openAppointmentOnAgenda(page: Page, id: number, scheduledA
 		`appointment ${id} not found on agenda day views (scheduledAt=${scheduledAt} paris=${parisDate(scheduledAt)} delta=${days})`
 	);
 }
+
+/** Go time.Weekday (0=Sunday … 6=Saturday) in agenda timezone — matches series create API. */
+export function goWeekdayFromIso(iso: string, timeZone = AGENDA_TZ): number {
+	const wd = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(new Date(iso));
+	const map: Record<string, number> = {
+		Sun: 0,
+		Mon: 1,
+		Tue: 2,
+		Wed: 3,
+		Thu: 4,
+		Fri: 5,
+		Sat: 6
+	};
+	return map[wd] ?? new Date(iso).getUTCDay();
+}
+
+export type CreatedSeries = {
+	id: number;
+	version: number;
+	status: string;
+	patientId: number;
+	occurrences: Array<{
+		id: number;
+		index: number;
+		scheduledAt: string;
+		status: string;
+		kind?: string;
+	}>;
+};
+
+/**
+ * Create a short weekly series on the first free availability slot that materializes.
+ * Retries across slots (same pattern as bookOnFreeSlot).
+ */
+export async function createSeriesOnFreeSlot(
+	request: APIRequestContext,
+	token: string,
+	opts: {
+		patientId: number;
+		serviceId: number;
+		appointmentTypeId: number;
+		count?: number;
+		from?: string;
+		to?: string;
+		practitionerId?: number;
+		reasonTag?: string;
+	}
+): Promise<CreatedSeries> {
+	const count = opts.count ?? 2;
+	const slots = await listSlots(request, token, {
+		serviceId: opts.serviceId,
+		appointmentTypeId: opts.appointmentTypeId,
+		practitionerId: opts.practitionerId,
+		from: opts.from,
+		to: opts.to
+	});
+	if (!slots.length) throw new Error('availability slots empty for series');
+	let lastText = '';
+	for (const slot of slots.slice(0, 40)) {
+		const key = `qa-series-${opts.reasonTag ?? 'x'}-${Date.now()}-${slot.practitionerId}-${slot.startAt}`;
+		const body = {
+			patientId: opts.patientId,
+			serviceId: opts.serviceId,
+			practitionerId: slot.practitionerId,
+			appointmentTypeId: opts.appointmentTypeId,
+			freq: 'WEEKLY',
+			intervalWeeks: 1,
+			byWeekdays: [goWeekdayFromIso(slot.startAt)],
+			count,
+			timezone: AGENDA_TZ,
+			anchorStartAt: slot.startAt,
+			idempotencyKey: key
+		};
+		const res = await request.post(`${api}/api/appointment-series`, {
+			headers: { ...bearer(token), 'Idempotency-Key': key },
+			data: body
+		});
+		lastText = await res.text();
+		if ([200, 201].includes(res.status())) {
+			const parsed = JSON.parse(lastText) as CreatedSeries & { data?: CreatedSeries };
+			const series = (parsed.id != null ? parsed : parsed.data) as CreatedSeries;
+			expect(series?.id, 'series id').toBeTruthy();
+			expect(series.occurrences?.length, 'series occurrences').toBeGreaterThanOrEqual(1);
+			return series;
+		}
+	}
+	throw new Error(`createSeriesOnFreeSlot failed after retries: ${lastText}`);
+}
+
+export async function getSeries(
+	request: APIRequestContext,
+	token: string,
+	seriesId: number
+): Promise<CreatedSeries> {
+	const res = await request.get(`${api}/api/appointment-series/${seriesId}`, {
+		headers: bearer(token)
+	});
+	expect(res.ok(), await res.text()).toBeTruthy();
+	return (await res.json()) as CreatedSeries;
+}
+
+export async function cancelEntireSeries(
+	request: APIRequestContext,
+	token: string,
+	seriesId: number,
+	expectedVersion: number
+) {
+	const key = crypto.randomUUID();
+	const res = await request.post(`${api}/api/appointment-series/${seriesId}/cancel`, {
+		headers: { ...bearer(token), 'Idempotency-Key': key },
+		data: { expectedVersion, idempotencyKey: key }
+	});
+	const text = await res.text();
+	let body: unknown = null;
+	try {
+		body = JSON.parse(text);
+	} catch {
+		/* non-JSON */
+	}
+	return { status: res.status(), body, text };
+}

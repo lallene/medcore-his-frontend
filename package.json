@@ -15,7 +15,7 @@
 		"test:e2e:smoke": "QA_SUITE=smoke playwright test",
 		"test:e2e:critical": "QA_SUITE=critical playwright test",
 		"test:e2e:full": "QA_SUITE=full playwright test",
-		"test:e2e:scheduling": "bash scripts/qa-scheduling-e2e.sh e2e/agenda/agenda.spec.ts e2e/admin/scheduling.spec.ts",
+		"test:e2e:scheduling": "bash scripts/qa-scheduling-e2e.sh e2e/agenda/agenda.spec.ts e2e/agenda/series.spec.ts e2e/admin/scheduling.spec.ts",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},

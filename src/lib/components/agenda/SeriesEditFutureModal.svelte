@@ -61,11 +61,13 @@
 		void loadSlots(appointment, dateLocal);
 	});
 
-	async function bootstrap(appt: Appointment) {
+	async function bootstrap(appt: Appointment, opts?: { preserveConflict?: boolean }) {
 		const seq = ++loadSeq;
 		loading = true;
-		error = '';
-		conflict = false;
+		if (!opts?.preserveConflict) {
+			error = '';
+			conflict = false;
+		}
 		selectedSlot = null;
 		slots = [];
 		idempotencyKey = newIdempotencyKey();
@@ -141,7 +143,7 @@
 					) || 'Conflit — veuillez réessayer.';
 				idempotencyKey = newIdempotencyKey();
 				onconflict?.();
-				if (appointment) await bootstrap(appointment);
+				if (appointment) await bootstrap(appointment, { preserveConflict: true });
 			} else {
 				error = resolveUserErrorMessage(e, 'Modification de série impossible.');
 			}
@@ -163,9 +165,11 @@
 	{:else}
 		<div class="space-y-4" data-testid="agenda-series-edit-future">
 			{#if error}
-				<Alert tone={conflict ? 'warning' : 'danger'} title={conflict ? 'Conflit' : 'Erreur'}
-					>{error}</Alert
-				>
+				<div data-testid={conflict ? 'agenda-series-edit-conflict' : 'agenda-series-edit-error'}>
+					<Alert tone={conflict ? 'warning' : 'danger'} title={conflict ? 'Conflit' : 'Erreur'}
+						>{error}</Alert
+					>
+				</div>
 			{/if}
 			<p class="text-sm text-slate-600">
 				Série #{series.id} · version {series.version} · à partir de l’occurrence
