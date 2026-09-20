@@ -6,6 +6,7 @@
 		Activity,
 		FileText,
 		HeartPulse,
+		Mail,
 		Phone,
 		Printer,
 		Shield,
@@ -19,6 +20,7 @@
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { PatientInsuranceView } from '$lib/types/insurance';
 	import type { Hospitalization } from '$lib/types/hospitalization';
+	import { formatPatientEmailDisplay } from '$lib/components/patients/patient-form';
 
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
 	import InfoBlock from '$lib/components/patients/InfoBlock.svelte';
@@ -154,8 +156,10 @@
 	}
 
 	function goToEditPatient(): void {
-		void goto(resolve('/patients'));
+		void goto(resolve(`/patients/${patient.id}/edit`));
 	}
+
+	const emailDisplay = $derived(formatPatientEmailDisplay(patient.email));
 </script>
 
 <div class="space-y-6">
@@ -416,6 +420,23 @@
 
 							<p class="truncate font-semibold text-slate-900">
 								{patient.telephone || '—'}
+							</p>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+						<div class="rounded-xl bg-white p-2 text-[#0E4C92] shadow-sm">
+							<Mail size={18} />
+						</div>
+
+						<div class="min-w-0">
+							<p class="text-sm text-slate-500">Email</p>
+
+							<p
+								class="truncate font-semibold text-slate-900"
+								data-testid="qa-patient-email-display"
+							>
+								{emailDisplay}
 							</p>
 						</div>
 					</div>

@@ -11,6 +11,7 @@
 		invalid?: boolean;
 		required?: boolean;
 		name?: string;
+		maxlength?: number;
 		autocomplete?: AutoFill;
 		class?: string;
 		'data-testid'?: string;
@@ -27,6 +28,7 @@
 		invalid = false,
 		required = false,
 		name = '',
+		maxlength,
 		autocomplete,
 		class: className = '',
 		'data-testid': testId,
@@ -42,6 +44,7 @@
 	{disabled}
 	{readonly}
 	{required}
+	{maxlength}
 	{autocomplete}
 	{oninput}
 	bind:value

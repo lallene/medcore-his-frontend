@@ -5,7 +5,8 @@ import type {
 	CreatePatientPayload,
 	Patient,
 	PatientListMeta,
-	PatientListResult
+	PatientListResult,
+	UpdatePatientPayload
 } from '$lib/types/patient';
 
 export async function getPatients(
@@ -39,6 +40,12 @@ export async function getPatient(id: number): Promise<Patient> {
 
 export async function createPatient(payload: CreatePatientPayload): Promise<Patient> {
 	const response = await api.post<ApiResponse<Patient>>('/api/patients', payload);
+
+	return response.data.data;
+}
+
+export async function updatePatient(id: number, payload: UpdatePatientPayload): Promise<Patient> {
+	const response = await api.put<ApiResponse<Patient>>(`/api/patients/${id}`, payload);
 
 	return response.data.data;
 }
