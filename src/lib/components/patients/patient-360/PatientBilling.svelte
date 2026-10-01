@@ -67,7 +67,8 @@
 		</div>
 		<button
 			class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
-			onclick={() => goto(resolve('/billing'))}
+			data-testid="patient-billing-open"
+			onclick={() => goto(resolve(`/billing?patientId=${patient.id}`))}
 			><ReceiptText size={16} class="inline" /> Ouvrir la facturation</button
 		>
 	</header>

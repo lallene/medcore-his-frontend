@@ -4,7 +4,12 @@
 	import { jwtDecode } from 'jwt-decode';
 	import { cancelInvoice, getInvoice, issueInvoice, payInvoice } from '$lib/api/billing';
 	import { listInsuranceReceivables } from '$lib/api/insurance-receivables';
-	import { can, formatXOF, paymentAllowed } from '$lib/components/billing/state';
+	import {
+		can,
+		formatBillingActType,
+		formatXOF,
+		paymentAllowed
+	} from '$lib/components/billing/state';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 	let invoice = $state<Invoice | null>(null);
@@ -66,30 +71,34 @@
 
 <svelte:head><title>{invoice?.number ?? 'Facture'}</title></svelte:head>
 <div class="mx-auto max-w-6xl space-y-6 p-6 print:p-0">
-	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}{#if invoice}<header
-			class="flex flex-wrap justify-between gap-4"
-		>
+	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
+	{#if invoice}<header class="flex flex-wrap justify-between gap-4" data-testid="invoice-detail">
 			<div>
 				<p class="text-sm font-bold text-blue-700">FACTURE</p>
-				<h1 class="text-3xl font-black">{invoice.number}</h1>
+				<h1 class="text-3xl font-black" data-testid="invoice-number">{invoice.number}</h1>
 				<p>{invoice.patientCode} — {invoice.patientName}</p>
-				<p class="text-sm text-slate-500">
+				<p class="text-sm text-slate-500" data-testid="invoice-status">
 					{new Date(invoice.createdAt).toLocaleString('fr-FR')} · {invoice.status}
 				</p>
 			</div>
 			<div class="flex gap-2 print:hidden">
 				{#if invoice.status === 'DRAFT' && can(permissions, 'billing.issue')}<button
 						class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+						data-testid="invoice-issue"
 						onclick={issue}
 						disabled={invoice.coveragePending}>Émettre</button
 					>{/if}{#if ['DRAFT', 'ISSUED'].includes(invoice.status) && can(permissions, 'billing.cancel')}<button
 						class="rounded-xl border border-red-300 px-4 py-2 font-bold text-red-700"
+						data-testid="invoice-cancel"
 						onclick={cancel}>Annuler</button
 					>{/if}<button class="rounded-xl border px-4 py-2" onclick={() => print()}>Imprimer</button
 				>
 			</div>
 		</header>
-		{#if invoice.coveragePending}<p class="rounded-xl bg-amber-50 p-3 font-bold text-amber-800">
+		{#if invoice.coveragePending}<p
+				class="rounded-xl bg-amber-50 p-3 font-bold text-amber-800"
+				data-testid="invoice-coverage-pending"
+			>
 				PEC en attente : la répartition financière n’est pas définitive et l’émission est bloquée.
 			</p>{/if}
 		<div class="overflow-x-auto rounded-2xl border bg-white">
@@ -104,13 +113,17 @@
 					>{#each invoice.lines ?? [] as line (line.id)}<tr class="border-t"
 							><td class="p-3"
 								><strong>{line.description}</strong><small class="block text-slate-500"
-									>{line.actType}</small
+									>{formatBillingActType(line.actType)}</small
 								></td
-							><td>{line.quantity}</td><td>{formatXOF(line.unitPrice)}</td><td
-								>{formatXOF(line.grossAmount)}</td
+							><td>{line.quantity}</td><td data-testid={`invoice-line-unit-${line.id}`}
+								>{formatXOF(line.unitPrice)}</td
+							><td data-testid={`invoice-line-gross-${line.id}`}>{formatXOF(line.grossAmount)}</td
 							><td>{line.authorizationNumber || line.coverageResolution}</td><td
+								data-testid={`invoice-line-insurance-${line.id}`}
 								>{formatXOF(line.insuranceAmount)}</td
-							><td>{formatXOF(line.patientAmount)}</td></tr
+							><td data-testid={`invoice-line-patient-${line.id}`}
+								>{formatXOF(line.patientAmount)}</td
+							></tr
 						>{/each}</tbody
 				>
 			</table>

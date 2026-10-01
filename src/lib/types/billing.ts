@@ -1,4 +1,5 @@
-export type ActType = 'CONSULTATION' | 'LABORATORY' | 'IMAGING' | 'HOSPITALIZATION' | 'MEDICATION';
+export type ActType =
+	'CONSULTATION' | 'LABORATORY' | 'IMAGING' | 'HOSPITALIZATION' | 'MEDICATION' | 'PERFORMED_ACT';
 export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELLED';
 export interface Tariff {
 	id: number;

@@ -10,6 +10,7 @@
 		ACTIVE_INVOICE_VOID_MESSAGE,
 		BASE_PRICE_HINT,
 		BASE_PRICE_LABEL,
+		PAID_INVOICE_VOID_MESSAGE,
 		actCategoryLabel,
 		canCreatePerformedActFromCatalog,
 		canVoidPerformedAct,
@@ -17,10 +18,14 @@
 		normalizeVoidReason,
 		originBadgeLabel,
 		performedActStatusLabel,
-		resolveVoidErrorMessage
+		resolveVoidErrorMessage,
+		voidConflictAllowsInvoiceCancelSuggestion
 	} from '$lib/components/performed-acts/state';
 	import { canCreatePerformedActPec } from '$lib/components/insurance/authorization-state';
+	import { canCreatePerformedActBilling } from '$lib/components/billing/state';
+	import { getActBillingStatus } from '$lib/api/billing';
 	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
+	import BillingActStatus from '$lib/components/billing/BillingActStatus.svelte';
 	import {
 		getStoredPermissions,
 		isAccessDeniedError,
@@ -47,6 +52,8 @@
 	let voidReason = $state('');
 	let voidError = $state('');
 	let voidBusy = $state(false);
+	let voidConflictInvoiceId = $state<number | null>(null);
+	let voidConflictInvoiceStatus = $state<string | null>(null);
 	let createBusy = $state(false);
 	let createError = $state('');
 	let catalogLoadError = $state('');
@@ -59,6 +66,12 @@
 	const selectedCatalog = $derived(catalogOptions.find((e) => e.id === catalogEntryId) ?? null);
 	const catalogReady = $derived(catalogOptions.length > 0 && !catalogLoadError);
 	const canOfferPec = $derived(selected ? canCreatePerformedActPec(selected, permissions) : false);
+	const canOfferBilling = $derived(
+		selected ? canCreatePerformedActBilling(selected, permissions) : false
+	);
+	const voidSuggestsCancel = $derived(
+		voidConflictAllowsInvoiceCancelSuggestion(voidConflictInvoiceStatus)
+	);
 
 	function openPerformedActPec() {
 		if (!selected || !canOfferPec) return;
@@ -66,6 +79,13 @@
 			resolve(
 				`/insurance/authorizations?patientId=${patientId}&referenceType=PERFORMED_ACT&referenceId=${selected.id}`
 			)
+		);
+	}
+
+	function openPerformedActBilling() {
+		if (!selected || !canOfferBilling) return;
+		void goto(
+			resolve(`/billing?patientId=${patientId}&actType=PERFORMED_ACT&referenceId=${selected.id}`)
 		);
 	}
 
@@ -153,6 +173,8 @@
 		selected = act;
 		voidReason = '';
 		voidError = '';
+		voidConflictInvoiceId = null;
+		voidConflictInvoiceStatus = null;
 		voidOpen = true;
 	}
 
@@ -165,13 +187,26 @@
 		}
 		voidBusy = true;
 		voidError = '';
+		voidConflictInvoiceId = null;
+		voidConflictInvoiceStatus = null;
 		try {
 			const updated = await voidPerformedAct(selected.id, { reason });
 			voidOpen = false;
 			await loadActs();
 			selected = updated;
 		} catch (e) {
-			voidError = resolveVoidErrorMessage(e);
+			let invoiceStatus: string | null = null;
+			try {
+				const status = await getActBillingStatus(patientId, 'PERFORMED_ACT', selected.id);
+				if (status.billed) {
+					voidConflictInvoiceId = status.invoiceId ?? null;
+					voidConflictInvoiceStatus = status.invoiceStatus ?? null;
+					invoiceStatus = status.invoiceStatus ?? null;
+				}
+			} catch {
+				/* act-status is optional enrichment only */
+			}
+			voidError = resolveVoidErrorMessage(e, { invoiceStatus });
 		} finally {
 			voidBusy = false;
 		}
@@ -357,6 +392,16 @@
 					>
 				{/if}
 
+				{#if canOfferBilling}
+					<Button data-testid="performed-act-billing-cta" onclick={openPerformedActBilling}
+						>Facturer</Button
+					>
+				{/if}
+
+				<div data-testid="performed-act-billing-status">
+					<BillingActStatus {patientId} actType="PERFORMED_ACT" referenceId={selected.id} />
+				</div>
+
 				<div data-testid="performed-act-pec-status">
 					<AuthorizationStatus
 						{patientId}
@@ -476,10 +521,26 @@
 			<Alert tone="danger">{voidError}</Alert>
 		</div>
 	{/if}
-	{#if voidError === ACTIVE_INVOICE_VOID_MESSAGE}
-		<p class="mb-3 text-sm text-slate-600" data-testid="performed-act-void-billing-hint">
-			Ouvrez la facturation pour résoudre la facture active, puis réessayez.
-		</p>
+	{#if voidError === ACTIVE_INVOICE_VOID_MESSAGE || voidError === PAID_INVOICE_VOID_MESSAGE}
+		<div class="mb-3 space-y-2" data-testid="performed-act-void-billing-hint">
+			<p class="text-sm text-slate-600">
+				{#if voidSuggestsCancel}
+					Ouvrez la facturation pour résoudre ou annuler explicitement la facture active, puis
+					réessayez. L'annulation de facture n'est jamais automatique.
+				{:else}
+					Consultez la facture encaissée. Aucun contournement remboursement/avoir n'est proposé ici.
+				{/if}
+			</p>
+			<a
+				class="inline-flex text-sm font-bold text-blue-700 underline"
+				href={voidConflictInvoiceId
+					? resolve(`/billing/${voidConflictInvoiceId}`)
+					: resolve(`/billing?patientId=${patientId}`)}
+				data-testid="performed-act-void-billing-link"
+			>
+				Ouvrir la facturation
+			</a>
+		</div>
 	{/if}
 	<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 		Motif d'annulation

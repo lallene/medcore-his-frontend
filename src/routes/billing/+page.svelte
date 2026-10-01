@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { jwtDecode } from 'jwt-decode';
 	import { getPatients } from '$lib/api/patients';
@@ -12,13 +13,22 @@
 		listInvoices,
 		listTariffs
 	} from '$lib/api/billing';
-	import { can, formatXOF } from '$lib/components/billing/state';
+	import {
+		BILLING_ACT_TYPES,
+		billableActSelectable,
+		can,
+		formatBillingActType,
+		formatXOF,
+		MISSING_TARIFF_MESSAGE,
+		tariffReferenceLabel
+	} from '$lib/components/billing/state';
 	import type { Patient } from '$lib/types/patient';
-	import type { BillableAct, BillingKPIs, Invoice, Tariff } from '$lib/types/billing';
+	import type { ActType, BillableAct, BillingKPIs, Invoice, Tariff } from '$lib/types/billing';
 
 	let tab = $state<'invoices' | 'create' | 'tariffs'>('invoices');
 	let loading = $state(true);
 	let error = $state('');
+	let actsError = $state('');
 	let permissions = $state<string[]>([]);
 	let invoices = $state<Invoice[]>([]);
 	let tariffs = $state<Tariff[]>([]);
@@ -26,6 +36,8 @@
 	let acts = $state<BillableAct[]>([]);
 	let selectedPatient = $state(0);
 	let selected = $state<string[]>([]);
+	let deepLinkActType = $state('');
+	let deepLinkReferenceId = $state(0);
 	let kpis = $state<BillingKPIs>({
 		pendingInvoices: 0,
 		patientReceivable: 0,
@@ -33,29 +45,33 @@
 		insuranceExpected: 0
 	});
 	let tariffForm = $state({
-		actType: 'CONSULTATION',
+		actType: 'CONSULTATION' as ActType,
 		code: '',
 		label: '',
 		unitPrice: 0,
 		effectiveFrom: new Date().toISOString().slice(0, 10),
 		isActive: true
 	});
+
 	const selectedLines = $derived(
 		acts
-			.filter((a) => selected.includes(a.billableKey) && a.tariff)
+			.filter((a) => selected.includes(a.billableKey) && billableActSelectable(a))
 			.map((a) => ({ actType: a.actType, referenceId: a.referenceId, tariffId: a.tariff!.id }))
 	);
+
+	const missingTariffActs = $derived(acts.filter((a) => !a.alreadyBilled && !a.tariff));
+
 	async function refresh() {
 		loading = true;
 		error = '';
 		try {
-			const [page, ts, ps, metrics] = await Promise.all([
+			const [pageData, ts, ps, metrics] = await Promise.all([
 				listInvoices(),
 				listTariffs(),
 				getPatients(1, 100),
 				getBillingKPIs()
 			]);
-			invoices = page.data;
+			invoices = pageData.data;
 			tariffs = ts;
 			patients = ps.data;
 			kpis = metrics;
@@ -65,14 +81,37 @@
 			loading = false;
 		}
 	}
-	async function loadActs() {
+
+	async function loadActs(opts?: { preserveSelection?: boolean }) {
 		if (!selectedPatient) {
 			acts = [];
+			selected = [];
 			return;
 		}
-		acts = await listBillableActs(selectedPatient);
-		selected = [];
+		actsError = '';
+		try {
+			acts = await listBillableActs(selectedPatient);
+			if (!opts?.preserveSelection) {
+				selected = [];
+			}
+			if (deepLinkActType && deepLinkReferenceId > 0) {
+				const match = acts.find(
+					(a) =>
+						a.actType.toUpperCase() === deepLinkActType.toUpperCase() &&
+						a.referenceId === deepLinkReferenceId
+				);
+				if (match && billableActSelectable(match) && !selected.includes(match.billableKey)) {
+					selected = [...selected, match.billableKey];
+				}
+				deepLinkActType = '';
+				deepLinkReferenceId = 0;
+			}
+		} catch (e) {
+			acts = [];
+			actsError = e instanceof Error ? e.message : 'Impossible de charger les actes facturables.';
+		}
 	}
+
 	async function saveInvoice() {
 		if (!selectedLines.length) return;
 		try {
@@ -83,11 +122,12 @@
 			error = e instanceof Error ? e.message : 'Création impossible';
 		}
 	}
+
 	async function saveTariff() {
 		try {
 			await createTariff({
 				...tariffForm,
-				actType: tariffForm.actType as Tariff['actType'],
+				actType: tariffForm.actType,
 				referenceId: null,
 				effectiveTo: null
 			});
@@ -97,6 +137,23 @@
 			error = e instanceof Error ? e.message : 'Tarif invalide';
 		}
 	}
+
+	async function applyDeepLink() {
+		const q = page.url.searchParams;
+		const patientId = Number(q.get('patientId') || 0);
+		const actType = (q.get('actType') || '').trim().toUpperCase();
+		const referenceId = Number(q.get('referenceId') || 0);
+		if (patientId > 0 && can(permissions, 'billing.create')) {
+			tab = 'create';
+			selectedPatient = patientId;
+			if (actType === 'PERFORMED_ACT' && referenceId > 0) {
+				deepLinkActType = actType;
+				deepLinkReferenceId = referenceId;
+			}
+			await loadActs();
+		}
+	}
+
 	onMount(() => {
 		const raw = localStorage.getItem('medcore_token');
 		if (raw) {
@@ -106,11 +163,14 @@
 				permissions = [];
 			}
 		}
-		void refresh();
+		void (async () => {
+			await refresh();
+			await applyDeepLink();
+		})();
 	});
 </script>
 
-<div class="space-y-6 p-6">
+<div class="space-y-6 p-6" data-testid="billing-page">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div>
 			<p class="text-xs font-black uppercase tracking-widest text-blue-600">Finance</p>
@@ -120,14 +180,18 @@
 		<div class="flex gap-2">
 			{#if can(permissions, 'billing.create')}<button
 					class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+					data-testid="billing-new-invoice"
 					onclick={() => (tab = 'create')}>Nouvelle facture</button
 				>{/if}{#if can(permissions, 'billing.tariff.read')}<button
 					class="rounded-xl border px-4 py-2 font-bold"
+					data-testid="billing-tariffs-tab"
 					onclick={() => (tab = 'tariffs')}>Tarifs</button
 				>{/if}
 		</div>
 	</header>
-	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
+	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="billing-error">
+			{error}
+		</p>{/if}
 	<div class="grid gap-3 md:grid-cols-4">
 		{#each [['Factures en attente', kpis.pendingInvoices], ['Part patient à encaisser', formatXOF(kpis.patientReceivable)], ['Factures payées', kpis.paidInvoices], ['Assurance attendue', formatXOF(kpis.insuranceExpected)]] as metric (metric[0])}<div
 				class="rounded-2xl border bg-white p-4 shadow-sm"
@@ -144,6 +208,7 @@
 		>{#if can(permissions, 'billing.create')}<button
 				class:font-black={tab === 'create'}
 				class="px-4 py-3"
+				data-testid="billing-tab-create"
 				onclick={() => (tab = 'create')}>Nouvelle facture</button
 			>{/if}{#if can(permissions, 'billing.tariff.read')}<button
 				class:font-black={tab === 'tariffs'}
@@ -178,70 +243,101 @@
 			</table>
 		</div>
 	{:else if tab === 'create'}
-		<section class="space-y-4 rounded-2xl border bg-white p-5">
+		<section class="space-y-4 rounded-2xl border bg-white p-5" data-testid="billing-create">
 			<label class="block font-bold"
 				>Patient<select
 					class="mt-2 w-full rounded-xl border p-3"
 					bind:value={selectedPatient}
-					onchange={loadActs}
+					data-testid="billing-patient-select"
+					onchange={() => void loadActs()}
 					><option value={0}>Sélectionner</option>{#each patients as p (p.id)}<option value={p.id}
 							>{p.codePatient} — {p.prenoms} {p.nom}</option
 						>{/each}</select
 				></label
-			>{#if selectedPatient}<h2 class="font-black">Actes non facturés</h2>
+			>
+			{#if actsError}
+				<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="billing-acts-error">
+					{actsError}
+				</p>
+			{/if}
+			{#if selectedPatient}<h2 class="font-black">Actes non facturés</h2>
+				{#if missingTariffActs.length > 0}
+					<p
+						class="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900"
+						data-testid="billing-missing-tariff"
+					>
+						{MISSING_TARIFF_MESSAGE}
+					</p>
+				{/if}
 				{#each acts as act (act.billableKey)}<label
-						class:opacity-50={act.alreadyBilled || !act.tariff}
+						class:opacity-50={!billableActSelectable(act)}
 						class="flex items-center gap-3 rounded-xl border p-3"
+						data-testid={`billing-act-${act.billableKey}`}
+						data-act-type={act.actType}
+						data-reference-id={act.referenceId}
 						><input
 							type="checkbox"
 							value={act.billableKey}
 							bind:group={selected}
-							disabled={act.alreadyBilled || !act.tariff}
+							disabled={!billableActSelectable(act)}
+							data-testid={`billing-act-check-${act.billableKey}`}
 						/><span class="flex-1"
 							><strong>{act.label}</strong><small class="block text-slate-500"
-								>{act.actType} · {act.quantity} × {act.tariff
+								>{formatBillingActType(act.actType)} · {act.quantity} × {act.tariff
 									? formatXOF(act.tariff.unitPrice)
 									: 'Tarif manquant'} · {act.authorizationNumber || act.coverageResolution}</small
 							></span
-						><span>{act.alreadyBilled ? 'Déjà facturé' : ''}</span></label
+						><span>{act.alreadyBilled ? 'Déjà facturé' : !act.tariff ? 'Tarif manquant' : ''}</span
+						></label
 					>{:else}<p class="text-slate-500">Aucun acte disponible.</p>{/each}<button
 					class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-40"
 					disabled={!selectedLines.length}
+					data-testid="billing-create-draft"
 					onclick={saveInvoice}>Créer le brouillon</button
 				>{/if}
 		</section>
 	{:else}
-		<section class="space-y-4">
+		<section class="space-y-4" data-testid="billing-tariffs">
 			{#if can(permissions, 'billing.tariff.manage')}<div
 					class="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-5"
 				>
-					<select class="rounded-xl border p-2" bind:value={tariffForm.actType}
-						>{#each ['CONSULTATION', 'LABORATORY', 'IMAGING', 'HOSPITALIZATION', 'MEDICATION'] as type (type)}<option
-								>{type}</option
+					<select
+						class="rounded-xl border p-2"
+						bind:value={tariffForm.actType}
+						data-testid="billing-tariff-act-type"
+						>{#each BILLING_ACT_TYPES as type (type)}<option value={type}
+								>{formatBillingActType(type)}</option
 							>{/each}</select
 					><input
 						class="rounded-xl border p-2"
 						placeholder="Code"
 						bind:value={tariffForm.code}
+						data-testid="billing-tariff-code"
 					/><input
 						class="rounded-xl border p-2"
 						placeholder="Libellé"
 						bind:value={tariffForm.label}
+						data-testid="billing-tariff-label"
 					/><input
 						class="rounded-xl border p-2"
 						type="number"
 						min="1"
 						placeholder="Prix XOF"
 						bind:value={tariffForm.unitPrice}
-					/><button class="rounded-xl bg-blue-700 font-bold text-white" onclick={saveTariff}
-						>Enregistrer</button
+						data-testid="billing-tariff-unit-price"
+					/><button
+						class="rounded-xl bg-blue-700 font-bold text-white"
+						data-testid="billing-tariff-save"
+						onclick={saveTariff}>Enregistrer</button
 					>
 				</div>{/if}
 			<div class="rounded-2xl border bg-white">
-				{#each tariffs as t (t.id)}<div class="grid grid-cols-4 gap-3 border-b p-3">
-						<strong>{t.code}</strong><span>{t.label}</span><span>{t.actType}</span><span
-							class="text-right font-black">{formatXOF(t.unitPrice)}</span
-						>
+				{#each tariffs as t (t.id)}<div
+						class="grid grid-cols-4 gap-3 border-b p-3"
+						data-testid={`billing-tariff-row-${t.id}`}
+					>
+						<strong>{t.code}</strong><span>{t.label}</span><span>{tariffReferenceLabel(t)}</span
+						><span class="text-right font-black">{formatXOF(t.unitPrice)}</span>
 					</div>{:else}<p class="p-6 text-center text-slate-500">Aucun tarif actif.</p>{/each}
 			</div>
 		</section>

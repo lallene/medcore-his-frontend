@@ -4,6 +4,7 @@ import {
 	ACTIVE_INVOICE_VOID_MESSAGE,
 	BASE_PRICE_LABEL,
 	BASE_PRICE_HINT,
+	PAID_INVOICE_VOID_MESSAGE,
 	actCategoryLabel,
 	canCreatePerformedActs,
 	canManageActCatalog,
@@ -16,7 +17,8 @@ import {
 	isActiveInvoiceVoidConflict,
 	normalizeVoidReason,
 	originBadgeLabel,
-	resolveVoidErrorMessage
+	resolveVoidErrorMessage,
+	voidConflictAllowsInvoiceCancelSuggestion
 } from './state.ts';
 
 test('formatCatalogPrice formats whole XOF without scaling', () => {
@@ -84,6 +86,20 @@ test('active invoice void conflict messaging', () => {
 		resolveVoidErrorMessage(new Error("Impossible d'annuler un acte encore facturé activement")),
 		ACTIVE_INVOICE_VOID_MESSAGE
 	);
+	assert.equal(
+		resolveVoidErrorMessage(new Error("Impossible d'annuler un acte encore facturé activement"), {
+			invoiceStatus: 'PAID'
+		}),
+		PAID_INVOICE_VOID_MESSAGE
+	);
+	assert.equal(
+		resolveVoidErrorMessage(new Error("Impossible d'annuler un acte encore facturé activement"), {
+			invoiceStatus: 'DRAFT'
+		}),
+		ACTIVE_INVOICE_VOID_MESSAGE
+	);
+	assert.equal(voidConflictAllowsInvoiceCancelSuggestion('DRAFT'), true);
+	assert.equal(voidConflictAllowsInvoiceCancelSuggestion('PAID'), false);
 	assert.equal(
 		resolveVoidErrorMessage(new Error('ACCESS_DENIED')),
 		"Vous n'avez pas la permission d'annuler cet acte."

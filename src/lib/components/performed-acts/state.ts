@@ -84,7 +84,13 @@ export function isActiveInvoiceVoidConflict(message: string): boolean {
 export const ACTIVE_INVOICE_VOID_MESSAGE =
 	"Cet acte possède une facturation active. Résolvez ou annulez la facture éligible depuis la facturation avant d'annuler l'acte.";
 
-export function resolveVoidErrorMessage(error: unknown): string {
+export const PAID_INVOICE_VOID_MESSAGE =
+	"Cet acte est lié à une facture déjà encaissée. L'annulation de facture n'est pas disponible après paiement — un avoir ou remboursement futur sera requis.";
+
+export function resolveVoidErrorMessage(
+	error: unknown,
+	opts?: { invoiceStatus?: string | null }
+): string {
 	const raw =
 		error instanceof Error && error.message && !error.message.startsWith('Request failed')
 			? error.message
@@ -94,8 +100,18 @@ export function resolveVoidErrorMessage(error: unknown): string {
 		if (raw === 'UNAUTHORIZED') return 'Session expirée. Reconnectez-vous.';
 		return "Impossible d'annuler l'acte réalisé.";
 	}
-	if (isActiveInvoiceVoidConflict(raw)) return ACTIVE_INVOICE_VOID_MESSAGE;
+	if (isActiveInvoiceVoidConflict(raw)) {
+		const status = (opts?.invoiceStatus ?? '').toUpperCase();
+		if (status === 'PAID' || status === 'PARTIALLY_PAID') return PAID_INVOICE_VOID_MESSAGE;
+		return ACTIVE_INVOICE_VOID_MESSAGE;
+	}
 	return raw;
+}
+
+/** Cancel is only suggested for non-paid active invoices. */
+export function voidConflictAllowsInvoiceCancelSuggestion(invoiceStatus?: string | null): boolean {
+	const status = (invoiceStatus ?? '').toUpperCase();
+	return status !== 'PAID' && status !== 'PARTIALLY_PAID';
 }
 
 export function normalizeVoidReason(reason: string): string {
