@@ -69,7 +69,9 @@
 				>Laboratoire</option
 			><option value="IMAGING">Imagerie</option><option value="HOSPITALIZATION"
 				>Hospitalisation</option
-			><option value="MEDICATION">Médicament</option>
+			><option value="MEDICATION">Médicament</option><option value="PERFORMED_ACT"
+				>Acte réalisé</option
+			>
 		</select>
 		<input
 			bind:value={search}

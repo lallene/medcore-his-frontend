@@ -16,7 +16,10 @@
 	import type { Patient } from '$lib/types/patient';
 	import type { InsuranceAuthorization, PatientInsuranceView } from '$lib/types/insurance';
 	import { getInsuranceAuthorizations } from '$lib/api/insurance';
-	import { authorizationStatusLabel } from '$lib/components/insurance/authorization-state';
+	import {
+		authorizationStatusLabel,
+		formatAuthorizationReferenceType
+	} from '$lib/components/insurance/authorization-state';
 	import {
 		insuranceAuthorizationDisplay,
 		normalizeInsuranceAuthorizations
@@ -285,8 +288,15 @@
 									<div>
 										<b class="text-violet-800">{authorization.authorizationNumber}</b>
 										<small class="block text-slate-500">{authorization.companyName}</small>
-										<b class="mt-1 block text-slate-900">{authorization.referenceLabel}</b>
-										<small class="text-slate-500">{authorization.service || '—'}</small>
+										<b
+											class="mt-1 block text-slate-900"
+											data-testid={`patient-insurance-ref-${authorization.id}`}
+											>{authorization.referenceLabel}</b
+										>
+										<small class="text-slate-500"
+											>{formatAuthorizationReferenceType(authorization.referenceType)} · {authorization.service ||
+												'—'}</small
+										>
 									</div>
 									<span
 										class="rounded-full bg-violet-50 px-3 py-1 text-xs font-black text-violet-800"

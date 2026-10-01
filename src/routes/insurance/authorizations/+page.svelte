@@ -17,10 +17,17 @@
 		submitInsuranceAuthorization
 	} from '$lib/api/insurance';
 	import {
+		AUTHORIZATION_REFERENCE_TYPES,
 		authorizationActions,
 		authorizationStatusLabel,
+		coverageSelectorLabel,
+		formatAuthorizationReferenceType,
 		hasAuthorizationPermission,
-		previewDecision
+		initialCoverageIdForCreate,
+		mapAuthorizationConflictMessage,
+		previewDecision,
+		requestedAmountFromPerformedActBasePrice,
+		requiresExplicitCoverageSelection
 	} from '$lib/components/insurance/authorization-state';
 	import type {
 		AuthorizationStatus,
@@ -67,7 +74,14 @@
 	let eligibleActs = $state<EligibleInsuranceAct[]>([]),
 		selectedActKeys = $state<string[]>([]);
 	let tariffAmounts = $state<Record<string, number>>({}),
-		loadingCreate = $state(false);
+		loadingCreate = $state(false),
+		coverageLoadError = $state(''),
+		eligibleLoadError = $state(''),
+		deepLinkError = $state('');
+	const explicitCoverageRequired = $derived(requiresExplicitCoverageSelection(createType));
+	const filterReferenceTypes = AUTHORIZATION_REFERENCE_TYPES.filter(
+		(t) => t !== 'OTHER' && t !== 'PROCEDURE'
+	);
 	const filteredPatients = $derived(
 		patients
 			.filter((p) =>
@@ -75,7 +89,8 @@
 			)
 			.slice(0, 12)
 	);
-	const selectedCoverage = $derived(coverages.find((c) => c.id === coverageId));
+	const selectedCoverageId = $derived(Number(coverageId) || 0);
+	const selectedCoverage = $derived(coverages.find((c) => c.id === selectedCoverageId));
 	const agentLabel = $derived(
 		claims?.name ||
 			[claims?.firstName, claims?.lastName].filter(Boolean).join(' ') ||
@@ -91,6 +106,12 @@
 		approvedAmount = $state<number | null>(null),
 		ceilingAmount = $state<number | null>(null),
 		rejectionReason = $state('');
+	const canSubmitCreate = $derived(
+		Boolean(selectedCoverageId) &&
+			!busy &&
+			!deepLinkError &&
+			(selectedActKeys.length > 0 || Boolean(contextLocked && referenceId && createType))
+	);
 	const canCreate = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.create'));
 	const canSubmit = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.submit'));
 	const canDecide = $derived(hasAuthorizationPermission(claims, 'insurance.authorization.decide'));
@@ -142,6 +163,8 @@
 			coverages = [];
 			return;
 		}
+		coverageLoadError = '';
+		deepLinkError = '';
 		try {
 			coverages = (await getPatientCoverages(patientId)).filter((c) => {
 				const today = new Date().toISOString().slice(0, 10);
@@ -149,23 +172,36 @@
 					c.isActive && (!c.validFrom || c.validFrom <= today) && (!c.validTo || c.validTo >= today)
 				);
 			});
-			coverageId = coverages.find((c) => c.isPrincipal)?.id ?? coverages[0]?.id ?? 0;
+			coverageId = initialCoverageIdForCreate(coverages, createType);
 			await loadEligibleActs();
-		} catch {
+		} catch (e) {
 			coverages = [];
 			coverageId = 0;
+			coverageLoadError =
+				e instanceof Error ? e.message : 'Impossible de charger les couvertures patient.';
 		}
 	}
 	async function loadEligibleActs() {
 		eligibleActs = [];
 		selectedActKeys = [];
-		if (!patientId || !coverageId) return;
+		eligibleLoadError = '';
+		deepLinkError = '';
+		if (!patientId || !selectedCoverageId) return;
 		loadingCreate = true;
 		try {
-			const types = ['CONSULTATION', 'LABORATORY', 'IMAGING', 'HOSPITALIZATION', 'MEDICATION'];
+			const types = [
+				'CONSULTATION',
+				'LABORATORY',
+				'IMAGING',
+				'HOSPITALIZATION',
+				'MEDICATION',
+				'PERFORMED_ACT'
+			];
 			eligibleActs = (
 				await Promise.all(
-					types.map((type) => getEligibleInsuranceActs({ patientId, coverageId, type }))
+					types.map((type) =>
+						getEligibleInsuranceActs({ patientId, coverageId: selectedCoverageId, type })
+					)
 				)
 			).flat();
 			const billable = await listBillableActs(patientId).catch(() => []);
@@ -175,17 +211,29 @@
 					.map((a) => [`${a.actType}:${a.referenceId}`, a.tariff!.unitPrice * a.quantity])
 			);
 			const contextual = `${createType}:${referenceId}`;
-			if (
-				referenceId &&
-				eligibleActs.some((a) => actKey(a) === contextual && a.authorizationResolution === 'NONE')
-			)
-				selectedActKeys = [contextual];
+			if (referenceId && createType) {
+				const match = eligibleActs.find((a) => actKey(a) === contextual);
+				if (!match || match.authorizationResolution !== 'NONE') {
+					if (requiresExplicitCoverageSelection(createType)) {
+						deepLinkError = !match
+							? "L'acte réalisé demandé n'est pas éligible à une PEC (introuvable, annulé, non éligible ou patient incorrect)."
+							: `Cet acte est déjà lié à une PEC (${match.existingAuthorizationNumber || 'existante'}).`;
+					}
+				} else {
+					selectedActKeys = [contextual];
+				}
+			}
 			recalculateAmount();
+		} catch (e) {
+			eligibleLoadError =
+				e instanceof Error ? e.message : 'Impossible de charger les actes éligibles.';
 		} finally {
 			loadingCreate = false;
 		}
 	}
 	function recalculateAmount() {
+		// PERFORMED_ACT: never derive RequestedAmount from BasePrice snapshot.
+		void requestedAmountFromPerformedActBasePrice(0);
 		requestedAmount =
 			selectedActKeys.reduce((sum, key) => sum + (tariffAmounts[key] || 0), 0) || null;
 	}
@@ -223,12 +271,20 @@
 		busy = true;
 		error = '';
 		try {
-			const acts = eligibleActs.filter((act) => selectedActKeys.includes(actKey(act)));
+			if (!selectedCoverageId) throw new Error('Sélectionnez explicitement une couverture.');
+			let acts = eligibleActs.filter((act) => selectedActKeys.includes(actKey(act)));
+			if (!acts.length && contextLocked && referenceId && createType) {
+				const match = eligibleActs.find(
+					(a) =>
+						actKey(a) === `${createType}:${referenceId}` && a.authorizationResolution === 'NONE'
+				);
+				if (match) acts = [match];
+			}
 			if (!acts.length) throw new Error('Sélectionnez au moins un acte non couvert.');
 			const primary = acts[0];
 			selected = await createInsuranceAuthorization({
 				patientId,
-				patientCoverageId: coverageId,
+				patientCoverageId: selectedCoverageId,
 				referenceType: primary.referenceType,
 				referenceId: primary.referenceId,
 				service: primary.secondaryLabel,
@@ -241,7 +297,8 @@
 			resetCreate();
 			await load();
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Création impossible';
+			const raw = e instanceof Error ? e.message : 'Création impossible';
+			error = mapAuthorizationConflictMessage(raw);
 		} finally {
 			busy = false;
 		}
@@ -377,10 +434,12 @@
 				>{#each Object.entries(authorizationStatusLabel) as [value, label] (value)}<option {value}
 						>{label}</option
 					>{/each}</select
-			><select bind:value={referenceType} class="rounded-lg border px-3"
-				><option value="">Tous actes</option
-				>{#each ['CONSULTATION', 'LABORATORY', 'IMAGING', 'HOSPITALIZATION', 'MEDICATION'] as type (type)}<option
-						value={type}>{type}</option
+			><select
+				bind:value={referenceType}
+				class="rounded-lg border px-3"
+				data-testid="auth-filter-reference-type"
+				><option value="">Tous actes</option>{#each filterReferenceTypes as type (type)}<option
+						value={type}>{formatAuthorizationReferenceType(type)}</option
 					>{/each}</select
 			><select bind:value={companyId} class="rounded-lg border px-3"
 				><option value="">Tous assureurs</option>{#each companies as company (company.id)}<option
@@ -446,11 +505,12 @@
 
 {#if showCreate}<div class="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
 		<form
+			data-testid="auth-create-form"
 			onsubmit={(e) => {
 				e.preventDefault();
 				void create();
 			}}
-			class="w-full max-w-2xl space-y-4 rounded-2xl bg-white p-6"
+			class="max-h-[90vh] w-full max-w-2xl space-y-4 overflow-y-auto rounded-2xl bg-white p-6"
 		>
 			<header class="flex justify-between">
 				<div>
@@ -461,6 +521,11 @@
 				</div>
 				<button type="button" onclick={resetCreate}><X /></button>
 			</header>
+			{#if error}
+				<p class="rounded-xl bg-red-50 p-3 text-sm text-red-700" data-testid="auth-create-error">
+					{error}
+				</p>
+			{/if}
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div class="relative sm:col-span-2">
 					<label for="pec-patient" class="font-bold">Patient</label>
@@ -488,6 +553,43 @@
 					<p>{agentLabel}</p>
 					<small>Identité vérifiée par le backend</small>
 				</div>
+				{#if coverageLoadError}
+					<div
+						class="sm:col-span-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-800"
+						data-testid="auth-coverage-error"
+					>
+						{coverageLoadError}
+					</div>
+				{:else if selectedPatient && coverages.length === 0}
+					<div
+						class="sm:col-span-2 rounded-lg bg-amber-50 p-3 text-amber-800"
+						data-testid="auth-coverage-empty"
+					>
+						<b>Aucune couverture active</b>
+						<p>
+							Aucune couverture éligible n’est disponible pour ce patient. Impossible de créer une
+							PEC.
+						</p>
+					</div>
+				{:else if coverages.length > 0 && (explicitCoverageRequired || coverages.length > 1)}
+					<label class="sm:col-span-2" for="auth-coverage-select"
+						>Couverture{explicitCoverageRequired ? ' (sélection obligatoire)' : ' active'}
+						<select
+							id="auth-coverage-select"
+							bind:value={coverageId}
+							onchange={loadEligibleActs}
+							class="mt-1 block h-10 w-full rounded-lg border px-3"
+							data-testid="auth-coverage-select"
+						>
+							{#if explicitCoverageRequired}
+								<option value={0}>Sélectionner une couverture…</option>
+							{/if}
+							{#each coverages as c (c.id)}
+								<option value={c.id}>{coverageSelectorLabel(c)}</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
 				{#if selectedCoverage}<div class="rounded-lg bg-violet-50 p-3">
 						<b>Assurance</b>
 						<p>{selectedCoverage.companyName}</p>
@@ -495,27 +597,40 @@
 							>{selectedCoverage.memberNumber} · taux contractuel {selectedCoverage.coverageRate}%
 							(informatif)</small
 						>
-					</div>{:else if selectedPatient}<div class="rounded-lg bg-amber-50 p-3 text-amber-800">
+					</div>{:else if selectedPatient && !coverageLoadError && coverages.length > 0 && explicitCoverageRequired}<div
+						class="rounded-lg bg-slate-50 p-3 text-slate-600"
+						data-testid="auth-coverage-unselected"
+					>
+						<b>Couverture non sélectionnée</b>
+						<p>Choisissez explicitement la couverture à utiliser pour cette PEC.</p>
+					</div>{:else if selectedPatient && coverages.length === 0 && !coverageLoadError}<div
+						class="rounded-lg bg-amber-50 p-3 text-amber-800"
+					>
 						<b>Patient non assuré</b>
 						<p>Aucune PEC ne peut être créée sans couverture active.</p>
 					</div>{/if}
-				{#if coverages.length > 1}<label class="sm:col-span-2"
-						>Couverture active<select
-							bind:value={coverageId}
-							onchange={loadEligibleActs}
-							class="mt-1 block h-10 w-full rounded-lg border px-3"
-							>{#each coverages as c (c.id)}<option value={c.id}
-									>{c.companyName} · {c.memberNumber}{c.isPrincipal ? ' · Principale' : ''}</option
-								>{/each}</select
-						></label
-					>{/if}
 			</div>
 			<section class="rounded-xl border p-3">
 				<h3 class="font-black">Actes concernés</h3>
+				{#if deepLinkError}
+					<p class="py-4 text-sm font-bold text-rose-700" data-testid="auth-deeplink-error">
+						{deepLinkError}
+					</p>
+				{/if}
+				{#if eligibleLoadError}
+					<p class="py-4 text-sm font-bold text-rose-700" data-testid="auth-eligible-error">
+						{eligibleLoadError}
+					</p>
+				{/if}
 				{#if loadingCreate}<p class="py-4 text-sm text-slate-500">
 						Chargement des actes du patient…
-					</p>{:else if !coverageId}<p class="py-4 text-sm text-slate-500">
-						Sélectionnez un patient assuré.
+					</p>{:else if !selectedCoverageId}<p
+						class="py-4 text-sm text-slate-500"
+						data-testid="auth-acts-need-coverage"
+					>
+						{explicitCoverageRequired
+							? 'Sélectionnez explicitement une couverture pour charger les actes éligibles.'
+							: 'Sélectionnez un patient assuré.'}
 					</p>{:else}<div class="mt-2 max-h-64 space-y-2 overflow-auto">
 						{#each eligibleActs as act (actKey(act))}<label
 								class="flex gap-3 rounded-lg border p-3"
@@ -526,9 +641,11 @@
 									bind:group={selectedActKeys}
 									onchange={recalculateAmount}
 									disabled={act.authorizationResolution !== 'NONE'}
+									data-testid={`auth-eligible-act-${act.referenceType}-${act.referenceId}`}
 								/><span class="min-w-0"
 									><b>{act.label}</b><small class="block text-slate-500"
-										>{act.referenceType} · {act.secondaryLabel || 'Service dérivé de l’acte'} · {act.date
+										>{formatAuthorizationReferenceType(act.referenceType)} · {act.secondaryLabel ||
+											'Service dérivé de l’acte'} · {act.date
 											? new Date(act.date).toLocaleDateString('fr-FR')
 											: '—'}</small
 									><small class="block font-bold text-violet-700"
@@ -544,23 +661,30 @@
 							</p>{/each}
 					</div>{/if}
 			</section>
-			<label
+			<label for="auth-requested-amount"
 				>Montant demandé <span class="text-xs text-slate-500"
-					>(prérempli depuis la tarification, modifiable)</span
+					>(prérempli depuis la tarification si disponible — jamais depuis le prix catalogue de
+					référence)</span
 				><input
+					id="auth-requested-amount"
 					type="number"
 					min="0"
 					bind:value={requestedAmount}
 					class="mt-1 block h-10 w-full rounded-lg border px-3"
+					data-testid="auth-requested-amount"
 				/></label
 			>
-			<label
-				>Commentaire<textarea bind:value={comment} class="block w-full rounded-lg border p-3"
-				></textarea></label
+			<label for="auth-comment"
+				>Commentaire<textarea
+					id="auth-comment"
+					bind:value={comment}
+					class="block w-full rounded-lg border p-3"></textarea></label
 			><button
-				disabled={busy || !coverageId || selectedActKeys.length === 0}
+				type="button"
+				onclick={() => void create()}
+				disabled={!canSubmitCreate}
 				class="rounded-lg bg-violet-700 px-4 py-2 font-bold text-white disabled:opacity-40"
-				>Créer la demande</button
+				data-testid="auth-create-submit">Créer la demande</button
 			>
 		</form>
 	</div>{/if}
@@ -575,15 +699,35 @@
 				</div>
 				<button onclick={() => (selected = null)}><X /></button>
 			</header>
-			<section class="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
+			<section
+				class="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2"
+				data-testid="auth-financial-split"
+			>
 				<p><b>Patient</b><br />{selected.patientName} · {selected.patientCode}</p>
 				<p><b>Acte</b><br />{selected.referenceLabel}</p>
+				<p data-testid="auth-detail-reference-type">
+					<b>Type</b><br />{formatAuthorizationReferenceType(selected.referenceType)}
+				</p>
 				<p><b>Assurance</b><br />{selected.companyName}</p>
 				<p><b>Contrat informatif</b><br />{selected.contractRate}%</p>
-				<p><b>Demandé</b><br />{money(selected.requestedAmount)}</p>
+				<p data-testid="auth-detail-requested">
+					<b>Demandé</b><br />{money(selected.requestedAmount)}
+				</p>
+				<p data-testid="auth-detail-approved-rate">
+					<b>Taux accordé</b><br />{selected.approvedRate == null
+						? '—'
+						: `${selected.approvedRate}%`}
+				</p>
+				<p data-testid="auth-detail-approved-amount">
+					<b>Montant accordé</b><br />{money(selected.approvedAmount)}
+				</p>
 				<p><b>Référence externe</b><br />{selected.externalReference || '—'}</p>
-				<p><b>Part assurance</b><br />{money(selected.insuranceAmount)}</p>
-				<p><b>Part patient</b><br />{money(selected.patientAmount)}</p>
+				<p data-testid="auth-detail-insurance-amount">
+					<b>Part assurance</b><br />{money(selected.insuranceAmount)}
+				</p>
+				<p data-testid="auth-detail-patient-amount">
+					<b>Part patient</b><br />{money(selected.patientAmount)}
+				</p>
 			</section>
 			<section class="mt-5 rounded-xl border p-4">
 				<h3 class="font-black">Actes couverts par cette PEC</h3>

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { createPerformedAct, listPerformedActs, voidPerformedAct } from '$lib/api/performed-acts';
 	import { listActCatalog } from '$lib/api/act-catalog';
 	import type { ActCatalogEntry } from '$lib/types/act-catalog';
@@ -17,6 +19,8 @@
 		performedActStatusLabel,
 		resolveVoidErrorMessage
 	} from '$lib/components/performed-acts/state';
+	import { canCreatePerformedActPec } from '$lib/components/insurance/authorization-state';
+	import AuthorizationStatus from '$lib/components/insurance/AuthorizationStatus.svelte';
 	import {
 		getStoredPermissions,
 		isAccessDeniedError,
@@ -54,6 +58,16 @@
 	const canCreate = $derived(canCreatePerformedActFromCatalog(permissions));
 	const selectedCatalog = $derived(catalogOptions.find((e) => e.id === catalogEntryId) ?? null);
 	const catalogReady = $derived(catalogOptions.length > 0 && !catalogLoadError);
+	const canOfferPec = $derived(selected ? canCreatePerformedActPec(selected, permissions) : false);
+
+	function openPerformedActPec() {
+		if (!selected || !canOfferPec) return;
+		void goto(
+			resolve(
+				`/insurance/authorizations?patientId=${patientId}&referenceType=PERFORMED_ACT&referenceId=${selected.id}`
+			)
+		);
+	}
 
 	async function loadActs() {
 		error = '';
@@ -335,6 +349,22 @@
 						{formatCatalogPrice(selected.basePrice, selected.currency)}
 					</p>
 					<p class="mt-1 text-xs text-amber-800">{BASE_PRICE_HINT}</p>
+				</div>
+
+				{#if canOfferPec}
+					<Button data-testid="performed-act-pec-cta" onclick={openPerformedActPec}
+						>Demander une PEC</Button
+					>
+				{/if}
+
+				<div data-testid="performed-act-pec-status">
+					<AuthorizationStatus
+						{patientId}
+						referenceType="PERFORMED_ACT"
+						referenceId={selected.id}
+						service={selected.actLabel}
+						allowCreate={false}
+					/>
 				</div>
 
 				{#if selected.status === 'VOIDED'}

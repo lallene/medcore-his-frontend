@@ -55,6 +55,7 @@ export type AuthorizationReferenceType =
 	| 'HOSPITALIZATION'
 	| 'PROCEDURE'
 	| 'MEDICATION'
+	| 'PERFORMED_ACT'
 	| 'OTHER';
 export type AuthorizationStatus =
 	'DRAFT' | 'SUBMITTED' | 'PENDING' | 'APPROVED' | 'PARTIALLY_APPROVED' | 'REJECTED' | 'CANCELLED';
