@@ -395,11 +395,25 @@ export async function bookPastAppointment(
 		practitioners.push(2, 3, 4, 5);
 	}
 	expect(practitioners.length, 'practitioner for past book').toBeGreaterThan(0);
+	// Relative offsets + previous business-day anchors (overnight/local off-hours).
+	const pastStarts: Date[] = [];
+	for (const mins of [90, 120, 150, 180, 210, 240, 300, 360, 420, 480]) {
+		const startAt = new Date(Date.now() - mins * 60_000);
+		startAt.setUTCSeconds(0, 0);
+		pastStarts.push(startAt);
+	}
+	for (const dayOffset of [0, 1, 2]) {
+		for (const hour of [10, 12, 14, 16]) {
+			const startAt = new Date();
+			startAt.setUTCDate(startAt.getUTCDate() - dayOffset);
+			startAt.setUTCHours(hour, 0, 0, 0);
+			if (startAt.getTime() >= Date.now() - 30 * 60_000) continue;
+			pastStarts.push(startAt);
+		}
+	}
 	let lastText = '';
 	for (const prac of practitioners) {
-		for (const mins of [90, 120, 150, 180, 210, 240, 300, 360, 420, 480]) {
-			const startAt = new Date(Date.now() - mins * 60_000);
-			startAt.setUTCSeconds(0, 0);
+		for (const startAt of pastStarts) {
 			const book = await request.post(`${api}/api/appointments`, {
 				headers: { ...bearer(token), 'Idempotency-Key': crypto.randomUUID() },
 				data: {

@@ -108,12 +108,26 @@ test('QA-QUEUE-SMOKE-001 @smoke appointment check-in to doctor queue', async ({
 	expect(typeId, 'appointment type').toBeTruthy();
 
 	// Prefer past-eligible starts (late check-in allowed) so early-window races don't flake.
+	// Overnight/local off-hours: also try previous business-day anchors inside 08:00–18:00.
+	const pastStarts: Date[] = [];
+	for (const mins of [90, 120, 150, 180, 210, 240, 300, 360]) {
+		const startAt = new Date(Date.now() - mins * 60_000);
+		startAt.setUTCSeconds(0, 0);
+		pastStarts.push(startAt);
+	}
+	for (const dayOffset of [0, 1, 2]) {
+		for (const hour of [10, 12, 14, 16]) {
+			const startAt = new Date();
+			startAt.setUTCDate(startAt.getUTCDate() - dayOffset);
+			startAt.setUTCHours(hour, 0, 0, 0);
+			if (startAt.getTime() >= Date.now() - 30 * 60_000) continue; // must be past-eligible
+			pastStarts.push(startAt);
+		}
+	}
 	let appt: { id: number } | null = null;
 	let lastBook = '';
 	for (const prac of [2, 3, 4, 5, 6]) {
-		for (const mins of [90, 120, 150, 180, 210, 240, 300, 360]) {
-			const startAt = new Date(Date.now() - mins * 60_000);
-			startAt.setUTCSeconds(0, 0);
+		for (const startAt of pastStarts) {
 			const apptRes = await request.post(`${api}/api/appointments`, {
 				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
 				data: {
@@ -145,9 +159,12 @@ test('QA-QUEUE-SMOKE-001 @smoke appointment check-in to doctor queue', async ({
 			startAt: string;
 			practitionerId: number;
 		}>;
-		for (const candidate of slots.slice(0, 40)) {
+		for (const candidate of slots.slice(0, 80)) {
 			const startMs = Date.parse(candidate.startAt);
-			if (startMs - Date.now() > 50 * 60_000) continue; // keep within ~60m early window
+			// Prefer near-term; if none, still try later same-day slots (overnight runs).
+			const earlyOk = startMs - Date.now() <= 50 * 60_000;
+			const sameDayFallback = startMs - Date.now() <= 14 * 60 * 60_000;
+			if (!earlyOk && !sameDayFallback) continue;
 			const apptRes = await request.post(`${api}/api/appointments`, {
 				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
 				data: {
