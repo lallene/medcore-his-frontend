@@ -7,6 +7,7 @@
 
 	import { updateConsultation } from '$lib/api/consultations';
 	import { formSnapshot, isFormDirty } from './form-sync';
+	import { consultationOccUserMessage, isConsultationOccConflict } from './consultation-occ';
 
 	import type { ConsultationDetail, UpdateConsultationPayload } from '$lib/types/consultation';
 
@@ -93,7 +94,7 @@
 	let sickLeaveDays = $state(0);
 
 	function consultationKey(value: ConsultationDetail): string {
-		return `${value.id}:${value.updatedAt}`;
+		return `${value.id}:${value.version}:${value.updatedAt}`;
 	}
 
 	function captureDraft(): object {
@@ -193,6 +194,7 @@
 
 		try {
 			const payload: UpdateConsultationPayload = {
+				expectedVersion: consultation.version,
 				diagnosis,
 				treatment,
 				observations,
@@ -243,7 +245,12 @@
 
 			await onSaved?.();
 		} catch (err: unknown) {
-			error = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.';
+			if (isConsultationOccConflict(err)) {
+				error = consultationOccUserMessage(err, 'Conflit de version');
+				await onSaved?.();
+			} else {
+				error = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.';
+			}
 		} finally {
 			saving = false;
 		}

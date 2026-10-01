@@ -9,6 +9,7 @@
 	} from '$lib/api/pharmacy';
 	import { updateConsultation } from '$lib/api/consultations';
 	import { formSnapshot, isFormDirty } from './form-sync';
+	import { consultationOccUserMessage, isConsultationOccConflict } from './consultation-occ';
 
 	import type { MedicationPresentation, PresentationAvailability } from '$lib/types/pharmacy';
 	import type { ConsultationDetail } from '$lib/types/consultation';
@@ -208,6 +209,7 @@
 
 		try {
 			const saved = await updateConsultation(consultationId, {
+				expectedVersion: consultation.version,
 				prescriptions: prescriptions.map((prescription) => ({
 					id: prescription.id,
 					presentationId: prescription.presentationId ?? 0,
@@ -222,7 +224,12 @@
 			success = 'Prescriptions enregistrées avec succès.';
 			await onSaved?.();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Impossible d’enregistrer les prescriptions.';
+			if (isConsultationOccConflict(err)) {
+				error = consultationOccUserMessage(err, 'Conflit de version');
+				await onSaved?.();
+			} else {
+				error = err instanceof Error ? err.message : 'Impossible d’enregistrer les prescriptions.';
+			}
 		} finally {
 			saving = false;
 		}

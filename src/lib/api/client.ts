@@ -40,6 +40,13 @@ api.interceptors.response.use(
 				typeof (error.response.data as { message?: string }).message === 'string'
 			) {
 				error.message = (error.response.data as { message: string }).message;
+			} else if (
+				error.response?.data &&
+				typeof error.response.data === 'object' &&
+				'error' in error.response.data &&
+				typeof (error.response.data as { error?: string }).error === 'string'
+			) {
+				error.message = (error.response.data as { error: string }).error;
 			}
 		}
 		return Promise.reject(error);

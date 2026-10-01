@@ -4,16 +4,18 @@
 
 	import { getMedicalExams, updateConsultation } from '$lib/api/consultations';
 	import { formSnapshot, isFormDirty, uniquePositiveIDs } from './form-sync';
+	import { consultationOccUserMessage, isConsultationOccConflict } from './consultation-occ';
 
 	import type { ConsultationExam, MedicalExam } from '$lib/types/consultation';
 
 	type Props = {
 		consultationId: number;
+		expectedVersion: number;
 		initialExams?: ConsultationExam[];
 		onSaved?: () => void | Promise<void>;
 	};
 
-	let { consultationId, initialExams = [], onSaved }: Props = $props();
+	let { consultationId, expectedVersion, initialExams = [], onSaved }: Props = $props();
 
 	let exams = $state<MedicalExam[]>([]);
 	let selectedExamIds = $state<number[]>([]);
@@ -92,6 +94,7 @@
 
 		try {
 			const saved = await updateConsultation(consultationId, {
+				expectedVersion,
 				examIds: selectedExamIds
 			});
 			const savedIDs = normalizedExamIds(saved.exams);
@@ -101,7 +104,12 @@
 			success = 'Examens enregistrés avec succès.';
 			await onSaved?.();
 		} catch (err: unknown) {
-			error = err instanceof Error ? err.message : 'Impossible d’enregistrer les examens.';
+			if (isConsultationOccConflict(err)) {
+				error = consultationOccUserMessage(err, 'Conflit de version');
+				await onSaved?.();
+			} else {
+				error = err instanceof Error ? err.message : 'Impossible d’enregistrer les examens.';
+			}
 		} finally {
 			saving = false;
 		}

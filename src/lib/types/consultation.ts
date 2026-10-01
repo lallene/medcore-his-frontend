@@ -21,6 +21,7 @@ export type Consultation = {
 	service: string;
 	serviceId?: number | null;
 	status: ConsultationStatus;
+	version: number;
 	diagnosis: string;
 	observations: string;
 	treatment: string;
@@ -227,6 +228,7 @@ export type ConsultationDetail = {
 	doctorName: string;
 	service: string;
 	status: 'draft' | 'in_progress' | 'completed' | 'cancelled';
+	version: number;
 
 	startedAt: string | null;
 	completedAt: string | null;
@@ -283,6 +285,8 @@ export type PrescriptionPayload = {
 };
 
 export type UpdateConsultationPayload = {
+	expectedVersion: number;
+
 	doctorName?: string;
 	service?: string;
 
@@ -316,5 +320,6 @@ export type ConsultationStatus = 'draft' | 'in_progress' | 'completed' | 'cancel
 
 export interface UpdateConsultationStatusPayload {
 	status: ConsultationStatus;
+	expectedVersion: number;
 	cancellationReason?: string;
 }

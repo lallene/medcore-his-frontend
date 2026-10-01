@@ -18,6 +18,10 @@
 
 	import { getConsultation, updateConsultationStatus } from '$lib/api/consultations';
 	import {
+		consultationOccUserMessage,
+		isConsultationOccConflict
+	} from '$lib/components/consultations/consultation-occ';
+	import {
 		completeQueueTicket,
 		getQueueTicket,
 		getQueueTicketByConsultation
@@ -241,12 +245,24 @@
 					dispositionNote: dispositionNote.trim() || undefined
 				});
 			} else {
-				await updateConsultationStatus(consultationId, { status: 'completed' });
+				await updateConsultationStatus(consultationId, {
+					status: 'completed',
+					expectedVersion: consultation.version
+				});
 			}
 			consultation = await getConsultation(consultationId);
 			await refreshQueueTicket(consultation?.queueTicketId ?? initialQueueTicketId, consultationId);
 		} catch (err: unknown) {
-			error = err instanceof Error ? err.message : 'Impossible de terminer la prise en charge.';
+			if (isConsultationOccConflict(err)) {
+				error = consultationOccUserMessage(err, 'Conflit de version');
+				try {
+					consultation = await getConsultation(consultationId);
+				} catch {
+					/* keep prior */
+				}
+			} else {
+				error = err instanceof Error ? err.message : 'Impossible de terminer la prise en charge.';
+			}
 		} finally {
 			completing = false;
 		}
@@ -502,6 +518,7 @@
 		{:else if consultation}
 			<ExamEditor
 				{consultationId}
+				expectedVersion={consultation.version}
 				initialExams={consultation.exams}
 				onSaved={refreshConsultation}
 			/>
