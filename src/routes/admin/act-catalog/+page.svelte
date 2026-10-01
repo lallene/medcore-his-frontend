@@ -5,11 +5,7 @@
 		listActCatalog,
 		updateActCatalogEntry
 	} from '$lib/api/act-catalog';
-	import {
-		ACT_CATEGORIES,
-		type ActCatalogEntry,
-		type ActCategory
-	} from '$lib/types/act-catalog';
+	import { ACT_CATEGORIES, type ActCatalogEntry, type ActCategory } from '$lib/types/act-catalog';
 	import {
 		BASE_PRICE_HINT,
 		BASE_PRICE_LABEL,
@@ -316,8 +312,7 @@
 			Description
 			<textarea
 				class="min-h-[4rem] rounded-xl border border-slate-200 px-3 py-2"
-				bind:value={form.description}
-			></textarea>
+				bind:value={form.description}></textarea>
 		</label>
 		<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 			Catégorie

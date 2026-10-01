@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		createPerformedAct,
-		listPerformedActs,
-		voidPerformedAct
-	} from '$lib/api/performed-acts';
+	import { createPerformedAct, listPerformedActs, voidPerformedAct } from '$lib/api/performed-acts';
 	import { listActCatalog } from '$lib/api/act-catalog';
 	import type { ActCatalogEntry } from '$lib/types/act-catalog';
 	import type { PerformedAct } from '$lib/types/performed-acts';
@@ -212,9 +208,7 @@
 								<div class="font-mono text-xs font-semibold text-violet-800">{act.actCode}</div>
 								<div class="font-medium text-slate-900">{act.actLabel}</div>
 							</td>
-							<td class="px-4 py-3"
-								>{actCategoryLabel[act.actCategory] ?? act.actCategory}</td
-							>
+							<td class="px-4 py-3">{actCategoryLabel[act.actCategory] ?? act.actCategory}</td>
 							<td class="px-4 py-3">{act.quantity}</td>
 							<td class="px-4 py-3">{formatDate(act.performedAt)}</td>
 							<td class="px-4 py-3">
@@ -228,7 +222,8 @@
 							</td>
 							<td class="px-4 py-3">
 								{#if origin}
-									<span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
+									<span
+										class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
 										>{origin}</span
 									>
 								{:else}
@@ -272,7 +267,9 @@
 		>
 			<header class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
 				<div>
-					<p class="text-xs font-bold tracking-wide text-violet-700 uppercase">{selected.actCode}</p>
+					<p class="text-xs font-bold tracking-wide text-violet-700 uppercase">
+						{selected.actCode}
+					</p>
 					<h3 id="performed-act-drawer-title" class="text-xl font-black text-slate-900">
 						{selected.actLabel}
 					</h3>
@@ -299,9 +296,9 @@
 					</div>
 					<div>
 						<p class="text-xs font-semibold text-slate-500">Origine</p>
-						<p class="font-medium text-slate-900"
-							>{originBadgeLabel(selected.sourceType) ?? 'Saisie manuelle'}</p
-						>
+						<p class="font-medium text-slate-900">
+							{originBadgeLabel(selected.sourceType) ?? 'Saisie manuelle'}
+						</p>
 					</div>
 					<div>
 						<p class="text-xs font-semibold text-slate-500">Facturable</p>
@@ -309,13 +306,14 @@
 					</div>
 					<div>
 						<p class="text-xs font-semibold text-slate-500">Éligible PEC</p>
-						<p class="font-medium text-slate-900"
-							>{selected.insuranceEligible ? 'Oui' : 'Non'}</p
-						>
+						<p class="font-medium text-slate-900">{selected.insuranceEligible ? 'Oui' : 'Non'}</p>
 					</div>
 				</div>
 
-				<div class="rounded-2xl border border-amber-100 bg-amber-50 p-4" data-testid="performed-act-base-price">
+				<div
+					class="rounded-2xl border border-amber-100 bg-amber-50 p-4"
+					data-testid="performed-act-base-price"
+				>
 					<p class="text-xs font-bold tracking-wide text-amber-800 uppercase">{BASE_PRICE_LABEL}</p>
 					<p class="mt-1 text-lg font-black text-amber-950">
 						{formatCatalogPrice(selected.basePrice, selected.currency)}
@@ -324,7 +322,10 @@
 				</div>
 
 				{#if selected.status === 'VOIDED'}
-					<div class="rounded-2xl border border-rose-100 bg-rose-50 p-4" data-testid="performed-act-void-meta">
+					<div
+						class="rounded-2xl border border-rose-100 bg-rose-50 p-4"
+						data-testid="performed-act-void-meta"
+					>
 						<p class="text-xs font-bold tracking-wide text-rose-700 uppercase">Annulation</p>
 						<p class="mt-1 font-medium text-rose-950">{selected.voidReason || '—'}</p>
 						<p class="mt-1 text-xs text-rose-700">
@@ -361,7 +362,10 @@
 				<option value={0}>Sélectionner…</option>
 				{#each catalogOptions as entry (entry.id)}
 					<option value={entry.id}
-						>{entry.code} — {entry.label} ({formatCatalogPrice(entry.basePrice, entry.currency)})</option
+						>{entry.code} — {entry.label} ({formatCatalogPrice(
+							entry.basePrice,
+							entry.currency
+						)})</option
 					>
 				{/each}
 			</select>
@@ -409,7 +413,12 @@
 	{/snippet}
 </Modal>
 
-<Modal bind:open={voidOpen} title="Annuler l'acte réalisé" description="Action irréversible." size="md">
+<Modal
+	bind:open={voidOpen}
+	title="Annuler l'acte réalisé"
+	description="Action irréversible."
+	size="md"
+>
 	{#if voidError}
 		<div data-testid="performed-act-void-error">
 			<Alert tone="danger">{voidError}</Alert>
@@ -427,8 +436,7 @@
 			bind:value={voidReason}
 			maxlength={240}
 			required
-			data-testid="performed-act-void-reason"
-		></textarea>
+			data-testid="performed-act-void-reason"></textarea>
 	</label>
 	{#snippet footer()}
 		<Button variant="ghost" disabled={voidBusy} onclick={() => (voidOpen = false)}>Fermer</Button>

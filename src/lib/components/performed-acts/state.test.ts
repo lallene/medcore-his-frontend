@@ -61,9 +61,7 @@ test('active invoice void conflict messaging', () => {
 	);
 	assert.equal(isActiveInvoiceVoidConflict('Seul un acte réalisé peut être annulé'), false);
 	assert.equal(
-		resolveVoidErrorMessage(
-			new Error("Impossible d'annuler un acte encore facturé activement")
-		),
+		resolveVoidErrorMessage(new Error("Impossible d'annuler un acte encore facturé activement")),
 		ACTIVE_INVOICE_VOID_MESSAGE
 	);
 	assert.equal(

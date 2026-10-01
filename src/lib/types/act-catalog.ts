@@ -1,10 +1,5 @@
 export type ActCategory =
-	| 'CONSULTATION'
-	| 'LABORATORY'
-	| 'IMAGING'
-	| 'HOSPITALIZATION'
-	| 'PROCEDURE'
-	| 'OTHER';
+	'CONSULTATION' | 'LABORATORY' | 'IMAGING' | 'HOSPITALIZATION' | 'PROCEDURE' | 'OTHER';
 
 export const ACT_CATEGORIES: ActCategory[] = [
 	'CONSULTATION',
