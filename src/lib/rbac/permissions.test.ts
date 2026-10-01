@@ -78,4 +78,11 @@ describe('rbac navigation', () => {
 		assert.equal(canAccessPath('/agenda', ['schedule.read.own']), true);
 		assert.equal(canAccessPath('/agenda', ['*']), true);
 	});
+
+	it('act catalog admin path requires act_catalog permissions', () => {
+		assert.equal(canAccessPath('/admin/act-catalog', ['dashboard.read']), false);
+		assert.equal(canAccessPath('/admin/act-catalog', ['act_catalog.read']), true);
+		assert.equal(canAccessPath('/admin/act-catalog', ['act_catalog.manage']), true);
+		assert.equal(canAccessPath('/admin/act-catalog', ['*']), true);
+	});
 });

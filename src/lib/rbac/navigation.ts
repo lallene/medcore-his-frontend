@@ -22,6 +22,7 @@ export type NavHref =
 	| '/admin/staff'
 	| '/admin/access'
 	| '/admin/organization'
+	| '/admin/act-catalog'
 	| '/admin/scheduling'
 	| '/admin/qa'
 	| '/admin/design-system'
@@ -116,6 +117,11 @@ export const adminMenu: NavItem[] = [
 	},
 	{ title: 'Organisation', href: '/admin/organization', permissions: ['organization.manage'] },
 	{
+		title: 'Référentiel des actes',
+		href: '/admin/act-catalog',
+		permissions: ['act_catalog.read', 'act_catalog.manage']
+	},
+	{
 		title: 'Plannings',
 		href: '/admin/scheduling',
 		permissions: [
@@ -140,6 +146,7 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/admin/access', permissions: ['rbac.read', 'staff.read', 'staff.manage'] },
 	{ prefix: '/admin/staff', permissions: ['staff.read'] },
 	{ prefix: '/admin/organization', permissions: ['organization.read', 'organization.manage'] },
+	{ prefix: '/admin/act-catalog', permissions: ['act_catalog.read', 'act_catalog.manage'] },
 	{
 		prefix: '/admin/scheduling',
 		permissions: [

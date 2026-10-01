@@ -5,6 +5,7 @@
 	import { clinicBranding } from '$lib/config/clinic';
 	import {
 		BarChart3,
+		BookOpen,
 		CalendarDays,
 		CreditCard,
 		FileCheck2,
@@ -65,6 +66,7 @@
 		'/admin/staff': Users,
 		'/admin/access': Shield,
 		'/admin/organization': Settings,
+		'/admin/act-catalog': BookOpen,
 		'/admin/scheduling': CalendarDays,
 		'/admin/qa': BarChart3,
 		'/admin/design-system': LayoutDashboard,

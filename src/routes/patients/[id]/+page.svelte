@@ -6,6 +6,7 @@
 	import PatientExams from '$lib/components/patients/patient-360/PatientExams.svelte';
 	import PatientPrescriptions from '$lib/components/patients/patient-360/PatientPrescriptions.svelte';
 	import PatientHospitalizations from '$lib/components/patients/patient-360/PatientHospitalizations.svelte';
+	import PatientPerformedActs from '$lib/components/patients/patient-360/PatientPerformedActs.svelte';
 	import PatientInsurance from '$lib/components/patients/patient-360/PatientInsurance.svelte';
 	import PatientBilling from '$lib/components/patients/patient-360/PatientBilling.svelte';
 	import PatientDocuments from '$lib/components/patients/patient-360/PatientDocuments.svelte';
@@ -14,6 +15,7 @@
 	import {
 		Building2,
 		CalendarDays,
+		ClipboardList,
 		FileHeart,
 		FileText,
 		FlaskConical,
@@ -44,6 +46,7 @@
 	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
 	import PatientActiveCareBanner from '$lib/components/patients/patient-360/PatientActiveCareBanner.svelte';
 	import { canReadAgenda } from '$lib/components/agenda/state';
+	import { canReadPerformedActs } from '$lib/components/performed-acts/state';
 	import { getStoredPermissions } from '$lib/rbac/permissions';
 	import { browser } from '$app/environment';
 
@@ -67,6 +70,9 @@
 	let appointmentCount = $state(0);
 
 	const showAppointmentsTab = $derived(browser ? canReadAgenda(getStoredPermissions()) : false);
+	const showPerformedActsTab = $derived(
+		browser ? canReadPerformedActs(getStoredPermissions()) : false
+	);
 
 	const consultationCount = $derived(consultations.length);
 
@@ -130,6 +136,15 @@
 			icon: Building2,
 			count: hospitalizationCount
 		},
+		...(showPerformedActsTab
+			? [
+					{
+						id: 'performed-acts' as const,
+						label: 'Actes réalisés',
+						icon: ClipboardList
+					}
+				]
+			: []),
 		{
 			id: 'insurance',
 			label: 'Assurance',
@@ -254,6 +269,8 @@
 			<PatientPrescriptions patientId={p.id} {consultations} />
 		{:else if activeTab === 'hospitalizations'}
 			<PatientHospitalizations patientId={p.id} {hospitalizations} />
+		{:else if activeTab === 'performed-acts' && showPerformedActsTab}
+			<PatientPerformedActs patientId={p.id} />
 		{:else if activeTab === 'insurance'}
 			<PatientInsurance patient={p} {insurance} />
 		{:else if activeTab === 'billing'}

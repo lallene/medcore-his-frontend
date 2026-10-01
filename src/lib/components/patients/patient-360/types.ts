@@ -6,6 +6,7 @@ export type PatientTab =
 	| 'exams'
 	| 'prescriptions'
 	| 'hospitalizations'
+	| 'performed-acts'
 	| 'insurance'
 	| 'billing'
 	| 'documents'
