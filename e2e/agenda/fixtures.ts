@@ -113,10 +113,17 @@ export async function clearActiveTickets(
 	const items = body.items ?? body.data ?? [];
 	for (const ticket of Array.isArray(items) ? items : []) {
 		if (String(ticket.status ?? '') !== 'ACTIVE') continue;
-		await request.post(`${api}/api/queue/tickets/${ticket.id}/cancel`, {
+		const cancel = await request.post(`${api}/api/queue/tickets/${ticket.id}/cancel`, {
 			headers: bearer(token),
 			data: {}
 		});
+		// LOT28A: cancel returns 409 after care start — complete instead for fixture cleanup.
+		if (cancel.status() === 409) {
+			await request.post(`${api}/api/queue/tickets/${ticket.id}/complete`, {
+				headers: bearer(token),
+				data: { disposition: 'DISCHARGED' }
+			});
+		}
 	}
 }
 

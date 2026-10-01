@@ -64,10 +64,17 @@ async function clearActiveTickets(request: APIRequestContext, token: string, pat
 	if (!list.ok()) return;
 	const body = await list.json();
 	for (const t of body.items ?? []) {
-		await request.post(`${api}/api/queue/tickets/${t.id}/cancel`, {
+		const cancel = await request.post(`${api}/api/queue/tickets/${t.id}/cancel`, {
 			headers: bearer(token),
 			data: { reason: `QA cleanup ${qaTag}` }
 		});
+		// LOT28A: cancel returns 409 after care start — complete instead for fixture cleanup.
+		if (cancel.status() === 409) {
+			await request.post(`${api}/api/queue/tickets/${t.id}/complete`, {
+				headers: bearer(token),
+				data: { disposition: 'DISCHARGED' }
+			});
+		}
 	}
 }
 
