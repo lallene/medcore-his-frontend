@@ -57,6 +57,11 @@ export function canCreatePerformedActs(permissions: string[]): boolean {
 	return permissions.includes('*') || permissions.includes('performed_acts.create');
 }
 
+/** Create UX needs catalog selection — both create + catalog read required. */
+export function canCreatePerformedActFromCatalog(permissions: string[]): boolean {
+	return canCreatePerformedActs(permissions) && canReadActCatalog(permissions);
+}
+
 export function canVoidPerformedActs(permissions: string[]): boolean {
 	return permissions.includes('*') || permissions.includes('performed_acts.void');
 }

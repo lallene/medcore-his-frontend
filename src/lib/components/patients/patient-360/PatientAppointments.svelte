@@ -9,15 +9,13 @@
 	} from '$lib/api/appointments';
 	import {
 		AGENDA_TIMEZONE,
-		addCalendarDays,
 		canBookAppointment,
 		canReadAgenda,
 		filterHistoryAppointments,
 		filterUpcomingAppointments,
-		formatAgendaDateTime,
-		startOfZonedDay,
-		toRfc3339
+		formatAgendaDateTime
 	} from '$lib/components/agenda/state';
+	import { patient360AppointmentWindows } from '$lib/components/patients/patient-360/appointment-windows';
 	import {
 		cancelEntireAppointmentSeries,
 		cancelSeriesFromAppointmentForward,
@@ -79,14 +77,7 @@
 
 	/** Half-open windows matching GET /api/appointments [from, to). */
 	function appointmentWindows() {
-		const startToday = startOfZonedDay(new Date(), AGENDA_TIMEZONE);
-		const historyFrom = addCalendarDays(startToday, -31, AGENDA_TIMEZONE);
-		const upcomingTo = addCalendarDays(startToday, 31, AGENDA_TIMEZONE);
-		return {
-			startToday,
-			past: { from: toRfc3339(historyFrom), to: toRfc3339(startToday) },
-			forward: { from: toRfc3339(startToday), to: toRfc3339(upcomingTo) }
-		};
+		return patient360AppointmentWindows(new Date(), AGENDA_TIMEZONE);
 	}
 
 	async function loadAppointments() {
@@ -279,7 +270,7 @@
 			<div>
 				<h2 class="text-lg font-semibold text-slate-900">Rendez-vous</h2>
 				<p class="text-sm text-slate-500">
-					À venir et historique récent (31 jours) — source agenda autoritative.
+					À venir et historique récent (30 jours) — source agenda autoritative.
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-2">
@@ -307,7 +298,7 @@
 			<section class="space-y-3" data-testid="patient-360-appointments-upcoming">
 				<div>
 					<h3 class="text-base font-semibold text-slate-900">À venir</h3>
-					<p class="text-sm text-slate-500">Planifiés et en cours (fenêtre 31 jours).</p>
+					<p class="text-sm text-slate-500">Planifiés et en cours (fenêtre 30 jours).</p>
 				</div>
 				{#if upcoming.length === 0}
 					<EmptyState
@@ -336,13 +327,13 @@
 				<div>
 					<h3 class="text-base font-semibold text-slate-900">Historique</h3>
 					<p class="text-sm text-slate-500">
-						Terminés, annulés, absents ou passés — 31 derniers jours (plus récents en premier).
+						Terminés, annulés, absents ou passés — 30 derniers jours (plus récents en premier).
 					</p>
 				</div>
 				{#if history.length === 0}
 					<EmptyState
 						title="Aucun historique récent"
-						description="Aucun rendez-vous historique sur les 31 derniers jours pour ce patient."
+						description="Aucun rendez-vous historique sur les 30 derniers jours pour ce patient."
 					/>
 				{:else}
 					<ul class="space-y-2" data-testid="patient-360-appointment-history-list">

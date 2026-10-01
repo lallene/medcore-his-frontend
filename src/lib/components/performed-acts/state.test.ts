@@ -7,6 +7,7 @@ import {
 	actCategoryLabel,
 	canCreatePerformedActs,
 	canManageActCatalog,
+	canCreatePerformedActFromCatalog,
 	canReadActCatalog,
 	canReadPerformedActs,
 	canVoidPerformedAct,
@@ -46,6 +47,25 @@ test('RBAC helpers do not infer permissions', () => {
 	assert.equal(canCreatePerformedActs(['performed_acts.read']), false);
 	assert.equal(canVoidPerformedActs(['performed_acts.create']), false);
 	assert.equal(canVoidPerformedActs(['*']), true);
+});
+
+test('create-from-catalog requires performed_acts.create AND act_catalog.read', () => {
+	assert.equal(canCreatePerformedActFromCatalog(['performed_acts.create']), false);
+	assert.equal(canCreatePerformedActFromCatalog(['act_catalog.read']), false);
+	assert.equal(
+		canCreatePerformedActFromCatalog(['performed_acts.create', 'act_catalog.read']),
+		true
+	);
+	assert.equal(
+		canCreatePerformedActFromCatalog(['performed_acts.create', 'act_catalog.manage']),
+		true
+	);
+	assert.equal(canCreatePerformedActFromCatalog(['*']), true);
+	assert.equal(
+		canCreatePerformedActs(['performed_acts.create']) &&
+			!canCreatePerformedActFromCatalog(['performed_acts.create']),
+		true
+	);
 });
 
 test('void availability is PERFORMED-only', () => {

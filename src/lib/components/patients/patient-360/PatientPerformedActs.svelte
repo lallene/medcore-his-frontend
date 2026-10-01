@@ -9,7 +9,7 @@
 		BASE_PRICE_HINT,
 		BASE_PRICE_LABEL,
 		actCategoryLabel,
-		canCreatePerformedActs,
+		canCreatePerformedActFromCatalog,
 		canVoidPerformedAct,
 		formatCatalogPrice,
 		normalizeVoidReason,
@@ -45,13 +45,15 @@
 	let voidBusy = $state(false);
 	let createBusy = $state(false);
 	let createError = $state('');
+	let catalogLoadError = $state('');
 	let catalogOptions = $state<ActCatalogEntry[]>([]);
 	let catalogEntryId = $state(0);
 	let quantity = $state(1);
 	let performedAt = $state('');
 
-	const canCreate = $derived(canCreatePerformedActs(permissions));
+	const canCreate = $derived(canCreatePerformedActFromCatalog(permissions));
 	const selectedCatalog = $derived(catalogOptions.find((e) => e.id === catalogEntryId) ?? null);
+	const catalogReady = $derived(catalogOptions.length > 0 && !catalogLoadError);
 
 	async function loadActs() {
 		error = '';
@@ -74,23 +76,37 @@
 	}
 
 	async function openCreate() {
+		if (!canCreate) return;
 		createError = '';
+		catalogLoadError = '';
 		quantity = 1;
 		performedAt = '';
 		catalogEntryId = 0;
+		catalogOptions = [];
 		createOpen = true;
 		try {
 			const page = await listActCatalog({ active: true, limit: 100 });
 			catalogOptions = (page.data ?? []).filter((e) => e.isActive);
+			if (catalogOptions.length === 0) {
+				catalogLoadError = 'Aucun acte catalogue actif disponible.';
+			}
 		} catch (e) {
-			createError = resolveUserErrorMessage(e, 'Impossible de charger le catalogue.');
+			catalogOptions = [];
+			if (isAccessDeniedError(e)) {
+				catalogLoadError = "Vous n'avez pas la permission de lire le référentiel des actes.";
+			} else {
+				catalogLoadError = resolveUserErrorMessage(e, 'Impossible de charger le catalogue.');
+			}
 		}
 	}
 
 	async function submitCreate() {
 		createError = '';
-		if (!catalogEntryId) {
-			createError = 'Sélectionnez un acte catalogue.';
+		if (!catalogReady || !catalogEntryId) {
+			createError =
+				catalogOptions.length === 0
+					? 'Impossible de créer : catalogue indisponible.'
+					: 'Sélectionnez un acte catalogue.';
 			return;
 		}
 		createBusy = true;
@@ -348,6 +364,11 @@
 {/if}
 
 <Modal bind:open={createOpen} title="Nouvel acte réalisé" size="lg">
+	{#if catalogLoadError}
+		<div data-testid="performed-act-catalog-error">
+			<Alert tone="danger">{catalogLoadError}</Alert>
+		</div>
+	{/if}
 	{#if createError}
 		<Alert tone="danger">{createError}</Alert>
 	{/if}
@@ -408,6 +429,7 @@
 		<Button
 			data-testid="performed-act-create-submit"
 			loading={createBusy}
+			disabled={!catalogReady || createBusy || !catalogEntryId}
 			onclick={() => void submitCreate()}>Créer</Button
 		>
 	{/snippet}
