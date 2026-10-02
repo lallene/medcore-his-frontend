@@ -36,6 +36,10 @@
 		MedicalRecordCollectionKey,
 		MedicalRecordDeletedIDs
 	} from '$lib/types/medical-record';
+	import {
+		externalDocumentReferenceStatus,
+		isSafeExternalDocumentURL
+	} from './medical-document-url';
 
 	type SectionId =
 		'identity' | 'coverage' | 'history' | 'treatments' | 'lifestyle' | 'vitals' | 'documents';
@@ -126,6 +130,26 @@
 
 	async function save() {
 		if (!record || !originalRecord) {
+			return;
+		}
+
+		const current = record;
+		const baseline = originalRecord;
+		const invalidDocument = current.documents.find((document) => {
+			const original = baseline.documents.find((item) => item.id === document.id);
+			const referenceChanged =
+				document.id === undefined ||
+				!original ||
+				(document.fileReference ?? '').trim() !== (original.fileReference ?? '').trim();
+			if (!referenceChanged) {
+				// Legacy invalid rows remain display-only; do not block unrelated dossier saves.
+				return false;
+			}
+			return !isSafeExternalDocumentURL(document.fileReference);
+		});
+		if (invalidDocument) {
+			error =
+				'Chaque document médical doit référencer une URL HTTPS absolue valide (sans identifiants).';
 			return;
 		}
 
@@ -1277,7 +1301,8 @@
 								<input
 									type="text"
 									bind:value={document.fileReference}
-									placeholder="Référence ou URL"
+									placeholder="URL HTTPS du document externe"
+									aria-label={`Référence URL du document ${index + 1}`}
 									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
 								/>
 
@@ -1297,6 +1322,28 @@
 								>
 									<Trash2 size={17} />
 								</button>
+
+								{#if externalDocumentReferenceStatus(document.fileReference) === 'safe'}
+									<!-- Absolute external HTTPS reference — not an in-app route -->
+									<!-- eslint-disable svelte/no-navigation-without-resolve -->
+									<a
+										href={document.fileReference.trim()}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-testid={`medical-document-external-link-${index}`}
+										class="text-sm font-bold text-[#0E4C92] underline md:col-span-2 xl:col-span-6"
+									>
+										Ouvrir la référence externe
+									</a>
+									<!-- eslint-enable svelte/no-navigation-without-resolve -->
+								{:else if externalDocumentReferenceStatus(document.fileReference) === 'invalid'}
+									<p
+										data-testid={`medical-document-invalid-ref-${index}`}
+										class="text-sm font-semibold text-amber-700 md:col-span-2 xl:col-span-6"
+									>
+										Référence externe non ouvrable — une URL HTTPS absolue est requise.
+									</p>
+								{/if}
 
 								<textarea
 									bind:value={document.description}
