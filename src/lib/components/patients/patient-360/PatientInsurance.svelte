@@ -32,10 +32,18 @@
 	interface Props {
 		patient: Patient;
 		insurance: PatientInsuranceView;
+		canReadCoverage?: boolean;
+		canReadAuthorizations?: boolean;
 	}
 
-	let { patient, insurance }: Props = $props();
+	let {
+		patient,
+		insurance,
+		canReadCoverage = false,
+		canReadAuthorizations = false
+	}: Props = $props();
 	let authorizations = $state<InsuranceAuthorization[]>([]);
+	let authDenied = $state(false);
 
 	const coverageRate = $derived(insurance.coverageRate);
 
@@ -68,12 +76,17 @@
 	}
 
 	onMount(async () => {
+		if (!canReadAuthorizations) return;
 		try {
 			authorizations = normalizeInsuranceAuthorizations(
 				(await getInsuranceAuthorizations({ patientId: patient.id, pageSize: 100 })).items
 			);
-		} catch {
-			authorizations = [];
+		} catch (e) {
+			if (e instanceof Error && e.message === 'ACCESS_DENIED') {
+				authDenied = true;
+			} else {
+				authorizations = [];
+			}
 		}
 	});
 </script>
@@ -192,68 +205,83 @@
 	<div class="grid gap-6 xl:grid-cols-3">
 		<div class="space-y-6 xl:col-span-2">
 			<Card title="Situation d’assurance" subtitle="Informations principales de couverture">
-				<div class="grid gap-4 md:grid-cols-2">
-					<MiniInfo title="Statut du patient" value={insuranceStatus} />
-
-					<MiniInfo title="Organisme" value={insurance.organization} />
-
-					<MiniInfo title="Matricule assuré" value={insurance.memberNumber} />
-
-					<MiniInfo title="Taux de couverture" value={coverageLabel} />
-
-					<MiniInfo title="Reste à charge" value={patientShareLabel} />
-
-					<MiniInfo title="Début de validité" value={formatDate(insurance.validFrom)} />
-
-					<MiniInfo title="Fin de validité" value={formatDate(insurance.validTo)} />
-
-					<MiniInfo title="Garant" value={insurance.guarantor} />
-
-					<MiniInfo title="Bénéficiaire" value={insurance.beneficiary} />
-				</div>
-
-				{#if insurance.source === 'legacy'}
-					<p class="mt-4 text-xs font-semibold text-amber-700">
-						Couverture issue des anciens champs patient, utilisée faute de couverture structurée
-						active.
+				{#if !canReadCoverage}
+					<p class="text-sm text-slate-500" data-testid="patient-360-coverage-denied">
+						Lecture des couvertures non autorisée.
 					</p>
-				{/if}
+				{:else}
+					<div class="grid gap-4 md:grid-cols-2">
+						<MiniInfo title="Statut du patient" value={insuranceStatus} />
 
-				<div class="mt-6">
-					<div class="mb-2 flex items-center justify-between text-sm font-bold">
-						<span class="text-slate-600"> Répartition de la couverture </span>
+						<MiniInfo title="Organisme" value={insurance.organization} />
 
-						<span class="text-violet-700">
-							{coverageRate} %
-						</span>
+						<MiniInfo title="Matricule assuré" value={insurance.memberNumber} />
+
+						<MiniInfo title="Taux de couverture" value={coverageLabel} />
+
+						<MiniInfo title="Reste à charge" value={patientShareLabel} />
+
+						<MiniInfo title="Début de validité" value={formatDate(insurance.validFrom)} />
+
+						<MiniInfo title="Fin de validité" value={formatDate(insurance.validTo)} />
+
+						<MiniInfo title="Garant" value={insurance.guarantor} />
+
+						<MiniInfo title="Bénéficiaire" value={insurance.beneficiary} />
 					</div>
 
-					<div class="h-3 overflow-hidden rounded-full bg-slate-100">
+					{#if insurance.source === 'legacy'}
+						<p class="mt-4 text-xs font-semibold text-amber-700">
+							Couverture issue des anciens champs patient, utilisée faute de couverture structurée
+							active.
+						</p>
+					{/if}
+
+					<div class="mt-6">
+						<div class="mb-2 flex items-center justify-between text-sm font-bold">
+							<span class="text-slate-600"> Répartition de la couverture </span>
+
+							<span class="text-violet-700">
+								{coverageRate} %
+							</span>
+						</div>
+
+						<div class="h-3 overflow-hidden rounded-full bg-slate-100">
+							<div
+								class="h-full rounded-full bg-violet-600 transition-all"
+								style={`width: ${coverageRate}%`}
+							></div>
+						</div>
+
 						<div
-							class="h-full rounded-full bg-violet-600 transition-all"
-							style={`width: ${coverageRate}%`}
-						></div>
-					</div>
+							class="mt-3 flex flex-wrap justify-between gap-2 text-xs font-semibold text-slate-500"
+						>
+							<span>
+								Assurance : {coverageRate} %
+							</span>
 
-					<div
-						class="mt-3 flex flex-wrap justify-between gap-2 text-xs font-semibold text-slate-500"
-					>
-						<span>
-							Assurance : {coverageRate} %
-						</span>
-
-						<span>
-							Patient : {patientShareRate} %
-						</span>
+							<span>
+								Patient : {patientShareRate} %
+							</span>
+						</div>
 					</div>
-				</div>
+				{/if}
 			</Card>
 
 			<Card
 				title="Décisions PEC par acte"
 				subtitle="Distinctes de la couverture contractuelle ci-dessus"
 			>
-				{#if authorizations.length === 0}<div
+				{#if !canReadAuthorizations}
+					<p class="text-sm text-slate-500">Lecture des autorisations PEC non autorisée.</p>
+				{:else if authDenied}
+					<p
+						class="rounded-xl bg-red-50 p-3 text-red-700"
+						data-testid="patient-360-insurance-auth-denied"
+					>
+						Accès refusé aux autorisations PEC.
+					</p>
+				{:else if authorizations.length === 0}<div
 						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
 					>
 						<div

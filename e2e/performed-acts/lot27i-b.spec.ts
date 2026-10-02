@@ -559,13 +559,10 @@ test.describe('LOT27I-B PerformedAct → PEC', () => {
 		}
 		const admin = await loginApi(request, adminEmail);
 		const patient = await createPatient(request, admin, 'RBAC');
-		const catalog = await ensureCatalogEntry(request, admin);
-		const act = await createPerformedAct(request, admin, patient.id, catalog.id);
 
 		await login(billingEmail, password);
-		await openPerformedActsTab(page, patient.id, patient.codePatient);
-		await page.getByTestId(`performed-act-open-${act.id}`).click();
-		await expect(page.getByTestId('performed-act-drawer')).toBeVisible();
-		await expect(page.getByTestId('performed-act-pec-cta')).toHaveCount(0);
+		// LOT28E-A: FACTURATION lacks patients.360.read — cannot open Patient360 shell.
+		await page.goto(`/patients/${patient.id}`);
+		await expect(page.getByTestId('access-denied')).toBeVisible({ timeout: 20_000 });
 	});
 });

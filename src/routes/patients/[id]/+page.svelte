@@ -45,17 +45,20 @@
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
 	import PatientActiveCareBanner from '$lib/components/patients/patient-360/PatientActiveCareBanner.svelte';
-	import { canReadAgenda } from '$lib/components/agenda/state';
-	import { canReadPerformedActs } from '$lib/components/performed-acts/state';
-	import { getStoredPermissions } from '$lib/rbac/permissions';
+	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
+	import {
+		derivePatient360Capabilities,
+		type Patient360Capabilities
+	} from '$lib/components/patients/patient-360/capabilities';
+	import { getStoredPermissions, isAccessDeniedError } from '$lib/rbac/permissions';
 	import { browser } from '$app/environment';
+	import { resolvePatientInsurance } from '$lib/components/patients/patient-360/patient-360-data';
 
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientCoverage } from '$lib/types/insurance';
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
 	import type { Hospitalization } from '$lib/types/hospitalization';
-	import { resolvePatientInsurance } from '$lib/components/patients/patient-360/patient-360-data';
 
 	let activeTab = $state<PatientTab>('overview');
 
@@ -67,29 +70,46 @@
 	let hospitalizations = $state<Hospitalization[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let accessDenied = $state(false);
 	let appointmentCount = $state(0);
+	let sectionDenied = $state<Partial<Record<string, boolean>>>({});
 
-	const showAppointmentsTab = $derived(browser ? canReadAgenda(getStoredPermissions()) : false);
-	const showPerformedActsTab = $derived(
-		browser ? canReadPerformedActs(getStoredPermissions()) : false
+	let caps = $state<Patient360Capabilities>(derivePatient360Capabilities([]));
+
+	const consultationCount = $derived(caps.canReadConsultations ? consultations.length : undefined);
+
+	const hospitalizationCount = $derived(
+		caps.canReadHospitalizations ? hospitalizations.length : undefined
 	);
 
-	const consultationCount = $derived(consultations.length);
-
-	const hospitalizationCount = $derived(hospitalizations.length);
-
 	const prescriptionCount = $derived(
-		consultations.reduce(
-			(total, consultation) => total + (consultation.prescriptions?.length ?? 0),
-			0
-		)
+		caps.canReadPrescriptions
+			? consultations.reduce(
+					(total, consultation) => total + (consultation.prescriptions?.length ?? 0),
+					0
+				)
+			: undefined
 	);
 
 	const examCount = $derived(
-		consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
+		caps.canReadConsultations
+			? consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
+			: undefined
 	);
 
-	const documentCount = $derived(summary?.statistics.documents ?? 0);
+	const documentCount = $derived(
+		caps.canReadDocuments && caps.canReadMedicalRecord
+			? (summary?.statistics.documents ?? 0)
+			: caps.canReadDocuments
+				? consultations.reduce((total, c) => {
+						let n = 0;
+						if ((c.prescriptions?.length ?? 0) > 0) n++;
+						if ((c.exams?.length ?? 0) > 0) n++;
+						if (c.sickLeaveRequired) n++;
+						return total + n;
+					}, 0)
+				: undefined
+	);
 
 	const patientTabs = $derived<PatientTabItem[]>([
 		{
@@ -97,7 +117,7 @@
 			label: 'Vue générale',
 			icon: LayoutDashboard
 		},
-		...(showAppointmentsTab
+		...(caps.canReadAppointments
 			? [
 					{
 						id: 'appointments' as const,
@@ -107,36 +127,56 @@
 					}
 				]
 			: []),
-		{
-			id: 'consultations',
-			label: 'Consultations',
-			icon: Stethoscope,
-			count: consultationCount
-		},
-		{
-			id: 'medical-record',
-			label: 'Dossier médical',
-			icon: FileHeart
-		},
-		{
-			id: 'exams',
-			label: 'Examens',
-			icon: FlaskConical,
-			count: examCount
-		},
-		{
-			id: 'prescriptions',
-			label: 'Prescriptions',
-			icon: Pill,
-			count: prescriptionCount
-		},
-		{
-			id: 'hospitalizations',
-			label: 'Hospitalisations',
-			icon: Building2,
-			count: hospitalizationCount
-		},
-		...(showPerformedActsTab
+		...(caps.canReadConsultations
+			? [
+					{
+						id: 'consultations' as const,
+						label: 'Consultations',
+						icon: Stethoscope,
+						count: consultationCount
+					}
+				]
+			: []),
+		...(caps.canReadMedicalRecord
+			? [
+					{
+						id: 'medical-record' as const,
+						label: 'Dossier médical',
+						icon: FileHeart
+					}
+				]
+			: []),
+		...(caps.canReadExams
+			? [
+					{
+						id: 'exams' as const,
+						label: 'Examens',
+						icon: FlaskConical,
+						count: examCount
+					}
+				]
+			: []),
+		...(caps.canReadPrescriptions
+			? [
+					{
+						id: 'prescriptions' as const,
+						label: 'Prescriptions',
+						icon: Pill,
+						count: prescriptionCount
+					}
+				]
+			: []),
+		...(caps.canReadHospitalizations
+			? [
+					{
+						id: 'hospitalizations' as const,
+						label: 'Hospitalisations',
+						icon: Building2,
+						count: hospitalizationCount
+					}
+				]
+			: []),
+		...(caps.canReadPerformedActs
 			? [
 					{
 						id: 'performed-acts' as const,
@@ -145,27 +185,43 @@
 					}
 				]
 			: []),
-		{
-			id: 'insurance',
-			label: 'Assurance',
-			icon: Shield
-		},
-		{
-			id: 'billing',
-			label: 'Facturation',
-			icon: ReceiptText
-		},
-		{
-			id: 'documents',
-			label: 'Documents',
-			icon: FileText,
-			count: documentCount
-		},
-		{
-			id: 'timeline',
-			label: 'Timeline',
-			icon: History
-		}
+		...(caps.canReadInsurance
+			? [
+					{
+						id: 'insurance' as const,
+						label: 'Assurance',
+						icon: Shield
+					}
+				]
+			: []),
+		...(caps.canReadBilling
+			? [
+					{
+						id: 'billing' as const,
+						label: 'Facturation',
+						icon: ReceiptText
+					}
+				]
+			: []),
+		...(caps.canReadDocuments
+			? [
+					{
+						id: 'documents' as const,
+						label: 'Documents',
+						icon: FileText,
+						count: documentCount
+					}
+				]
+			: []),
+		...(caps.canReadTimeline
+			? [
+					{
+						id: 'timeline' as const,
+						label: 'Timeline',
+						icon: History
+					}
+				]
+			: [])
 	]);
 
 	function selectTab(tab: PatientTab): void {
@@ -176,48 +232,105 @@
 		return patientTabs.find((tab) => tab.id === activeTab)?.label ?? 'Module';
 	}
 
+	function markDenied(key: string): void {
+		sectionDenied = { ...sectionDenied, [key]: true };
+	}
+
 	onMount(async () => {
 		try {
+			const permissions = browser ? getStoredPermissions() : [];
+			caps = derivePatient360Capabilities(permissions);
+
+			if (!caps.canEnterPatient360) {
+				accessDenied = true;
+				return;
+			}
+
 			const id = Number(page.params.id);
 
 			if (!Number.isInteger(id) || id <= 0) {
 				throw new Error('Identifiant patient invalide.');
 			}
 
-			const patientResponse = await getPatient(id);
-			patient = patientResponse;
-
-			function fallbackOnForbidden<T>(error: unknown, fallback: T): T {
-				if (error instanceof Error && error.message === 'ACCESS_DENIED') {
-					return fallback;
-				}
-
-				throw error;
+			if (!caps.canReadDemographics) {
+				accessDenied = true;
+				return;
 			}
 
-			const [summaryResponse, consultationsResponse, coveragesResponse, hospitalizationsResponse] =
-				await Promise.all([
-					getPatientSummary(id).catch((error) => fallbackOnForbidden(error, null)),
-					getPatientConsultations(id).catch((error) =>
-						fallbackOnForbidden(error, [] as PatientConsultation[])
-					),
-					getPatientCoverages(id).catch((error) =>
-						fallbackOnForbidden(error, [] as PatientCoverage[])
-					),
-					listPatientHospitalizations(id).catch((error) =>
-						fallbackOnForbidden(error, [] as Hospitalization[])
-					)
-				]);
+			try {
+				patient = await getPatient(id);
+			} catch (err: unknown) {
+				if (isAccessDeniedError(err)) {
+					accessDenied = true;
+					return;
+				}
+				throw err;
+			}
 
-			summary = summaryResponse;
-			consultations = consultationsResponse ?? [];
-			coverages = coveragesResponse ?? [];
-			hospitalizations = hospitalizationsResponse ?? [];
-			timelineEvents = summaryResponse?.medical_record?.id
-				? await getClinicalTimeline(summaryResponse.medical_record.id).catch((error) =>
-						fallbackOnForbidden(error, [] as ClinicalTimelineEvent[])
-					)
-				: [];
+			const tasks: Array<Promise<void>> = [];
+
+			if (caps.canReadMedicalRecord) {
+				tasks.push(
+					getPatientSummary(id)
+						.then((value) => {
+							summary = value;
+						})
+						.catch((err: unknown) => {
+							if (isAccessDeniedError(err)) markDenied('summary');
+							else throw err;
+						})
+				);
+			}
+
+			if (caps.canReadConsultations) {
+				tasks.push(
+					getPatientConsultations(id)
+						.then((value) => {
+							consultations = value;
+						})
+						.catch((err: unknown) => {
+							if (isAccessDeniedError(err)) markDenied('consultations');
+							else throw err;
+						})
+				);
+			}
+
+			if (caps.canReadInsuranceCoverage) {
+				tasks.push(
+					getPatientCoverages(id)
+						.then((value) => {
+							coverages = value;
+						})
+						.catch((err: unknown) => {
+							if (isAccessDeniedError(err)) markDenied('coverages');
+							else throw err;
+						})
+				);
+			}
+
+			if (caps.canReadHospitalizations) {
+				tasks.push(
+					listPatientHospitalizations(id)
+						.then((value) => {
+							hospitalizations = value;
+						})
+						.catch((err: unknown) => {
+							if (isAccessDeniedError(err)) markDenied('hospitalizations');
+							else throw err;
+						})
+				);
+			}
+
+			await Promise.all(tasks);
+
+			if (caps.canReadTimeline && summary?.medical_record?.id) {
+				try {
+					timelineEvents = await getClinicalTimeline(summary.medical_record.id);
+				} catch (err: unknown) {
+					if (isAccessDeniedError(err)) markDenied('timeline');
+					else throw err;
+				}
+			}
 		} catch (err: unknown) {
 			error = err instanceof Error ? err.message : 'Impossible de charger la fiche patient.';
 		} finally {
@@ -232,6 +345,11 @@
 
 {#if loading}
 	<LoadingState label="Chargement du dossier patient…" class="min-h-[300px]" />
+{:else if accessDenied}
+	<AccessDenied
+		title="Accès Patient 360° refusé"
+		description="La permission patients.360.read est requise pour ouvrir le dossier Patient 360°."
+	/>
 {:else if error}
 	<Alert tone="danger" title="Patient 360°">{error}</Alert>
 {:else if patient}
@@ -251,34 +369,75 @@
 		<PatientTabs tabs={patientTabs} {activeTab} onSelect={selectTab} />
 
 		{#if activeTab === 'overview'}
-			<PatientOverview patient={p} {summary} {consultations} {insurance} {hospitalizations} />
-		{:else if activeTab === 'appointments' && showAppointmentsTab}
+			<PatientOverview
+				patient={p}
+				{summary}
+				{consultations}
+				{insurance}
+				{hospitalizations}
+				capabilities={caps}
+			/>
+		{:else if activeTab === 'appointments' && caps.canReadAppointments}
 			<PatientAppointments
 				patient={p}
 				onCountChange={(n) => {
 					appointmentCount = n;
 				}}
 			/>
-		{:else if activeTab === 'consultations'}
-			<PatientConsultations patientId={p.id} {consultations} />
-		{:else if activeTab === 'medical-record'}
-			<PatientMedicalRecord patient={p} {summary} {consultations} {hospitalizations} />
-		{:else if activeTab === 'exams'}
-			<PatientExams patientId={p.id} {consultations} />
-		{:else if activeTab === 'prescriptions'}
+		{:else if activeTab === 'consultations' && caps.canReadConsultations}
+			{#if sectionDenied.consultations}
+				<Alert tone="danger" title="Accès refusé">Consultations non autorisées.</Alert>
+			{:else}
+				<PatientConsultations patientId={p.id} {consultations} />
+			{/if}
+		{:else if activeTab === 'medical-record' && caps.canReadMedicalRecord}
+			{#if sectionDenied.summary}
+				<Alert tone="danger" title="Accès refusé">Dossier médical non autorisé.</Alert>
+			{:else}
+				<PatientMedicalRecord patient={p} {summary} {consultations} {hospitalizations} />
+			{/if}
+		{:else if activeTab === 'exams' && caps.canReadExams}
+			<PatientExams
+				patientId={p.id}
+				{consultations}
+				canReadLaboratory={caps.canReadLaboratory}
+				canReadImaging={caps.canReadImaging}
+				canReadConsultations={caps.canReadConsultations}
+			/>
+		{:else if activeTab === 'prescriptions' && caps.canReadPrescriptions}
 			<PatientPrescriptions patientId={p.id} {consultations} />
-		{:else if activeTab === 'hospitalizations'}
-			<PatientHospitalizations patientId={p.id} {hospitalizations} />
-		{:else if activeTab === 'performed-acts' && showPerformedActsTab}
+		{:else if activeTab === 'hospitalizations' && caps.canReadHospitalizations}
+			{#if sectionDenied.hospitalizations}
+				<Alert tone="danger" title="Accès refusé">Hospitalisations non autorisées.</Alert>
+			{:else}
+				<PatientHospitalizations patientId={p.id} {hospitalizations} />
+			{/if}
+		{:else if activeTab === 'performed-acts' && caps.canReadPerformedActs}
 			<PatientPerformedActs patientId={p.id} />
-		{:else if activeTab === 'insurance'}
-			<PatientInsurance patient={p} {insurance} />
-		{:else if activeTab === 'billing'}
-			<PatientBilling patient={p} {consultations} {hospitalizations} />
-		{:else if activeTab === 'documents'}
+		{:else if activeTab === 'insurance' && caps.canReadInsurance}
+			<PatientInsurance
+				patient={p}
+				{insurance}
+				canReadCoverage={caps.canReadInsuranceCoverage}
+				canReadAuthorizations={caps.canReadInsuranceAuthorizations}
+			/>
+		{:else if activeTab === 'billing' && caps.canReadBilling}
+			<PatientBilling
+				patient={p}
+				{consultations}
+				{hospitalizations}
+				canReadInvoices={caps.canReadBillingInvoices}
+				canReadReceivables={caps.canReadReceivables}
+				canReadInsuranceReceivables={caps.canReadInsuranceReceivables}
+			/>
+		{:else if activeTab === 'documents' && caps.canReadDocuments}
 			<PatientDocuments {consultations} {summary} />
-		{:else if activeTab === 'timeline'}
-			<PatientTimeline events={timelineEvents} />
+		{:else if activeTab === 'timeline' && caps.canReadTimeline}
+			{#if sectionDenied.timeline}
+				<Alert tone="danger" title="Accès refusé">Timeline non autorisée.</Alert>
+			{:else}
+				<PatientTimeline events={timelineEvents} />
+			{/if}
 		{:else}
 			<Card title={activeTabLabel()} subtitle="Module Patient 360°">
 				<p>Module indisponible.</p>

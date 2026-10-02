@@ -14,17 +14,29 @@
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
 	import type { Hospitalization } from '$lib/types/hospitalization';
+	import { isAccessDeniedError } from '$lib/rbac/permissions';
 	interface Props {
 		patient: Patient;
 		consultations: PatientConsultation[];
 		hospitalizations: Hospitalization[];
+		canReadInvoices?: boolean;
+		canReadReceivables?: boolean;
+		canReadInsuranceReceivables?: boolean;
 	}
-	let { patient, consultations, hospitalizations }: Props = $props();
+	let {
+		patient,
+		consultations,
+		hospitalizations,
+		canReadInvoices = false,
+		canReadReceivables = false,
+		canReadInsuranceReceivables = false
+	}: Props = $props();
 	let invoices = $state<Invoice[]>([]);
 	let receivables = $state<ReceivableItem[]>([]);
 	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
 	let loading = $state(true);
 	let error = $state('');
+	let accessDenied = $state(false);
 	const totals = $derived(
 		invoices
 			.filter((x) => x.status !== 'CANCELLED')
@@ -41,13 +53,35 @@
 	);
 	onMount(async () => {
 		try {
-			[invoices, receivables, insuranceReceivables] = await Promise.all([
-				listPatientInvoices(patient.id),
-				listPatientReceivables(patient.id).then((page) => page.items),
-				listPatientInsuranceReceivables(patient.id).then((page) => page.items)
-			]);
+			const tasks: Array<Promise<void>> = [];
+			if (canReadInvoices) {
+				tasks.push(
+					listPatientInvoices(patient.id).then((value) => {
+						invoices = value;
+					})
+				);
+			}
+			if (canReadReceivables) {
+				tasks.push(
+					listPatientReceivables(patient.id).then((page) => {
+						receivables = page.items;
+					})
+				);
+			}
+			if (canReadInsuranceReceivables) {
+				tasks.push(
+					listPatientInsuranceReceivables(patient.id).then((page) => {
+						insuranceReceivables = page.items;
+					})
+				);
+			}
+			await Promise.all(tasks);
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Historique indisponible';
+			if (isAccessDeniedError(e)) {
+				accessDenied = true;
+			} else {
+				error = e instanceof Error ? e.message : 'Historique indisponible';
+			}
 		} finally {
 			loading = false;
 		}
@@ -65,91 +99,107 @@
 				Factures persistées · {consultations.length} consultation(s) · {hospitalizations.length} séjour(s).
 			</p>
 		</div>
-		<button
-			class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
-			data-testid="patient-billing-open"
-			onclick={() => goto(resolve(`/billing?patientId=${patient.id}`))}
-			><ReceiptText size={16} class="inline" /> Ouvrir la facturation</button
-		>
+		{#if canReadInvoices}
+			<button
+				class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+				data-testid="patient-billing-open"
+				onclick={() => goto(resolve(`/billing?patientId=${patient.id}`))}
+				><ReceiptText size={16} class="inline" /> Ouvrir la facturation</button
+			>
+		{/if}
 	</header>
-	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
-	<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-		{#each [['Brut', totals.gross], ['Assurance', totals.insurance], ['Part patient', totals.patient], ['Payé', totals.paid], ['Reste', totals.balance]] as item (item[0])}<div
-				class="rounded-2xl border bg-white p-4"
-			>
-				<p class="text-xs font-bold uppercase text-slate-500">{item[0]}</p>
-				<p class="mt-2 text-xl font-black">{formatXOF(Number(item[1]))}</p>
-			</div>{/each}
-	</div>
-	<section class="rounded-2xl border bg-rose-50 p-4">
-		<h3 class="font-black text-rose-900">Créances patient</h3>
-		<p class="text-sm text-rose-700">La part assurance est exclue du reste dû par le patient.</p>
-		<div class="mt-3 grid gap-2 md:grid-cols-3">
-			<p>Total part patient <b>{formatXOF(totals.patient)}</b></p>
-			<p>Total payé <b>{formatXOF(totals.paid)}</b></p>
-			<p>
-				Reste à payer <b>{formatXOF(receivables.reduce((sum, r) => sum + r.patientBalance, 0))}</b>
-			</p>
+	{#if accessDenied}
+		<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="patient-360-billing-denied">
+			Accès refusé à la facturation.
+		</p>
+	{:else if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
+	{#if canReadInvoices}
+		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+			{#each [['Brut', totals.gross], ['Assurance', totals.insurance], ['Part patient', totals.patient], ['Payé', totals.paid], ['Reste', totals.balance]] as item (item[0])}<div
+					class="rounded-2xl border bg-white p-4"
+				>
+					<p class="text-xs font-bold uppercase text-slate-500">{item[0]}</p>
+					<p class="mt-2 text-xl font-black">{formatXOF(Number(item[1]))}</p>
+				</div>{/each}
 		</div>
-		{#each receivables as debt (debt.invoiceId)}<a
-				href={resolve(`/receivables/${debt.invoiceId}`)}
-				class="mt-2 grid gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-5"
-				><b>{debt.invoiceNumber}</b><span>Patient {formatXOF(debt.patientDue)}</span><span
-					>Payé {formatXOF(debt.patientPaid)}</span
-				><span>Reste {formatXOF(debt.patientBalance)}</span><span
-					>{statusLabel[debt.status]} · {debt.dueDate
-						? new Date(debt.dueDate).toLocaleDateString('fr-FR')
-						: 'sans échéance'}</span
-				></a
-			>{:else}<p class="mt-3 text-sm">Aucune créance patient active.</p>{/each}
-	</section>
-	<section class="rounded-2xl border bg-indigo-50 p-4">
-		<h3 class="font-black text-indigo-900">Situation assurance</h3>
-		<p class="text-sm text-indigo-700">Circuit assureur séparé des paiements patient.</p>
-		<div class="mt-3 grid gap-2 md:grid-cols-3">
-			<p>
-				Part assurance <b
-					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceDue, 0))}</b
+	{/if}
+	{#if canReadReceivables}
+		<section class="rounded-2xl border bg-rose-50 p-4">
+			<h3 class="font-black text-rose-900">Créances patient</h3>
+			<p class="text-sm text-rose-700">La part assurance est exclue du reste dû par le patient.</p>
+			<div class="mt-3 grid gap-2 md:grid-cols-3">
+				<p>Total part patient <b>{formatXOF(totals.patient)}</b></p>
+				<p>Total payé <b>{formatXOF(totals.paid)}</b></p>
+				<p>
+					Reste à payer <b>{formatXOF(receivables.reduce((sum, r) => sum + r.patientBalance, 0))}</b
+					>
+				</p>
+			</div>
+			{#each receivables as debt (debt.invoiceId)}<a
+					href={resolve(`/receivables/${debt.invoiceId}`)}
+					class="mt-2 grid gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-5"
+					><b>{debt.invoiceNumber}</b><span>Patient {formatXOF(debt.patientDue)}</span><span
+						>Payé {formatXOF(debt.patientPaid)}</span
+					><span>Reste {formatXOF(debt.patientBalance)}</span><span
+						>{statusLabel[debt.status]} · {debt.dueDate
+							? new Date(debt.dueDate).toLocaleDateString('fr-FR')
+							: 'sans échéance'}</span
+					></a
+				>{:else}<p class="mt-3 text-sm">Aucune créance patient active.</p>{/each}
+		</section>
+	{/if}
+	{#if canReadInsuranceReceivables}
+		<section class="rounded-2xl border bg-indigo-50 p-4">
+			<h3 class="font-black text-indigo-900">Situation assurance</h3>
+			<p class="text-sm text-indigo-700">Circuit assureur séparé des paiements patient.</p>
+			<div class="mt-3 grid gap-2 md:grid-cols-3">
+				<p>
+					Part assurance <b
+						>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceDue, 0))}</b
+					>
+				</p>
+				<p>
+					Réglé par assurance <b
+						>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insurancePaid, 0))}</b
+					>
+				</p>
+				<p>
+					Reste assurance <b
+						>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceBalance, 0))}</b
+					>
+				</p>
+			</div>
+		</section>
+	{/if}
+	{#if canReadInvoices}
+		<div class="overflow-x-auto rounded-2xl border bg-white">
+			{#if loading}<p class="p-8 text-center">Chargement…</p>{:else}<table
+					class="w-full text-left text-sm"
 				>
-			</p>
-			<p>
-				Réglé par assurance <b
-					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insurancePaid, 0))}</b
-				>
-			</p>
-			<p>
-				Reste assurance <b
-					>{formatXOF(insuranceReceivables.reduce((s, r) => s + r.insuranceBalance, 0))}</b
-				>
-			</p>
+					<thead class="bg-slate-50"
+						><tr
+							><th class="p-3">Facture</th><th>Date</th><th>Brut</th><th>Assurance</th><th
+								>Patient</th
+							><th>Payé</th><th>Reste</th><th>Statut</th></tr
+						></thead
+					><tbody
+						>{#each invoices as x (x.id)}<tr class="border-t"
+								><td class="p-3"
+									><a class="font-black text-blue-700" href={resolve(`/billing/${x.id}`)}
+										>{x.number}</a
+									></td
+								><td>{new Date(x.createdAt).toLocaleDateString('fr-FR')}</td><td
+									>{formatXOF(x.grossAmount)}</td
+								><td>{formatXOF(x.insuranceAmount)}</td><td>{formatXOF(x.patientAmount)}</td><td
+									>{formatXOF(x.paidAmount)}</td
+								><td>{formatXOF(x.balanceAmount)}</td><td>{x.status}</td></tr
+							>{:else}<tr
+								><td colspan="8" class="p-10 text-center text-slate-500"
+									>Aucune facture pour ce patient.</td
+								></tr
+							>{/each}</tbody
+					>
+				</table>{/if}
 		</div>
-	</section>
-	<div class="overflow-x-auto rounded-2xl border bg-white">
-		{#if loading}<p class="p-8 text-center">Chargement…</p>{:else}<table
-				class="w-full text-left text-sm"
-			>
-				<thead class="bg-slate-50"
-					><tr
-						><th class="p-3">Facture</th><th>Date</th><th>Brut</th><th>Assurance</th><th>Patient</th
-						><th>Payé</th><th>Reste</th><th>Statut</th></tr
-					></thead
-				><tbody
-					>{#each invoices as x (x.id)}<tr class="border-t"
-							><td class="p-3"
-								><a class="font-black text-blue-700" href={resolve(`/billing/${x.id}`)}
-									>{x.number}</a
-								></td
-							><td>{new Date(x.createdAt).toLocaleDateString('fr-FR')}</td><td
-								>{formatXOF(x.grossAmount)}</td
-							><td>{formatXOF(x.insuranceAmount)}</td><td>{formatXOF(x.patientAmount)}</td><td
-								>{formatXOF(x.paidAmount)}</td
-							><td>{formatXOF(x.balanceAmount)}</td><td>{x.status}</td></tr
-						>{:else}<tr
-							><td colspan="8" class="p-10 text-center text-slate-500"
-								>Aucune facture pour ce patient.</td
-							></tr
-						>{/each}</tbody
-				>
-			</table>{/if}
-	</div>
+	{/if}
 </div>

@@ -8,7 +8,6 @@ import { test } from '../fixtures/medcore';
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
 const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
-const billingEmail = 'demo.facturation@medcore.local';
 const doctorEmail = 'demo.generaliste@medcore.local';
 const nurseEmail = 'demo.infirmier@medcore.local';
 
@@ -233,7 +232,7 @@ test.describe('LOT27I-C PerformedAct → billing', () => {
 		});
 		const act = await createPerformedAct(request, admin, patient.id, catalog.id);
 
-		const actor = (await canLogin(request, billingEmail)) ? billingEmail : adminEmail;
+		const actor = adminEmail;
 		await login(actor, password);
 		await openPerformedActsTab(page, patient.id, patient.codePatient);
 		await page.getByTestId(`performed-act-open-${act.id}`).click();

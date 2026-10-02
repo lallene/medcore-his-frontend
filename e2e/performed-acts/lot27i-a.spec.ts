@@ -146,8 +146,7 @@ test('QA-27IA-002 @critical Patient360 performed acts list/detail/create/void RB
 	if (hasDemo) {
 		await login(receptionEmail, password);
 		await page.goto(`/patients/${patient.id}`);
-		await expect(page.getByText(patient.codePatient).first()).toBeVisible({ timeout: 20_000 });
-		await expect(page.getByTestId('patient-360-tab-performed-acts')).toHaveCount(0);
+		await expect(page.getByTestId('access-denied')).toBeVisible({ timeout: 20_000 });
 
 		await login(nurseEmail, password);
 		await openPerformedActsTab(page, patient.id, patient.codePatient);
@@ -179,11 +178,10 @@ test('QA-27IA-002 @critical Patient360 performed acts list/detail/create/void RB
 		await expect(page.getByTestId('performed-act-void-meta')).toBeVisible({ timeout: 20_000 });
 		await expect(page.getByTestId('performed-act-void')).toHaveCount(0);
 
+		// LOT28E-A: FACTURATION retains performed_acts.read but not patients.360.read → P360 denied
 		await login(billingEmail, password);
-		await openPerformedActsTab(page, patient.id, patient.codePatient);
-		await expect(page.getByTestId('performed-act-create')).toHaveCount(0);
-		await page.getByTestId(`performed-act-open-${createdId}`).click();
-		await expect(page.getByTestId('performed-act-void')).toHaveCount(0);
+		await page.goto(`/patients/${patient.id}`);
+		await expect(page.getByTestId('access-denied')).toBeVisible({ timeout: 20_000 });
 		return;
 	}
 

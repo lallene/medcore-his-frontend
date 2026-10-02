@@ -11,6 +11,7 @@ const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const receptionEmail = 'demo.accueil@medcore.local';
 const doctorEmail = 'demo.generaliste@medcore.local';
 const nurseEmail = 'demo.infirmier@medcore.local';
+const medicalDirectorEmail = 'demo.directeur.medical@medcore.local';
 
 async function loginApi(request: APIRequestContext, email: string) {
 	const response = await request.post(`${api}/api/auth/login`, {
@@ -122,8 +123,8 @@ test('QA-P360-APPT-001 @critical upcoming appointments isolation and RBAC', asyn
 		reason: `QA-360-B-${Date.now()}`
 	});
 
-	// ACCUEIL / schedule.read.service — sees tab + own patient only
-	await login(receptionEmail, password);
+	// DIRECTEUR_MEDICAL — patients.360.read + schedule.read.all — sees tab + own patient only
+	await login(medicalDirectorEmail, password);
 	await page.goto(`/patients/${patientA.id}`);
 	await expect(page.getByText(patientA.codePatient).first()).toBeVisible({ timeout: 20_000 });
 	await expect(page.getByTestId('patient-360-tab-appointments')).toBeVisible({ timeout: 20_000 });
@@ -138,7 +139,12 @@ test('QA-P360-APPT-001 @critical upcoming appointments isolation and RBAC', asyn
 	await expect(page.getByTestId('agenda-appointment-details')).toBeVisible();
 	await expect(page.getByTestId('agenda-open-patient')).toHaveCount(0);
 
-	// INFIRMIER — patients:read without schedule.read → no tab
+	// ACCUEIL — patients:read without patients.360.read → Patient360 denied (LOT28E-A)
+	await login(receptionEmail, password);
+	await page.goto(`/patients/${patientA.id}`);
+	await expect(page.getByTestId('access-denied')).toBeVisible({ timeout: 20_000 });
+
+	// INFIRMIER — patients.360.read without schedule.read → no appointments tab
 	await login(nurseEmail, password);
 	await page.goto(`/patients/${patientA.id}`);
 	await expect(page.getByText(patientA.codePatient).first()).toBeVisible({
@@ -424,7 +430,7 @@ test('QA-P360-APPT-HISTORY-002 @critical history RBAC isolation and physician ow
 	await cancelAppointmentApi(request, admin, apptA.id);
 	await cancelAppointmentApi(request, admin, apptB.id);
 
-	await login(receptionEmail, password);
+	await login(medicalDirectorEmail, password);
 	await page.goto(`/patients/${patientA.id}`);
 	await page.getByTestId('patient-360-tab-appointments').click({ force: true });
 	await expect(

@@ -22,10 +22,11 @@
 		'queue.read.service',
 		'queue.read.all'
 	]);
+	const canReadMinimal = can(permissions, 'patients.360.read');
 	const canOpenConsultation = can(permissions, 'consultations.read');
 
 	onMount(async () => {
-		if (!canReadQueue) return;
+		if (!canReadQueue && !canReadMinimal) return;
 		loading = true;
 		try {
 			ticket = await getPatientActiveQueueTicket(patientId);
@@ -42,13 +43,15 @@
 		<Alert tone="info" title="Prise en charge en cours">
 			<p class="text-sm">
 				Ticket <span class="font-mono">{ticket.reference}</span>
-				· {stageLabels[ticket.stage]}
-				· {ticket.serviceName}
-				{#if ticket.doctorTakenByName}
+				· {stageLabels[ticket.stage] ?? ticket.stage}
+				{#if ticket.serviceName}
+					· {ticket.serviceName}
+				{/if}
+				{#if canReadQueue && ticket.doctorTakenByName}
 					· {ticket.doctorTakenByName}
 				{/if}
 			</p>
-			{#if canOpenConsultation && ticket.consultationId}
+			{#if canReadQueue && canOpenConsultation && ticket.consultationId}
 				<a
 					href={resolve(`/consultations/${ticket.consultationId}`)}
 					class="mt-2 inline-block text-sm font-semibold text-primary hover:underline"

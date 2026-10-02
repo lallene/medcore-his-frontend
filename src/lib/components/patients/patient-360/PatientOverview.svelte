@@ -20,6 +20,7 @@
 	import type { PatientSummary } from '$lib/types/patient-summary';
 	import type { PatientInsuranceView } from '$lib/types/insurance';
 	import type { Hospitalization } from '$lib/types/hospitalization';
+	import type { Patient360Capabilities } from '$lib/components/patients/patient-360/capabilities';
 	import { formatPatientEmailDisplay } from '$lib/components/patients/patient-form';
 
 	import MetricCard from '$lib/components/dashboard/MetricCard.svelte';
@@ -36,52 +37,93 @@
 		consultations: PatientConsultation[];
 		insurance: PatientInsuranceView;
 		hospitalizations: Hospitalization[];
+		capabilities: Patient360Capabilities;
 	}
 
-	let { patient, summary, consultations, insurance, hospitalizations }: Props = $props();
+	let { patient, summary, consultations, insurance, hospitalizations, capabilities }: Props =
+		$props();
 
-	const insuranceStatus = $derived(insurance.status);
+	const insuranceStatus = $derived(
+		capabilities.canReadInsurance ? insurance.status : 'Non autorisé'
+	);
 
 	const insuranceDetail = $derived(
-		insurance.insured ? insurance.memberNumber : 'Aucune couverture'
+		capabilities.canReadInsurance
+			? insurance.insured
+				? insurance.memberNumber
+				: 'Aucune couverture'
+			: '—'
 	);
 
-	const coverageRate = $derived(insurance.insured ? `${insurance.coverageRate} %` : '0 %');
+	const coverageRate = $derived(
+		capabilities.canReadInsurance && insurance.insured ? `${insurance.coverageRate} %` : '—'
+	);
 
 	const patientShareRate = $derived(
-		insurance.insured ? `${Math.max(0, 100 - insurance.coverageRate)} %` : '100 %'
+		capabilities.canReadInsurance && insurance.insured
+			? `${Math.max(0, 100 - insurance.coverageRate)} %`
+			: '—'
 	);
 
-	const consultationCount = $derived(consultations.length);
+	const consultationCount = $derived(
+		capabilities.canReadConsultations ? consultations.length : null
+	);
 
-	const hospitalizationCount = $derived(hospitalizations.length);
+	const hospitalizationCount = $derived(
+		capabilities.canReadHospitalizations ? hospitalizations.length : null
+	);
 
 	const prescriptionCount = $derived(
-		consultations.reduce(
-			(total, consultation) => total + (consultation.prescriptions?.length ?? 0),
-			0
-		)
+		capabilities.canReadPrescriptions
+			? consultations.reduce(
+					(total, consultation) => total + (consultation.prescriptions?.length ?? 0),
+					0
+				)
+			: null
 	);
 
 	const examCount = $derived(
-		consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
+		capabilities.canReadConsultations
+			? consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
+			: null
 	);
 
-	const documentCount = $derived(summary?.statistics.documents ?? 0);
+	const documentCount = $derived(
+		capabilities.canReadDocuments
+			? (summary?.statistics.documents ??
+					consultations.reduce((total, c) => {
+						let n = 0;
+						if ((c.prescriptions?.length ?? 0) > 0) n++;
+						if ((c.exams?.length ?? 0) > 0) n++;
+						if (c.sickLeaveRequired) n++;
+						return total + n;
+					}, 0))
+			: null
+	);
 
-	const activeAllergyCount = $derived(summary?.medical_record.active_allergies ?? 0);
+	const activeAllergyCount = $derived(
+		capabilities.canReadMedicalRecord ? (summary?.medical_record.active_allergies ?? 0) : null
+	);
 
-	const activeTreatmentCount = $derived(summary?.medical_record.current_treatments ?? 0);
+	const activeTreatmentCount = $derived(
+		capabilities.canReadMedicalRecord ? (summary?.medical_record.current_treatments ?? 0) : null
+	);
 
-	const chronicDiseaseCount = $derived(summary?.medical_record.chronic_diseases ?? 0);
+	const chronicDiseaseCount = $derived(
+		capabilities.canReadMedicalRecord ? (summary?.medical_record.chronic_diseases ?? 0) : null
+	);
 
-	const consultationProgress = $derived(Math.min(consultationCount * 10, 100));
+	const consultationProgress = $derived(
+		consultationCount === null ? 0 : Math.min(consultationCount * 10, 100)
+	);
 
-	const prescriptionProgress = $derived(Math.min(prescriptionCount * 8, 100));
+	const prescriptionProgress = $derived(
+		prescriptionCount === null ? 0 : Math.min(prescriptionCount * 8, 100)
+	);
 
-	const examProgress = $derived(Math.min(examCount * 6, 100));
+	const examProgress = $derived(examCount === null ? 0 : Math.min(examCount * 6, 100));
 
-	const documentProgress = $derived(Math.min(documentCount * 10, 100));
+	const documentProgress = $derived(documentCount === null ? 0 : Math.min(documentCount * 10, 100));
 
 	function formatSex(value?: string | null): string {
 		switch (value?.trim().toUpperCase()) {
@@ -164,55 +206,69 @@
 
 <div class="space-y-6">
 	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-		<MetricCard
-			icon={Shield}
-			title="Couverture"
-			value={insuranceStatus}
-			detail={insuranceDetail}
-			trend={coverageRate}
-			progress={insurance.coverageRate}
-			accent="#7C3AED"
-		/>
+		{#if capabilities.canReadInsurance}
+			<MetricCard
+				icon={Shield}
+				title="Couverture"
+				value={insuranceStatus}
+				detail={insuranceDetail}
+				trend={coverageRate}
+				progress={insurance.coverageRate}
+				accent="#7C3AED"
+			/>
+		{/if}
 
-		<MetricCard
-			icon={HeartPulse}
-			title="Consultations"
-			value={String(consultationCount)}
-			detail="Historique médical"
-			trend={`${hospitalizationCount} hospitalisation(s)`}
-			progress={consultationProgress}
-			accent="#18B893"
-		/>
+		{#if capabilities.canReadConsultations}
+			<MetricCard
+				icon={HeartPulse}
+				title="Consultations"
+				value={String(consultationCount ?? 0)}
+				detail="Historique médical"
+				trend={capabilities.canReadHospitalizations
+					? `${hospitalizationCount ?? 0} hospitalisation(s)`
+					: '—'}
+				progress={consultationProgress}
+				accent="#18B893"
+			/>
+		{/if}
 
-		<MetricCard
-			icon={WalletCards}
-			title="Prescriptions"
-			value={String(prescriptionCount)}
-			detail={`${activeTreatmentCount} traitement(s) actif(s)`}
-			trend="Médicaments"
-			progress={prescriptionProgress}
-			accent="#EA580C"
-		/>
+		{#if capabilities.canReadPrescriptions}
+			<MetricCard
+				icon={WalletCards}
+				title="Prescriptions"
+				value={String(prescriptionCount ?? 0)}
+				detail={capabilities.canReadMedicalRecord
+					? `${activeTreatmentCount ?? 0} traitement(s) actif(s)`
+					: '—'}
+				trend="Médicaments"
+				progress={prescriptionProgress}
+				accent="#EA580C"
+			/>
+		{/if}
 
-		<MetricCard
-			icon={Activity}
-			title="Examens"
-			value={String(examCount)}
-			detail="Laboratoire et imagerie"
-			trend="Parcours clinique"
-			progress={examProgress}
-			accent="#0E4C92"
-		/>
+		{#if capabilities.canReadExams || capabilities.canReadConsultations}
+			<MetricCard
+				icon={Activity}
+				title="Examens"
+				value={String(examCount ?? 0)}
+				detail="Laboratoire et imagerie"
+				trend="Parcours clinique"
+				progress={examProgress}
+				accent="#0E4C92"
+			/>
+		{/if}
 
-		<MetricCard
-			icon={FileText}
-			title="Documents"
-			value={String(documentCount)}
-			detail="Pièces médicales"
-			trend="Dossier patient"
-			progress={documentProgress}
-			accent="#F59E0B"
-		/>
+		{#if capabilities.canReadDocuments}
+			<MetricCard
+				icon={FileText}
+				title="Documents"
+				value={String(documentCount ?? 0)}
+				detail="Pièces médicales"
+				trend="Dossier patient"
+				progress={documentProgress}
+				accent="#F59E0B"
+			/>
+		{/if}
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-3">
@@ -240,56 +296,64 @@
 			</Card>
 
 			<Card title="Assurance et prise en charge" subtitle="Situation administrative du patient">
-				<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-					<MiniInfo title="Statut" value={insuranceStatus} />
+				{#if capabilities.canReadInsurance}
+					<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+						<MiniInfo title="Statut" value={insuranceStatus} />
 
-					<MiniInfo title="Organisme" value={insurance.organization} />
+						<MiniInfo title="Organisme" value={insurance.organization} />
 
-					<MiniInfo title="Matricule" value={insurance.memberNumber} />
+						<MiniInfo title="Matricule" value={insurance.memberNumber} />
 
-					<MiniInfo title="Taux couverture" value={coverageRate} />
+						<MiniInfo title="Taux couverture" value={coverageRate} />
 
-					<MiniInfo title="Part patient" value={patientShareRate} />
-				</div>
-
-				{#if !insurance.insured}
-					<div
-						class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700"
-					>
-						Ce patient ne dispose actuellement d’aucune couverture médicale active.
+						<MiniInfo title="Part patient" value={patientShareRate} />
 					</div>
+
+					{#if !insurance.insured}
+						<div
+							class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700"
+						>
+							Ce patient ne dispose actuellement d’aucune couverture médicale active.
+						</div>
+					{/if}
+				{:else}
+					<p class="text-sm text-slate-500">Informations d’assurance non autorisées.</p>
 				{/if}
 			</Card>
 
 			<Card title="Résumé médical" subtitle="Données importantes du dossier">
-				<div class="grid gap-4 md:grid-cols-3">
-					<MiniInfo title="Allergies actives" value={String(activeAllergyCount)} />
+				{#if capabilities.canReadMedicalRecord}
+					<div class="grid gap-4 md:grid-cols-3">
+						<MiniInfo title="Allergies actives" value={String(activeAllergyCount ?? 0)} />
 
-					<MiniInfo title="Maladies chroniques" value={String(chronicDiseaseCount)} />
+						<MiniInfo title="Maladies chroniques" value={String(chronicDiseaseCount ?? 0)} />
 
-					<MiniInfo title="Traitements actifs" value={String(activeTreatmentCount)} />
-				</div>
-
-				{#if summary?.clinical_alerts?.length}
-					<div class="mt-5 space-y-3">
-						{#each summary.clinical_alerts as alert (`${alert.code}-${alert.title}`)}
-							<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-								<p class="font-black">
-									{alert.title}
-								</p>
-
-								<p class="mt-1 text-sm">
-									{alert.description}
-								</p>
-							</div>
-						{/each}
+						<MiniInfo title="Traitements actifs" value={String(activeTreatmentCount ?? 0)} />
 					</div>
+
+					{#if summary?.clinical_alerts?.length}
+						<div class="mt-5 space-y-3">
+							{#each summary.clinical_alerts as alert (`${alert.code}-${alert.title}`)}
+								<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+									<p class="font-black">
+										{alert.title}
+									</p>
+
+									<p class="mt-1 text-sm">
+										{alert.description}
+									</p>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<div
+							class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700"
+						>
+							Aucune alerte clinique active.
+						</div>
+					{/if}
 				{:else}
-					<div
-						class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700"
-					>
-						Aucune alerte clinique active.
-					</div>
+					<p class="text-sm text-slate-500">Résumé médical non autorisé.</p>
 				{/if}
 			</Card>
 
@@ -300,35 +364,43 @@
 					<JourneyStep
 						icon={HeartPulse}
 						title="Consultations"
-						detail={`${consultationCount} enregistrée(s)`}
+						detail={consultationCount === null
+							? 'Non autorisé'
+							: `${consultationCount} enregistrée(s)`}
 						color="#18B893"
 					/>
 
 					<JourneyStep
 						icon={Shield}
 						title="Assurance"
-						detail={insurance.insured ? `${insurance.coverageRate} % couvert` : 'Non assuré'}
+						detail={capabilities.canReadInsurance
+							? insurance.insured
+								? `${insurance.coverageRate} % couvert`
+								: 'Non assuré'
+							: 'Non autorisé'}
 						color="#7C3AED"
 					/>
 
 					<JourneyStep
 						icon={WalletCards}
 						title="Prescriptions"
-						detail={`${prescriptionCount} enregistrée(s)`}
+						detail={prescriptionCount === null
+							? 'Non autorisé'
+							: `${prescriptionCount} enregistrée(s)`}
 						color="#EA580C"
 					/>
 
 					<JourneyStep
 						icon={Activity}
 						title="Examens"
-						detail={`${examCount} demandé(s)`}
+						detail={examCount === null ? 'Non autorisé' : `${examCount} demandé(s)`}
 						color="#2563EB"
 					/>
 
 					<JourneyStep
 						icon={FileText}
 						title="Documents"
-						detail={`${documentCount} document(s)`}
+						detail={documentCount === null ? 'Non autorisé' : `${documentCount} document(s)`}
 						color="#F59E0B"
 					/>
 				</div>
@@ -361,7 +433,7 @@
 						/>
 					{/if}
 
-					{#if documentCount > 0}
+					{#if (documentCount ?? 0) > 0}
 						<TimelineItem
 							icon={FileText}
 							title={`${documentCount} document(s) médical(aux)`}
@@ -459,7 +531,7 @@
 						<span class="text-sm font-semibold text-slate-600"> Allergies </span>
 
 						<span class="font-black text-slate-900">
-							{activeAllergyCount}
+							{activeAllergyCount ?? '—'}
 						</span>
 					</div>
 
@@ -469,7 +541,7 @@
 						<span class="text-sm font-semibold text-slate-600"> Maladies chroniques </span>
 
 						<span class="font-black text-slate-900">
-							{chronicDiseaseCount}
+							{chronicDiseaseCount ?? '—'}
 						</span>
 					</div>
 
@@ -479,7 +551,7 @@
 						<span class="text-sm font-semibold text-slate-600"> Traitements actifs </span>
 
 						<span class="font-black text-slate-900">
-							{activeTreatmentCount}
+							{activeTreatmentCount ?? '—'}
 						</span>
 					</div>
 
@@ -489,7 +561,7 @@
 						<span class="text-sm font-semibold text-slate-600"> Hospitalisations </span>
 
 						<span class="font-black text-slate-900">
-							{hospitalizationCount}
+							{hospitalizationCount ?? '—'}
 						</span>
 					</div>
 				</div>

@@ -18,15 +18,25 @@
 	interface Props {
 		patientId: number;
 		consultations: PatientConsultation[];
+		canReadLaboratory?: boolean;
+		canReadImaging?: boolean;
+		canReadConsultations?: boolean;
 	}
-	let { patientId, consultations }: Props = $props();
+	let {
+		patientId,
+		consultations,
+		canReadLaboratory = false,
+		canReadImaging = false,
+		canReadConsultations = false
+	}: Props = $props();
 	let orders = $state<LaboratoryListItem[]>([]),
 		details = $state<Record<number, LaboratoryOrder>>({}),
 		imagingOrders = $state<ImagingListItem[]>([]),
 		imagingDetails = $state<Record<number, ImagingOrder>>({}),
 		search = $state(''),
 		loading = $state(true),
-		error = $state('');
+		error = $state(''),
+		accessDenied = $state(false);
 	const filtered = $derived(
 		orders.filter((o) =>
 			`${o.examName} ${o.examCode} ${o.requestNumber}`.toLowerCase().includes(search.toLowerCase())
@@ -38,41 +48,61 @@
 		)
 	);
 	const nonLaboratoryExams = $derived(
-		consultations
-			.flatMap((consultation) =>
-				consultation.exams
-					.filter(
-						(exam) => !isLaboratoryCategory(exam.category) && !isImagingCategory(exam.category)
+		canReadConsultations
+			? consultations
+					.flatMap((consultation) =>
+						consultation.exams
+							.filter(
+								(exam) => !isLaboratoryCategory(exam.category) && !isImagingCategory(exam.category)
+							)
+							.map((exam) => ({
+								key: `${consultation.id}-${exam.id}`,
+								...exam,
+								consultationId: consultation.id,
+								service: consultation.service,
+								doctorName: consultation.doctorName,
+								date: consultation.startedAt ?? consultation.createdAt
+							}))
 					)
-					.map((exam) => ({
-						key: `${consultation.id}-${exam.id}`,
-						...exam,
-						consultationId: consultation.id,
-						service: consultation.service,
-						doctorName: consultation.doctorName,
-						date: consultation.startedAt ?? consultation.createdAt
-					}))
-			)
-			.filter((exam) =>
-				`${exam.name} ${exam.code} ${exam.category}`.toLowerCase().includes(search.toLowerCase())
-			)
+					.filter((exam) =>
+						`${exam.name} ${exam.code} ${exam.category}`
+							.toLowerCase()
+							.includes(search.toLowerCase())
+					)
+			: []
 	);
 	onMount(async () => {
 		try {
-			const [laboratoryResponse, imagingResponse] = await Promise.all([
-				listLaboratoryOrders({ patientId, limit: 100 }),
-				listImagingOrders({ patientId, limit: 100 })
-			]);
-			orders = laboratoryResponse.data;
-			imagingOrders = imagingResponse.data;
-			const loadedDetails = await Promise.all(orders.map((order) => getLaboratoryOrder(order.id)));
-			details = Object.fromEntries(loadedDetails.map((detail) => [detail.id, detail]));
-			const loadedImaging = await Promise.all(
-				imagingOrders.map((order) => getImagingOrder(order.id))
-			);
-			imagingDetails = Object.fromEntries(loadedImaging.map((detail) => [detail.id, detail]));
+			const tasks: Array<Promise<void>> = [];
+			if (canReadLaboratory) {
+				tasks.push(
+					listLaboratoryOrders({ patientId, limit: 100 }).then(async (laboratoryResponse) => {
+						orders = laboratoryResponse.data;
+						const loadedDetails = await Promise.all(
+							orders.map((order) => getLaboratoryOrder(order.id))
+						);
+						details = Object.fromEntries(loadedDetails.map((detail) => [detail.id, detail]));
+					})
+				);
+			}
+			if (canReadImaging) {
+				tasks.push(
+					listImagingOrders({ patientId, limit: 100 }).then(async (imagingResponse) => {
+						imagingOrders = imagingResponse.data;
+						const loadedImaging = await Promise.all(
+							imagingOrders.map((order) => getImagingOrder(order.id))
+						);
+						imagingDetails = Object.fromEntries(loadedImaging.map((detail) => [detail.id, detail]));
+					})
+				);
+			}
+			await Promise.all(tasks);
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Chargement impossible';
+			if (e instanceof Error && e.message === 'ACCESS_DENIED') {
+				accessDenied = true;
+			} else {
+				error = e instanceof Error ? e.message : 'Chargement impossible';
+			}
 		} finally {
 			loading = false;
 		}
@@ -128,9 +158,14 @@
 			class="w-full rounded-xl border bg-white py-3 pl-10 pr-3"
 		/></label
 	>
-	{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{:else if loading}<p
-			class="p-10 text-center"
+	{#if accessDenied}<p
+			class="rounded-xl bg-red-50 p-4 text-red-700"
+			data-testid="patient-360-exams-denied"
 		>
+			Accès refusé aux examens.
+		</p>{:else if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">
+			{error}
+		</p>{:else if loading}<p class="p-10 text-center">
 			Chargement...
 		</p>{:else if filtered.length === 0 && filteredImaging.length === 0 && nonLaboratoryExams.length === 0}<div
 			class="rounded-2xl border border-dashed p-12 text-center"

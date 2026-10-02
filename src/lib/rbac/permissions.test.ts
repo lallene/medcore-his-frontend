@@ -85,4 +85,11 @@ describe('rbac navigation', () => {
 		assert.equal(canAccessPath('/admin/act-catalog', ['act_catalog.manage']), true);
 		assert.equal(canAccessPath('/admin/act-catalog', ['*']), true);
 	});
+
+	it('LOT28E-A Patient360 path requires patients.360.read; list stays patients:read', () => {
+		assert.equal(canAccessPath('/patients', ['patients:read']), true);
+		assert.equal(canAccessPath('/patients/12', ['patients:read']), false);
+		assert.equal(canAccessPath('/patients/12', ['patients.360.read']), true);
+		assert.equal(canAccessPath('/patients/12/edit', ['patients:read']), true);
+	});
 });

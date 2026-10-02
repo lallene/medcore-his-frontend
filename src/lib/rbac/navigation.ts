@@ -161,6 +161,8 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/admin/qa', permissions: ['qa.read'] },
 	{ prefix: '/admin/design-system', permissions: ['qa.read'] },
 	{ prefix: '/dashboard', permissions: ['dashboard.read'] },
+	// LOT28E-A: Patient360 shell is /patients/:numericId — require patients.360.read.
+	// Ordinary list /patients stays patients:read (matched after the exact-id check in canAccessPath).
 	{ prefix: '/patients', permissions: ['patients:read'] },
 	{ prefix: '/consultations', permissions: ['consultations.read'] },
 	{ prefix: '/queue/doctor', permissions: ['queue.doctor.read'] },
@@ -209,6 +211,10 @@ export function filterVisibleNav(items: NavItem[], permissions: string[]): NavIt
 
 export function canAccessPath(pathname: string, permissions: string[]): boolean {
 	const path = pathname.split('?')[0];
+	// LOT28E-A Model B: Patient360 page requires patients.360.read (not patients:read alone).
+	if (/^\/patients\/\d+$/.test(path)) {
+		return canAny(permissions, ['patients.360.read']);
+	}
 	for (const rule of routePermissionRules) {
 		if (path === rule.prefix || path.startsWith(`${rule.prefix}/`)) {
 			return canAny(permissions, rule.permissions);
