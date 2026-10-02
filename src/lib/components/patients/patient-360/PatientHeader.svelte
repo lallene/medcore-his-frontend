@@ -120,7 +120,10 @@
 				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">Patient 360°</p>
 
 				<div class="mt-3 flex flex-wrap items-center gap-3">
-					<h1 class="text-3xl font-bold leading-tight sm:text-4xl">
+					<h1
+						class="text-3xl font-bold leading-tight sm:text-4xl"
+						data-testid="patient-360-header-name"
+					>
 						{fullName}
 					</h1>
 
@@ -160,7 +163,10 @@
 						🎂 {formatAge()}
 					</span>
 
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
+					<span
+						class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur"
+						data-testid="patient-360-header-code"
+					>
 						📁 {patientCode()}
 					</span>
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
 	import PatientOverview from '$lib/components/patients/patient-360/PatientOverview.svelte';
 	import PatientMedicalRecord from '$lib/components/patients/patient-360/PatientMedicalRecord.svelte';
 	import PatientExams from '$lib/components/patients/patient-360/PatientExams.svelte';
@@ -50,6 +49,10 @@
 		derivePatient360Capabilities,
 		type Patient360Capabilities
 	} from '$lib/components/patients/patient-360/capabilities';
+	import {
+		errorMessageFromUnknown,
+		tabExamCount
+	} from '$lib/components/patients/patient-360/patient-360-load';
 	import { getStoredPermissions, isAccessDeniedError } from '$lib/rbac/permissions';
 	import { browser } from '$app/environment';
 	import { resolvePatientInsurance } from '$lib/components/patients/patient-360/patient-360-data';
@@ -73,8 +76,11 @@
 	let accessDenied = $state(false);
 	let appointmentCount = $state(0);
 	let sectionDenied = $state<Partial<Record<string, boolean>>>({});
+	let sectionErrors = $state<Partial<Record<string, string>>>({});
 
 	let caps = $state<Patient360Capabilities>(derivePatient360Capabilities([]));
+
+	let patientLoadGeneration = 0;
 
 	const consultationCount = $derived(caps.canReadConsultations ? consultations.length : undefined);
 
@@ -91,11 +97,7 @@
 			: undefined
 	);
 
-	const examCount = $derived(
-		caps.canReadConsultations
-			? consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
-			: undefined
-	);
+	const examCount = $derived(tabExamCount(caps, consultations));
 
 	const documentCount = $derived(
 		caps.canReadDocuments && caps.canReadMedicalRecord
@@ -236,106 +238,178 @@
 		sectionDenied = { ...sectionDenied, [key]: true };
 	}
 
-	onMount(async () => {
+	function markSectionError(key: string, message: string): void {
+		sectionErrors = { ...sectionErrors, [key]: message };
+	}
+
+	function resetPatientScopedState(): void {
+		patient = null;
+		summary = null;
+		consultations = [];
+		coverages = [];
+		timelineEvents = [];
+		hospitalizations = [];
+		sectionDenied = {};
+		sectionErrors = {};
+		error = '';
+		accessDenied = false;
+		appointmentCount = 0;
+		activeTab = 'overview';
+		loading = true;
+	}
+
+	function isLoadCurrent(token: number): boolean {
+		return token === patientLoadGeneration;
+	}
+
+	async function loadPatient360(id: number, token: number, permissions: string[]): Promise<void> {
+		const nextCaps = derivePatient360Capabilities(permissions);
+		if (!isLoadCurrent(token)) return;
+
+		caps = nextCaps;
+
+		if (!nextCaps.canEnterPatient360) {
+			accessDenied = true;
+			loading = false;
+			return;
+		}
+
+		if (!Number.isInteger(id) || id <= 0) {
+			error = 'Identifiant patient invalide.';
+			loading = false;
+			return;
+		}
+
+		if (!nextCaps.canReadDemographics) {
+			accessDenied = true;
+			loading = false;
+			return;
+		}
+
 		try {
-			const permissions = browser ? getStoredPermissions() : [];
-			caps = derivePatient360Capabilities(permissions);
-
-			if (!caps.canEnterPatient360) {
-				accessDenied = true;
-				return;
-			}
-
-			const id = Number(page.params.id);
-
-			if (!Number.isInteger(id) || id <= 0) {
-				throw new Error('Identifiant patient invalide.');
-			}
-
-			if (!caps.canReadDemographics) {
-				accessDenied = true;
-				return;
-			}
-
-			try {
-				patient = await getPatient(id);
-			} catch (err: unknown) {
-				if (isAccessDeniedError(err)) {
-					accessDenied = true;
-					return;
-				}
-				throw err;
-			}
-
-			const tasks: Array<Promise<void>> = [];
-
-			if (caps.canReadMedicalRecord) {
-				tasks.push(
-					getPatientSummary(id)
-						.then((value) => {
-							summary = value;
-						})
-						.catch((err: unknown) => {
-							if (isAccessDeniedError(err)) markDenied('summary');
-							else throw err;
-						})
-				);
-			}
-
-			if (caps.canReadConsultations) {
-				tasks.push(
-					getPatientConsultations(id)
-						.then((value) => {
-							consultations = value;
-						})
-						.catch((err: unknown) => {
-							if (isAccessDeniedError(err)) markDenied('consultations');
-							else throw err;
-						})
-				);
-			}
-
-			if (caps.canReadInsuranceCoverage) {
-				tasks.push(
-					getPatientCoverages(id)
-						.then((value) => {
-							coverages = value;
-						})
-						.catch((err: unknown) => {
-							if (isAccessDeniedError(err)) markDenied('coverages');
-							else throw err;
-						})
-				);
-			}
-
-			if (caps.canReadHospitalizations) {
-				tasks.push(
-					listPatientHospitalizations(id)
-						.then((value) => {
-							hospitalizations = value;
-						})
-						.catch((err: unknown) => {
-							if (isAccessDeniedError(err)) markDenied('hospitalizations');
-							else throw err;
-						})
-				);
-			}
-
-			await Promise.all(tasks);
-
-			if (caps.canReadTimeline && summary?.medical_record?.id) {
-				try {
-					timelineEvents = await getClinicalTimeline(summary.medical_record.id);
-				} catch (err: unknown) {
-					if (isAccessDeniedError(err)) markDenied('timeline');
-					else throw err;
-				}
-			}
+			const loadedPatient = await getPatient(id);
+			if (!isLoadCurrent(token)) return;
+			patient = loadedPatient;
 		} catch (err: unknown) {
+			if (!isLoadCurrent(token)) return;
+			if (isAccessDeniedError(err)) {
+				accessDenied = true;
+				loading = false;
+				return;
+			}
 			error = err instanceof Error ? err.message : 'Impossible de charger la fiche patient.';
-		} finally {
+			loading = false;
+			return;
+		}
+
+		const moduleTasks: Array<Promise<void>> = [];
+
+		if (nextCaps.canReadMedicalRecord) {
+			moduleTasks.push(
+				getPatientSummary(id)
+					.then((value) => {
+						if (!isLoadCurrent(token)) return;
+						summary = value;
+					})
+					.catch((err: unknown) => {
+						if (!isLoadCurrent(token)) return;
+						if (isAccessDeniedError(err)) markDenied('summary');
+						else markSectionError('summary', errorMessageFromUnknown(err, 'Dossier indisponible.'));
+					})
+			);
+		}
+
+		if (nextCaps.canReadConsultations) {
+			moduleTasks.push(
+				getPatientConsultations(id)
+					.then((value) => {
+						if (!isLoadCurrent(token)) return;
+						consultations = value;
+					})
+					.catch((err: unknown) => {
+						if (!isLoadCurrent(token)) return;
+						if (isAccessDeniedError(err)) markDenied('consultations');
+						else
+							markSectionError(
+								'consultations',
+								errorMessageFromUnknown(err, 'Consultations indisponibles.')
+							);
+					})
+			);
+		}
+
+		if (nextCaps.canReadInsuranceCoverage) {
+			moduleTasks.push(
+				getPatientCoverages(id)
+					.then((value) => {
+						if (!isLoadCurrent(token)) return;
+						coverages = value;
+					})
+					.catch((err: unknown) => {
+						if (!isLoadCurrent(token)) return;
+						if (isAccessDeniedError(err)) markDenied('coverages');
+						else
+							markSectionError(
+								'coverages',
+								errorMessageFromUnknown(err, 'Couvertures indisponibles.')
+							);
+					})
+			);
+		}
+
+		if (nextCaps.canReadHospitalizations) {
+			moduleTasks.push(
+				listPatientHospitalizations(id)
+					.then((value) => {
+						if (!isLoadCurrent(token)) return;
+						hospitalizations = value;
+					})
+					.catch((err: unknown) => {
+						if (!isLoadCurrent(token)) return;
+						if (isAccessDeniedError(err)) markDenied('hospitalizations');
+						else
+							markSectionError(
+								'hospitalizations',
+								errorMessageFromUnknown(err, 'Hospitalisations indisponibles.')
+							);
+					})
+			);
+		}
+
+		await Promise.allSettled(moduleTasks);
+
+		if (!isLoadCurrent(token)) return;
+
+		if (nextCaps.canReadTimeline && summary?.medical_record?.id) {
+			try {
+				const events = await getClinicalTimeline(summary.medical_record.id);
+				if (!isLoadCurrent(token)) return;
+				timelineEvents = events;
+			} catch (err: unknown) {
+				if (!isLoadCurrent(token)) return;
+				if (isAccessDeniedError(err)) markDenied('timeline');
+				else markSectionError('timeline', errorMessageFromUnknown(err, 'Timeline indisponible.'));
+			}
+		}
+
+		if (isLoadCurrent(token)) {
 			loading = false;
 		}
+	}
+
+	$effect(() => {
+		if (!browser) return;
+
+		const idRaw = page.params.id;
+		const permissions = getStoredPermissions();
+		const id = Number(idRaw);
+
+		patientLoadGeneration += 1;
+		const token = patientLoadGeneration;
+
+		resetPatientScopedState();
+
+		void loadPatient360(id, token, permissions);
 	});
 </script>
 
@@ -387,12 +461,16 @@
 		{:else if activeTab === 'consultations' && caps.canReadConsultations}
 			{#if sectionDenied.consultations}
 				<Alert tone="danger" title="Accès refusé">Consultations non autorisées.</Alert>
+			{:else if sectionErrors.consultations}
+				<Alert tone="danger" title="Consultations">{sectionErrors.consultations}</Alert>
 			{:else}
 				<PatientConsultations patientId={p.id} {consultations} />
 			{/if}
 		{:else if activeTab === 'medical-record' && caps.canReadMedicalRecord}
 			{#if sectionDenied.summary}
 				<Alert tone="danger" title="Accès refusé">Dossier médical non autorisé.</Alert>
+			{:else if sectionErrors.summary}
+				<Alert tone="danger" title="Dossier médical">{sectionErrors.summary}</Alert>
 			{:else}
 				<PatientMedicalRecord patient={p} {summary} {consultations} {hospitalizations} />
 			{/if}
@@ -409,6 +487,8 @@
 		{:else if activeTab === 'hospitalizations' && caps.canReadHospitalizations}
 			{#if sectionDenied.hospitalizations}
 				<Alert tone="danger" title="Accès refusé">Hospitalisations non autorisées.</Alert>
+			{:else if sectionErrors.hospitalizations}
+				<Alert tone="danger" title="Hospitalisations">{sectionErrors.hospitalizations}</Alert>
 			{:else}
 				<PatientHospitalizations patientId={p.id} {hospitalizations} />
 			{/if}
@@ -435,6 +515,8 @@
 		{:else if activeTab === 'timeline' && caps.canReadTimeline}
 			{#if sectionDenied.timeline}
 				<Alert tone="danger" title="Accès refusé">Timeline non autorisée.</Alert>
+			{:else if sectionErrors.timeline}
+				<Alert tone="danger" title="Timeline">{sectionErrors.timeline}</Alert>
 			{:else}
 				<PatientTimeline events={timelineEvents} />
 			{/if}

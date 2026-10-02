@@ -82,6 +82,7 @@
 			: null
 	);
 
+	/** Authoritative only with consultations.read; lab/imaging-only must not show fabricated zero. */
 	const examCount = $derived(
 		capabilities.canReadConsultations
 			? consultations.reduce((total, consultation) => total + (consultation.exams?.length ?? 0), 0)
@@ -246,7 +247,7 @@
 			/>
 		{/if}
 
-		{#if capabilities.canReadExams || capabilities.canReadConsultations}
+		{#if capabilities.canReadConsultations}
 			<MetricCard
 				icon={Activity}
 				title="Examens"
@@ -254,6 +255,16 @@
 				detail="Laboratoire et imagerie"
 				trend="Parcours clinique"
 				progress={examProgress}
+				accent="#0E4C92"
+			/>
+		{:else if capabilities.canReadExams}
+			<MetricCard
+				icon={Activity}
+				title="Examens"
+				value="—"
+				detail="Voir l'onglet Examens"
+				trend="Parcours clinique"
+				progress={0}
 				accent="#0E4C92"
 			/>
 		{/if}
@@ -390,12 +401,21 @@
 						color="#EA580C"
 					/>
 
-					<JourneyStep
-						icon={Activity}
-						title="Examens"
-						detail={examCount === null ? 'Non autorisé' : `${examCount} demandé(s)`}
-						color="#2563EB"
-					/>
+					{#if capabilities.canReadConsultations}
+						<JourneyStep
+							icon={Activity}
+							title="Examens"
+							detail={`${examCount ?? 0} demandé(s)`}
+							color="#2563EB"
+						/>
+					{:else if capabilities.canReadExams}
+						<JourneyStep
+							icon={Activity}
+							title="Examens"
+							detail="Voir l'onglet Examens"
+							color="#2563EB"
+						/>
+					{/if}
 
 					<JourneyStep
 						icon={FileText}

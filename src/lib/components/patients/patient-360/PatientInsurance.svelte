@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { browser } from '$app/environment';
 
 	import {
 		BadgeCheck,
@@ -28,6 +28,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import MiniInfo from '$lib/components/patients/MiniInfo.svelte';
+	import { isAccessDeniedError } from '$lib/rbac/permissions';
+	import { errorMessageFromUnknown } from './patient-360-load';
 
 	interface Props {
 		patient: Patient;
@@ -44,6 +46,9 @@
 	}: Props = $props();
 	let authorizations = $state<InsuranceAuthorization[]>([]);
 	let authDenied = $state(false);
+	let authError = $state('');
+	let authLoading = $state(false);
+	let authLoadGeneration = 0;
 
 	const coverageRate = $derived(insurance.coverageRate);
 
@@ -75,19 +80,43 @@
 		void goto(resolve(`/insurance/authorizations?patientId=${patient.id}`));
 	}
 
-	onMount(async () => {
-		if (!canReadAuthorizations) return;
-		try {
-			authorizations = normalizeInsuranceAuthorizations(
-				(await getInsuranceAuthorizations({ patientId: patient.id, pageSize: 100 })).items
-			);
-		} catch (e) {
-			if (e instanceof Error && e.message === 'ACCESS_DENIED') {
-				authDenied = true;
-			} else {
-				authorizations = [];
-			}
+	function isAuthLoadCurrent(token: number): boolean {
+		return token === authLoadGeneration;
+	}
+
+	$effect(() => {
+		if (!browser || !canReadAuthorizations) {
+			authorizations = [];
+			authDenied = false;
+			authError = '';
+			authLoading = false;
+			return;
 		}
+
+		const pid = patient.id;
+		authLoadGeneration += 1;
+		const token = authLoadGeneration;
+		authorizations = [];
+		authDenied = false;
+		authError = '';
+		authLoading = true;
+
+		void (async () => {
+			try {
+				const page = await getInsuranceAuthorizations({ patientId: pid, pageSize: 100 });
+				if (!isAuthLoadCurrent(token)) return;
+				authorizations = normalizeInsuranceAuthorizations(page.items);
+			} catch (e: unknown) {
+				if (!isAuthLoadCurrent(token)) return;
+				if (isAccessDeniedError(e)) {
+					authDenied = true;
+				} else {
+					authError = errorMessageFromUnknown(e, 'Autorisations PEC indisponibles.');
+				}
+			} finally {
+				if (isAuthLoadCurrent(token)) authLoading = false;
+			}
+		})();
 	});
 </script>
 
@@ -281,6 +310,15 @@
 					>
 						Accès refusé aux autorisations PEC.
 					</p>
+				{:else if authError}
+					<p
+						class="rounded-xl bg-red-50 p-3 text-red-700"
+						data-testid="patient-360-insurance-auth-error"
+					>
+						{authError}
+					</p>
+				{:else if authLoading}
+					<p class="text-sm text-slate-500">Chargement des autorisations PEC…</p>
 				{:else if authorizations.length === 0}<div
 						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
 					>

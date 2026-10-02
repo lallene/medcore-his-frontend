@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { browser } from '$app/environment';
 	import { getPatientActiveQueueTicket } from '$lib/api/queue';
 	import { stageLabels } from '$lib/components/queue/state';
 	import type { QueueTicketRow } from '$lib/types/queue';
@@ -16,6 +16,8 @@
 	let ticket = $state<QueueTicketRow | null>(null);
 	let loading = $state(false);
 
+	let loadGeneration = 0;
+
 	const permissions = getStoredPermissions();
 	const canReadQueue = canAny(permissions, [
 		'queue.doctor.read',
@@ -25,16 +27,36 @@
 	const canReadMinimal = can(permissions, 'patients.360.read');
 	const canOpenConsultation = can(permissions, 'consultations.read');
 
-	onMount(async () => {
-		if (!canReadQueue && !canReadMinimal) return;
-		loading = true;
-		try {
-			ticket = await getPatientActiveQueueTicket(patientId);
-		} catch {
+	function isCurrent(token: number): boolean {
+		return token === loadGeneration;
+	}
+
+	$effect(() => {
+		if (!browser) return;
+		const pid = patientId;
+		if (!canReadQueue && !canReadMinimal) {
 			ticket = null;
-		} finally {
 			loading = false;
+			return;
 		}
+
+		loadGeneration += 1;
+		const token = loadGeneration;
+		ticket = null;
+		loading = true;
+
+		void (async () => {
+			try {
+				const row = await getPatientActiveQueueTicket(pid);
+				if (!isCurrent(token)) return;
+				ticket = row;
+			} catch {
+				if (!isCurrent(token)) return;
+				ticket = null;
+			} finally {
+				if (isCurrent(token)) loading = false;
+			}
+		})();
 	});
 </script>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { browser } from '$app/environment';
 	import { FlaskConical, Search, Stethoscope } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { getLaboratoryOrder, listLaboratoryOrders } from '$lib/api/laboratory';
@@ -15,6 +15,11 @@
 	import type { LaboratoryListItem, LaboratoryOrder } from '$lib/types/laboratory';
 	import type { ImagingListItem, ImagingOrder } from '$lib/types/imaging';
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
+	import { can, getStoredPermissions, isAccessDeniedError } from '$lib/rbac/permissions';
+	import { errorMessageFromUnknown } from './patient-360-load';
+
+	type BranchUi = { loading: boolean; denied: boolean; error: string };
+
 	interface Props {
 		patientId: number;
 		consultations: PatientConsultation[];
@@ -29,14 +34,20 @@
 		canReadImaging = false,
 		canReadConsultations = false
 	}: Props = $props();
-	let orders = $state<LaboratoryListItem[]>([]),
-		details = $state<Record<number, LaboratoryOrder>>({}),
-		imagingOrders = $state<ImagingListItem[]>([]),
-		imagingDetails = $state<Record<number, ImagingOrder>>({}),
-		search = $state(''),
-		loading = $state(true),
-		error = $state(''),
-		accessDenied = $state(false);
+
+	let orders = $state<LaboratoryListItem[]>([]);
+	let details = $state<Record<number, LaboratoryOrder>>({});
+	let imagingOrders = $state<ImagingListItem[]>([]);
+	let imagingDetails = $state<Record<number, ImagingOrder>>({});
+	let search = $state('');
+	let labBranch = $state<BranchUi>({ loading: false, denied: false, error: '' });
+	let imagingBranch = $state<BranchUi>({ loading: false, denied: false, error: '' });
+
+	let loadGeneration = 0;
+
+	const permissions = getStoredPermissions();
+	const canCreateConsultation = can(permissions, 'consultations.create');
+
 	const filtered = $derived(
 		orders.filter((o) =>
 			`${o.examName} ${o.examCode} ${o.requestNumber}`.toLowerCase().includes(search.toLowerCase())
@@ -71,42 +82,102 @@
 					)
 			: []
 	);
-	onMount(async () => {
-		try {
-			const tasks: Array<Promise<void>> = [];
-			if (canReadLaboratory) {
-				tasks.push(
-					listLaboratoryOrders({ patientId, limit: 100 }).then(async (laboratoryResponse) => {
+
+	const anyLoading = $derived(labBranch.loading || imagingBranch.loading);
+	const consultSubtitle = $derived(
+		canReadConsultations
+			? `Prescriptions, prélèvements et résultats issus de ${consultations.length} consultation(s).`
+			: 'Laboratoire et imagerie selon vos autorisations.'
+	);
+
+	function isCurrent(token: number): boolean {
+		return token === loadGeneration;
+	}
+
+	$effect(() => {
+		if (!browser) return;
+
+		const pid = patientId;
+		const wantLab = canReadLaboratory;
+		const wantImaging = canReadImaging;
+
+		loadGeneration += 1;
+		const token = loadGeneration;
+
+		orders = [];
+		details = {};
+		imagingOrders = [];
+		imagingDetails = {};
+		labBranch = { loading: wantLab, denied: false, error: '' };
+		imagingBranch = { loading: wantImaging, denied: false, error: '' };
+
+		const tasks: Array<Promise<void>> = [];
+
+		if (wantLab) {
+			tasks.push(
+				listLaboratoryOrders({ patientId: pid, limit: 100 })
+					.then(async (laboratoryResponse) => {
+						if (!isCurrent(token)) return;
 						orders = laboratoryResponse.data;
 						const loadedDetails = await Promise.all(
 							orders.map((order) => getLaboratoryOrder(order.id))
 						);
+						if (!isCurrent(token)) return;
 						details = Object.fromEntries(loadedDetails.map((detail) => [detail.id, detail]));
 					})
-				);
-			}
-			if (canReadImaging) {
-				tasks.push(
-					listImagingOrders({ patientId, limit: 100 }).then(async (imagingResponse) => {
+					.catch((e: unknown) => {
+						if (!isCurrent(token)) return;
+						if (isAccessDeniedError(e)) {
+							labBranch = { loading: false, denied: true, error: '' };
+						} else {
+							labBranch = {
+								loading: false,
+								denied: false,
+								error: errorMessageFromUnknown(e, 'Laboratoire indisponible.')
+							};
+						}
+					})
+					.finally(() => {
+						if (!isCurrent(token)) return;
+						if (labBranch.loading) labBranch = { ...labBranch, loading: false };
+					})
+			);
+		}
+
+		if (wantImaging) {
+			tasks.push(
+				listImagingOrders({ patientId: pid, limit: 100 })
+					.then(async (imagingResponse) => {
+						if (!isCurrent(token)) return;
 						imagingOrders = imagingResponse.data;
 						const loadedImaging = await Promise.all(
 							imagingOrders.map((order) => getImagingOrder(order.id))
 						);
+						if (!isCurrent(token)) return;
 						imagingDetails = Object.fromEntries(loadedImaging.map((detail) => [detail.id, detail]));
 					})
-				);
-			}
-			await Promise.all(tasks);
-		} catch (e) {
-			if (e instanceof Error && e.message === 'ACCESS_DENIED') {
-				accessDenied = true;
-			} else {
-				error = e instanceof Error ? e.message : 'Chargement impossible';
-			}
-		} finally {
-			loading = false;
+					.catch((e: unknown) => {
+						if (!isCurrent(token)) return;
+						if (isAccessDeniedError(e)) {
+							imagingBranch = { loading: false, denied: true, error: '' };
+						} else {
+							imagingBranch = {
+								loading: false,
+								denied: false,
+								error: errorMessageFromUnknown(e, 'Imagerie indisponible.')
+							};
+						}
+					})
+					.finally(() => {
+						if (!isCurrent(token)) return;
+						if (imagingBranch.loading) imagingBranch = { ...imagingBranch, loading: false };
+					})
+			);
 		}
+
+		void Promise.allSettled(tasks);
 	});
+
 	function date(v: string) {
 		return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(
 			new Date(v)
@@ -122,12 +193,16 @@
 			</p>
 			<h2 class="mt-2 text-2xl font-black">Examens du patient</h2>
 			<p class="text-sm text-slate-500">
-				Prescriptions, prélèvements et résultats issus de {consultations.length} consultation(s).
+				{consultSubtitle}
 			</p>
 		</div>
-		<Button onclick={() => goto(resolve(`/patients/${patientId}/consultations/create`))}
-			><Stethoscope size={16} />Nouvelle consultation</Button
-		>
+		{#if canCreateConsultation}
+			<Button
+				data-testid="patient-360-exams-new-consultation"
+				onclick={() => goto(resolve(`/patients/${patientId}/consultations/create`))}
+				><Stethoscope size={16} />Nouvelle consultation</Button
+			>
+		{/if}
 	</div>
 	<div class="grid gap-4 sm:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-5">
@@ -158,16 +233,27 @@
 			class="w-full rounded-xl border bg-white py-3 pl-10 pr-3"
 		/></label
 	>
-	{#if accessDenied}<p
-			class="rounded-xl bg-red-50 p-4 text-red-700"
-			data-testid="patient-360-exams-denied"
-		>
-			Accès refusé aux examens.
-		</p>{:else if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">
-			{error}
-		</p>{:else if loading}<p class="p-10 text-center">
+	{#if labBranch.denied}
+		<p class="rounded-xl bg-red-50 p-4 text-red-700" data-testid="patient-360-exams-lab-denied">
+			Accès refusé au laboratoire.
+		</p>
+	{:else if labBranch.error}
+		<p class="rounded-xl bg-red-50 p-4 text-red-700" data-testid="patient-360-exams-lab-error">
+			{labBranch.error}
+		</p>
+	{/if}
+	{#if imagingBranch.denied}
+		<p class="rounded-xl bg-red-50 p-4 text-red-700" data-testid="patient-360-exams-imaging-denied">
+			Accès refusé à l'imagerie.
+		</p>
+	{:else if imagingBranch.error}
+		<p class="rounded-xl bg-red-50 p-4 text-red-700" data-testid="patient-360-exams-imaging-error">
+			{imagingBranch.error}
+		</p>
+	{/if}
+	{#if anyLoading}<p class="p-10 text-center">
 			Chargement...
-		</p>{:else if filtered.length === 0 && filteredImaging.length === 0 && nonLaboratoryExams.length === 0}<div
+		</p>{:else if filtered.length === 0 && filteredImaging.length === 0 && nonLaboratoryExams.length === 0 && !labBranch.error && !imagingBranch.error && !labBranch.denied && !imagingBranch.denied}<div
 			class="rounded-2xl border border-dashed p-12 text-center"
 		>
 			<FlaskConical class="mx-auto text-slate-300" size={40} />
