@@ -373,7 +373,103 @@ export async function bookOnFreeSlot(
 	throw new Error(`bookOnFreeSlot failed after retries: ${lastText}`);
 }
 
-/** Book a past SCHEDULED appointment eligible for no-show (retries across offsets/practitioners). */
+/**
+ * Practitioners with an active working schedule on the service.
+ * Prefer this over hardcoded staff IDs (unassigned practitioners return 400).
+ */
+export async function listScheduledPractitioners(
+	request: APIRequestContext,
+	token: string,
+	svc: number
+): Promise<number[]> {
+	const response = await request.get(`${api}/api/schedules?serviceId=${svc}&limit=200`, {
+		headers: bearer(token)
+	});
+	expect(response.ok(), await response.text()).toBeTruthy();
+	const items = ((await response.json()).items ?? []) as Array<{
+		practitionerId?: number;
+		active?: boolean;
+	}>;
+	const ids = [
+		...new Set(
+			items
+				.filter((row) => row.active !== false && Number(row.practitionerId) > 0)
+				.map((row) => Number(row.practitionerId))
+		)
+	].sort((a, b) => a - b);
+	return ids;
+}
+
+/**
+ * Past wall-clock starts inside typical DEMO schedule hours (Europe/Paris 08–17).
+ * Avoids UTC-hour anchors that land outside MEDCORE_TIMEZONE schedule windows.
+ */
+export function pastScheduleAnchorsParis(now = new Date()): Date[] {
+	const formatter = new Intl.DateTimeFormat('en-CA', {
+		timeZone: AGENDA_TZ,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+		hourCycle: 'h23'
+	});
+
+	function parisParts(d: Date) {
+		const parts = Object.fromEntries(
+			formatter.formatToParts(d).map((p) => [p.type, p.value])
+		) as Record<string, string>;
+		return {
+			year: Number(parts.year),
+			month: Number(parts.month),
+			day: Number(parts.day),
+			hour: Number(parts.hour),
+			minute: Number(parts.minute)
+		};
+	}
+
+	/** Build an absolute instant for a Paris civil clock (handles CET/CEST via iterative offset). */
+	function parisLocalToUtc(y: number, m: number, d: number, hour: number, minute = 0): Date {
+		let guess = Date.UTC(y, m - 1, d, hour, minute, 0);
+		for (let i = 0; i < 3; i++) {
+			const got = parisParts(new Date(guess));
+			const wantMin = hour * 60 + minute;
+			const gotMin = got.hour * 60 + got.minute;
+			const dayDrift = Date.UTC(got.year, got.month - 1, got.day) - Date.UTC(y, m - 1, d);
+			guess -= dayDrift + (gotMin - wantMin) * 60_000;
+		}
+		return new Date(guess);
+	}
+
+	const nowParis = parisParts(now);
+	const out: Date[] = [];
+	const hours = [9, 10, 11, 12, 14, 15, 16];
+	for (let dayOffset = 1; dayOffset <= 5; dayOffset++) {
+		const probe = new Date(now.getTime() - dayOffset * 24 * 60 * 60_000);
+		const day = parisParts(probe);
+		for (const hour of hours) {
+			const start = parisLocalToUtc(day.year, day.month, day.day, hour, 0);
+			// Must be strictly in the past for NO_SHOW / late check-in eligibility.
+			if (start.getTime() <= now.getTime() - 15 * 60_000) {
+				out.push(start);
+			}
+		}
+	}
+	// Also try earlier today (Paris) if still past — useful mid-afternoon runs.
+	for (const hour of hours) {
+		const start = parisLocalToUtc(nowParis.year, nowParis.month, nowParis.day, hour, 0);
+		if (start.getTime() <= now.getTime() - 15 * 60_000) {
+			out.push(start);
+		}
+	}
+	return out;
+}
+
+/**
+ * Book a past SCHEDULED appointment eligible for NO_SHOW / late check-in.
+ * Uses scheduled practitioners + Europe/Paris schedule anchors (canonical product rules).
+ */
 export async function bookPastAppointment(
 	request: APIRequestContext,
 	token: string,
@@ -384,42 +480,24 @@ export async function bookPastAppointment(
 		reason: string;
 	}
 ) {
-	const near = await listSlots(request, token, {
-		serviceId: opts.serviceId,
-		appointmentTypeId: opts.appointmentTypeId,
-		from: new Date().toISOString(),
-		to: new Date(Date.now() + 8 * 60 * 60_000).toISOString()
-	}).catch(() => [] as Slot[]);
-	const far = await listSlots(request, token, {
-		serviceId: opts.serviceId,
-		appointmentTypeId: opts.appointmentTypeId,
-		from: new Date(Date.now() + 8 * 60 * 60_000).toISOString(),
-		to: new Date(Date.now() + 5 * 24 * 60 * 60_000).toISOString()
-	}).catch(() => [] as Slot[]);
-	const practitioners = [...new Set([...near, ...far].map((s) => s.practitionerId))];
+	let practitioners = await listScheduledPractitioners(request, token, opts.serviceId);
 	if (!practitioners.length) {
-		// Last resort: known demo practitioners often used by URG schedules
-		practitioners.push(2, 3, 4, 5);
+		const slots = await listSlots(request, token, {
+			serviceId: opts.serviceId,
+			appointmentTypeId: opts.appointmentTypeId,
+			from: new Date().toISOString(),
+			to: new Date(Date.now() + 5 * 24 * 60 * 60_000).toISOString()
+		}).catch(() => [] as Slot[]);
+		practitioners = [...new Set(slots.map((s) => s.practitionerId))];
 	}
-	expect(practitioners.length, 'practitioner for past book').toBeGreaterThan(0);
-	// Relative offsets + previous business-day anchors (overnight/local off-hours).
-	const pastStarts: Date[] = [];
-	for (const mins of [90, 120, 150, 180, 210, 240, 300, 360, 420, 480]) {
-		const startAt = new Date(Date.now() - mins * 60_000);
-		startAt.setUTCSeconds(0, 0);
-		pastStarts.push(startAt);
-	}
-	for (const dayOffset of [0, 1, 2]) {
-		for (const hour of [10, 12, 14, 16]) {
-			const startAt = new Date();
-			startAt.setUTCDate(startAt.getUTCDate() - dayOffset);
-			startAt.setUTCHours(hour, 0, 0, 0);
-			if (startAt.getTime() >= Date.now() - 30 * 60_000) continue;
-			pastStarts.push(startAt);
-		}
-	}
+	expect(practitioners.length, 'scheduled practitioner for past book').toBeGreaterThan(0);
+
+	const pastStarts = pastScheduleAnchorsParis();
+	expect(pastStarts.length, 'past Paris schedule anchors').toBeGreaterThan(0);
+
 	let lastText = '';
 	for (const prac of practitioners) {
+		let skipPractitioner = false;
 		for (const startAt of pastStarts) {
 			const book = await request.post(`${api}/api/appointments`, {
 				headers: { ...bearer(token), 'Idempotency-Key': crypto.randomUUID() },
@@ -443,7 +521,16 @@ export async function bookPastAppointment(
 				};
 				return body;
 			}
+			// Structural assignment failure — do not treat as slot collision.
+			if (
+				book.status() === 400 &&
+				/non affecté|not assigned|affecté à ce service/i.test(lastText)
+			) {
+				skipPractitioner = true;
+				break;
+			}
 		}
+		if (skipPractitioner) continue;
 	}
 	throw new Error(`bookPastAppointment failed: ${lastText}`);
 }

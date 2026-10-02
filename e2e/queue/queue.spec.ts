@@ -1,5 +1,11 @@
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
+import {
+	activeType,
+	bookOnFreeSlot,
+	bookPastAppointment,
+	serviceId as agendaServiceId
+} from '../agenda/fixtures';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
 const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
@@ -38,15 +44,7 @@ async function patientId(request: APIRequestContext, token: string, code: string
 }
 
 async function serviceId(request: APIRequestContext, token: string, code = 'URG') {
-	const response = await request.get(`${api}/api/organization/services`, {
-		headers: bearer(token)
-	});
-	expect(response.ok(), await response.text()).toBeTruthy();
-	const body = await response.json();
-	const items = body.data ?? body;
-	const row = (Array.isArray(items) ? items : []).find((s: { code?: string }) => s.code === code);
-	expect(row?.id, `service ${code}`).toBeTruthy();
-	return row.id as number;
+	return agendaServiceId(request, token, code);
 }
 
 function okCreate(status: number) {
@@ -107,93 +105,40 @@ test('QA-QUEUE-SMOKE-001 @smoke appointment check-in to doctor queue', async ({
 	expect(pid).toBeTruthy();
 
 	const sid = await serviceId(request, reception);
-	const typesRes = await request.get(`${api}/api/appointment-types?serviceId=${sid}&active=true`, {
-		headers: bearer(reception)
-	});
-	expect(typesRes.ok(), await typesRes.text()).toBeTruthy();
-	const typeId = ((await typesRes.json()).items ?? [])[0]?.id as number;
-	expect(typeId, 'appointment type').toBeTruthy();
+	const type = await activeType(request, reception, sid);
 
-	// Prefer past-eligible starts (late check-in allowed) so early-window races don't flake.
-	// Overnight/local off-hours: also try previous business-day anchors inside 08:00–18:00.
-	const pastStarts: Date[] = [];
-	for (const mins of [90, 120, 150, 180, 210, 240, 300, 360]) {
-		const startAt = new Date(Date.now() - mins * 60_000);
-		startAt.setUTCSeconds(0, 0);
-		pastStarts.push(startAt);
+	// Prefer a past SCHEDULED appointment (late check-in always timing-eligible).
+	// Fall back to a near free availability slot within the early-check-in window.
+	let appt: { id: number };
+	try {
+		appt = await bookPastAppointment(request, reception, {
+			patientId: pid,
+			serviceId: sid,
+			appointmentTypeId: type.id,
+			reason: `QA-SMOKE-${Date.now()}`
+		});
+	} catch (err) {
+		const pastErr = err instanceof Error ? err.message : String(err);
+		const booked = await bookOnFreeSlot(request, reception, {
+			patientId: pid,
+			serviceId: sid,
+			appointmentTypeId: type.id,
+			from: new Date().toISOString(),
+			to: new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString(),
+			reason: `QA-SMOKE-NEAR-${Date.now()}`
+		});
+		const startMs = Date.parse(booked.slot.startAt);
+		const earlyOk = startMs - Date.now() <= 55 * 60_000;
+		const alreadyStarted = startMs <= Date.now();
+		expect(
+			earlyOk || alreadyStarted,
+			`smoke slot outside early check-in window: ${booked.slot.startAt} (pastErr=${pastErr})`
+		).toBeTruthy();
+		appt = booked.body;
 	}
-	for (const dayOffset of [0, 1, 2]) {
-		for (const hour of [10, 12, 14, 16]) {
-			const startAt = new Date();
-			startAt.setUTCDate(startAt.getUTCDate() - dayOffset);
-			startAt.setUTCHours(hour, 0, 0, 0);
-			if (startAt.getTime() >= Date.now() - 30 * 60_000) continue; // must be past-eligible
-			pastStarts.push(startAt);
-		}
-	}
-	let appt: { id: number } | null = null;
-	let lastBook = '';
-	for (const prac of [2, 3, 4, 5, 6]) {
-		for (const startAt of pastStarts) {
-			const apptRes = await request.post(`${api}/api/appointments`, {
-				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
-				data: {
-					patientId: pid,
-					serviceId: sid,
-					practitionerId: prac,
-					appointmentTypeId: typeId,
-					startAt: startAt.toISOString(),
-					reason: `QA-SMOKE-${Date.now()}`,
-					idempotencyKey: crypto.randomUUID()
-				}
-			});
-			lastBook = await apptRes.text();
-			if (okCreate(apptRes.status())) {
-				appt = JSON.parse(lastBook) as { id: number };
-				break;
-			}
-		}
-		if (appt) break;
-	}
-	if (!appt) {
-		const from = new Date().toISOString();
-		const to = new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString();
-		const avail = await request.get(
-			`${api}/api/availability?serviceId=${sid}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&appointmentTypeId=${typeId}`,
-			{ headers: bearer(reception) }
-		);
-		const slots = ((await avail.json()).slots ?? []) as Array<{
-			startAt: string;
-			practitionerId: number;
-		}>;
-		for (const candidate of slots.slice(0, 80)) {
-			const startMs = Date.parse(candidate.startAt);
-			// Prefer near-term; if none, still try later same-day slots (overnight runs).
-			const earlyOk = startMs - Date.now() <= 50 * 60_000;
-			const sameDayFallback = startMs - Date.now() <= 14 * 60 * 60_000;
-			if (!earlyOk && !sameDayFallback) continue;
-			const apptRes = await request.post(`${api}/api/appointments`, {
-				headers: { ...bearer(reception), 'Idempotency-Key': crypto.randomUUID() },
-				data: {
-					patientId: pid,
-					serviceId: sid,
-					practitionerId: candidate.practitionerId,
-					appointmentTypeId: typeId,
-					startAt: candidate.startAt,
-					reason: `QA-SMOKE-NEAR-${Date.now()}`,
-					idempotencyKey: crypto.randomUUID()
-				}
-			});
-			lastBook = await apptRes.text();
-			if (okCreate(apptRes.status())) {
-				appt = JSON.parse(lastBook) as { id: number };
-				break;
-			}
-		}
-	}
-	expect(appt?.id, `book smoke: ${lastBook}`).toBeTruthy();
+	expect(appt.id, 'book smoke appointment id').toBeTruthy();
 
-	const checkIn = await request.post(`${api}/api/queue/appointments/${appt!.id}/check-in`, {
+	const checkIn = await request.post(`${api}/api/queue/appointments/${appt.id}/check-in`, {
 		headers: bearer(reception),
 		data: { identityConfirmed: true, financeOverride: true, financeOverrideNote: 'QA smoke' }
 	});
