@@ -43,3 +43,6 @@ export async function validateImagingOrder(id: number): Promise<ImagingOrder> {
 export async function cancelImagingOrder(id: number, reason: string): Promise<ImagingOrder> {
 	return (await api.post<ImagingOrder>(`/api/imaging/orders/${id}/cancel`, { reason })).data;
 }
+export async function closeImagingReport(id: number, reason: string): Promise<ImagingOrder> {
+	return (await api.post<ImagingOrder>(`/api/imaging/orders/${id}/close-report`, { reason })).data;
+}

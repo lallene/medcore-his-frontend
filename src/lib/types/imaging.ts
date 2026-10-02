@@ -1,5 +1,11 @@
 export type ImagingStatus =
-	'ORDERED' | 'SCHEDULED' | 'IN_PROGRESS' | 'REPORT_DRAFTED' | 'VALIDATED' | 'CANCELLED';
+	| 'ORDERED'
+	| 'SCHEDULED'
+	| 'IN_PROGRESS'
+	| 'REPORT_DRAFTED'
+	| 'VALIDATED'
+	| 'CANCELLED'
+	| 'REPORT_CLOSED';
 export type ImagingModality = 'XRAY' | 'ULTRASOUND' | 'CT' | 'MRI' | 'MAMMOGRAPHY' | 'OTHER';
 export type ImagingReport = {
 	id: number;

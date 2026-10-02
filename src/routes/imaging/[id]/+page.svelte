@@ -5,6 +5,7 @@
 	import { jwtDecode } from 'jwt-decode';
 	import {
 		cancelImagingOrder,
+		closeImagingReport,
 		getImagingOrder,
 		saveImagingReport,
 		scheduleImagingOrder,
@@ -226,11 +227,24 @@
 				class="rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white"
 				>Valider définitivement</button
 			>{/if}
-		{#if order.report && (order.status === 'VALIDATED' || !canReport)}<section
+		{#if canReport && actions.closeReport}<button
+				disabled={busy}
+				onclick={() => {
+					const reason = prompt('Motif de clôture du compte rendu (examen déjà réalisé)');
+					if (reason) act(() => closeImagingReport(id, reason));
+				}}
+				class="rounded-xl border border-slate-300 bg-white px-5 py-3 font-bold text-slate-800"
+				>Clôturer le compte rendu</button
+			>{/if}
+		{#if order.report && (order.status === 'VALIDATED' || order.status === 'REPORT_CLOSED' || !canReport)}<section
 				class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
 			>
 				<h2 class="font-black text-emerald-900">
-					Compte rendu {order.status === 'VALIDATED' ? 'validé' : 'en lecture'}
+					Compte rendu {order.status === 'VALIDATED'
+						? 'validé'
+						: order.status === 'REPORT_CLOSED'
+							? 'clôturé'
+							: 'en lecture'}
 				</h2>
 				<div class="mt-3 space-y-3">
 					<p><b>Indication :</b> {order.report.clinicalIndication || '—'}</p>

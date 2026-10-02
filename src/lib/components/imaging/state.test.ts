@@ -17,13 +17,17 @@ test('workflow actions follow status and validation is readonly', () => {
 	assert.equal(imagingActions('ORDERED').schedule, true);
 	assert.equal(imagingActions('SCHEDULED').start, true);
 	assert.equal(imagingActions('IN_PROGRESS').report, true);
+	assert.equal(imagingActions('IN_PROGRESS').closeReport, true);
 	assert.equal(imagingActions('REPORT_DRAFTED').validate, true);
 	assert.equal(imagingActions('VALIDATED').readonly, true);
 	assert.equal(imagingActions('VALIDATED').report, false);
+	assert.equal(imagingActions('REPORT_CLOSED').readonly, true);
+	assert.equal(imagingActions('REPORT_CLOSED').closeReport, false);
 });
 test('modalities and labels are stable', () => {
 	assert.deepEqual(imagingModalities, ['XRAY', 'ULTRASOUND', 'CT', 'MRI', 'MAMMOGRAPHY', 'OTHER']);
 	assert.equal(imagingStatusLabel('REPORT_DRAFTED'), 'Compte rendu rédigé');
+	assert.equal(imagingStatusLabel('REPORT_CLOSED'), 'Réalisé — CR clôturé');
 });
 test('RBAC is granular', () => {
 	assert.equal(
@@ -52,6 +56,7 @@ test('queue and detail expose filters pagination workflow and readonly report', 
 		'startImagingOrder',
 		'saveImagingReport',
 		'validateImagingOrder',
+		'closeImagingReport',
 		'order.report'
 	])
 		assert.equal(detail.includes(marker), true);

@@ -5,7 +5,8 @@ export const imagingStatuses: ImagingStatus[] = [
 	'IN_PROGRESS',
 	'REPORT_DRAFTED',
 	'VALIDATED',
-	'CANCELLED'
+	'CANCELLED',
+	'REPORT_CLOSED'
 ];
 export const imagingModalities: ImagingModality[] = [
 	'XRAY',
@@ -26,7 +27,8 @@ export function imagingStatusLabel(status: ImagingStatus) {
 			IN_PROGRESS: 'En cours',
 			REPORT_DRAFTED: 'Compte rendu rédigé',
 			VALIDATED: 'Validé',
-			CANCELLED: 'Annulé'
+			CANCELLED: 'Annulé',
+			REPORT_CLOSED: 'Réalisé — CR clôturé'
 		} as Record<ImagingStatus, string>
 	)[status];
 }
@@ -48,8 +50,9 @@ export function imagingActions(status: ImagingStatus) {
 		start: status === 'ORDERED' || status === 'SCHEDULED',
 		report: status === 'IN_PROGRESS' || status === 'REPORT_DRAFTED',
 		validate: status === 'REPORT_DRAFTED',
+		closeReport: status === 'IN_PROGRESS' || status === 'REPORT_DRAFTED',
 		cancel: status === 'ORDERED' || status === 'SCHEDULED',
-		readonly: status === 'VALIDATED' || status === 'CANCELLED'
+		readonly: status === 'VALIDATED' || status === 'CANCELLED' || status === 'REPORT_CLOSED'
 	};
 }
 export function hasImagingPermission(
