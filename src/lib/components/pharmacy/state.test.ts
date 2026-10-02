@@ -101,6 +101,7 @@ test('états lots et libellés mouvements sont stables', () => {
 
 test('dispensation soumise au RBAC', () => {
 	assert.equal(canDispense({ permissions: ['pharmacy.dispensation.create'] }), true);
+	assert.equal(canDispense({ permissions: ['pharmacy.dispense'] }), false);
 	assert.equal(canDispense({ role: 'accueil', permissions: [] }), false);
 });
 

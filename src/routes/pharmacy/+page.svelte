@@ -74,7 +74,7 @@
 				claims.permissions?.includes('*') ||
 				claims.permissions?.includes(permission))
 		);
-	const canDispense = $derived(has('pharmacy.dispensation.create') || has('pharmacy.dispense'));
+	const canDispense = $derived(has('pharmacy.dispensation.create'));
 	const status = (value: string) => stockStatusLabel(value.toUpperCase() as StockStatus);
 	const forms = $derived([...new Set(availability.map((i) => i.form).filter(Boolean))].sort());
 	const services = $derived([...new Set(vouchers.map((i) => i.service).filter(Boolean))].sort());

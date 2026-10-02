@@ -31,8 +31,7 @@ export function canDispense(claims: { role?: string; permissions?: string[] } | 
 		claims &&
 		(claims.role === 'admin' ||
 			claims.permissions?.includes('*') ||
-			claims.permissions?.includes('pharmacy.dispensation.create') ||
-			claims.permissions?.includes('pharmacy.dispense'))
+			claims.permissions?.includes('pharmacy.dispensation.create'))
 	);
 }
 
