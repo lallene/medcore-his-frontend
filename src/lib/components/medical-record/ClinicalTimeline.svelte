@@ -19,6 +19,7 @@
 
 	import { getClinicalTimeline } from '$lib/api/clinical-timeline';
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
+	import { clinicalTimelineEventLabel } from './clinical-timeline-labels';
 
 	type TimelineFilter =
 		'all' | 'consultation' | 'prescription' | 'exam' | 'hospitalization' | 'document';
@@ -178,34 +179,7 @@
 	}
 
 	function eventLabel(event: ClinicalTimelineEvent): string {
-		switch (normalize(event.event_type)) {
-			case 'consultation_created':
-				return 'Consultation créée';
-			case 'consultation_completed':
-				return 'Consultation terminée';
-			case 'consultation_cancelled':
-				return 'Consultation annulée';
-			case 'consultation_status_changed':
-				return 'Statut de consultation';
-			case 'medication_prescribed':
-				return 'Prescription médicale';
-			case 'exam_requested':
-				return 'Examen demandé';
-			case 'vital_sign_added':
-				return 'Constantes enregistrées';
-			case 'medical_history_added':
-				return 'Antécédent médical';
-			case 'allergy_added':
-				return 'Allergie enregistrée';
-			case 'soap_updated':
-				return 'Note SOAP mise à jour';
-			case 'specialty_data_updated':
-				return 'Volet spécialisé mis à jour';
-			case 'common_medical_record_updated':
-				return 'Dossier médical mis à jour';
-			default:
-				return event.title || 'Événement clinique';
-		}
+		return clinicalTimelineEventLabel(event.event_type, event.title);
 	}
 
 	function severityLabel(value: string): string {
