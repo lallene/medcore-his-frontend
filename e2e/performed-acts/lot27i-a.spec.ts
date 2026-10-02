@@ -54,13 +54,19 @@ async function createPatient(request: APIRequestContext, token: string, tag: str
 }
 
 async function ensureCatalogEntry(request: APIRequestContext, token: string) {
+	// Patient360 create-select loads act-catalog with active=true&limit=100
+	// (server max), ordered by category,label,code. Accumulated E2E PROCEDURE
+	// rows push late labels off page 1 → selectOption hangs until timeout.
+	// Use CONSULTATION + early label so the fixture stays inside that window
+	// without weakening RBAC assertions or changing product pagination.
 	const code = `QA27IA-${Date.now().toString(36).toUpperCase()}`;
+	const label = `000-QA ${code}`;
 	const create = await request.post(`${api}/api/act-catalog`, {
 		headers: bearer(token),
 		data: {
 			code,
-			label: `Acte QA ${code}`,
-			category: 'PROCEDURE',
+			label,
+			category: 'CONSULTATION',
 			basePrice: 12500,
 			currency: 'XOF',
 			billable: true,
@@ -70,7 +76,27 @@ async function ensureCatalogEntry(request: APIRequestContext, token: string) {
 	});
 	const text = await create.text();
 	expect([200, 201].includes(create.status()), text).toBeTruthy();
-	return JSON.parse(text) as { id: number; code: string; label: string; basePrice: number };
+	const catalog = JSON.parse(text) as {
+		id: number;
+		code: string;
+		label: string;
+		basePrice: number;
+	};
+
+	const list = await request.get(`${api}/api/act-catalog`, {
+		headers: bearer(token),
+		params: { active: 'true', limit: 100 }
+	});
+	const listText = await list.text();
+	expect(list.ok(), listText).toBeTruthy();
+	const page = JSON.parse(listText) as { data?: Array<{ id: number }> };
+	const ids = (page.data ?? []).map((row) => row.id);
+	expect(
+		ids.includes(catalog.id),
+		`QA catalog fixture id=${catalog.id} missing from create-select window (active limit=100); environment catalog pollution`
+	).toBeTruthy();
+
+	return catalog;
 }
 
 async function openPerformedActsTab(page: Page, patientId: number, codePatient: string) {

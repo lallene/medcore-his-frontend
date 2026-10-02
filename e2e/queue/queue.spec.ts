@@ -119,13 +119,18 @@ test('QA-QUEUE-SMOKE-001 @smoke appointment check-in to doctor queue', async ({
 		});
 	} catch (err) {
 		const pastErr = err instanceof Error ? err.message : String(err);
+		// Only book inside the early check-in window — a free slot days ahead is not eligible.
 		const booked = await bookOnFreeSlot(request, reception, {
 			patientId: pid,
 			serviceId: sid,
 			appointmentTypeId: type.id,
 			from: new Date().toISOString(),
-			to: new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString(),
+			to: new Date(Date.now() + 55 * 60_000).toISOString(),
 			reason: `QA-SMOKE-NEAR-${Date.now()}`
+		}).catch((nearErr) => {
+			throw new Error(
+				`smoke early-window book failed (pastErr=${pastErr}; nearErr=${nearErr instanceof Error ? nearErr.message : String(nearErr)})`
+			);
 		});
 		const startMs = Date.parse(booked.slot.startAt);
 		const earlyOk = startMs - Date.now() <= 55 * 60_000;

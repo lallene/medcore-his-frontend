@@ -294,10 +294,6 @@ test('QA-SCHEDULE-EXCEPTION-CREATE-001 @critical create negative exception', asy
 	await fillExceptionPractitioner(page, prac);
 	await page.getByTestId('exception-form-service').selectOption(String(sid));
 	await page.getByTestId('exception-form-type').selectOption('ABSENCE');
-	const start = new Date(Date.now() + (10 + (Date.now() % 5)) * 24 * 60 * 60_000);
-	start.setMinutes(0, 0, 0);
-	start.setHours(9 + (Date.now() % 6), 0, 0, 0);
-	const end = new Date(start.getTime() + 2 * 60 * 60_000);
 	const toParisLocal = (d: Date) => {
 		const parts = Object.fromEntries(
 			new Intl.DateTimeFormat('en-CA', {
@@ -315,15 +311,36 @@ test('QA-SCHEDULE-EXCEPTION-CREATE-001 @critical create negative exception', asy
 		);
 		return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 	};
-	await page.getByTestId('exception-form-start').fill(toParisLocal(start));
-	await page.getByTestId('exception-form-end').fill(toParisLocal(end));
-	await page.getByTestId('exception-form-reason').fill(`QA-EX-ABS-${Date.now()}`);
-	const post = page.waitForResponse(
-		(r) => r.url().includes('/api/schedule-exceptions') && r.request().method() === 'POST',
-		{ timeout: 30_000 }
-	);
-	await page.getByTestId('exception-form-submit').click();
-	expect([200, 201].includes((await post).status())).toBeTruthy();
+
+	// Prior E2E runs leave ABSENCE rows; probe future windows until one is free (same
+	// pattern as EXTRA_AVAILABILITY). Still requires HTTP 200/201 — no assertion weaken.
+	let created = false;
+	let lastStatus = 0;
+	for (let i = 0; i < 40; i++) {
+		const start = new Date(Date.now() + (30 + i) * 24 * 60 * 60_000);
+		start.setMinutes(0, 0, 0);
+		start.setHours(9 + (i % 6), 0, 0, 0);
+		const end = new Date(start.getTime() + 2 * 60 * 60_000);
+		await page.getByTestId('exception-form-start').fill(toParisLocal(start));
+		await page.getByTestId('exception-form-end').fill(toParisLocal(end));
+		await page.getByTestId('exception-form-reason').fill(`QA-EX-ABS-${Date.now()}-${i}`);
+		const post = page.waitForResponse(
+			(r) => r.url().includes('/api/schedule-exceptions') && r.request().method() === 'POST',
+			{ timeout: 30_000 }
+		);
+		await page.getByTestId('exception-form-submit').click();
+		lastStatus = (await post).status();
+		if ([200, 201].includes(lastStatus)) {
+			created = true;
+			break;
+		}
+		// Only probe another slot on known overlap/collision; fail fast otherwise.
+		if (lastStatus !== 409) {
+			break;
+		}
+		await expect(page.getByTestId('exception-form')).toBeVisible();
+	}
+	expect(created, `unique ABSENCE slot, last status=${lastStatus}`).toBeTruthy();
 	await expect(page.getByTestId('exception-row').first()).toBeVisible({ timeout: 15_000 });
 	await expect(page.locator('[data-exception-polarity="negative"]').first()).toBeVisible();
 });

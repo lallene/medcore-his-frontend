@@ -445,7 +445,8 @@ export function pastScheduleAnchorsParis(now = new Date()): Date[] {
 	const nowParis = parisParts(now);
 	const out: Date[] = [];
 	const hours = [9, 10, 11, 12, 14, 15, 16];
-	for (let dayOffset = 1; dayOffset <= 5; dayOffset++) {
+	// Wider lookback: repeated E2E runs exhaust the near-past DEMO slots (409 CONFLICT).
+	for (let dayOffset = 1; dayOffset <= 21; dayOffset++) {
 		const probe = new Date(now.getTime() - dayOffset * 24 * 60 * 60_000);
 		const day = parisParts(probe);
 		for (const hour of hours) {
