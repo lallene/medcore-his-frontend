@@ -100,17 +100,21 @@
 	const examCount = $derived(tabExamCount(caps, consultations));
 
 	const documentCount = $derived(
-		caps.canReadDocuments && caps.canReadMedicalRecord
-			? (summary?.statistics.documents ?? 0)
-			: caps.canReadDocuments
-				? consultations.reduce((total, c) => {
-						let n = 0;
-						if ((c.prescriptions?.length ?? 0) > 0) n++;
-						if ((c.exams?.length ?? 0) > 0) n++;
-						if (c.sickLeaveRequired) n++;
-						return total + n;
-					}, 0)
-				: undefined
+		!caps.canReadDocuments
+			? undefined
+			: caps.canReadMedicalRecord
+				? sectionDenied.summary || sectionErrors.summary
+					? undefined
+					: (summary?.statistics.documents ?? 0)
+				: sectionDenied.consultations || sectionErrors.consultations
+					? undefined
+					: consultations.reduce((total, c) => {
+							let n = 0;
+							if ((c.prescriptions?.length ?? 0) > 0) n++;
+							if ((c.exams?.length ?? 0) > 0) n++;
+							if (c.sickLeaveRequired) n++;
+							return total + n;
+						}, 0)
 	);
 
 	const patientTabs = $derived<PatientTabItem[]>([
@@ -450,6 +454,8 @@
 				{insurance}
 				{hospitalizations}
 				capabilities={caps}
+				consultationsDenied={!!sectionDenied.consultations}
+				consultationsError={sectionErrors.consultations ?? ''}
 			/>
 		{:else if activeTab === 'appointments' && caps.canReadAppointments}
 			<PatientAppointments
@@ -511,7 +517,12 @@
 				canReadInsuranceReceivables={caps.canReadInsuranceReceivables}
 			/>
 		{:else if activeTab === 'documents' && caps.canReadDocuments}
-			<PatientDocuments {consultations} {summary} />
+			<PatientDocuments
+				{consultations}
+				{summary}
+				consultationsDenied={!!sectionDenied.consultations}
+				consultationsError={sectionErrors.consultations ?? ''}
+			/>
 		{:else if activeTab === 'timeline' && caps.canReadTimeline}
 			{#if sectionDenied.timeline}
 				<Alert tone="danger" title="Accès refusé">Timeline non autorisée.</Alert>

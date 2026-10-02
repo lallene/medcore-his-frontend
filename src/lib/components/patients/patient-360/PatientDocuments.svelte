@@ -15,11 +15,13 @@
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
 
 	import {
 		openConsultationDocument,
 		type ConsultationDocumentType
 	} from '$lib/api/consultation-documents';
+	import { classifyDocumentsView } from './patient-360-documents-state';
 
 	type DocumentType = 'prescription' | 'exam-request' | 'sick-leave';
 
@@ -37,9 +39,17 @@
 	interface Props {
 		consultations: PatientConsultation[];
 		summary: PatientSummary | null;
+		/** LOT28E-C1: authoritative consultations section state from Patient360 page. */
+		consultationsDenied?: boolean;
+		consultationsError?: string;
 	}
 
-	let { consultations, summary }: Props = $props();
+	let {
+		consultations,
+		summary,
+		consultationsDenied = false,
+		consultationsError = ''
+	}: Props = $props();
 
 	let search = $state('');
 	let typeFilter = $state<'all' | DocumentType>('all');
@@ -97,6 +107,16 @@
 			(first, second) => new Date(second.date).getTime() - new Date(first.date).getTime()
 		);
 	});
+
+	const documentsReady = $derived(!consultationsDenied && !consultationsError);
+
+	const viewState = $derived(
+		classifyDocumentsView({
+			denied: consultationsDenied,
+			error: consultationsError,
+			documentCount: documents.length
+		})
+	);
 
 	const filteredDocuments = $derived.by(() => {
 		const query = search.trim().toLowerCase();
@@ -189,7 +209,7 @@
 	}
 </script>
 
-<div class="space-y-6">
+<div class="space-y-6" data-testid="patient-360-documents">
 	<div>
 		<p class="text-xs font-black uppercase tracking-[0.2em] text-[#0E4C92]">Archives médicales</p>
 
@@ -201,177 +221,192 @@
 		</p>
 	</div>
 
-	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-		<div class="rounded-2xl border border-slate-200 bg-white p-5">
-			<p class="text-xs font-black uppercase text-slate-400">Documents générés</p>
-
-			<p class="mt-2 text-3xl font-black text-slate-900">
-				{documents.length}
-			</p>
+	{#if viewState === 'denied'}
+		<div data-testid="patient-360-documents-denied">
+			<Alert tone="warning" title="Documents">
+				Accès aux consultations refusé — les documents générés ne peuvent pas être affichés.
+			</Alert>
 		</div>
-
-		<div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
-			<p class="text-xs font-black uppercase text-orange-500">Ordonnances</p>
-
-			<p class="mt-2 text-3xl font-black text-orange-900">
-				{prescriptionDocumentCount}
-			</p>
+	{:else if viewState === 'error'}
+		<div data-testid="patient-360-documents-error">
+			<Alert tone="danger" title="Documents">{consultationsError}</Alert>
 		</div>
+	{:else}
+		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			<div class="rounded-2xl border border-slate-200 bg-white p-5">
+				<p class="text-xs font-black uppercase text-slate-400">Documents générés</p>
 
-		<div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
-			<p class="text-xs font-black uppercase text-violet-500">Demandes d’examens</p>
-
-			<p class="mt-2 text-3xl font-black text-violet-900">
-				{examDocumentCount}
-			</p>
-		</div>
-
-		<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-			<p class="text-xs font-black uppercase text-blue-500">Repos maladie</p>
-
-			<p class="mt-2 text-3xl font-black text-blue-900">
-				{sickLeaveDocumentCount}
-			</p>
-		</div>
-	</div>
-
-	<Card
-		title="Bibliothèque documentaire"
-		subtitle={`${filteredDocuments.length} document(s) affiché(s)`}
-	>
-		<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-			<div class="relative w-full max-w-xl">
-				<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-
-				<input
-					bind:value={search}
-					placeholder="Rechercher un document, service, médecin..."
-					class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"
-				/>
-			</div>
-
-			<select
-				bind:value={typeFilter}
-				aria-label="Filtrer les documents par type"
-				class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600"
-			>
-				<option value="all">Tous les documents</option>
-				<option value="prescription">Ordonnances</option>
-				<option value="exam-request">Demandes d’examens</option>
-				<option value="sick-leave">Repos maladie</option>
-			</select>
-		</div>
-
-		{#if filteredDocuments.length === 0}
-			<div
-				class="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center"
-			>
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
-				>
-					<FileHeart size={28} />
-				</div>
-
-				<h3 class="mt-5 text-xl font-black text-slate-900">Aucun document trouvé</h3>
-
-				<p class="mt-2 max-w-md text-sm leading-6 text-slate-500">
-					Les documents générés pendant les consultations apparaîtront automatiquement ici.
+				<p class="mt-2 text-3xl font-black text-slate-900">
+					{documents.length}
 				</p>
 			</div>
-		{:else}
-			<div class="space-y-4">
-				{#each filteredDocuments as document (document.key)}
-					<article
-						class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-sm lg:flex-row lg:items-center lg:justify-between"
+
+			<div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+				<p class="text-xs font-black uppercase text-orange-500">Ordonnances</p>
+
+				<p class="mt-2 text-3xl font-black text-orange-900">
+					{prescriptionDocumentCount}
+				</p>
+			</div>
+
+			<div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+				<p class="text-xs font-black uppercase text-violet-500">Demandes d’examens</p>
+
+				<p class="mt-2 text-3xl font-black text-violet-900">
+					{examDocumentCount}
+				</p>
+			</div>
+
+			<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+				<p class="text-xs font-black uppercase text-blue-500">Repos maladie</p>
+
+				<p class="mt-2 text-3xl font-black text-blue-900">
+					{sickLeaveDocumentCount}
+				</p>
+			</div>
+		</div>
+
+		<Card
+			title="Bibliothèque documentaire"
+			subtitle={`${filteredDocuments.length} document(s) affiché(s)`}
+		>
+			<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+				<div class="relative w-full max-w-xl">
+					<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+
+					<input
+						bind:value={search}
+						placeholder="Rechercher un document, service, médecin..."
+						class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"
+					/>
+				</div>
+
+				<select
+					bind:value={typeFilter}
+					aria-label="Filtrer les documents par type"
+					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600"
+				>
+					<option value="all">Tous les documents</option>
+					<option value="prescription">Ordonnances</option>
+					<option value="exam-request">Demandes d’examens</option>
+					<option value="sick-leave">Repos maladie</option>
+				</select>
+			</div>
+
+			{#if filteredDocuments.length === 0}
+				<div
+					class="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center"
+					data-testid="patient-360-documents-empty"
+				>
+					<div
+						class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
 					>
-						<div class="flex min-w-0 items-start gap-4">
-							<div
-								class={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${documentTypeClass(
-									document.type
-								)}`}
-							>
-								{#if document.type === 'prescription'}
-									<Pill size={21} />
-								{:else if document.type === 'exam-request'}
-									<FlaskConical size={21} />
-								{:else}
-									<Stethoscope size={21} />
-								{/if}
-							</div>
+						<FileHeart size={28} />
+					</div>
 
-							<div class="min-w-0">
-								<div class="flex flex-wrap items-center gap-2">
-									<h3 class="text-lg font-black text-slate-900">
-										{document.title}
-									</h3>
+					<h3 class="mt-5 text-xl font-black text-slate-900">Aucun document trouvé</h3>
 
-									<span
-										class={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${documentTypeClass(
-											document.type
-										)}`}
-									>
-										{documentTypeLabel(document.type)}
-									</span>
-								</div>
-
-								<p class="mt-1 text-sm text-slate-500">
-									{document.description}
-								</p>
-
-								<div
-									class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500"
-								>
-									<span class="inline-flex items-center gap-1.5">
-										<CalendarDays size={14} />
-										{formatDate(document.date)}
-									</span>
-
-									<span>
-										{document.service || 'Service non renseigné'}
-									</span>
-
-									<span>
-										{document.doctorName || 'Médecin non renseigné'}
-									</span>
-
-									<span>
-										Consultation #{document.consultationId}
-									</span>
-								</div>
-							</div>
-						</div>
-
-						<Button
-							variant="secondary"
-							disabled={openingDocumentKey === document.key}
-							onclick={() => void openDocument(document)}
+					<p class="mt-2 max-w-md text-sm leading-6 text-slate-500">
+						Les documents générés pendant les consultations apparaîtront automatiquement ici.
+					</p>
+				</div>
+			{:else}
+				<div class="space-y-4" data-testid="patient-360-documents-list">
+					{#each filteredDocuments as document (document.key)}
+						<article
+							class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-sm lg:flex-row lg:items-center lg:justify-between"
 						>
-							<FileDown size={16} />
+							<div class="flex min-w-0 items-start gap-4">
+								<div
+									class={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${documentTypeClass(
+										document.type
+									)}`}
+								>
+									{#if document.type === 'prescription'}
+										<Pill size={21} />
+									{:else if document.type === 'exam-request'}
+										<FlaskConical size={21} />
+									{:else}
+										<Stethoscope size={21} />
+									{/if}
+								</div>
 
-							{openingDocumentKey === document.key ? 'Ouverture...' : 'Ouvrir le PDF'}
-						</Button>
-					</article>
-				{/each}
+								<div class="min-w-0">
+									<div class="flex flex-wrap items-center gap-2">
+										<h3 class="text-lg font-black text-slate-900">
+											{document.title}
+										</h3>
+
+										<span
+											class={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${documentTypeClass(
+												document.type
+											)}`}
+										>
+											{documentTypeLabel(document.type)}
+										</span>
+									</div>
+
+									<p class="mt-1 text-sm text-slate-500">
+										{document.description}
+									</p>
+
+									<div
+										class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500"
+									>
+										<span class="inline-flex items-center gap-1.5">
+											<CalendarDays size={14} />
+											{formatDate(document.date)}
+										</span>
+
+										<span>
+											{document.service || 'Service non renseigné'}
+										</span>
+
+										<span>
+											{document.doctorName || 'Médecin non renseigné'}
+										</span>
+
+										<span>
+											Consultation #{document.consultationId}
+										</span>
+									</div>
+								</div>
+							</div>
+
+							<Button
+								variant="secondary"
+								disabled={openingDocumentKey === document.key}
+								onclick={() => void openDocument(document)}
+							>
+								<FileDown size={16} />
+
+								{openingDocumentKey === document.key ? 'Ouverture...' : 'Ouvrir le PDF'}
+							</Button>
+						</article>
+					{/each}
+				</div>
+			{/if}
+		</Card>
+		{#if documentError}
+			<div
+				class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"
+			>
+				{documentError}
 			</div>
 		{/if}
-	</Card>
-	{#if documentError}
-		<div
-			class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"
-		>
-			{documentError}
-		</div>
+		{#if documentsReady}
+			<div class="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+				<FileText size={18} class="mt-0.5 shrink-0 text-blue-700" />
+
+				<div>
+					<p class="text-sm font-bold text-blue-900">Documents médicaux enregistrés</p>
+
+					<p class="mt-1 text-sm leading-6 text-blue-700">
+						Le résumé du patient indique actuellement
+						{summary?.statistics.documents ?? 0} document(s) médical(aux) dans son dossier.
+					</p>
+				</div>
+			</div>
+		{/if}
 	{/if}
-	<div class="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-		<FileText size={18} class="mt-0.5 shrink-0 text-blue-700" />
-
-		<div>
-			<p class="text-sm font-bold text-blue-900">Documents médicaux enregistrés</p>
-
-			<p class="mt-1 text-sm leading-6 text-blue-700">
-				Le résumé du patient indique actuellement
-				{summary?.statistics.documents ?? 0} document(s) médical(aux) dans son dossier.
-			</p>
-		</div>
-	</div>
 </div>

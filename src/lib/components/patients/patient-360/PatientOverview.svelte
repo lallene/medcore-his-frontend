@@ -38,10 +38,21 @@
 		insurance: PatientInsuranceView;
 		hospitalizations: Hospitalization[];
 		capabilities: Patient360Capabilities;
+		/** When consultation-derived document counts are used, deny/error must not become zero. */
+		consultationsDenied?: boolean;
+		consultationsError?: string;
 	}
 
-	let { patient, summary, consultations, insurance, hospitalizations, capabilities }: Props =
-		$props();
+	let {
+		patient,
+		summary,
+		consultations,
+		insurance,
+		hospitalizations,
+		capabilities,
+		consultationsDenied = false,
+		consultationsError = ''
+	}: Props = $props();
 
 	const insuranceStatus = $derived(
 		capabilities.canReadInsurance ? insurance.status : 'Non autorisé'
@@ -90,16 +101,19 @@
 	);
 
 	const documentCount = $derived(
-		capabilities.canReadDocuments
-			? (summary?.statistics.documents ??
-					consultations.reduce((total, c) => {
-						let n = 0;
-						if ((c.prescriptions?.length ?? 0) > 0) n++;
-						if ((c.exams?.length ?? 0) > 0) n++;
-						if (c.sickLeaveRequired) n++;
-						return total + n;
-					}, 0))
-			: null
+		!capabilities.canReadDocuments
+			? null
+			: summary != null
+				? (summary.statistics.documents ?? 0)
+				: consultationsDenied || consultationsError
+					? null
+					: consultations.reduce((total, c) => {
+							let n = 0;
+							if ((c.prescriptions?.length ?? 0) > 0) n++;
+							if ((c.exams?.length ?? 0) > 0) n++;
+							if (c.sickLeaveRequired) n++;
+							return total + n;
+						}, 0)
 	);
 
 	const activeAllergyCount = $derived(
