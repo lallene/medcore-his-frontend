@@ -19,7 +19,10 @@
 
 	import { getClinicalTimeline } from '$lib/api/clinical-timeline';
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
-	import { clinicalTimelineCategoryLabel, clinicalTimelineEventLabel } from './clinical-timeline-labels';
+	import {
+		clinicalTimelineCategoryLabel,
+		clinicalTimelineEventLabel
+	} from './clinical-timeline-labels';
 
 	type TimelineFilter =
 		'all' | 'consultation' | 'prescription' | 'exam' | 'hospitalization' | 'document';

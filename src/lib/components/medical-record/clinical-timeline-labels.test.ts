@@ -306,10 +306,7 @@ describe('LOT28E-B3 performed_act timeline vocabulary (P112)', () => {
 	});
 
 	it('P112 no invented legacy aliases', () => {
-		assert.equal(
-			clinicalTimelineEventLabel('performed_act_recorded', 'fallback'),
-			'fallback'
-		);
+		assert.equal(clinicalTimelineEventLabel('performed_act_recorded', 'fallback'), 'fallback');
 		assert.equal(clinicalTimelineEventLabel('act_performed', 'x'), 'x');
 		assert.equal(clinicalTimelineEventLabel('act_voided', 'y'), 'y');
 		assert.equal(isPerformedActTimelineEventType('performed_act_recorded'), false);
