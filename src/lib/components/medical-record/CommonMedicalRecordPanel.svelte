@@ -40,6 +40,10 @@
 		externalDocumentReferenceStatus,
 		isSafeExternalDocumentURL
 	} from './medical-document-url';
+	import {
+		medicalDocumentRemoveAriaLabel,
+		medicalDocumentRemoveTitle
+	} from './medical-document-lifecycle';
 
 	type SectionId =
 		'identity' | 'coverage' | 'history' | 'treatments' | 'lifestyle' | 'vitals' | 'documents';
@@ -1317,7 +1321,8 @@
 								<button
 									type="button"
 									onclick={() => removeDocument(index)}
-									aria-label={`Supprimer le document ${index + 1}`}
+									aria-label={medicalDocumentRemoveAriaLabel(document.id, index)}
+									title={medicalDocumentRemoveTitle(document.id)}
 									class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-500"
 								>
 									<Trash2 size={17} />

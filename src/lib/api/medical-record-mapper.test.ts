@@ -168,6 +168,36 @@ test('existing removal requires an explicit delete id', () => {
 	});
 });
 
+test('F02 persisted document archive enters delete_ids', () => {
+	const original = mapMedicalRecordResponse(responseFixture());
+	const current = structuredClone(original);
+	current.documents = [];
+	const deleted = emptyDeletedIDs();
+	deleted.documents = [14];
+	assert.deepEqual(buildMedicalRecordPatch(original, current, deleted).documents, {
+		upsert: [],
+		delete_ids: [14]
+	});
+});
+
+test('F01 unsaved document discard emits no delete id', () => {
+	const original = mapMedicalRecordResponse(responseFixture());
+	const current = structuredClone(original);
+	current.documents.push({
+		consultationId: null,
+		type: 'OTHER',
+		title: 'Temp',
+		documentDate: null,
+		fileReference: 'https://docs.example.com/tmp.pdf',
+		fileName: '',
+		mimeType: '',
+		description: '',
+		uploadedBy: ''
+	});
+	current.documents.pop();
+	assert.equal(buildMedicalRecordPatch(original, current, emptyDeletedIDs()).documents, undefined);
+});
+
 test('removing a new local item emits no delete id', () => {
 	const original = mapMedicalRecordResponse(responseFixture());
 	const current = structuredClone(original);
