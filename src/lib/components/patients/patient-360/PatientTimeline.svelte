@@ -17,6 +17,11 @@
 
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
 	import Card from '$lib/components/ui/Card.svelte';
+	import {
+		clinicalTimelineEventLabel,
+		isMedicalRecordTimelineMetricCategory,
+		isVitalSignTimelineCategory
+	} from '$lib/components/medical-record/clinical-timeline-labels';
 	import { normalizeMedicalTimeline } from './patient-360-data';
 
 	interface Props {
@@ -74,11 +79,7 @@
 	);
 	const examCount = $derived(timelineEvents.filter((event) => event.category === 'exam').length);
 	const recordCount = $derived(
-		timelineEvents.filter((event) =>
-			['medical_record', 'allergy', 'medical_history', 'vital_sign', 'document'].includes(
-				event.category
-			)
-		).length
+		timelineEvents.filter((event) => isMedicalRecordTimelineMetricCategory(event.category)).length
 	);
 
 	function formatDate(value?: string): string {
@@ -97,6 +98,7 @@
 	}
 
 	function categoryLabel(value: string): string {
+		if (isVitalSignTimelineCategory(value)) return 'Constantes';
 		return (
 			{
 				consultation: 'Consultation',
@@ -105,7 +107,6 @@
 				allergy: 'Allergie',
 				medical_history: 'Antécédent',
 				medical_record: 'Dossier médical',
-				vital_sign: 'Constantes',
 				document: 'Document'
 			}[value] ?? value.replaceAll('_', ' ')
 		);
@@ -206,7 +207,9 @@
 										</div>
 										<div class="min-w-0 flex-1">
 											<div class="flex flex-wrap items-center gap-2">
-												<h4 class="font-black text-slate-900">{event.title}</h4>
+												<h4 class="font-black text-slate-900">
+													{clinicalTimelineEventLabel(event.event_type, event.title)}
+												</h4>
 												<span
 													class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase text-slate-600"
 													>{categoryLabel(event.category)}</span

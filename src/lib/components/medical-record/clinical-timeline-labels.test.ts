@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { clinicalTimelineEventLabel } from './clinical-timeline-labels.ts';
+import {
+	TIMELINE_CATEGORY_VITAL_SIGN_LEGACY,
+	TIMELINE_CATEGORY_VITAL_SIGNS,
+	TIMELINE_EVENT_VITAL_SIGN_ADDED_LEGACY,
+	TIMELINE_EVENT_VITAL_SIGNS_RECORDED,
+	TIMELINE_LABEL_VITAL_SIGNS,
+	clinicalTimelineEventLabel,
+	isMedicalRecordTimelineMetricCategory,
+	isVitalSignTimelineCategory,
+	isVitalSignTimelineEventType
+} from './clinical-timeline-labels.ts';
 import { derivePatient360Capabilities } from '../patients/patient-360/capabilities.ts';
 import {
 	classifyModuleFetchError,
@@ -116,5 +126,140 @@ describe('LOT28E-B1 Patient360 timeline states preserved', () => {
 		const allow = derivePatient360Capabilities(['patients.360.read', 'medical_records.read']);
 		assert.equal(allow.canReadTimeline, true);
 		assert.equal(allow.canReadMedicalRecord, true);
+	});
+});
+
+describe('LOT28E-B2-D vital_signs_recorded timeline compatibility', () => {
+	it('D01 vital_signs_recorded resolves to intended French label', () => {
+		assert.equal(
+			clinicalTimelineEventLabel(TIMELINE_EVENT_VITAL_SIGNS_RECORDED),
+			TIMELINE_LABEL_VITAL_SIGNS
+		);
+		assert.equal(TIMELINE_LABEL_VITAL_SIGNS, 'Constantes enregistrées');
+	});
+
+	it('D02 vital_signs_recorded resolves to intended category helpers', () => {
+		assert.equal(isVitalSignTimelineCategory(TIMELINE_CATEGORY_VITAL_SIGNS), true);
+		assert.equal(isVitalSignTimelineEventType(TIMELINE_EVENT_VITAL_SIGNS_RECORDED), true);
+		assert.equal(isVitalSignTimelineCategory('consultation'), false);
+	});
+
+	it('D03 vital_signs_recorded contributes to medical-record metric bucket', () => {
+		const events = [
+			baseEvent({
+				id: 1,
+				event_type: TIMELINE_EVENT_VITAL_SIGNS_RECORDED,
+				category: TIMELINE_CATEGORY_VITAL_SIGNS,
+				title: 'Constantes enregistrées',
+				description: 'TA 120/80'
+			}),
+			baseEvent({ id: 2, event_type: 'document_added', category: 'document' }),
+			baseEvent({
+				id: 3,
+				event_type: 'consultation_created',
+				category: 'consultation',
+				title: 'Consultation créée'
+			})
+		];
+		const metricCount = events.filter((event) =>
+			isMedicalRecordTimelineMetricCategory(event.category)
+		).length;
+		assert.equal(metricCount, 2);
+		assert.equal(isMedicalRecordTimelineMetricCategory(TIMELINE_CATEGORY_VITAL_SIGNS), true);
+	});
+
+	it('D04 vital_sign_added legacy alias resolves to same label', () => {
+		assert.equal(
+			clinicalTimelineEventLabel(TIMELINE_EVENT_VITAL_SIGN_ADDED_LEGACY),
+			clinicalTimelineEventLabel(TIMELINE_EVENT_VITAL_SIGNS_RECORDED)
+		);
+	});
+
+	it('D05 legacy alias category resolves to same bucket', () => {
+		assert.equal(isVitalSignTimelineCategory(TIMELINE_CATEGORY_VITAL_SIGN_LEGACY), true);
+		assert.equal(
+			isMedicalRecordTimelineMetricCategory(TIMELINE_CATEGORY_VITAL_SIGN_LEGACY),
+			isMedicalRecordTimelineMetricCategory(TIMELINE_CATEGORY_VITAL_SIGNS)
+		);
+	});
+
+	it('D06 mapping does not mutate/transform backend event payload', () => {
+		const event = baseEvent({
+			id: 42,
+			event_type: TIMELINE_EVENT_VITAL_SIGNS_RECORDED,
+			category: TIMELINE_CATEGORY_VITAL_SIGNS,
+			title: 'Constantes enregistrées',
+			description: 'TA 120/80 — FC 72 bpm',
+			reference_type: 'vital_sign',
+			reference_id: 9
+		});
+		const before = structuredClone(event);
+		const label = clinicalTimelineEventLabel(event.event_type, event.title);
+		const normalized = normalizeMedicalTimeline([event]);
+		assert.equal(label, TIMELINE_LABEL_VITAL_SIGNS);
+		assert.deepEqual(event, before);
+		assert.equal(normalized[0]?.event_type, TIMELINE_EVENT_VITAL_SIGNS_RECORDED);
+		assert.equal(normalized[0]?.category, TIMELINE_CATEGORY_VITAL_SIGNS);
+		assert.equal(normalized[0]?.reference_type, 'vital_sign');
+		assert.equal(normalized[0]?.reference_id, 9);
+	});
+
+	it('D07 unknown event fallback remains intact', () => {
+		assert.equal(
+			clinicalTimelineEventLabel('future_clinical_signal', 'Titre backend'),
+			'Titre backend'
+		);
+		assert.equal(clinicalTimelineEventLabel('totally_unknown'), 'Événement clinique');
+	});
+
+	it('D08 document_added mapping unchanged', () => {
+		assert.equal(clinicalTimelineEventLabel('document_added'), 'Document médical ajouté');
+	});
+
+	it('D09 document_archived mapping unchanged', () => {
+		assert.equal(clinicalTimelineEventLabel('document_archived'), 'Document médical archivé');
+	});
+
+	it('D10 billing_event safe rendering unchanged (fallback title)', () => {
+		assert.equal(
+			clinicalTimelineEventLabel('billing_event', 'Événement de facturation'),
+			'Événement de facturation'
+		);
+		assert.equal(isVitalSignTimelineEventType('billing_event'), false);
+		assert.equal(isVitalSignTimelineCategory('billing'), false);
+	});
+
+	it('D11 insurance_event safe rendering unchanged (fallback title)', () => {
+		assert.equal(
+			clinicalTimelineEventLabel('insurance_event', "Événement d'assurance"),
+			"Événement d'assurance"
+		);
+		assert.equal(isVitalSignTimelineEventType('insurance_event'), false);
+		assert.equal(isVitalSignTimelineCategory('insurance'), false);
+	});
+
+	it('D12 no permission/capability change', () => {
+		const deny = derivePatient360Capabilities(['patients.360.read']);
+		assert.equal(deny.canReadTimeline, false);
+		const allow = derivePatient360Capabilities(['patients.360.read', 'medical_records.read']);
+		assert.equal(allow.canReadTimeline, true);
+		assert.equal(allow.canReadMedicalRecord, true);
+		assert.equal(
+			isMedicalRecordTimelineMetricCategory(TIMELINE_CATEGORY_VITAL_SIGNS) &&
+				!isMedicalRecordTimelineMetricCategory('billing'),
+			true
+		);
+	});
+
+	it('D03b legacy and canonical do not double-count one event', () => {
+		const events = [
+			baseEvent({
+				id: 7,
+				event_type: TIMELINE_EVENT_VITAL_SIGNS_RECORDED,
+				category: TIMELINE_CATEGORY_VITAL_SIGNS
+			})
+		];
+		const n = events.filter((e) => isMedicalRecordTimelineMetricCategory(e.category)).length;
+		assert.equal(n, 1);
 	});
 });
