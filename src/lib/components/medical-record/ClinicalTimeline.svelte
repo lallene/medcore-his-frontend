@@ -19,7 +19,7 @@
 
 	import { getClinicalTimeline } from '$lib/api/clinical-timeline';
 	import type { ClinicalTimelineEvent } from '$lib/types/clinical-timeline';
-	import { clinicalTimelineEventLabel } from './clinical-timeline-labels';
+	import { clinicalTimelineCategoryLabel, clinicalTimelineEventLabel } from './clinical-timeline-labels';
 
 	type TimelineFilter =
 		'all' | 'consultation' | 'prescription' | 'exam' | 'hospitalization' | 'document';
@@ -435,7 +435,7 @@
 														<span
 															class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-500"
 														>
-															{event.category}
+															{clinicalTimelineCategoryLabel(event.category)}
 														</span>
 													{/if}
 

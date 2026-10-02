@@ -2,13 +2,22 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+	TIMELINE_CATEGORY_LABEL_PERFORMED_ACT,
+	TIMELINE_CATEGORY_PERFORMED_ACT,
 	TIMELINE_CATEGORY_VITAL_SIGN_LEGACY,
 	TIMELINE_CATEGORY_VITAL_SIGNS,
+	TIMELINE_EVENT_PERFORMED_ACT_PERFORMED,
+	TIMELINE_EVENT_PERFORMED_ACT_VOIDED,
 	TIMELINE_EVENT_VITAL_SIGN_ADDED_LEGACY,
 	TIMELINE_EVENT_VITAL_SIGNS_RECORDED,
+	TIMELINE_LABEL_PERFORMED_ACT_PERFORMED,
+	TIMELINE_LABEL_PERFORMED_ACT_VOIDED,
 	TIMELINE_LABEL_VITAL_SIGNS,
+	clinicalTimelineCategoryLabel,
 	clinicalTimelineEventLabel,
 	isMedicalRecordTimelineMetricCategory,
+	isPerformedActTimelineCategory,
+	isPerformedActTimelineEventType,
 	isVitalSignTimelineCategory,
 	isVitalSignTimelineEventType
 } from './clinical-timeline-labels.ts';
@@ -261,5 +270,61 @@ describe('LOT28E-B2-D vital_signs_recorded timeline compatibility', () => {
 		];
 		const n = events.filter((e) => isMedicalRecordTimelineMetricCategory(e.category)).length;
 		assert.equal(n, 1);
+	});
+});
+
+describe('LOT28E-B3 performed_act timeline vocabulary (P112)', () => {
+	it('P112 performed_act_performed maps to Acte réalisé', () => {
+		assert.equal(
+			clinicalTimelineEventLabel(TIMELINE_EVENT_PERFORMED_ACT_PERFORMED),
+			TIMELINE_LABEL_PERFORMED_ACT_PERFORMED
+		);
+		assert.equal(TIMELINE_LABEL_PERFORMED_ACT_PERFORMED, 'Acte réalisé');
+	});
+
+	it('P112 performed_act_voided maps to Acte annulé', () => {
+		assert.equal(
+			clinicalTimelineEventLabel(TIMELINE_EVENT_PERFORMED_ACT_VOIDED),
+			TIMELINE_LABEL_PERFORMED_ACT_VOIDED
+		);
+		assert.equal(TIMELINE_LABEL_PERFORMED_ACT_VOIDED, 'Acte annulé');
+	});
+
+	it('P112 performed_act category recognized with French label', () => {
+		assert.equal(isPerformedActTimelineCategory(TIMELINE_CATEGORY_PERFORMED_ACT), true);
+		assert.equal(
+			clinicalTimelineCategoryLabel(TIMELINE_CATEGORY_PERFORMED_ACT),
+			TIMELINE_CATEGORY_LABEL_PERFORMED_ACT
+		);
+		assert.equal(TIMELINE_CATEGORY_LABEL_PERFORMED_ACT, 'Actes réalisés');
+		assert.equal(isPerformedActTimelineEventType(TIMELINE_EVENT_PERFORMED_ACT_PERFORMED), true);
+		assert.equal(isPerformedActTimelineEventType(TIMELINE_EVENT_PERFORMED_ACT_VOIDED), true);
+	});
+
+	it('P112 performed_act is not a medical-record metric bucket', () => {
+		assert.equal(isMedicalRecordTimelineMetricCategory(TIMELINE_CATEGORY_PERFORMED_ACT), false);
+	});
+
+	it('P112 no invented legacy aliases', () => {
+		assert.equal(
+			clinicalTimelineEventLabel('performed_act_recorded', 'fallback'),
+			'fallback'
+		);
+		assert.equal(clinicalTimelineEventLabel('act_performed', 'x'), 'x');
+		assert.equal(clinicalTimelineEventLabel('act_voided', 'y'), 'y');
+		assert.equal(isPerformedActTimelineEventType('performed_act_recorded'), false);
+	});
+
+	it('P112 no navigation fields required for label rendering', () => {
+		const event = baseEvent({
+			event_type: TIMELINE_EVENT_PERFORMED_ACT_PERFORMED,
+			category: TIMELINE_CATEGORY_PERFORMED_ACT,
+			title: 'Acte réalisé',
+			description: 'Suture',
+			reference_type: '',
+			reference_id: 0
+		});
+		assert.equal(clinicalTimelineEventLabel(event.event_type, event.title), 'Acte réalisé');
+		assert.equal(clinicalTimelineCategoryLabel(event.category), 'Actes réalisés');
 	});
 });

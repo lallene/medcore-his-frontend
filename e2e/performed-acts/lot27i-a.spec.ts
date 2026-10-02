@@ -50,7 +50,14 @@ async function createPatient(request: APIRequestContext, token: string, tag: str
 	const text = await response.text();
 	expect([200, 201].includes(response.status()), text).toBeTruthy();
 	const data = JSON.parse(text).data ?? JSON.parse(text);
-	return data as { id: number; codePatient: string };
+	const patient = data as { id: number; codePatient: string };
+	// LOT28E-B3: PA create requires MedicalRecord (fail-closed). Product GET
+	// /patients/:id/medical-record already GetOrCreates — seed it for fixtures.
+	const mr = await request.get(`${api}/api/patients/${patient.id}/medical-record`, {
+		headers: bearer(token)
+	});
+	expect(mr.ok(), await mr.text()).toBeTruthy();
+	return patient;
 }
 
 async function ensureCatalogEntry(request: APIRequestContext, token: string) {

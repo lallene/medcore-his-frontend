@@ -14,6 +14,14 @@ export const TIMELINE_CATEGORY_VITAL_SIGN_LEGACY = 'vital_sign';
 
 export const TIMELINE_LABEL_VITAL_SIGNS = 'Constantes enregistrées';
 
+/** LOT28E-B3 — PerformedAct timeline vocabulary (canonical only). */
+export const TIMELINE_EVENT_PERFORMED_ACT_PERFORMED = 'performed_act_performed';
+export const TIMELINE_EVENT_PERFORMED_ACT_VOIDED = 'performed_act_voided';
+export const TIMELINE_CATEGORY_PERFORMED_ACT = 'performed_act';
+export const TIMELINE_LABEL_PERFORMED_ACT_PERFORMED = 'Acte réalisé';
+export const TIMELINE_LABEL_PERFORMED_ACT_VOIDED = 'Acte annulé';
+export const TIMELINE_CATEGORY_LABEL_PERFORMED_ACT = 'Actes réalisés';
+
 export function clinicalTimelineEventLabel(
 	eventType: string | null | undefined,
 	fallbackTitle?: string | null
@@ -49,9 +57,36 @@ export function clinicalTimelineEventLabel(
 			return 'Document médical ajouté';
 		case 'document_archived':
 			return 'Document médical archivé';
+		case TIMELINE_EVENT_PERFORMED_ACT_PERFORMED:
+			return TIMELINE_LABEL_PERFORMED_ACT_PERFORMED;
+		case TIMELINE_EVENT_PERFORMED_ACT_VOIDED:
+			return TIMELINE_LABEL_PERFORMED_ACT_VOIDED;
 		default:
 			return (fallbackTitle ?? '').trim() || 'Événement clinique';
 	}
+}
+
+/** French category presentation for known timeline categories (raw fallback otherwise). */
+export function clinicalTimelineCategoryLabel(category: string | null | undefined): string {
+	const value = (category ?? '').trim().toLowerCase();
+	switch (value) {
+		case TIMELINE_CATEGORY_PERFORMED_ACT:
+			return TIMELINE_CATEGORY_LABEL_PERFORMED_ACT;
+		default:
+			return (category ?? '').trim();
+	}
+}
+
+export function isPerformedActTimelineCategory(category: string | null | undefined): boolean {
+	return (category ?? '').trim().toLowerCase() === TIMELINE_CATEGORY_PERFORMED_ACT;
+}
+
+export function isPerformedActTimelineEventType(eventType: string | null | undefined): boolean {
+	const value = (eventType ?? '').trim().toLowerCase();
+	return (
+		value === TIMELINE_EVENT_PERFORMED_ACT_PERFORMED ||
+		value === TIMELINE_EVENT_PERFORMED_ACT_VOIDED
+	);
 }
 
 /** True for canonical backend vital category and legacy singular FE alias. */
@@ -72,6 +107,7 @@ export function isVitalSignTimelineEventType(eventType: string | null | undefine
 /**
  * Categories that contribute to the Patient360 “dossier / constantes / documents” metric bucket.
  * Includes backend `vital_signs` and legacy `vital_sign`.
+ * LOT28E-B3: performed_act is NOT a medical-record metric bucket.
  */
 export function isMedicalRecordTimelineMetricCategory(
 	category: string | null | undefined

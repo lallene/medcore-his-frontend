@@ -47,7 +47,9 @@ async function createPatient(request: APIRequestContext, token: string, tag: str
 	const text = await response.text();
 	expect([200, 201].includes(response.status()), text).toBeTruthy();
 	const data = JSON.parse(text).data ?? JSON.parse(text);
-	return data as { id: number; codePatient: string };
+	const patient = data as { id: number; codePatient: string };
+	await ensureMedicalRecord(request, token, patient.id);
+	return patient;
 }
 
 async function ensureMedicalRecord(request: APIRequestContext, token: string, patientId: number) {
