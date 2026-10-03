@@ -309,7 +309,7 @@
 		creditError = null;
 		try {
 			invoice = await issueCreditNote(invoice.id, { reason: check.reason, idempotencyKey: key });
-			successMessage = 'Avoir émis — facture corrigée par avoir (sans remboursement).';
+			successMessage = 'Avoir émis — facture corrigée par avoir.';
 			creditCmd = completePaymentCommandSuccess();
 			closeCredit();
 		} catch (e) {
@@ -711,7 +711,7 @@
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
 				<h2 class="text-lg font-black text-amber-950">{CREDIT_NOTE_ACTION_LABEL}</h2>
 				<p class="text-sm text-slate-600">
-					Document correctif comptable. Cela ne rembourse pas le patient et n’annule pas un
+					Document correctif comptable. Cela ne restitue pas de fonds au patient et n’annule pas un
 					encaissement.
 				</p>
 				<dl class="grid grid-cols-2 gap-2 text-sm">
@@ -737,7 +737,7 @@
 						data-testid="invoice-credit-note-confirm"
 					/>
 					<span
-						>Je confirme l’émission de cet avoir (correction de facture, sans remboursement).</span
+						>Je confirme l’émission de cet avoir (correction de facture, sans restitution de fonds).</span
 					>
 				</label>
 				{#if creditError}<p

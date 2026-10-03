@@ -138,7 +138,7 @@ test.describe('LOT29F-B credit note', () => {
 		await expect(page.getByTestId('invoice-credit-note-panel')).toBeVisible({ timeout: 20_000 });
 		await expect(page.getByTestId('invoice-credit-note-number')).toBeVisible();
 		await expect(page.getByTestId('invoice-pay-success')).toContainText(/Avoir émis/i);
-		await expect(page.getByTestId('invoice-pay-success')).not.toContainText(/rembours/i);
+		await expect(page.getByTestId('invoice-pay-success')).not.toContainText(/rembours|refund/i);
 		await expect(page.getByTestId('invoice-number')).toContainText(invoice.number);
 
 		await page.getByTestId('invoice-credit-note-link').click();
@@ -146,7 +146,7 @@ test.describe('LOT29F-B credit note', () => {
 		await expect(page.getByTestId('credit-note-document')).toBeVisible({ timeout: 20_000 });
 		await expect(page.getByTestId('credit-note-doc-type')).toHaveText('AVOIR');
 		await expect(page.getByTestId('credit-note-doc-invoice')).toContainText(invoice.number);
-		await expect(page.getByTestId('credit-note-document')).not.toContainText(/remboursé/i);
+		await expect(page.getByTestId('credit-note-document')).not.toContainText(/rembours|refund/i);
 
 		await page.goto(`/billing/${invoice.id}`);
 		await expect(page.getByTestId('invoice-number')).toContainText(invoice.number);

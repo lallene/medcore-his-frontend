@@ -27,7 +27,7 @@
 			<h2 class="text-xl font-black tracking-wide" data-testid="credit-note-doc-type">AVOIR</h2>
 			<p class="mt-2 text-xl font-black" data-testid="credit-note-doc-number">{note.number}</p>
 			<p class="mt-2 text-sm text-slate-600">
-				Document correctif de facture — ne constitue pas un remboursement.
+				Document correctif de facture — ne constitue pas une restitution de fonds.
 			</p>
 		</header>
 		<div class="mt-6 grid grid-cols-2 gap-2 text-sm">
@@ -50,8 +50,8 @@
 			<span>Motif</span><b data-testid="credit-note-doc-reason">{note.reason}</b>
 		</div>
 		<p class="mt-6 text-sm text-slate-700">
-			Cet avoir corrige la facture {note.invoiceNumber}. Il ne signifie pas que des fonds ont été
-			restitués au patient.
+			Cet avoir corrige la facture {note.invoiceNumber}. Il ne signifie pas qu’un paiement a été
+			retourné au patient.
 		</p>
 		<div class="mt-6 flex gap-2 print:hidden">
 			<a class="rounded-xl border px-4 py-2 font-bold" href={resolve(`/billing/${note.invoiceId}`)}
