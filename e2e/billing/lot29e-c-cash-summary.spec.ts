@@ -188,7 +188,7 @@ test.describe('LOT29E-C cash session summary', () => {
 		await expect(page.getByTestId('cash-kpi-cash')).toContainText('20');
 		await expect(page.getByTestId('cash-kpi-other')).toContainText('30');
 		await expect(page.getByTestId('cash-kpi-total')).toContainText('50');
-		await expect(page.getByTestId('cash-kpi-count')).toHaveText('2');
+		await expect(page.getByTestId('cash-kpi-count')).toHaveText(/^2$/);
 		await expect(page.getByTestId('cash-kpi-expected')).toContainText('30');
 
 		await page.getByTestId('cash-close-counted').fill('30000');

@@ -296,8 +296,10 @@
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-total">
 					<small>Total</small><strong class="block">{formatXOF(kpis.total)}</strong>
 				</div>
-				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-count">
-					<small>Opérations</small><strong class="block">{kpis.count}</strong>
+				<div class="rounded-xl border bg-white p-3">
+					<small>Opérations</small><strong class="block" data-testid="cash-kpi-count"
+						>{kpis.count}</strong
+					>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-expected">
 					<small>Espèces théoriques</small><strong class="block">{formatXOF(kpis.expected)}</strong>
