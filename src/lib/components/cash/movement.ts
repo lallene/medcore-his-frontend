@@ -83,5 +83,5 @@ export function classifyMovementError(error: unknown): {
 }
 
 export function movementCopyIsSafe(text: string): boolean {
-	return !/rembours|refund|paiement|payment|avoir|crédit patient/i.test(text);
+	return !/rembours|refund|paiement|payment|crédit patient/i.test(text);
 }

@@ -474,7 +474,7 @@
 			>
 				<h2 class="font-black">Mouvement de caisse</h2>
 				<p class="text-sm text-slate-600">
-					Entrée / sortie physique hors encaissement. Ce n’est pas un paiement ni un remboursement.
+					Entrée / sortie physique hors encaissement. Distinct des encaissements et des avoirs.
 				</p>
 				<p class="mt-2 text-sm">
 					Espèces attendues (serveur)
