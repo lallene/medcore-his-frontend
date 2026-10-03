@@ -14,10 +14,14 @@
 		dueDate = $state('');
 	let follow = $state({ actionType: 'NOTE', note: '', promisedPaymentDate: '', promisedAmount: 0 });
 	const id = $derived(Number(page.params.id));
-	const openCash = (invoiceId: number) =>
-		// The route itself is resolved; only its query string is appended dynamically.
+	const openCollection = (invoiceId: number) => {
+		if (permissions.includes('*') || permissions.includes('billing.payment.create')) {
+			void goto(resolve(`/billing/${invoiceId}`));
+			return;
+		}
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(resolve('/cash') + `?invoiceId=${invoiceId}`);
+		void goto(resolve('/cash') + `?invoiceId=${invoiceId}`);
+	};
 	async function load() {
 		try {
 			item = await getReceivable(id);
@@ -60,10 +64,11 @@
 				<h1 class="text-3xl font-black">{item.invoiceNumber}</h1>
 				<p>{item.patientName} — {item.patientCode}</p>
 			</div>
-			{#if permissions.includes('*') || permissions.includes('cash.payment.create')}<button
-					onclick={() => openCash(item!.invoiceId)}
+			{#if permissions.includes('*') || permissions.includes('billing.payment.create') || permissions.includes('cash.payment.create')}<button
+					type="button"
+					onclick={() => openCollection(item!.invoiceId)}
 					class="h-fit rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white"
-					>Encaisser à la caisse</button
+					data-testid="receivable-encaisser">Encaisser</button
 				>{/if}
 		</header>
 		<section class="grid gap-3 md:grid-cols-5">

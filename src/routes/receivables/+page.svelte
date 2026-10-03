@@ -15,10 +15,15 @@
 	let search = $state(''),
 		status = $state(''),
 		due = $state('');
-	const openCash = (invoiceId: number) =>
-		// The route itself is resolved; only its query string is appended dynamically.
+	const openCollection = (invoiceId: number) => {
+		// LOT29C: primary collection is billing workspace (no cash-session required).
+		if (permissions.includes('*') || permissions.includes('billing.payment.create')) {
+			void goto(resolve(`/billing/${invoiceId}`));
+			return;
+		}
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(resolve('/cash') + `?invoiceId=${invoiceId}`);
+		void goto(resolve('/cash') + `?invoiceId=${invoiceId}`);
+	};
 	async function load() {
 		loading = true;
 		try {
@@ -107,9 +112,11 @@
 								><td>{statusLabel[r.status]}</td><td class="space-x-2"
 									><a href={resolve(`/receivables/${r.invoiceId}`)} class="font-bold text-blue-700"
 										>Détail</a
-									>{#if permissions.includes('*') || permissions.includes('cash.payment.create')}<button
-											onclick={() => openCash(r.invoiceId)}
-											class="font-bold text-emerald-700">Encaisser</button
+									>{#if permissions.includes('*') || permissions.includes('billing.payment.create') || permissions.includes('cash.payment.create')}<button
+											type="button"
+											onclick={() => openCollection(r.invoiceId)}
+											class="font-bold text-emerald-700"
+											data-testid={`receivable-encaisser-${r.invoiceId}`}>Encaisser</button
 										>{/if}</td
 								></tr
 							>{:else}<tr

@@ -22,8 +22,21 @@
 		MISSING_TARIFF_MESSAGE,
 		tariffReferenceLabel
 	} from '$lib/components/billing/state';
+	import {
+		canShowEncaisser,
+		collectibleStatusLabel,
+		filterInvoicesForCashier,
+		invoiceCollectibleKind
+	} from '$lib/components/billing/collection';
 	import type { Patient } from '$lib/types/patient';
-	import type { ActType, BillableAct, BillingKPIs, Invoice, Tariff } from '$lib/types/billing';
+	import type {
+		ActType,
+		BillableAct,
+		BillingKPIs,
+		Invoice,
+		InvoiceStatus,
+		Tariff
+	} from '$lib/types/billing';
 
 	let tab = $state<'invoices' | 'create' | 'tariffs'>('invoices');
 	let loading = $state(true);
@@ -38,6 +51,9 @@
 	let selected = $state<string[]>([]);
 	let deepLinkActType = $state('');
 	let deepLinkReferenceId = $state(0);
+	let invoiceSearch = $state('');
+	let statusFilter = $state<'all' | 'collectible' | InvoiceStatus>('collectible');
+	let searchInput = $state('');
 	let kpis = $state<BillingKPIs>({
 		pendingInvoices: 0,
 		patientReceivable: 0,
@@ -61,12 +77,32 @@
 
 	const missingTariffActs = $derived(acts.filter((a) => !a.alreadyBilled && !a.tariff));
 
+	const visibleInvoices = $derived(
+		filterInvoicesForCashier(invoices, {
+			collectibleOnly: statusFilter === 'collectible',
+			search: invoiceSearch
+		}).filter((x) => {
+			if (statusFilter === 'all' || statusFilter === 'collectible') return true;
+			return x.status === statusFilter;
+		})
+	);
+
 	async function refresh() {
 		loading = true;
 		error = '';
 		try {
+			const params: Record<string, string | number> = { limit: 100 };
+			if (invoiceSearch.trim()) params.search = invoiceSearch.trim();
+			if (
+				statusFilter !== 'all' &&
+				statusFilter !== 'collectible' &&
+				statusFilter !== 'PARTIALLY_PAID'
+			) {
+				params.status = statusFilter;
+			}
+			if (statusFilter === 'PARTIALLY_PAID') params.status = 'PARTIALLY_PAID';
 			const [pageData, ts, ps, metrics] = await Promise.all([
-				listInvoices(),
+				listInvoices(params),
 				listTariffs(),
 				getPatients(1, 100),
 				getBillingKPIs()
@@ -80,6 +116,11 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function applyInvoiceFilters() {
+		invoiceSearch = searchInput;
+		await refresh();
 	}
 
 	async function loadActs(opts?: { preserveSelection?: boolean }) {
@@ -217,27 +258,76 @@
 			>{/if}
 	</nav>
 	{#if loading}<p>Chargement…</p>{:else if tab === 'invoices'}
-		<div class="overflow-x-auto rounded-2xl border bg-white">
+		<section
+			class="flex flex-wrap items-end gap-3 rounded-2xl border bg-white p-4"
+			data-testid="billing-invoice-filters"
+		>
+			<label class="min-w-[14rem] flex-1 text-sm"
+				><span class="font-bold">Recherche</span><input
+					class="mt-1 w-full rounded-xl border p-2"
+					placeholder="INV-*, code patient, nom…"
+					bind:value={searchInput}
+					data-testid="billing-invoice-search"
+					onkeydown={(e) => {
+						if (e.key === 'Enter') void applyInvoiceFilters();
+					}}
+				/></label
+			><label class="text-sm"
+				><span class="font-bold">Filtre</span><select
+					class="mt-1 rounded-xl border p-2"
+					bind:value={statusFilter}
+					data-testid="billing-invoice-status-filter"
+					onchange={() => void refresh()}
+					><option value="collectible">À encaisser</option><option value="all">Toutes</option
+					><option value="ISSUED">ISSUED</option><option value="PARTIALLY_PAID"
+						>PARTIALLY_PAID</option
+					><option value="PAID">PAID</option><option value="DRAFT">DRAFT</option><option
+						value="CANCELLED">CANCELLED</option
+					></select
+				></label
+			><button
+				type="button"
+				class="rounded-xl bg-slate-900 px-4 py-2 font-bold text-white"
+				data-testid="billing-invoice-filter-apply"
+				onclick={() => void applyInvoiceFilters()}>Filtrer</button
+			>
+		</section>
+		<div class="overflow-x-auto rounded-2xl border bg-white" data-testid="billing-invoice-table">
 			<table class="w-full text-left text-sm">
 				<thead class="bg-slate-50 text-xs uppercase text-slate-500"
 					><tr
 						><th class="p-3">Numéro</th><th>Patient</th><th>Brut</th><th>Assurance</th><th
 							>Patient</th
-						><th>Payé</th><th>Reste</th><th>Statut</th></tr
+						><th>Payé</th><th>Reste</th><th>Statut</th><th class="p-3">Action</th></tr
 					></thead
 				><tbody
-					>{#each invoices as x (x.id)}<tr class="border-t hover:bg-slate-50"
+					>{#each visibleInvoices as x (x.id)}<tr
+							class="border-t hover:bg-slate-50"
+							data-testid={`billing-invoice-row-${x.id}`}
 							><td class="p-3"
-								><a class="font-black text-blue-700" href={resolve(`/billing/${x.id}`)}
-									>{x.number}</a
+								><a
+									class="font-black text-blue-700"
+									href={resolve(`/billing/${x.id}`)}
+									data-testid={`billing-invoice-link-${x.id}`}>{x.number}</a
 								></td
-							><td>{x.patientName}</td><td>{formatXOF(x.grossAmount)}</td><td
+							><td>{x.patientCode} — {x.patientName}</td><td>{formatXOF(x.grossAmount)}</td><td
 								>{formatXOF(x.insuranceAmount)}</td
 							><td>{formatXOF(x.patientAmount)}</td><td>{formatXOF(x.paidAmount)}</td><td
-								>{formatXOF(x.balanceAmount)}</td
-							><td>{x.status}</td></tr
+								class="font-bold">{formatXOF(x.balanceAmount)}</td
+							><td
+								><span data-testid={`billing-invoice-status-${x.id}`}>{x.status}</span><small
+									class="block text-slate-500"
+									>{collectibleStatusLabel(invoiceCollectibleKind(x))}</small
+								></td
+							><td class="p-3"
+								>{#if canShowEncaisser(x, permissions)}<a
+										class="font-bold text-emerald-700"
+										href={resolve(`/billing/${x.id}`)}
+										data-testid={`billing-invoice-encaisser-${x.id}`}>Encaisser</a
+									>{:else}<span class="text-slate-400">—</span>{/if}</td
+							></tr
 						>{:else}<tr
-							><td class="p-8 text-center text-slate-500" colspan="8">Aucune facture</td></tr
+							><td class="p-8 text-center text-slate-500" colspan="9">Aucune facture</td></tr
 						>{/each}</tbody
 				>
 			</table>

@@ -43,7 +43,8 @@ test('detail, Patient 360 and Cash integration keep their responsibilities separ
 		'utf8'
 	);
 	const cash = readFileSync(new URL('../../../routes/cash/+page.svelte', import.meta.url), 'utf8');
-	assert.match(detail, /Encaisser à la caisse/);
+	assert.match(detail, /Encaisser/);
+	assert.match(detail, /billing\/\$\{invoiceId\}|billing\.payment\.create/);
 	assert.match(detail, /Promesse/);
 	assert.match(patient360, /Créances patient/);
 	assert.match(patient360, /part assurance est exclue/);
