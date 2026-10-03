@@ -10,6 +10,13 @@
 		formatXOF,
 		paymentAllowed
 	} from '$lib/components/billing/state';
+	import {
+		beginPaymentCommand,
+		completePaymentCommandError,
+		completePaymentCommandSuccess,
+		createPaymentCommandState,
+		isPaymentSubmitDisabled
+	} from '$lib/components/billing/payment-command';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 	let invoice = $state<Invoice | null>(null);
@@ -17,6 +24,7 @@
 	let permissions = $state<string[]>([]);
 	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
 	let payment = $state({ amount: 0, paymentMethod: 'CASH', reference: '' });
+	let paymentCmd = $state(createPaymentCommandState());
 	async function refresh() {
 		try {
 			invoice = await getInvoice(Number(page.params.id));
@@ -40,10 +48,16 @@
 		}
 	}
 	async function pay() {
-		if (!invoice) return;
+		if (!invoice || isPaymentSubmitDisabled(paymentCmd)) return;
+		paymentCmd = beginPaymentCommand(paymentCmd);
+		const key = paymentCmd.idempotencyKey;
+		error = '';
 		try {
-			invoice = await payInvoice(invoice.id, { ...payment, idempotencyKey: crypto.randomUUID() });
+			invoice = await payInvoice(invoice.id, { ...payment, idempotencyKey: key });
+			paymentCmd = completePaymentCommandSuccess();
+			if (invoice) payment.amount = invoice.balanceAmount;
 		} catch (e) {
+			paymentCmd = completePaymentCommandError(paymentCmd);
 			error = e instanceof Error ? e.message : 'Paiement impossible';
 		}
 	}
@@ -156,8 +170,12 @@
 					class="rounded-xl border p-2"
 					placeholder="Référence (facultatif)"
 					bind:value={payment.reference}
-				/><button class="rounded-xl bg-emerald-700 font-bold text-white" onclick={pay}
-					>Encaisser</button
+				/><button
+					class="rounded-xl bg-emerald-700 font-bold text-white disabled:opacity-40"
+					onclick={pay}
+					disabled={isPaymentSubmitDisabled(paymentCmd)}
+					data-testid="invoice-pay"
+					>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
 				>
 			</section>{/if}
 		{#if invoice.payments?.length}<section class="rounded-2xl border bg-white p-5">

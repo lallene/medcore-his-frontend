@@ -40,6 +40,15 @@ export const cashPayment = async (
 		mobileOperator?: string;
 		idempotencyKey: string;
 	}
-) => (await api.post<CashReceipt>(`/api/cash/sessions/${id}/payments`, payload)).data;
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<CashReceipt>(
+			`/api/cash/sessions/${id}/payments`,
+			{ ...payload, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
 export const getReceipt = async (id: number) =>
 	(await api.get<CashReceipt>(`/api/cash/receipts/${id}`)).data;

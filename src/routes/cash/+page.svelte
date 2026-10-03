@@ -23,6 +23,13 @@
 		needsOperator,
 		needsReference
 	} from '$lib/components/cash/state';
+	import {
+		beginPaymentCommand,
+		completePaymentCommandError,
+		completePaymentCommandSuccess,
+		createPaymentCommandState,
+		isPaymentSubmitDisabled
+	} from '$lib/components/billing/payment-command';
 	import type { CashReceipt, CashRegister, CashMethod, SessionSummary } from '$lib/types/cash';
 	import type { Invoice } from '$lib/types/billing';
 	let session = $state<SessionSummary | null>(null),
@@ -41,6 +48,7 @@
 		externalReference: '',
 		mobileOperator: ''
 	});
+	let paymentCmd = $state(createPaymentCommandState());
 	let closing = $state({ countedCashAmount: 0, note: '' });
 	const kpis = $derived(session ? cashKpis(session) : null);
 	const filtered = $derived(
@@ -82,17 +90,22 @@
 		}
 	}
 	async function collect() {
-		if (!session || !selected) return;
+		if (!session || !selected || isPaymentSubmitDisabled(paymentCmd)) return;
+		paymentCmd = beginPaymentCommand(paymentCmd);
+		const key = paymentCmd.idempotencyKey;
+		error = '';
 		try {
 			const r = await cashPayment(session.session.id, {
 				invoiceId: selected.id,
 				...payment,
-				idempotencyKey: crypto.randomUUID()
+				idempotencyKey: key
 			});
+			paymentCmd = completePaymentCommandSuccess();
 			await refresh();
 			selected = null;
 			await goto(resolve(`/cash/receipts/${r.id}`));
 		} catch (e) {
+			paymentCmd = completePaymentCommandError(paymentCmd);
 			error = e instanceof Error ? e.message : 'Paiement impossible';
 		}
 	}
@@ -206,6 +219,7 @@
 						onclick={() => {
 							selected = x;
 							payment.amount = x.balanceAmount;
+							paymentCmd = createPaymentCommandState();
 						}}
 						><strong>{x.number}</strong><span>{x.patientCode} — {x.patientName}</span><span
 							>Assurance {formatXOF(x.insuranceAmount)}</span
@@ -244,9 +258,12 @@
 							? 'Référence obligatoire'
 							: 'Référence facultative'}
 					/><button
-						disabled={!cashCan(permissions, 'cash.payment.create')}
+						disabled={!cashCan(permissions, 'cash.payment.create') ||
+							isPaymentSubmitDisabled(paymentCmd)}
 						class="rounded-xl bg-emerald-700 p-2 font-bold text-white disabled:opacity-40"
-						onclick={collect}>Encaisser</button
+						data-testid="cash-pay"
+						onclick={collect}
+						>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
 					>
 				</div>
 			</section>{/if}
