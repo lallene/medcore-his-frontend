@@ -29,6 +29,20 @@ export const payInvoice = async (
 		)
 	).data;
 };
+/** LOT29D-C: full payment reversal (immutable payment + linked counter-entry). */
+export const reversePayment = async (
+	paymentId: number,
+	payload: { reason: string; idempotencyKey: string }
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<Invoice>(
+			`/api/billing/payments/${paymentId}/reverse`,
+			{ reason: payload.reason, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
 export const listTariffs = async () => (await api.get<Tariff[]>('/api/billing/tariffs')).data;
 export const createTariff = async (payload: Omit<Tariff, 'id' | 'currency'>) =>
 	(await api.post<Tariff>('/api/billing/tariffs', payload)).data;

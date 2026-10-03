@@ -3,7 +3,13 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { jwtDecode } from 'jwt-decode';
-	import { cancelInvoice, getInvoice, issueInvoice, payInvoice } from '$lib/api/billing';
+	import {
+		cancelInvoice,
+		getInvoice,
+		issueInvoice,
+		payInvoice,
+		reversePayment
+	} from '$lib/api/billing';
 	import { listInsuranceReceivables } from '$lib/api/insurance-receivables';
 	import {
 		can,
@@ -27,12 +33,18 @@
 		invoiceCollectibleKind,
 		isPaymentFormSubmitDisabled,
 		canShowPaymentReceipt,
+		canShowReversePayment,
+		classifyReversalError,
 		latestReceiptedPayment,
 		mergePaymentHistory,
 		paymentAmountErrorMessage,
+		paymentIsReversed,
+		REVERSAL_ACTION_LABEL,
+		validateReversalReason,
 		validatePaymentAmount,
 		type PaymentUxError
 	} from '$lib/components/billing/collection';
+	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 
@@ -45,6 +57,11 @@
 	let payment = $state({ amount: 0, paymentMethod: 'CASH', reference: '' });
 	let paymentCmd = $state(createPaymentCommandState());
 	let amountHint = $state('');
+	let reverseTarget = $state<Payment | null>(null);
+	let reverseReason = $state('');
+	let reverseCmd = $state(createPaymentCommandState());
+	let reverseError = $state<PaymentUxError | null>(null);
+	let reverseConfirm = $state(false);
 
 	const collectibleKind = $derived(invoice ? invoiceCollectibleKind(invoice) : null);
 	const showCollection = $derived(invoice ? canShowEncaisser(invoice, permissions) : false);
@@ -143,6 +160,79 @@
 					}
 				} catch {
 					/* keep payment error */
+				}
+			}
+		}
+	}
+
+	function openReverse(p: Payment) {
+		reverseTarget = p;
+		reverseReason = '';
+		reverseConfirm = false;
+		reverseError = null;
+		reverseCmd = createPaymentCommandState();
+	}
+
+	function closeReverse() {
+		reverseTarget = null;
+		reverseReason = '';
+		reverseConfirm = false;
+		reverseError = null;
+		reverseCmd = createPaymentCommandState();
+	}
+
+	async function submitReverse() {
+		if (!invoice || !reverseTarget || isPaymentSubmitDisabled(reverseCmd)) return;
+		const check = validateReversalReason(reverseReason);
+		if (!check.ok) {
+			reverseError = {
+				kind: 'validation',
+				message: check.message,
+				preserveKey: true,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		if (!reverseConfirm) {
+			reverseError = {
+				kind: 'validation',
+				message: 'Confirmez explicitement la contrepassation.',
+				preserveKey: true,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		reverseCmd = beginPaymentCommand(reverseCmd);
+		const key = reverseCmd.idempotencyKey;
+		reverseError = null;
+		try {
+			const updated = await reversePayment(reverseTarget.id, {
+				reason: check.reason,
+				idempotencyKey: key
+			});
+			invoice = {
+				...updated,
+				payments: mergePaymentHistory(invoice.payments, updated.payments)
+			};
+			reverseCmd = completePaymentCommandSuccess();
+			successMessage = `Encaissement contrepassé — reste patient ${formatXOF(updated.balanceAmount)}.`;
+			closeReverse();
+			payment.amount = updated.balanceAmount;
+		} catch (e) {
+			const classified = classifyReversalError(e);
+			reverseError = classified;
+			if (classified.preserveKey) {
+				reverseCmd = completePaymentCommandError(reverseCmd);
+			} else {
+				reverseCmd = createPaymentCommandState();
+			}
+			if (classified.shouldRefresh) {
+				try {
+					await refresh();
+				} catch {
+					/* keep */
 				}
 			}
 		}
@@ -375,7 +465,7 @@
 							><tr
 								><th class="p-2">Date</th><th>Mode</th><th>Référence</th><th>Montant</th><th
 									>Reçu par</th
-								><th>Reçu</th></tr
+								><th>État</th><th>Reçu</th><th class="print:hidden">Action</th></tr
 							></thead
 						><tbody
 							>{#each invoice.payments as p (p.id)}<tr
@@ -386,6 +476,11 @@
 									><td>{p.reference || '—'}</td><td class="font-bold">{formatXOF(p.amount)}</td><td
 										>{p.receivedBy}</td
 									><td
+										>{#if paymentIsReversed(p)}<span
+												class="font-semibold text-amber-800"
+												data-testid={`invoice-payment-reversed-${p.id}`}>Contrepassé</span
+											>{:else}<span class="text-slate-500">Effectif</span>{/if}</td
+									><td
 										>{#if canShowPaymentReceipt(p, permissions)}<a
 												class="font-semibold text-teal-800 underline"
 												href={resolve(`/cash/receipts/${p.receiptId}`)}
@@ -393,6 +488,13 @@
 											>{:else if p.receiptId}<span
 												class="text-slate-400"
 												data-testid={`invoice-receipt-denied-${p.id}`}>Reçu</span
+											>{:else}<span class="text-slate-400">—</span>{/if}</td
+									><td class="print:hidden"
+										>{#if canShowReversePayment(p, permissions)}<button
+												type="button"
+												class="text-sm font-semibold text-amber-900 underline"
+												data-testid={`invoice-payment-reverse-${p.id}`}
+												onclick={() => openReverse(p)}>{REVERSAL_ACTION_LABEL}</button
 											>{:else}<span class="text-slate-400">—</span>{/if}</td
 									></tr
 								>{/each}</tbody
@@ -422,4 +524,73 @@
 						>
 					</div>{/each}
 			</section>{/if}{/if}
+	{#if reverseTarget}<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:hidden"
+			data-testid="invoice-reverse-modal"
+			role="dialog"
+			aria-modal="true"
+		>
+			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
+				<h2 class="text-lg font-black text-amber-950">{REVERSAL_ACTION_LABEL}</h2>
+				<p class="text-sm text-slate-600">
+					Corrige l’effet financier HIS de cet encaissement. Cela n’enregistre pas un remboursement
+					externe.
+				</p>
+				<dl class="grid grid-cols-2 gap-2 text-sm">
+					<dt class="text-slate-500">Montant</dt>
+					<dd class="font-bold" data-testid="invoice-reverse-amount">
+						{formatXOF(reverseTarget.amount)}
+					</dd>
+					<dt class="text-slate-500">Mode</dt>
+					<dd data-testid="invoice-reverse-method">{reverseTarget.paymentMethod}</dd>
+					<dt class="text-slate-500">Date</dt>
+					<dd>{new Date(reverseTarget.paidAt).toLocaleString('fr-FR')}</dd>
+					<dt class="text-slate-500">Référence</dt>
+					<dd>{reverseTarget.reference || '—'}</dd>
+				</dl>
+				<label class="block text-sm">
+					<span class="font-bold">Motif</span>
+					<textarea
+						class="mt-1 w-full rounded-xl border p-2"
+						rows="3"
+						bind:value={reverseReason}
+						data-testid="invoice-reverse-reason"></textarea>
+				</label>
+				<label class="flex items-start gap-2 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={reverseConfirm}
+						data-testid="invoice-reverse-confirm"
+					/>
+					<span
+						>Je confirme la contrepassation de cet encaissement (sans remboursement automatique).</span
+					>
+				</label>
+				{#if reverseError}<p
+						class="text-sm text-amber-900"
+						data-testid="invoice-reverse-error"
+						role="alert"
+					>
+						{reverseError.message}
+					</p>{/if}
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded-xl border px-4 py-2 font-bold"
+						onclick={closeReverse}
+						data-testid="invoice-reverse-cancel">Fermer</button
+					>
+					<button
+						type="button"
+						class="rounded-xl bg-amber-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+						onclick={submitReverse}
+						disabled={isPaymentSubmitDisabled(reverseCmd)}
+						data-testid="invoice-reverse-submit"
+						>{isPaymentSubmitDisabled(reverseCmd)
+							? 'Contrepassation…'
+							: REVERSAL_ACTION_LABEL}</button
+					>
+				</div>
+			</div>
+		</div>{/if}
 </div>

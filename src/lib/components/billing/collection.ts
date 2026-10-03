@@ -19,6 +19,11 @@ export type BillingPaymentMethod = (typeof BILLING_PAYMENT_METHODS)[number]['val
 export const COLLECTION_PERMISSION = 'billing.payment.create';
 /** Canonical receipt read — same permission as /cash/receipts/:id (LOT29D-B). */
 export const RECEIPT_READ_PERMISSION = 'cash.receipt.read';
+/** LOT29D-C: separate from collection — Contrepasser / Annuler l'encaissement. */
+export const REVERSAL_PERMISSION = 'billing.payment.reverse';
+export const REVERSAL_ACTION_LABEL = "Annuler l'encaissement";
+export const MIN_REVERSAL_REASON_LEN = 3;
+export const MAX_REVERSAL_REASON_LEN = 500;
 
 export type CollectibleKind =
 	'payable' | 'partially_paid' | 'settled' | 'cancelled' | 'draft' | 'non_collectible';
@@ -276,6 +281,50 @@ export function latestReceiptedPayment(payments: Payment[] | undefined): Payment
 		if (paymentHasCanonicalReceipt(rows[i])) return rows[i];
 	}
 	return null;
+}
+
+export function paymentIsReversed(payment: Payment | undefined | null): boolean {
+	return Boolean(payment?.reversed);
+}
+
+export function canShowReversePayment(
+	payment: Payment | undefined | null,
+	permissions: string[]
+): boolean {
+	if (!payment || paymentIsReversed(payment)) return false;
+	// Cash-session payments are rejected server-side; hide when session id is known.
+	if (payment.cashSessionId != null && payment.cashSessionId > 0) return false;
+	return can(permissions, REVERSAL_PERMISSION);
+}
+
+export function validateReversalReason(
+	raw: string
+): { ok: true; reason: string } | { ok: false; message: string } {
+	const reason = raw.trim();
+	if (!reason) return { ok: false, message: 'Motif obligatoire.' };
+	if (reason.length < MIN_REVERSAL_REASON_LEN) return { ok: false, message: 'Motif trop court.' };
+	if (reason.length > MAX_REVERSAL_REASON_LEN) return { ok: false, message: 'Motif trop long.' };
+	return { ok: true, reason };
+}
+
+export function classifyReversalError(error: unknown): PaymentUxError {
+	const base = classifyPaymentError(error);
+	if (base.kind === 'permission') {
+		return {
+			...base,
+			message: "Vous n'avez pas l'autorisation de contrepasser cet encaissement."
+		};
+	}
+	return {
+		...base,
+		message: base.message
+			.replace(/paiement/gi, 'contrepassation')
+			.replace(/Paiement/g, 'Contrepassation')
+	};
+}
+
+export function usesRefundWording(text: string): boolean {
+	return /\brembours/i.test(text);
 }
 
 export function isCanonicalPaymentMethod(value: string): value is BillingPaymentMethod {

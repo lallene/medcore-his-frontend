@@ -58,4 +58,7 @@ export interface CashReceipt {
 	patientAmount: number;
 	paidBefore: number;
 	balanceAfter: number;
+	/** LOT29D-C: underlying payment was fully reversed. */
+	paymentReversed?: boolean;
+	paymentReversedAt?: string | null;
 }

@@ -4,7 +4,9 @@ import AxiosError from 'axios';
 import {
 	BILLING_PAYMENT_METHODS,
 	canShowEncaisser,
+	canShowReversePayment,
 	classifyPaymentError,
+	classifyReversalError,
 	filterInvoicesForCashier,
 	invoiceCollectibleKind,
 	isCanonicalPaymentMethod,
@@ -15,14 +17,20 @@ import {
 	latestReceiptedPayment,
 	paymentHasCanonicalReceipt,
 	paymentHistoryFingerprint,
+	paymentIsReversed,
 	receiptHref,
-	validatePaymentAmount
+	REVERSAL_ACTION_LABEL,
+	REVERSAL_PERMISSION,
+	usesRefundWording,
+	validatePaymentAmount,
+	validateReversalReason
 } from './collection.ts';
 import {
 	beginPaymentCommand,
 	completePaymentCommandError,
 	completePaymentCommandSuccess,
-	createPaymentCommandState
+	createPaymentCommandState,
+	isPaymentSubmitDisabled
 } from './payment-command.ts';
 import type { Invoice, Payment } from '$lib/types/billing';
 
@@ -305,4 +313,129 @@ test('RF08 receipt view remains financial-only', () => {
 	assert.equal(keys.includes('clinicalNotes'), false);
 	assert.ok(keys.includes('amount'));
 	assert.ok(keys.includes('paymentMethod'));
+});
+
+const pay = (over: Partial<Payment> = {}): Payment => ({
+	id: 10,
+	amount: 5000,
+	paymentMethod: 'CARD',
+	paidAt: '2026-01-01T10:00:00Z',
+	receivedBy: 1,
+	receiptId: 44,
+	receiptNumber: 'REC-000044',
+	...over
+});
+
+test('FR01 reversed payment remains visible in history merge', () => {
+	const reversed = pay({ id: 1, reversed: true, reversalId: 9, reversalReason: 'erreur saisie' });
+	const merged = mergePaymentHistory([], [reversed]);
+	assert.equal(merged.length, 1);
+	assert.equal(merged[0].id, 1);
+	assert.equal(paymentIsReversed(merged[0]), true);
+});
+
+test('FR02 reversal indicator derived from payment.reversed', () => {
+	assert.equal(paymentIsReversed(pay({ reversed: true })), true);
+	assert.equal(paymentIsReversed(pay()), false);
+});
+
+test('FR03 authorized reversal action shown', () => {
+	assert.equal(canShowReversePayment(pay(), [REVERSAL_PERMISSION]), true);
+	assert.equal(canShowReversePayment(pay(), ['*']), true);
+	assert.equal(REVERSAL_ACTION_LABEL.includes('Rembours'), false);
+	assert.ok(
+		REVERSAL_ACTION_LABEL.includes('encaissement') || REVERSAL_ACTION_LABEL.includes('Contrepass')
+	);
+});
+
+test('FR04 unauthorized user has no action', () => {
+	assert.equal(canShowReversePayment(pay(), ['billing.payment.create']), false);
+	assert.equal(canShowReversePayment(pay(), ['billing.read']), false);
+});
+
+test('FR05 modal requires reason', () => {
+	assert.deepEqual(validateReversalReason(''), { ok: false, message: 'Motif obligatoire.' });
+	assert.equal(validateReversalReason('  ').ok, false);
+	assert.equal(validateReversalReason('ab').ok, false);
+	assert.deepEqual(validateReversalReason('  erreur caisse  '), {
+		ok: true,
+		reason: 'erreur caisse'
+	});
+});
+
+test('FR06 amount immutable — no amount in reverse payload helpers', () => {
+	const check = validateReversalReason('motif valide');
+	assert.equal(check.ok, true);
+	if (check.ok) {
+		const payload = { reason: check.reason, idempotencyKey: 'k1' };
+		assert.equal('amount' in payload, false);
+	}
+});
+
+test('FR07 in-flight disables submit', () => {
+	let cmd = createPaymentCommandState('rev-key-1');
+	cmd = beginPaymentCommand(cmd);
+	assert.equal(isPaymentSubmitDisabled(cmd), true);
+	assert.equal(cmd.idempotencyKey, 'rev-key-1');
+});
+
+test('FR08 success refreshes via authoritative invoice payments', () => {
+	const before = pay({ id: 3, amount: 2000 });
+	const after = pay({
+		id: 3,
+		amount: 2000,
+		reversed: true,
+		reversalId: 11,
+		reversalReason: 'double saisie'
+	});
+	const merged = mergePaymentHistory([before], [after]);
+	assert.equal(merged[0].reversed, true);
+	assert.equal(merged[0].reversalId, 11);
+});
+
+test('FR09 replay does not duplicate reversal identity', () => {
+	const a = pay({ id: 4, reversed: true, reversalId: 20 });
+	const merged = mergePaymentHistory([a], [a, { ...a }]);
+	assert.equal(merged.length, 1);
+	assert.equal(merged[0].reversalId, 20);
+});
+
+test('FR10 network uncertainty reuses key', () => {
+	const network = new AxiosError.AxiosError('Network Error');
+	const classified = classifyReversalError(network);
+	assert.equal(classified.kind, 'network_uncertain');
+	assert.equal(classified.preserveKey, true);
+	let cmd = createPaymentCommandState('same-rev-key');
+	cmd = beginPaymentCommand(cmd);
+	cmd = completePaymentCommandError(cmd);
+	assert.equal(cmd.idempotencyKey, 'same-rev-key');
+});
+
+test('FR11 no refund wording in reversal labels', () => {
+	assert.equal(usesRefundWording(REVERSAL_ACTION_LABEL), false);
+	assert.equal(usesRefundWording('Encaissement contrepassé'), false);
+	assert.equal(usesRefundWording('Rembourser le patient'), true);
+});
+
+test('FR12 receipt retained / payment marked reversed', () => {
+	const p = pay({ reversed: true, receiptId: 88, receiptNumber: 'REC-000088' });
+	assert.equal(paymentHasCanonicalReceipt(p), true);
+	assert.equal(receiptHref(p.receiptId!), '/cash/receipts/88');
+	assert.equal(paymentIsReversed(p), true);
+});
+
+test('FR13 P360 remains read-only for reversal', () => {
+	// Reversal action is billing-scoped permission gate; P360 must not invent collection/reversal.
+	assert.equal(canShowReversePayment(pay(), ['patients.360.read', 'billing.read']), false);
+});
+
+test('FR14 multiple payments only target selected payment', () => {
+	const a = pay({ id: 1, amount: 2000 });
+	const b = pay({ id: 2, amount: 3000, reversed: true });
+	assert.equal(canShowReversePayment(a, [REVERSAL_PERMISSION]), true);
+	assert.equal(canShowReversePayment(b, [REVERSAL_PERMISSION]), false);
+	assert.equal(
+		canShowReversePayment(pay({ id: 3, cashSessionId: 9 }), [REVERSAL_PERMISSION]),
+		false
+	);
 });

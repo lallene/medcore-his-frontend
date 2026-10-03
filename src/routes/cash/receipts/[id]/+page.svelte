@@ -18,6 +18,15 @@
 			<h1 class="text-2xl font-black">MEDCORE HIS</h1>
 			<h2>REÇU DE PAIEMENT</h2>
 			{#if duplicate}<p class="font-black text-red-700">DUPLICATA</p>{/if}
+			{#if receipt.paymentReversed}<p
+					class="mt-2 font-black text-amber-800"
+					data-testid="receipt-payment-reversed"
+				>
+					Encaissement contrepassé
+					{#if receipt.paymentReversedAt}<span class="block text-sm font-semibold"
+							>{new Date(receipt.paymentReversedAt).toLocaleString('fr-FR')}</span
+						>{/if}
+				</p>{/if}
 			<p class="text-xl font-black">{receipt.receiptNumber}</p>
 		</header>
 		<div class="mt-6 grid grid-cols-2 gap-2">

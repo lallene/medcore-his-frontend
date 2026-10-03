@@ -47,9 +47,16 @@ export interface Payment {
 	reference?: string;
 	paidAt: string;
 	receivedBy: number;
+	cashSessionId?: number | null;
 	/** Canonical cash_receipts id when issued (LOT29D-B). */
 	receiptId?: number | null;
 	receiptNumber?: string | null;
+	/** LOT29D-C full reversal decoration. */
+	reversed?: boolean;
+	reversalId?: number | null;
+	reversedAt?: string | null;
+	reversalReason?: string | null;
+	reversedBy?: number | null;
 }
 export interface Invoice {
 	id: number;
