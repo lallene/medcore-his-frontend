@@ -173,7 +173,7 @@ test.describe('LOT29C cashier collection', () => {
 		const btn = page.getByTestId('invoice-pay');
 		await Promise.all([btn.click(), btn.click()]);
 		await expect(page.getByTestId('invoice-pay-success')).toBeVisible({ timeout: 20_000 });
-		const rows = page.locator('[data-testid^="invoice-payment-"]');
+		const rows = page.locator('[data-testid^="invoice-payment-"]:not([data-testid*="receipt"])');
 		await expect(rows).toHaveCount(1);
 		const verify = await request.get(`${api}/api/billing/invoices/${invoice.id}`, {
 			headers: bearer(admin)

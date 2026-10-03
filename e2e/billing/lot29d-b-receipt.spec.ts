@@ -154,9 +154,13 @@ test.describe('LOT29D-B billing receipt convergence', () => {
 		expect(pay.receiptId).toBeTruthy();
 		expect(pay.receiptNumber).toMatch(/^REC-\d{6}$/);
 
-		await page.getByTestId(`invoice-payment-receipt-${pay.id}`).click();
-		await expect(page.getByText(pay.receiptNumber!)).toBeVisible({ timeout: 20_000 });
-		await expect(page.getByText('CARD')).toBeVisible();
+		await page.getByTestId('invoice-pay-receipt-link').click();
+		await expect(page).toHaveURL(new RegExp(`/cash/receipts/${pay.receiptId}$`));
+		await expect(page.getByRole('heading', { name: 'REÇU DE PAIEMENT' })).toBeVisible({
+			timeout: 20_000
+		});
+		await expect(page.locator('p.text-xl.font-black')).toHaveText(pay.receiptNumber!);
+		await expect(page.getByText('CARD', { exact: true })).toBeVisible();
 		await expect(page.getByText('Encaissement facturation')).toBeVisible();
 	});
 

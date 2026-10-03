@@ -389,10 +389,10 @@
 										>{#if canShowPaymentReceipt(p, permissions)}<a
 												class="font-semibold text-teal-800 underline"
 												href={resolve(`/cash/receipts/${p.receiptId}`)}
-												data-testid={`invoice-payment-receipt-${p.id}`}>Voir le reçu</a
+												data-testid={`invoice-receipt-${p.id}`}>Voir le reçu</a
 											>{:else if p.receiptId}<span
 												class="text-slate-400"
-												data-testid={`invoice-payment-receipt-denied-${p.id}`}>Reçu</span
+												data-testid={`invoice-receipt-denied-${p.id}`}>Reçu</span
 											>{:else}<span class="text-slate-400">—</span>{/if}</td
 									></tr
 								>{/each}</tbody
