@@ -179,10 +179,11 @@
 		error = '';
 		try {
 			const result = await closeSession(id, { ...closing, idempotencyKey: key });
-			closeResult = result;
 			closeCmd = completeSessionCommandSuccess('cash-close');
 			recoveryTarget = null;
+			// refresh() clears transient closeResult; restore authoritative backend snapshot after.
 			await refresh();
+			closeResult = result;
 		} catch (e) {
 			const classified = classifyCashCommandError(e);
 			error = classified.message;
