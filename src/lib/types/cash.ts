@@ -22,8 +22,12 @@ export interface CashSession {
 	closingNote: string;
 	register: CashRegister;
 }
+/** Backend-authoritative session financial projection (LOT29E-C). FE formats only. */
 export interface SessionSummary {
 	session: CashSession;
+	cashCollected: number;
+	nonCashCollected: number;
+	totalCollected: number;
 	cashPayments: number;
 	cardPayments: number;
 	mobileMoneyPayments: number;

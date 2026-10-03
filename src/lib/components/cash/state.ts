@@ -9,15 +9,41 @@ export const methods: { value: CashMethod; label: string }[] = [
 export const needsReference = (m: CashMethod) => m === 'BANK_TRANSFER' || m === 'CHECK';
 export const needsOperator = (m: CashMethod) => m === 'MOBILE_MONEY';
 export const CLOSE_ANY_PERMISSION = 'cash.session.close_any';
-export const cashKpis = (s: SessionSummary) => ({
-	opening: s.session.openingFloat,
-	cash: s.cashPayments,
-	other: s.totalPayments - s.cashPayments,
-	total: s.totalPayments,
-	count: s.operationCount,
-	expected: s.session.openingFloat + s.cashPayments
-});
-export const difference = (counted: number, expected: number) => counted - expected;
+
+/**
+ * Presentation mapping of backend SessionSummary — NOT a financial calculator.
+ * expected/cash/nonCash/total/count are taken from the server projection only.
+ */
+export function presentSessionSummary(s: SessionSummary | null | undefined) {
+	if (!s) return null;
+	return {
+		opening: s.session.openingFloat,
+		cash: s.cashCollected,
+		other: s.nonCashCollected,
+		total: s.totalCollected,
+		count: s.operationCount,
+		expected: s.expectedCash
+	};
+}
+
+/** Closed-session closing proof from persisted snapshot fields (never recomputed). */
+export function presentClosedSnapshot(s: SessionSummary | null | undefined) {
+	if (!s || s.session.status !== 'CLOSED') return null;
+	return {
+		expected: s.session.expectedCashAmount ?? s.expectedCash,
+		counted: s.session.countedCashAmount ?? null,
+		difference: s.session.cashDifference ?? null
+	};
+}
+
+/**
+ * Form-only draft gap while the cashier types counted cash.
+ * Not financial authority — close result uses backend cashDifference.
+ */
+export function draftCloseGap(counted: number, backendExpected: number) {
+	return counted - backendExpected;
+}
+
 export const cashCan = (permissions: string[], permission: string) =>
 	permissions.includes('*') || permissions.includes(permission);
 
@@ -61,10 +87,10 @@ export function closeNoteRequired(
 	session: CashSession | undefined | null,
 	userId: number | null,
 	counted: number,
-	expected: number
+	backendExpected: number
 ): boolean {
 	if (recoveryNoteRequired(session, userId)) return true;
-	return difference(counted, expected) !== 0;
+	return draftCloseGap(counted, backendExpected) !== 0;
 }
 
 export function classifyCashCommandError(error: unknown): {

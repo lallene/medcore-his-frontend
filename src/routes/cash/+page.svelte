@@ -21,13 +21,13 @@
 		canCollectOnSession,
 		canRecoverCloseSession,
 		cashCan,
-		cashKpis,
 		classifyCashCommandError,
 		closeNoteRequired,
-		difference,
+		draftCloseGap,
 		methods,
 		needsOperator,
-		needsReference
+		needsReference,
+		presentSessionSummary
 	} from '$lib/components/cash/state';
 	import {
 		beginSessionCommand,
@@ -56,6 +56,8 @@
 		journal = $state<CashReceipt[]>([]),
 		invoices = $state<Invoice[]>([]),
 		error = $state(''),
+		summaryLoading = $state(true),
+		summaryError = $state(''),
 		search = $state(''),
 		permissions = $state<string[]>([]),
 		userId = $state<number | null>(null),
@@ -75,7 +77,7 @@
 	let openCmd = $state(createSessionCommandState('cash-open'));
 	let closeCmd = $state(createSessionCommandState('cash-close'));
 	let closing = $state({ countedCashAmount: 0, note: '' });
-	const kpis = $derived(session ? cashKpis(session) : null);
+	const kpis = $derived(presentSessionSummary(session));
 	const filtered = $derived(
 		invoices.filter(
 			(x) =>
@@ -92,24 +94,34 @@
 	const showRecovery = $derived(!session && canRecoverCloseSession(permissions));
 
 	async function refresh() {
-		[registers, session] = await Promise.all([listRegisters(), currentSession()]);
-		closeResult = null;
-		if (session) {
-			[journal, invoices] = await Promise.all([
-				sessionJournal(session.session.id),
-				listInvoices({ limit: 100 }).then((x) =>
-					x.data.filter((i) => ['ISSUED', 'PARTIALLY_PAID'].includes(i.status))
-				)
-			]);
-			closing.countedCashAmount = session.expectedCash;
-			closing.note = '';
-			closeCmd = createSessionCommandState('cash-close');
-			const invoiceId = Number(page.url.searchParams.get('invoiceId') || 0);
-			if (invoiceId) selected = invoices.find((invoice) => invoice.id === invoiceId) ?? null;
-		} else if (canRecoverCloseSession(permissions)) {
-			openSessions = (await listSessions()).filter((x) => x.status === 'OPEN');
-		} else {
-			openSessions = [];
+		summaryLoading = true;
+		summaryError = '';
+		try {
+			[registers, session] = await Promise.all([listRegisters(), currentSession()]);
+			closeResult = null;
+			if (session) {
+				[journal, invoices] = await Promise.all([
+					sessionJournal(session.session.id),
+					listInvoices({ limit: 100 }).then((x) =>
+						x.data.filter((i) => ['ISSUED', 'PARTIALLY_PAID'].includes(i.status))
+					)
+				]);
+				closing.countedCashAmount = session.expectedCash;
+				closing.note = '';
+				closeCmd = createSessionCommandState('cash-close');
+				const invoiceId = Number(page.url.searchParams.get('invoiceId') || 0);
+				if (invoiceId) selected = invoices.find((invoice) => invoice.id === invoiceId) ?? null;
+			} else if (canRecoverCloseSession(permissions)) {
+				openSessions = (await listSessions()).filter((x) => x.status === 'OPEN');
+			} else {
+				openSessions = [];
+			}
+		} catch (e) {
+			session = null;
+			journal = [];
+			summaryError = e instanceof Error ? e.message : 'Résumé de caisse indisponible';
+		} finally {
+			summaryLoading = false;
 		}
 	}
 	async function open() {
@@ -223,6 +235,16 @@
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="cash-error" role="alert">
 			{error}
 		</p>{/if}
+	{#if summaryLoading}<p class="text-sm text-slate-500" data-testid="cash-summary-loading">
+			Chargement du résumé…
+		</p>{/if}
+	{#if summaryError}<p
+			class="rounded-xl bg-red-50 p-3 text-red-700"
+			data-testid="cash-summary-error"
+			role="alert"
+		>
+			{summaryError}
+		</p>{/if}
 	{#if closeResult}<section
 			class="rounded-2xl border border-emerald-300 bg-emerald-50 p-4"
 			data-testid="cash-close-result"
@@ -242,10 +264,161 @@
 				>
 			</p>
 		</section>{/if}
-	{#if !session}<section
-			class="max-w-3xl rounded-2xl border bg-white p-6"
-			data-testid="cash-open-panel"
-		>
+	{#if session}
+		<section class="rounded-2xl border bg-white p-5">
+			<div class="flex justify-between">
+				<div>
+					<h2 class="font-black">
+						{session.session.register.code} — {session.session.register.name}
+					</h2>
+					<p class="text-sm text-slate-500">
+						Ouverte {new Date(session.session.openedAt).toLocaleString('fr-FR')}
+					</p>
+				</div>
+				<a class="text-blue-700" href={resolve(`/cash/sessions/${session.session.id}`)}
+					>Journal complet</a
+				>
+			</div>
+		</section>
+		{#if kpis && !summaryError}<div
+				class="grid gap-3 md:grid-cols-3 xl:grid-cols-6"
+				data-testid="cash-summary"
+			>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-opening">
+					<small>Fond initial</small><strong class="block">{formatXOF(kpis.opening)}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-cash">
+					<small>Espèces</small><strong class="block">{formatXOF(kpis.cash)}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-other">
+					<small>Autres</small><strong class="block">{formatXOF(kpis.other)}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-total">
+					<small>Total</small><strong class="block">{formatXOF(kpis.total)}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-count">
+					<small>Opérations</small><strong class="block">{kpis.count}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-expected">
+					<small>Espèces théoriques</small><strong class="block">{formatXOF(kpis.expected)}</strong>
+				</div>
+			</div>{/if}
+		{#if ownSession}<section class="rounded-2xl border bg-white p-5">
+				<h2 class="font-black">Recherche facture/patient</h2>
+				<input
+					class="mt-3 w-full rounded-xl border p-3"
+					bind:value={search}
+					placeholder="INV-*, P*, nom patient"
+				/>
+				<div class="mt-3 space-y-2">
+					{#each filtered as x (x.id)}<button
+							class="grid w-full gap-2 rounded-xl border p-3 text-left md:grid-cols-4"
+							onclick={() => {
+								selected = x;
+								payment.amount = x.balanceAmount;
+								paymentCmd = createPaymentCommandState();
+							}}
+							><strong>{x.number}</strong><span>{x.patientCode} — {x.patientName}</span><span
+								>Assurance {formatXOF(x.insuranceAmount)}</span
+							><span class="font-black">Reste patient {formatXOF(x.balanceAmount)}</span></button
+						>{/each}
+				</div>
+			</section>
+			{#if selected}<section class="rounded-2xl border-2 border-emerald-300 bg-white p-5">
+					<h2 class="font-black">Encaisser {selected.number}</h2>
+					<div class="grid gap-2 md:grid-cols-4">
+						<p>Brut <b>{formatXOF(selected.grossAmount)}</b></p>
+						<p>Assurance <b>{formatXOF(selected.insuranceAmount)}</b></p>
+						<p>Patient <b>{formatXOF(selected.patientAmount)}</b></p>
+						<p>Reste <b>{formatXOF(selected.balanceAmount)}</b></p>
+					</div>
+					<div class="mt-4 grid gap-3 md:grid-cols-4">
+						<input
+							class="rounded-xl border p-2"
+							type="number"
+							min="1"
+							max={selected.balanceAmount}
+							bind:value={payment.amount}
+						/><select class="rounded-xl border p-2" bind:value={payment.paymentMethod}
+							>{#each methods as m (m.value)}<option value={m.value}>{m.label}</option
+								>{/each}</select
+						>{#if needsOperator(payment.paymentMethod)}<select
+								class="rounded-xl border p-2"
+								bind:value={payment.mobileOperator}
+								><option value="">Opérateur</option
+								>{#each ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money', 'Autre'] as o (o)}<option
+										>{o}</option
+									>{/each}</select
+							>{/if}<input
+							class="rounded-xl border p-2"
+							bind:value={payment.externalReference}
+							placeholder={needsReference(payment.paymentMethod)
+								? 'Référence obligatoire'
+								: 'Référence facultative'}
+						/><button
+							disabled={isPaymentSubmitDisabled(paymentCmd)}
+							class="rounded-xl bg-emerald-700 p-2 font-bold text-white disabled:opacity-40"
+							data-testid="cash-pay"
+							onclick={collect}
+							>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
+						>
+					</div>
+				</section>{/if}
+		{:else}<p
+				class="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
+				data-testid="cash-collect-denied"
+			>
+				Encaissement réservé à la caissière / au caissier ouvreur de cette session.
+			</p>{/if}
+		<section class="rounded-2xl border bg-white p-5">
+			<h2 class="font-black">Opérations récentes</h2>
+			{#each journal.slice(0, 10) as r (r.id)}<a
+					class="grid gap-2 border-t py-2 md:grid-cols-4"
+					href={resolve(`/cash/receipts/${r.id}`)}
+					><b>{r.receiptNumber}</b><span>{r.invoiceNumber}</span><span>{r.paymentMethod}</span><b
+						>{formatXOF(r.amount)}</b
+					></a
+				>{:else}<p class="text-slate-500">Aucune opération.</p>{/each}
+		</section>
+		{#if canCloseOwn}<section
+				class="rounded-2xl border bg-white p-5"
+				data-testid="cash-close-panel"
+			>
+				<h2 class="font-black">Clôture</h2>
+				<p>
+					Espèces théoriques <b data-testid="cash-close-expected-preview"
+						>{formatXOF(session.expectedCash)}</b
+					>
+				</p>
+				<input
+					class="rounded-xl border p-2"
+					type="number"
+					min="0"
+					bind:value={closing.countedCashAmount}
+					data-testid="cash-close-counted"
+				/>
+				<p data-testid="cash-close-gap-preview">
+					Écart (saisie) {formatXOF(draftCloseGap(closing.countedCashAmount, session.expectedCash))}
+				</p>
+				{#if closeNoteRequired(session.session, userId, closing.countedCashAmount, session.expectedCash)}<textarea
+						class="w-full rounded-xl border p-2"
+						bind:value={closing.note}
+						placeholder="Justification obligatoire"
+						data-testid="cash-close-note"></textarea>{/if}<button
+					class="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-40"
+					disabled={isSessionSubmitDisabled(closeCmd)}
+					data-testid="cash-close-submit"
+					onclick={() => finish()}
+					>{isSessionSubmitDisabled(closeCmd) ? 'Clôture…' : 'Clôturer'}</button
+				>
+			</section>{:else}<p
+				class="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
+				data-testid="cash-close-denied"
+			>
+				Clôture réservée à l’ouvreur (récupération superviseur hors session courante).
+			</p>{/if}
+	{:else if !summaryLoading}
+		<section class="max-w-3xl rounded-2xl border bg-white p-6" data-testid="cash-open-panel">
 			<h2 class="text-xl font-black">Ouvrir la caisse</h2>
 			<div class="mt-4 grid gap-3 md:grid-cols-2">
 				<select
@@ -343,141 +516,5 @@
 						>
 					</div>{/if}
 			</section>{/if}
-	{:else}<section class="rounded-2xl border bg-white p-5">
-			<div class="flex justify-between">
-				<div>
-					<h2 class="font-black">
-						{session.session.register.code} — {session.session.register.name}
-					</h2>
-					<p class="text-sm text-slate-500">
-						Ouverte {new Date(session.session.openedAt).toLocaleString('fr-FR')}
-					</p>
-				</div>
-				<a class="text-blue-700" href={resolve(`/cash/sessions/${session.session.id}`)}
-					>Journal complet</a
-				>
-			</div>
-		</section>
-		{#if kpis}<div class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-				{#each [['Fond initial', kpis.opening], ['Espèces', kpis.cash], ['Autres', kpis.other], ['Total', kpis.total], ['Opérations', kpis.count], ['Espèces théoriques', kpis.expected]] as x (x[0])}<div
-						class="rounded-xl border bg-white p-3"
-					>
-						<small>{x[0]}</small><strong class="block"
-							>{x[0] === 'Opérations' ? x[1] : formatXOF(Number(x[1]))}</strong
-						>
-					</div>{/each}
-			</div>{/if}
-		{#if ownSession}<section class="rounded-2xl border bg-white p-5">
-				<h2 class="font-black">Recherche facture/patient</h2>
-				<input
-					class="mt-3 w-full rounded-xl border p-3"
-					bind:value={search}
-					placeholder="INV-*, P*, nom patient"
-				/>
-				<div class="mt-3 space-y-2">
-					{#each filtered as x (x.id)}<button
-							class="grid w-full gap-2 rounded-xl border p-3 text-left md:grid-cols-4"
-							onclick={() => {
-								selected = x;
-								payment.amount = x.balanceAmount;
-								paymentCmd = createPaymentCommandState();
-							}}
-							><strong>{x.number}</strong><span>{x.patientCode} — {x.patientName}</span><span
-								>Assurance {formatXOF(x.insuranceAmount)}</span
-							><span class="font-black">Reste patient {formatXOF(x.balanceAmount)}</span></button
-						>{/each}
-				</div>
-			</section>
-			{#if selected}<section class="rounded-2xl border-2 border-emerald-300 bg-white p-5">
-					<h2 class="font-black">Encaisser {selected.number}</h2>
-					<div class="grid gap-2 md:grid-cols-4">
-						<p>Brut <b>{formatXOF(selected.grossAmount)}</b></p>
-						<p>Assurance <b>{formatXOF(selected.insuranceAmount)}</b></p>
-						<p>Patient <b>{formatXOF(selected.patientAmount)}</b></p>
-						<p>Reste <b>{formatXOF(selected.balanceAmount)}</b></p>
-					</div>
-					<div class="mt-4 grid gap-3 md:grid-cols-4">
-						<input
-							class="rounded-xl border p-2"
-							type="number"
-							min="1"
-							max={selected.balanceAmount}
-							bind:value={payment.amount}
-						/><select class="rounded-xl border p-2" bind:value={payment.paymentMethod}
-							>{#each methods as m (m.value)}<option value={m.value}>{m.label}</option
-								>{/each}</select
-						>{#if needsOperator(payment.paymentMethod)}<select
-								class="rounded-xl border p-2"
-								bind:value={payment.mobileOperator}
-								><option value="">Opérateur</option
-								>{#each ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money', 'Autre'] as o (o)}<option
-										>{o}</option
-									>{/each}</select
-							>{/if}<input
-							class="rounded-xl border p-2"
-							bind:value={payment.externalReference}
-							placeholder={needsReference(payment.paymentMethod)
-								? 'Référence obligatoire'
-								: 'Référence facultative'}
-						/><button
-							disabled={isPaymentSubmitDisabled(paymentCmd)}
-							class="rounded-xl bg-emerald-700 p-2 font-bold text-white disabled:opacity-40"
-							data-testid="cash-pay"
-							onclick={collect}
-							>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
-						>
-					</div>
-				</section>{/if}{:else}<p
-				class="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
-				data-testid="cash-collect-denied"
-			>
-				Encaissement réservé à la caissière / au caissier ouvreur de cette session.
-			</p>{/if}
-		<section class="rounded-2xl border bg-white p-5">
-			<h2 class="font-black">Opérations récentes</h2>
-			{#each journal.slice(0, 10) as r (r.id)}<a
-					class="grid gap-2 border-t py-2 md:grid-cols-4"
-					href={resolve(`/cash/receipts/${r.id}`)}
-					><b>{r.receiptNumber}</b><span>{r.invoiceNumber}</span><span>{r.paymentMethod}</span><b
-						>{formatXOF(r.amount)}</b
-					></a
-				>{:else}<p class="text-slate-500">Aucune opération.</p>{/each}
-		</section>
-		{#if canCloseOwn}<section
-				class="rounded-2xl border bg-white p-5"
-				data-testid="cash-close-panel"
-			>
-				<h2 class="font-black">Clôture</h2>
-				<p>
-					Espèces théoriques <b data-testid="cash-close-expected-preview"
-						>{formatXOF(session.expectedCash)}</b
-					>
-				</p>
-				<input
-					class="rounded-xl border p-2"
-					type="number"
-					min="0"
-					bind:value={closing.countedCashAmount}
-					data-testid="cash-close-counted"
-				/>
-				<p>
-					Écart {formatXOF(difference(closing.countedCashAmount, session.expectedCash))}
-				</p>
-				{#if closeNoteRequired(session.session, userId, closing.countedCashAmount, session.expectedCash)}<textarea
-						class="w-full rounded-xl border p-2"
-						bind:value={closing.note}
-						placeholder="Justification obligatoire"
-						data-testid="cash-close-note"></textarea>{/if}<button
-					class="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-40"
-					disabled={isSessionSubmitDisabled(closeCmd)}
-					data-testid="cash-close-submit"
-					onclick={() => finish()}
-					>{isSessionSubmitDisabled(closeCmd) ? 'Clôture…' : 'Clôturer'}</button
-				>
-			</section>{:else}<p
-				class="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"
-				data-testid="cash-close-denied"
-			>
-				Clôture réservée à l’ouvreur (récupération superviseur hors session courante).
-			</p>{/if}{/if}
+	{/if}
 </div>
