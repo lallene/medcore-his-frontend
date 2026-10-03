@@ -6,6 +6,7 @@
 	import {
 		cancelInvoice,
 		getInvoice,
+		issueCreditNote,
 		issueInvoice,
 		payInvoice,
 		reversePayment
@@ -44,6 +45,14 @@
 		validatePaymentAmount,
 		type PaymentUxError
 	} from '$lib/components/billing/collection';
+	import {
+		canShowCreditNoteDocument,
+		canShowIssueCreditNote,
+		classifyCreditNoteError,
+		CREDIT_NOTE_ACTION_LABEL,
+		creditNoteAuthoritativeAmount,
+		validateCreditNoteReason
+	} from '$lib/components/billing/credit-note';
 	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
@@ -62,9 +71,15 @@
 	let reverseCmd = $state(createPaymentCommandState());
 	let reverseError = $state<PaymentUxError | null>(null);
 	let reverseConfirm = $state(false);
+	let creditOpen = $state(false);
+	let creditReason = $state('');
+	let creditConfirm = $state(false);
+	let creditCmd = $state(createPaymentCommandState());
+	let creditError = $state<PaymentUxError | null>(null);
 
 	const collectibleKind = $derived(invoice ? invoiceCollectibleKind(invoice) : null);
 	const showCollection = $derived(invoice ? canShowEncaisser(invoice, permissions) : false);
+	const showCreditNote = $derived(invoice ? canShowIssueCreditNote(invoice, permissions) : false);
 
 	async function refresh(opts?: { resetAmount?: boolean }) {
 		const id = Number(page.params.id);
@@ -250,6 +265,71 @@
 		}
 	}
 
+	function openCredit() {
+		creditOpen = true;
+		creditReason = '';
+		creditConfirm = false;
+		creditError = null;
+		creditCmd = createPaymentCommandState();
+	}
+
+	function closeCredit() {
+		creditOpen = false;
+		creditReason = '';
+		creditConfirm = false;
+		creditError = null;
+		creditCmd = createPaymentCommandState();
+	}
+
+	async function submitCredit() {
+		if (!invoice || isPaymentSubmitDisabled(creditCmd)) return;
+		const check = validateCreditNoteReason(creditReason);
+		if (!check.ok) {
+			creditError = {
+				kind: 'validation',
+				message: check.message,
+				preserveKey: false,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		if (!creditConfirm) {
+			creditError = {
+				kind: 'validation',
+				message: 'Confirmez l’émission de l’avoir.',
+				preserveKey: false,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		creditCmd = beginPaymentCommand(creditCmd);
+		const key = creditCmd.idempotencyKey;
+		creditError = null;
+		try {
+			invoice = await issueCreditNote(invoice.id, { reason: check.reason, idempotencyKey: key });
+			successMessage = 'Avoir émis — facture corrigée par avoir (sans remboursement).';
+			creditCmd = completePaymentCommandSuccess();
+			closeCredit();
+		} catch (e) {
+			const classified = classifyCreditNoteError(e);
+			creditError = classified;
+			if (classified.preserveKey) {
+				creditCmd = completePaymentCommandError(creditCmd);
+			} else {
+				creditCmd = createPaymentCommandState();
+			}
+			if (classified.shouldRefresh) {
+				try {
+					await refresh();
+				} catch {
+					/* keep */
+				}
+			}
+		}
+	}
+
 	onMount(() => {
 		const raw = localStorage.getItem('medcore_token');
 		if (raw)
@@ -309,14 +389,43 @@
 						data-testid="invoice-issue"
 						onclick={issue}
 						disabled={invoice.coveragePending}>Émettre</button
-					>{/if}{#if ['DRAFT', 'ISSUED'].includes(invoice.status) && can(permissions, 'billing.cancel')}<button
+					>{/if}{#if ['DRAFT', 'ISSUED'].includes(invoice.status) && can(permissions, 'billing.cancel') && !invoice.creditNote}<button
 						class="rounded-xl border border-red-300 px-4 py-2 font-bold text-red-700"
 						data-testid="invoice-cancel"
 						onclick={cancel}>Annuler</button
+					>{/if}{#if showCreditNote}<button
+						class="rounded-xl border border-amber-400 px-4 py-2 font-bold text-amber-900"
+						data-testid="invoice-credit-note"
+						onclick={openCredit}>{CREDIT_NOTE_ACTION_LABEL}</button
 					>{/if}<button class="rounded-xl border px-4 py-2" onclick={() => print()}>Imprimer</button
 				>
 			</div>
 		</header>
+		{#if invoice.creditNote}<section
+				class="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+				data-testid="invoice-credit-note-panel"
+			>
+				<p class="text-sm font-bold text-amber-900">AVOIR ÉMIS</p>
+				<p class="mt-1 font-black" data-testid="invoice-credit-note-number">
+					{invoice.creditNote.number}
+				</p>
+				<p class="text-sm" data-testid="invoice-credit-note-amount">
+					Montant : {formatXOF(invoice.creditNote.amount)}
+				</p>
+				<p class="text-sm" data-testid="invoice-credit-note-reason">
+					Motif : {invoice.creditNote.reason}
+				</p>
+				<p class="text-sm text-slate-600" data-testid="invoice-credit-note-issued-at">
+					Émis le {new Date(invoice.creditNote.issuedAt).toLocaleString('fr-FR')}
+				</p>
+				{#if canShowCreditNoteDocument(invoice, permissions)}
+					<a
+						class="mt-3 inline-block font-bold text-amber-950 underline"
+						href={resolve(`/billing/credit-notes/${invoice.creditNote.id}`)}
+						data-testid="invoice-credit-note-link">Voir l’avoir imprimable</a
+					>
+				{/if}
+			</section>{/if}
 		{#if invoice.coveragePending}<p
 				class="rounded-xl bg-amber-50 p-3 font-bold text-amber-800"
 				data-testid="invoice-coverage-pending"
@@ -589,6 +698,69 @@
 						>{isPaymentSubmitDisabled(reverseCmd)
 							? 'Contrepassation…'
 							: REVERSAL_ACTION_LABEL}</button
+					>
+				</div>
+			</div>
+		</div>{/if}
+	{#if creditOpen && invoice}<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:hidden"
+			data-testid="invoice-credit-note-modal"
+			role="dialog"
+			aria-modal="true"
+		>
+			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
+				<h2 class="text-lg font-black text-amber-950">{CREDIT_NOTE_ACTION_LABEL}</h2>
+				<p class="text-sm text-slate-600">
+					Document correctif comptable. Cela ne rembourse pas le patient et n’annule pas un
+					encaissement.
+				</p>
+				<dl class="grid grid-cols-2 gap-2 text-sm">
+					<dt class="text-slate-500">Facture</dt>
+					<dd class="font-bold">{invoice.number}</dd>
+					<dt class="text-slate-500">Montant de l’avoir</dt>
+					<dd class="font-bold" data-testid="invoice-credit-note-modal-amount">
+						{formatXOF(creditNoteAuthoritativeAmount(invoice))}
+					</dd>
+				</dl>
+				<label class="block text-sm">
+					<span class="font-bold">Motif</span>
+					<textarea
+						class="mt-1 w-full rounded-xl border p-2"
+						rows="3"
+						bind:value={creditReason}
+						data-testid="invoice-credit-note-reason-input"></textarea>
+				</label>
+				<label class="flex items-start gap-2 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={creditConfirm}
+						data-testid="invoice-credit-note-confirm"
+					/>
+					<span
+						>Je confirme l’émission de cet avoir (correction de facture, sans remboursement).</span
+					>
+				</label>
+				{#if creditError}<p
+						class="text-sm text-amber-900"
+						data-testid="invoice-credit-note-error"
+						role="alert"
+					>
+						{creditError.message}
+					</p>{/if}
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded-xl border px-4 py-2 font-bold"
+						onclick={closeCredit}
+						data-testid="invoice-credit-note-cancel">Fermer</button
+					>
+					<button
+						type="button"
+						class="rounded-xl bg-amber-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+						onclick={submitCredit}
+						disabled={isPaymentSubmitDisabled(creditCmd)}
+						data-testid="invoice-credit-note-submit"
+						>{isPaymentSubmitDisabled(creditCmd) ? 'Émission…' : CREDIT_NOTE_ACTION_LABEL}</button
 					>
 				</div>
 			</div>

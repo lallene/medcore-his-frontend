@@ -1,5 +1,12 @@
 import { api } from '$lib/api/client';
-import type { BillableAct, BillingKPIs, Invoice, InvoicePage, Tariff } from '$lib/types/billing';
+import type {
+	BillableAct,
+	BillingKPIs,
+	CreditNote,
+	Invoice,
+	InvoicePage,
+	Tariff
+} from '$lib/types/billing';
 export const listInvoices = async (params: Record<string, string | number> = {}) =>
 	(await api.get<InvoicePage>('/api/billing/invoices', { params })).data;
 export const listPatientInvoices = async (patientId: number) =>
@@ -43,6 +50,22 @@ export const reversePayment = async (
 		)
 	).data;
 };
+/** LOT29F-B: immutable full-invoice credit note (avoir) — not a refund. */
+export const issueCreditNote = async (
+	invoiceId: number,
+	payload: { reason: string; idempotencyKey: string }
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<Invoice>(
+			`/api/billing/invoices/${invoiceId}/credit-notes`,
+			{ reason: payload.reason, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
+export const getCreditNote = async (id: number) =>
+	(await api.get<CreditNote>(`/api/billing/credit-notes/${id}`)).data;
 export const listTariffs = async () => (await api.get<Tariff[]>('/api/billing/tariffs')).data;
 export const createTariff = async (payload: Omit<Tariff, 'id' | 'currency'>) =>
 	(await api.post<Tariff>('/api/billing/tariffs', payload)).data;

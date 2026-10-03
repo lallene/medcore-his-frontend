@@ -58,6 +58,24 @@ export interface Payment {
 	reversalReason?: string | null;
 	reversedBy?: number | null;
 }
+/** LOT29F-B immutable credit note projection on invoice / document. */
+export interface CreditNote {
+	id: number;
+	number: string;
+	invoiceId: number;
+	amount: number;
+	reason: string;
+	issuedBy: number;
+	issuedAt: string;
+	createdAt: string;
+	invoiceNumber?: string;
+	invoiceGrossAmount?: number;
+	patientAmount?: number;
+	patientId?: number;
+	patientName?: string;
+	patientCode?: string;
+	issuerName?: string;
+}
 export interface Invoice {
 	id: number;
 	number: string;
@@ -75,6 +93,11 @@ export interface Invoice {
 	createdAt: string;
 	lines?: InvoiceLine[];
 	payments?: Payment[];
+	/** LOT29F-B decorations */
+	creditedAmount?: number;
+	effectivePatientAmount?: number;
+	effectiveBalanceAmount?: number;
+	creditNote?: CreditNote | null;
 }
 export interface InvoicePage {
 	data: Invoice[];
