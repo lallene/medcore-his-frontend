@@ -26,6 +26,8 @@
 		COLLECTION_PERMISSION,
 		invoiceCollectibleKind,
 		isPaymentFormSubmitDisabled,
+		canShowPaymentReceipt,
+		latestReceiptedPayment,
 		mergePaymentHistory,
 		paymentAmountErrorMessage,
 		validatePaymentAmount,
@@ -112,10 +114,14 @@
 			};
 			paymentCmd = completePaymentCommandSuccess();
 			payment.amount = updated.balanceAmount;
+			const receipted = latestReceiptedPayment(updated.payments);
 			successMessage =
 				updated.balanceAmount === 0
 					? 'Paiement enregistré — facture soldée (solde patient = 0).'
 					: `Paiement enregistré — reste patient ${formatXOF(updated.balanceAmount)}.`;
+			if (receipted?.receiptNumber) {
+				successMessage += ` Reçu ${receipted.receiptNumber} disponible.`;
+			}
 			if (updated.insuranceAmount > 0) {
 				insuranceReceivables = (
 					await listInsuranceReceivables({ search: updated.number, limit: 100 })
@@ -174,13 +180,25 @@
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="invoice-error">
 			{error}
 		</p>{/if}
-	{#if successMessage}<p
+	{#if successMessage}<div
 			class="rounded-xl bg-emerald-50 p-3 font-medium text-emerald-800"
 			data-testid="invoice-pay-success"
 			role="status"
 		>
-			{successMessage}
-		</p>{/if}
+			<p>{successMessage}</p>
+			{#if invoice}
+				{@const lastReceipt = latestReceiptedPayment(invoice.payments)}
+				{#if lastReceipt && canShowPaymentReceipt(lastReceipt, permissions)}
+					<p class="mt-2">
+						<a
+							class="font-bold text-teal-900 underline"
+							href={resolve(`/cash/receipts/${lastReceipt.receiptId}`)}
+							data-testid="invoice-pay-receipt-link">Voir le reçu {lastReceipt.receiptNumber}</a
+						>
+					</p>
+				{/if}
+			{/if}
+		</div>{/if}
 	{#if invoice}<header class="flex flex-wrap justify-between gap-4" data-testid="invoice-detail">
 			<div>
 				<p class="text-sm font-bold text-blue-700">FACTURE</p>
@@ -357,7 +375,7 @@
 							><tr
 								><th class="p-2">Date</th><th>Mode</th><th>Référence</th><th>Montant</th><th
 									>Reçu par</th
-								></tr
+								><th>Reçu</th></tr
 							></thead
 						><tbody
 							>{#each invoice.payments as p (p.id)}<tr
@@ -367,6 +385,15 @@
 										>{p.paymentMethod}</td
 									><td>{p.reference || '—'}</td><td class="font-bold">{formatXOF(p.amount)}</td><td
 										>{p.receivedBy}</td
+									><td
+										>{#if canShowPaymentReceipt(p, permissions)}<a
+												class="font-semibold text-teal-800 underline"
+												href={resolve(`/cash/receipts/${p.receiptId}`)}
+												data-testid={`invoice-payment-receipt-${p.id}`}>Voir le reçu</a
+											>{:else if p.receiptId}<span
+												class="text-slate-400"
+												data-testid={`invoice-payment-receipt-denied-${p.id}`}>Reçu</span
+											>{:else}<span class="text-slate-400">—</span>{/if}</td
 									></tr
 								>{/each}</tbody
 						>

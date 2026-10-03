@@ -17,6 +17,8 @@ export const BILLING_PAYMENT_METHODS = [
 export type BillingPaymentMethod = (typeof BILLING_PAYMENT_METHODS)[number]['value'];
 
 export const COLLECTION_PERMISSION = 'billing.payment.create';
+/** Canonical receipt read — same permission as /cash/receipts/:id (LOT29D-B). */
+export const RECEIPT_READ_PERMISSION = 'cash.receipt.read';
 
 export type CollectibleKind =
 	'payable' | 'partially_paid' | 'settled' | 'cancelled' | 'draft' | 'non_collectible';
@@ -245,8 +247,35 @@ export function mergePaymentHistory(
 
 export function paymentHistoryFingerprint(payments: Payment[] | undefined): string {
 	return (payments ?? [])
-		.map((p) => `${p.id}:${p.amount}:${p.paymentMethod}:${p.paidAt}`)
+		.map(
+			(p) =>
+				`${p.id}:${p.amount}:${p.paymentMethod}:${p.paidAt}:${p.receiptId ?? ''}:${p.receiptNumber ?? ''}`
+		)
 		.join('|');
+}
+
+export function paymentHasCanonicalReceipt(payment: Payment | undefined | null): boolean {
+	return Boolean(payment?.receiptId && payment.receiptId > 0);
+}
+
+export function canShowPaymentReceipt(
+	payment: Payment | undefined | null,
+	permissions: string[]
+): boolean {
+	return paymentHasCanonicalReceipt(payment) && can(permissions, RECEIPT_READ_PERMISSION);
+}
+
+export function receiptHref(receiptId: number): string {
+	return `/cash/receipts/${receiptId}`;
+}
+
+/** Latest payment that has a canonical receipt (authoritative list order). */
+export function latestReceiptedPayment(payments: Payment[] | undefined): Payment | null {
+	const rows = payments ?? [];
+	for (let i = rows.length - 1; i >= 0; i--) {
+		if (paymentHasCanonicalReceipt(rows[i])) return rows[i];
+	}
+	return null;
 }
 
 export function isCanonicalPaymentMethod(value: string): value is BillingPaymentMethod {

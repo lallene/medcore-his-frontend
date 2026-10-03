@@ -39,7 +39,8 @@ export interface CashReceipt {
 	paymentId: number;
 	invoiceId: number;
 	patientId: number;
-	cashSessionId: number;
+	/** Present for cash-session collection; null/absent for sessionless billing receipts. */
+	cashSessionId?: number | null;
 	amount: number;
 	paymentMethod: CashMethod;
 	externalReference: string;

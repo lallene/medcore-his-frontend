@@ -24,7 +24,9 @@
 			<span>Date</span><b>{new Date(receipt.issuedAt).toLocaleString('fr-FR')}</b><span
 				>Caissier</span
 			><b>{receipt.cashierName}</b><span>Caisse</span><b
-				>{receipt.registerCode} — {receipt.registerName}</b
+				>{receipt.registerCode
+					? `${receipt.registerCode} — ${receipt.registerName}`
+					: 'Encaissement facturation'}</b
 			><span>Patient</span><b>{receipt.patientCode} — {receipt.patientName}</b><span>Facture</span
 			><b>{receipt.invoiceNumber}</b><span>Montant facture</span><b
 				>{formatXOF(receipt.invoiceGrossAmount)}</b

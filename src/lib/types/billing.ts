@@ -47,6 +47,9 @@ export interface Payment {
 	reference?: string;
 	paidAt: string;
 	receivedBy: number;
+	/** Canonical cash_receipts id when issued (LOT29D-B). */
+	receiptId?: number | null;
+	receiptNumber?: string | null;
 }
 export interface Invoice {
 	id: number;

@@ -11,7 +11,11 @@ import {
 	isInvoiceCollectible,
 	isPaymentFormSubmitDisabled,
 	mergePaymentHistory,
+	canShowPaymentReceipt,
+	latestReceiptedPayment,
+	paymentHasCanonicalReceipt,
 	paymentHistoryFingerprint,
+	receiptHref,
 	validatePaymentAmount
 } from './collection.ts';
 import {
@@ -183,4 +187,122 @@ test('C17 payment history rendered from authoritative records', () => {
 	assert.equal(inv.payments?.length, 1);
 	assert.equal(inv.payments?.[0].paymentMethod, 'CARD');
 	assert.ok(filterInvoicesForCashier([inv], { collectibleOnly: true }).length === 1);
+});
+
+test('RF01 successful billing payment exposes receipt', () => {
+	const p: Payment = {
+		id: 9,
+		amount: 5000,
+		paymentMethod: 'CASH',
+		paidAt: '2026-10-03T10:00:00Z',
+		receivedBy: 2,
+		receiptId: 44,
+		receiptNumber: 'REC-000044'
+	};
+	assert.equal(paymentHasCanonicalReceipt(p), true);
+	assert.equal(latestReceiptedPayment([p])?.receiptNumber, 'REC-000044');
+});
+
+test('RF02 receipt action uses canonical receipt ID', () => {
+	assert.equal(receiptHref(44), '/cash/receipts/44');
+	assert.equal(
+		canShowPaymentReceipt(
+			{ id: 1, amount: 1, paymentMethod: 'CASH', paidAt: '', receivedBy: 1, receiptId: 44 },
+			['cash.receipt.read']
+		),
+		true
+	);
+});
+
+test('RF03 payment replay does not duplicate receipt UI', () => {
+	const a: Payment = {
+		id: 5,
+		amount: 2000,
+		paymentMethod: 'CASH',
+		paidAt: '2026-01-01T10:00:00Z',
+		receivedBy: 1,
+		receiptId: 7,
+		receiptNumber: 'REC-000007'
+	};
+	const merged = mergePaymentHistory([a], [a, a]);
+	assert.equal(merged.length, 1);
+	assert.equal(paymentHistoryFingerprint(merged), paymentHistoryFingerprint([a]));
+});
+
+test('RF04 two payment records can expose two different receipts', () => {
+	const payments: Payment[] = [
+		{
+			id: 1,
+			amount: 1000,
+			paymentMethod: 'CASH',
+			paidAt: 'a',
+			receivedBy: 1,
+			receiptId: 10,
+			receiptNumber: 'REC-000010'
+		},
+		{
+			id: 2,
+			amount: 2000,
+			paymentMethod: 'CARD',
+			paidAt: 'b',
+			receivedBy: 1,
+			receiptId: 11,
+			receiptNumber: 'REC-000011'
+		}
+	];
+	assert.equal(payments[0].receiptId, 10);
+	assert.equal(payments[1].receiptId, 11);
+	assert.equal(latestReceiptedPayment(payments)?.receiptId, 11);
+});
+
+test('RF05 missing receipt handled truthfully', () => {
+	const p: Payment = { id: 3, amount: 1000, paymentMethod: 'CASH', paidAt: 'a', receivedBy: 1 };
+	assert.equal(paymentHasCanonicalReceipt(p), false);
+	assert.equal(canShowPaymentReceipt(p, ['cash.receipt.read']), false);
+	assert.equal(latestReceiptedPayment([p]), null);
+});
+
+test('RF06 unauthorized receipt action hidden', () => {
+	const p: Payment = {
+		id: 4,
+		amount: 1000,
+		paymentMethod: 'CASH',
+		paidAt: 'a',
+		receivedBy: 1,
+		receiptId: 12,
+		receiptNumber: 'REC-000012'
+	};
+	assert.equal(canShowPaymentReceipt(p, ['billing.payment.create']), false);
+	assert.equal(canShowPaymentReceipt(p, ['*']), true);
+});
+
+test('RF07 reprint uses existing receipt not create', () => {
+	const p: Payment = {
+		id: 5,
+		amount: 1000,
+		paymentMethod: 'CASH',
+		paidAt: 'a',
+		receivedBy: 1,
+		receiptId: 15,
+		receiptNumber: 'REC-000015'
+	};
+	assert.equal(receiptHref(p.receiptId!), '/cash/receipts/15');
+	assert.equal(latestReceiptedPayment([p, p])?.receiptId, 15);
+});
+
+test('RF08 receipt view remains financial-only', () => {
+	const p: Payment = {
+		id: 6,
+		amount: 1000,
+		paymentMethod: 'CASH',
+		paidAt: 'a',
+		receivedBy: 1,
+		receiptId: 16,
+		receiptNumber: 'REC-000016'
+	};
+	const keys = Object.keys(p);
+	assert.equal(keys.includes('diagnosis'), false);
+	assert.equal(keys.includes('clinicalNotes'), false);
+	assert.ok(keys.includes('amount'));
+	assert.ok(keys.includes('paymentMethod'));
 });
