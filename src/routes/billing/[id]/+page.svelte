@@ -478,7 +478,7 @@
 									><td
 										>{#if paymentIsReversed(p)}<span
 												class="font-semibold text-amber-800"
-												data-testid={`invoice-payment-reversed-${p.id}`}>Contrepassé</span
+												data-testid={`invoice-reversed-${p.id}`}>Contrepassé</span
 											>{:else}<span class="text-slate-500">Effectif</span>{/if}</td
 									><td
 										>{#if canShowPaymentReceipt(p, permissions)}<a
@@ -493,7 +493,7 @@
 										>{#if canShowReversePayment(p, permissions)}<button
 												type="button"
 												class="text-sm font-semibold text-amber-900 underline"
-												data-testid={`invoice-payment-reverse-${p.id}`}
+												data-testid={`invoice-reverse-${p.id}`}
 												onclick={() => openReverse(p)}>{REVERSAL_ACTION_LABEL}</button
 											>{:else}<span class="text-slate-400">—</span>{/if}</td
 									></tr

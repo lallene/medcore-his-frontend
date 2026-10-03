@@ -156,7 +156,7 @@ test.describe('LOT29D-C payment reversal', () => {
 
 		await expect(page.getByTestId(`invoice-payment-${payment.id}`)).toBeVisible();
 		await expect(page.getByTestId(`invoice-receipt-${payment.id}`)).toBeVisible();
-		await page.getByTestId(`invoice-payment-reverse-${payment.id}`).click();
+		await page.getByTestId(`invoice-reverse-${payment.id}`).click();
 		await expect(page.getByTestId('invoice-reverse-modal')).toBeVisible();
 		await expect(page.getByTestId('invoice-reverse-amount')).toContainText('22');
 		await page.getByTestId('invoice-reverse-reason').fill('Erreur de saisie QA-29D-C-001');
@@ -164,7 +164,7 @@ test.describe('LOT29D-C payment reversal', () => {
 		await page.getByTestId('invoice-reverse-submit').click();
 
 		await expect(page.getByTestId('invoice-reverse-modal')).toBeHidden({ timeout: 20_000 });
-		await expect(page.getByTestId(`invoice-payment-reversed-${payment.id}`)).toBeVisible({
+		await expect(page.getByTestId(`invoice-reversed-${payment.id}`)).toBeVisible({
 			timeout: 20_000
 		});
 		await expect(page.getByTestId(`invoice-payment-${payment.id}`)).toBeVisible();
