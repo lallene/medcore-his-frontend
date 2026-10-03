@@ -1,4 +1,5 @@
 export type CashMethod = 'CASH' | 'CARD' | 'MOBILE_MONEY' | 'BANK_TRANSFER' | 'CHECK';
+export type VarianceKind = 'BALANCED' | 'SHORTAGE' | 'SURPLUS';
 export interface CashRegister {
 	id: number;
 	code: string;
@@ -16,13 +17,13 @@ export interface CashSession {
 	status: 'OPEN' | 'CLOSED';
 	closedBy?: number;
 	closedAt?: string;
-	expectedCashAmount?: number;
-	countedCashAmount?: number;
-	cashDifference?: number;
+	expectedCashAmount?: number | null;
+	countedCashAmount?: number | null;
+	cashDifference?: number | null;
 	closingNote: string;
 	register: CashRegister;
 }
-/** Backend-authoritative session financial projection (LOT29E-C). FE formats only. */
+/** Backend-authoritative session financial projection (LOT29E-C / 29E-D). FE formats only. */
 export interface SessionSummary {
 	session: CashSession;
 	cashCollected: number;
@@ -36,6 +37,25 @@ export interface SessionSummary {
 	totalPayments: number;
 	operationCount: number;
 	expectedCash: number;
+	closingProofComplete: boolean;
+	finalReconciliation: boolean;
+	recoveryClose: boolean;
+	varianceKind?: VarianceKind | '';
+}
+export interface SessionListPage {
+	items: CashSession[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+}
+export interface SessionListQuery {
+	status?: 'OPEN' | 'CLOSED' | '';
+	cashRegisterId?: number;
+	dateFrom?: string;
+	dateTo?: string;
+	page?: number;
+	limit?: number;
 }
 export interface CashReceipt {
 	id: number;

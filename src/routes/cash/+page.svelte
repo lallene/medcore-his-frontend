@@ -112,7 +112,8 @@
 				const invoiceId = Number(page.url.searchParams.get('invoiceId') || 0);
 				if (invoiceId) selected = invoices.find((invoice) => invoice.id === invoiceId) ?? null;
 			} else if (canRecoverCloseSession(permissions)) {
-				openSessions = (await listSessions()).filter((x) => x.status === 'OPEN');
+				const hist = await listSessions({ status: 'OPEN', limit: 50 });
+				openSessions = hist.items;
 			} else {
 				openSessions = [];
 			}
@@ -228,9 +229,16 @@
 </script>
 
 <div class="space-y-5 p-6" data-testid="cash-workspace">
-	<header>
-		<p class="text-xs font-black uppercase text-emerald-700">Finance</p>
-		<h1 class="text-3xl font-black">Caisse</h1>
+	<header class="flex flex-wrap items-end justify-between gap-3">
+		<div>
+			<p class="text-xs font-black uppercase text-emerald-700">Finance</p>
+			<h1 class="text-3xl font-black">Caisse</h1>
+		</div>
+		<a
+			class="text-sm font-bold text-blue-700 print:hidden"
+			href={resolve('/cash/sessions')}
+			data-testid="cash-history-link">Historique des sessions</a
+		>
 	</header>
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700" data-testid="cash-error" role="alert">
 			{error}
@@ -263,6 +271,11 @@
 					>{formatXOF(closeResult.session.cashDifference ?? 0)}</b
 				>
 			</p>
+			<a
+				class="mt-2 inline-block text-sm font-bold text-emerald-900 underline print:hidden"
+				href={resolve(`/cash/sessions/${closeResult.session.id}`)}
+				data-testid="cash-close-recon-link">Voir le rapprochement</a
+			>
 		</section>{/if}
 	{#if session}
 		<section class="rounded-2xl border bg-white p-5">

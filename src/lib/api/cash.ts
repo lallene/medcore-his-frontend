@@ -2,8 +2,9 @@ import { api } from '$lib/api/client';
 import type {
 	CashReceipt,
 	CashRegister,
-	CashSession,
 	SessionSummary,
+	SessionListPage,
+	SessionListQuery,
 	CashMethod
 } from '$lib/types/cash';
 export const listRegisters = async () =>
@@ -16,7 +17,17 @@ export const createRegister = async (payload: {
 }) => (await api.post<CashRegister>('/api/cash/registers', payload)).data;
 export const currentSession = async () =>
 	(await api.get<SessionSummary | null>('/api/cash/sessions/current')).data;
-export const listSessions = async () => (await api.get<CashSession[]>('/api/cash/sessions')).data;
+export const listSessions = async (query: SessionListQuery = {}) => {
+	const params = new URLSearchParams();
+	if (query.status) params.set('status', query.status);
+	if (query.cashRegisterId) params.set('cashRegisterId', String(query.cashRegisterId));
+	if (query.dateFrom) params.set('dateFrom', query.dateFrom);
+	if (query.dateTo) params.set('dateTo', query.dateTo);
+	params.set('page', String(query.page ?? 1));
+	params.set('limit', String(query.limit ?? 20));
+	const qs = params.toString();
+	return (await api.get<SessionListPage>(`/api/cash/sessions?${qs}`)).data;
+};
 export const getSession = async (id: number) =>
 	(await api.get<SessionSummary>(`/api/cash/sessions/${id}`)).data;
 export const openSession = async (payload: {

@@ -1,4 +1,4 @@
-import type { CashMethod, CashSession, SessionSummary } from '$lib/types/cash';
+import type { CashMethod, CashSession, SessionSummary, VarianceKind } from '$lib/types/cash';
 export const methods: { value: CashMethod; label: string }[] = [
 	{ value: 'CASH', label: 'Espèces' },
 	{ value: 'CARD', label: 'Carte bancaire' },
@@ -9,6 +9,12 @@ export const methods: { value: CashMethod; label: string }[] = [
 export const needsReference = (m: CashMethod) => m === 'BANK_TRANSFER' || m === 'CHECK';
 export const needsOperator = (m: CashMethod) => m === 'MOBILE_MONEY';
 export const CLOSE_ANY_PERMISSION = 'cash.session.close_any';
+
+const varianceLabels: Record<VarianceKind, string> = {
+	BALANCED: 'Caisse équilibrée',
+	SHORTAGE: 'Écart négatif (manquants)',
+	SURPLUS: 'Écart positif (excédent)'
+};
 
 /**
  * Presentation mapping of backend SessionSummary — NOT a financial calculator.
@@ -22,18 +28,44 @@ export function presentSessionSummary(s: SessionSummary | null | undefined) {
 		other: s.nonCashCollected,
 		total: s.totalCollected,
 		count: s.operationCount,
-		expected: s.expectedCash
+		expected: s.expectedCash,
+		card: s.cardPayments,
+		mobile: s.mobileMoneyPayments,
+		transfer: s.bankTransferPayments,
+		check: s.checkPayments
 	};
 }
 
-/** Closed-session closing proof from persisted snapshot fields (never recomputed). */
+/**
+ * Final CLOSED reconciliation proof from backend only.
+ * Incomplete legacy CLOSED → null (no fake zeros).
+ */
 export function presentClosedSnapshot(s: SessionSummary | null | undefined) {
 	if (!s || s.session.status !== 'CLOSED') return null;
+	if (!s.finalReconciliation || !s.closingProofComplete) return null;
+	const kind = (s.varianceKind || '') as VarianceKind | '';
 	return {
 		expected: s.session.expectedCashAmount ?? s.expectedCash,
 		counted: s.session.countedCashAmount ?? null,
-		difference: s.session.cashDifference ?? null
+		difference: s.session.cashDifference ?? null,
+		varianceKind: kind || null,
+		varianceLabel: kind ? varianceLabels[kind] : null,
+		closingNote: s.session.closingNote || '',
+		openedBy: s.session.openedBy,
+		closedBy: s.session.closedBy ?? null,
+		openedAt: s.session.openedAt,
+		closedAt: s.session.closedAt ?? null,
+		openingNote: s.session.openingNote || '',
+		recoveryClose: s.recoveryClose
 	};
+}
+
+export function canShowClosingReport(s: SessionSummary | null | undefined): boolean {
+	return Boolean(s?.finalReconciliation && s.closingProofComplete);
+}
+
+export function isIncompleteClosed(s: SessionSummary | null | undefined): boolean {
+	return Boolean(s && s.session.status === 'CLOSED' && !s.finalReconciliation);
 }
 
 /**

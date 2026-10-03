@@ -4,11 +4,13 @@ import {
 	canCloseOwnSession,
 	canCollectOnSession,
 	canRecoverCloseSession,
+	canShowClosingReport,
 	cashCan,
 	classifyCashCommandError,
 	closeNoteRequired,
 	CLOSE_ANY_PERMISSION,
 	draftCloseGap,
+	isIncompleteClosed,
 	isSessionOpener,
 	methods,
 	needsOperator,
@@ -53,8 +55,30 @@ const summary = (over: Partial<SessionSummary> = {}): SessionSummary => ({
 	totalPayments: 18000,
 	operationCount: 3,
 	expectedCash: 55000,
+	closingProofComplete: false,
+	finalReconciliation: false,
+	recoveryClose: false,
+	varianceKind: '',
 	...over
 });
+
+const closedComplete = (over: Partial<SessionSummary> = {}): SessionSummary =>
+	summary({
+		session: sess({
+			status: 'CLOSED',
+			expectedCashAmount: 30000,
+			countedCashAmount: 30000,
+			cashDifference: 0,
+			closedBy: 11,
+			closedAt: '2026-01-01T12:00:00Z',
+			closingNote: ''
+		}),
+		expectedCash: 30000,
+		closingProofComplete: true,
+		finalReconciliation: true,
+		varianceKind: 'BALANCED',
+		...over
+	});
 
 test('SF01–SF06 dashboard uses backend summary fields only', () => {
 	const x = presentSessionSummary(summary());
@@ -90,28 +114,96 @@ test('SF10 error path exposes no reconstructed totals', () => {
 });
 
 test('SF11–SF14 closed snapshot from backend fields', () => {
-	const closed = summary({
+	const closed = closedComplete({
 		session: sess({
 			status: 'CLOSED',
 			expectedCashAmount: 30000,
 			countedCashAmount: 29000,
-			cashDifference: -1000
+			cashDifference: -1000,
+			closedBy: 11,
+			closedAt: '2026-01-01T12:00:00Z',
+			closingNote: 'manque'
 		}),
 		expectedCash: 30000,
-		cashCollected: 20000
+		cashCollected: 20000,
+		varianceKind: 'SHORTAGE'
 	});
 	const snap = presentClosedSnapshot(closed);
 	assert.ok(snap);
 	assert.equal(snap.expected, 30000);
 	assert.equal(snap.counted, 29000);
 	assert.equal(snap.difference, -1000);
-	// presentSessionSummary still maps expectedCash from backend (snapshot-backed).
 	assert.equal(presentSessionSummary(closed)?.expected, 30000);
 });
 
 test('SF14 draft gap is form-only and does not invent closed variance', () => {
 	assert.equal(draftCloseGap(53000, 55000), -2000);
 	assert.equal(presentClosedSnapshot(summary()), null);
+});
+
+test('RC01–RC14 reconciliation presentation from backend only', () => {
+	const balanced = closedComplete();
+	assert.equal(canShowClosingReport(balanced), true);
+	const snap = presentClosedSnapshot(balanced);
+	assert.ok(snap);
+	assert.equal(snap.varianceKind, 'BALANCED');
+	assert.equal(snap.varianceLabel, 'Caisse équilibrée');
+	assert.equal(snap.expected, 30000);
+	assert.equal(snap.counted, 30000);
+	assert.equal(snap.difference, 0);
+
+	const shortage = closedComplete({
+		session: sess({
+			status: 'CLOSED',
+			expectedCashAmount: 15000,
+			countedCashAmount: 14000,
+			cashDifference: -1000,
+			closedBy: 11,
+			closedAt: '2026-01-01T12:00:00Z',
+			closingNote: 'manque espèces'
+		}),
+		expectedCash: 15000,
+		varianceKind: 'SHORTAGE'
+	});
+	assert.equal(presentClosedSnapshot(shortage)?.varianceLabel, 'Écart négatif (manquants)');
+	assert.equal(presentClosedSnapshot(shortage)?.closingNote, 'manque espèces');
+
+	const surplus = closedComplete({
+		session: sess({
+			status: 'CLOSED',
+			expectedCashAmount: 5000,
+			countedCashAmount: 5500,
+			cashDifference: 500,
+			closedBy: 11,
+			closedAt: '2026-01-01T12:00:00Z',
+			closingNote: 'excédent'
+		}),
+		expectedCash: 5000,
+		varianceKind: 'SURPLUS'
+	});
+	assert.equal(presentClosedSnapshot(surplus)?.varianceKind, 'SURPLUS');
+
+	const recovery = closedComplete({
+		session: sess({
+			status: 'CLOSED',
+			openedBy: 11,
+			closedBy: 99,
+			expectedCashAmount: 1000,
+			countedCashAmount: 1000,
+			cashDifference: 0,
+			closedAt: '2026-01-01T12:00:00Z',
+			closingNote: 'récupération'
+		}),
+		expectedCash: 1000,
+		recoveryClose: true
+	});
+	assert.equal(presentClosedSnapshot(recovery)?.recoveryClose, true);
+	assert.equal(presentClosedSnapshot(recovery)?.closedBy, 99);
+	assert.equal(presentClosedSnapshot(recovery)?.openedBy, 11);
+
+	assert.equal(canShowClosingReport(summary()), false);
+	assert.equal(isIncompleteClosed(summary({ session: sess({ status: 'CLOSED' }) })), true);
+	assert.equal(presentClosedSnapshot(summary({ session: sess({ status: 'CLOSED' }) })), null);
 });
 
 test('SF15 mixed payment methods map from backend breakdown fields', () => {
