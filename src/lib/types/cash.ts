@@ -37,10 +37,30 @@ export interface SessionSummary {
 	totalPayments: number;
 	operationCount: number;
 	expectedCash: number;
+	/** LOT29F-C — physical cash journal totals (not revenue). Backend-authoritative. */
+	cashMovementIn: number;
+	cashMovementOut: number;
+	netCashMovement: number;
 	closingProofComplete: boolean;
 	finalReconciliation: boolean;
 	recoveryClose: boolean;
 	varianceKind?: VarianceKind | '';
+}
+export type CashMovementDirection = 'IN' | 'OUT';
+export type CashMovementType = 'MANUAL_IN' | 'MANUAL_OUT';
+/** Append-only physical cash journal entry (not a Payment / Refund). */
+export interface CashMovement {
+	id: number;
+	cashSessionId: number;
+	direction: CashMovementDirection;
+	type: CashMovementType;
+	amount: number;
+	reason: string;
+	referenceType?: string;
+	referenceId?: number | null;
+	createdBy: number;
+	occurredAt: string;
+	createdAt: string;
 }
 export interface SessionListPage {
 	items: CashSession[];

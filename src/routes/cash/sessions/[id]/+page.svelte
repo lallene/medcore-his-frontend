@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { getSession, sessionJournal } from '$lib/api/cash';
+	import { getSession, listMovements, sessionJournal } from '$lib/api/cash';
 	import { formatXOF } from '$lib/components/billing/state';
 	import {
 		canShowClosingReport,
@@ -11,10 +11,12 @@
 		presentClosedSnapshot,
 		presentSessionSummary
 	} from '$lib/components/cash/state';
-	import type { CashReceipt, SessionSummary } from '$lib/types/cash';
+	import { MOVEMENT_IN_LABEL, MOVEMENT_OUT_LABEL } from '$lib/components/cash/movement';
+	import type { CashMovement, CashReceipt, SessionSummary } from '$lib/types/cash';
 
 	let session = $state<SessionSummary | null>(null),
 		rows = $state<CashReceipt[]>([]),
+		movements = $state<CashMovement[]>([]),
 		loading = $state(true),
 		error = $state('');
 	const kpis = $derived(presentSessionSummary(session));
@@ -26,13 +28,16 @@
 		loading = true;
 		error = '';
 		try {
-			[session, rows] = await Promise.all([
-				getSession(Number(page.params.id)),
-				sessionJournal(Number(page.params.id)).catch(() => [] as CashReceipt[])
+			const id = Number(page.params.id);
+			[session, rows, movements] = await Promise.all([
+				getSession(id),
+				sessionJournal(id).catch(() => [] as CashReceipt[]),
+				listMovements(id).catch(() => [] as CashMovement[])
 			]);
 		} catch (e) {
 			session = null;
 			rows = [];
+			movements = [];
 			error = e instanceof Error ? e.message : 'Résumé de session indisponible';
 		} finally {
 			loading = false;
@@ -67,12 +72,18 @@
 			</p>
 			<div class="grid gap-3 md:grid-cols-4" data-testid="cash-session-summary">
 				<p data-testid="cash-session-opening">Fond <b>{formatXOF(kpis.opening)}</b></p>
-				<p data-testid="cash-session-cash">Espèces <b>{formatXOF(kpis.cash)}</b></p>
+				<p data-testid="cash-session-cash">Espèces encaissées <b>{formatXOF(kpis.cash)}</b></p>
+				<p data-testid="cash-session-movement-in">
+					Entrées de caisse <b>{formatXOF(kpis.movementIn)}</b>
+				</p>
+				<p data-testid="cash-session-movement-out">
+					Sorties de caisse <b>{formatXOF(kpis.movementOut)}</b>
+				</p>
 				<p data-testid="cash-session-other">Autres <b>{formatXOF(kpis.other)}</b></p>
-				<p data-testid="cash-session-total">Total <b>{formatXOF(kpis.total)}</b></p>
+				<p data-testid="cash-session-total">Total encaissé <b>{formatXOF(kpis.total)}</b></p>
 				<p data-testid="cash-session-count">Opérations <b>{kpis.count}</b></p>
 				<p data-testid="cash-session-expected">
-					Espèces théoriques <b>{formatXOF(kpis.expected)}</b>
+					Espèces attendues <b>{formatXOF(kpis.expected)}</b>
 				</p>
 			</div>
 		{/if}
@@ -123,8 +134,8 @@
 				<section class="mb-4" data-testid="cash-recon-collections">
 					<h2 class="font-black">Encaissements</h2>
 					<p class="text-sm text-slate-600">
-						Le total encaissé n’inclut pas le fond de caisse. Les espèces attendues en caisse
-						incluent le fond + espèces encaissées uniquement.
+						Le total encaissé n’inclut pas le fond de caisse ni les mouvements de caisse. Les
+						espèces attendues = fond + espèces encaissées + entrées − sorties (serveur).
 					</p>
 					<div class="mt-2 grid gap-2 md:grid-cols-3">
 						<p data-testid="cash-recon-cash">Espèces encaissées <b>{formatXOF(kpis.cash)}</b></p>
@@ -141,6 +152,21 @@
 						<li>{methodLabel('BANK_TRANSFER')} : {formatXOF(kpis.transfer)}</li>
 						<li>{methodLabel('CHECK')} : {formatXOF(kpis.check)}</li>
 					</ul>
+				</section>
+
+				<section class="mb-4" data-testid="cash-recon-movements">
+					<h2 class="font-black">Mouvements de caisse</h2>
+					<div class="mt-2 grid gap-2 md:grid-cols-3">
+						<p data-testid="cash-recon-movement-in">
+							Entrées de caisse <b>{formatXOF(kpis.movementIn)}</b>
+						</p>
+						<p data-testid="cash-recon-movement-out">
+							Sorties de caisse <b>{formatXOF(kpis.movementOut)}</b>
+						</p>
+						<p data-testid="cash-recon-net-movement">
+							Net mouvements <b>{formatXOF(kpis.netMovement)}</b>
+						</p>
+					</div>
 				</section>
 
 				<section
@@ -188,7 +214,7 @@
 		{/if}
 
 		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-journal">
-			<h2 class="border-b p-3 font-black">Journal des opérations (documentaire)</h2>
+			<h2 class="border-b p-3 font-black">Journal des encaissements (documentaire)</h2>
 			{#each rows as r (r.id)}<a
 					class="grid gap-2 border-b p-3 md:grid-cols-4"
 					href={resolve(`/cash/receipts/${r.id}`)}
@@ -196,6 +222,18 @@
 						>{formatXOF(r.amount)}</b
 					></a
 				>{:else}<p class="p-3 text-slate-500">Aucune opération.</p>{/each}
+		</section>
+		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-movements">
+			<h2 class="border-b p-3 font-black">Journal des mouvements de caisse</h2>
+			{#each movements as m (m.id)}<div
+					class="grid gap-2 border-b p-3 md:grid-cols-4"
+					data-testid="cash-session-movement-row"
+				>
+					<span>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</span>
+					<span>{new Date(m.occurredAt).toLocaleString('fr-FR')}</span>
+					<span class="truncate">{m.reason}</span>
+					<b>{formatXOF(m.amount)}</b>
+				</div>{:else}<p class="p-3 text-slate-500">Aucun mouvement de caisse.</p>{/each}
 		</section>
 	{/if}
 </div>

@@ -7,8 +7,10 @@
 	import {
 		cashPayment,
 		closeSession,
+		createMovement,
 		createRegister,
 		currentSession,
+		listMovements,
 		listRegisters,
 		listSessions,
 		openSession,
@@ -37,6 +39,16 @@
 		isSessionSubmitDisabled
 	} from '$lib/components/cash/session-command';
 	import {
+		canShowCreateMovement,
+		classifyMovementError,
+		MOVEMENT_IN_LABEL,
+		MOVEMENT_OUT_LABEL,
+		movementTypeForDirection,
+		validateMovementAmount,
+		validateMovementReason,
+		warnOutExceedsExpected
+	} from '$lib/components/cash/movement';
+	import {
 		beginPaymentCommand,
 		completePaymentCommandError,
 		completePaymentCommandSuccess,
@@ -44,6 +56,8 @@
 		isPaymentSubmitDisabled
 	} from '$lib/components/billing/payment-command';
 	import type {
+		CashMovement,
+		CashMovementDirection,
 		CashReceipt,
 		CashRegister,
 		CashMethod,
@@ -54,6 +68,7 @@
 	let session = $state<SessionSummary | null>(null),
 		registers = $state<CashRegister[]>([]),
 		journal = $state<CashReceipt[]>([]),
+		movements = $state<CashMovement[]>([]),
 		invoices = $state<Invoice[]>([]),
 		error = $state(''),
 		summaryLoading = $state(true),
@@ -76,7 +91,14 @@
 	let paymentCmd = $state(createPaymentCommandState());
 	let openCmd = $state(createSessionCommandState('cash-open'));
 	let closeCmd = $state(createSessionCommandState('cash-close'));
+	let moveCmd = $state(createSessionCommandState('cash-move'));
 	let closing = $state({ countedCashAmount: 0, note: '' });
+	let movementForm = $state({
+		direction: 'IN' as CashMovementDirection,
+		amount: 0,
+		reason: '',
+		confirm: false
+	});
 	const kpis = $derived(presentSessionSummary(session));
 	const filtered = $derived(
 		invoices.filter(
@@ -92,6 +114,14 @@
 		session ? canCloseOwnSession(session.session, userId, permissions) : false
 	);
 	const showRecovery = $derived(!session && canRecoverCloseSession(permissions));
+	const canCreateMovement = $derived(
+		session ? canShowCreateMovement(session.session, permissions) : false
+	);
+	const outWarn = $derived(
+		session
+			? warnOutExceedsExpected(movementForm.direction, movementForm.amount, session.expectedCash)
+			: null
+	);
 
 	async function refresh() {
 		summaryLoading = true;
@@ -100,8 +130,9 @@
 			[registers, session] = await Promise.all([listRegisters(), currentSession()]);
 			closeResult = null;
 			if (session) {
-				[journal, invoices] = await Promise.all([
+				[journal, movements, invoices] = await Promise.all([
 					sessionJournal(session.session.id),
+					listMovements(session.session.id).catch(() => [] as CashMovement[]),
 					listInvoices({ limit: 100 }).then((x) =>
 						x.data.filter((i) => ['ISSUED', 'PARTIALLY_PAID'].includes(i.status))
 					)
@@ -112,14 +143,17 @@
 				const invoiceId = Number(page.url.searchParams.get('invoiceId') || 0);
 				if (invoiceId) selected = invoices.find((invoice) => invoice.id === invoiceId) ?? null;
 			} else if (canRecoverCloseSession(permissions)) {
+				movements = [];
 				const hist = await listSessions({ status: 'OPEN', limit: 50 });
 				openSessions = hist.items;
 			} else {
+				movements = [];
 				openSessions = [];
 			}
 		} catch (e) {
 			session = null;
 			journal = [];
+			movements = [];
 			summaryError = e instanceof Error ? e.message : 'Résumé de caisse indisponible';
 		} finally {
 			summaryLoading = false;
@@ -213,6 +247,46 @@
 		closeCmd = createSessionCommandState('cash-close');
 		error = '';
 	}
+	async function submitMovement() {
+		if (!session || !canCreateMovement || isSessionSubmitDisabled(moveCmd)) return;
+		const amountCheck = validateMovementAmount(movementForm.amount);
+		if (!amountCheck.ok) {
+			error = amountCheck.message;
+			return;
+		}
+		const reasonCheck = validateMovementReason(movementForm.reason);
+		if (!reasonCheck.ok) {
+			error = reasonCheck.message;
+			return;
+		}
+		if (!movementForm.confirm) {
+			error = 'Confirmation obligatoire pour enregistrer le mouvement de caisse.';
+			return;
+		}
+		moveCmd = beginSessionCommand(moveCmd);
+		const key = moveCmd.idempotencyKey;
+		error = '';
+		try {
+			await createMovement(session.session.id, {
+				direction: movementForm.direction,
+				type: movementTypeForDirection(movementForm.direction),
+				amount: movementForm.amount,
+				reason: reasonCheck.reason,
+				idempotencyKey: key
+			});
+			moveCmd = completeSessionCommandSuccess('cash-move');
+			movementForm = { direction: 'IN', amount: 0, reason: '', confirm: false };
+			await refresh();
+		} catch (e) {
+			const classified = classifyMovementError(e);
+			error = classified.message;
+			if (classified.preserveKey) {
+				moveCmd = completeSessionCommandError(moveCmd);
+			} else {
+				moveCmd = createSessionCommandState('cash-move');
+			}
+		}
+	}
 	onMount(() => {
 		const raw = localStorage.getItem('medcore_token');
 		if (raw)
@@ -294,20 +368,29 @@
 			</div>
 		</section>
 		{#if kpis && !summaryError}<div
-				class="grid gap-3 md:grid-cols-3 xl:grid-cols-6"
+				class="grid gap-3 md:grid-cols-3 xl:grid-cols-4"
 				data-testid="cash-summary"
 			>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-opening">
 					<small>Fond initial</small><strong class="block">{formatXOF(kpis.opening)}</strong>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-cash">
-					<small>Espèces</small><strong class="block">{formatXOF(kpis.cash)}</strong>
+					<small>Espèces encaissées</small><strong class="block">{formatXOF(kpis.cash)}</strong>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-movement-in">
+					<small>Entrées de caisse</small><strong class="block">{formatXOF(kpis.movementIn)}</strong
+					>
+				</div>
+				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-movement-out">
+					<small>Sorties de caisse</small><strong class="block"
+						>{formatXOF(kpis.movementOut)}</strong
+					>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-other">
-					<small>Autres</small><strong class="block">{formatXOF(kpis.other)}</strong>
+					<small>Autres encaissements</small><strong class="block">{formatXOF(kpis.other)}</strong>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-total">
-					<small>Total</small><strong class="block">{formatXOF(kpis.total)}</strong>
+					<small>Total encaissé</small><strong class="block">{formatXOF(kpis.total)}</strong>
 				</div>
 				<div class="rounded-xl border bg-white p-3">
 					<small>Opérations</small><strong class="block" data-testid="cash-kpi-count"
@@ -315,7 +398,7 @@
 					>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-expected">
-					<small>Espèces théoriques</small><strong class="block">{formatXOF(kpis.expected)}</strong>
+					<small>Espèces attendues</small><strong class="block">{formatXOF(kpis.expected)}</strong>
 				</div>
 			</div>{/if}
 		{#if ownSession}<section class="rounded-2xl border bg-white p-5">
@@ -385,8 +468,62 @@
 			>
 				Encaissement réservé à la caissière / au caissier ouvreur de cette session.
 			</p>{/if}
+		{#if canCreateMovement}<section
+				class="rounded-2xl border bg-white p-5"
+				data-testid="cash-movement-panel"
+			>
+				<h2 class="font-black">Mouvement de caisse</h2>
+				<p class="text-sm text-slate-600">
+					Entrée / sortie physique hors encaissement. Ce n’est pas un paiement ni un remboursement.
+				</p>
+				<p class="mt-2 text-sm">
+					Espèces attendues (serveur)
+					<b data-testid="cash-movement-expected">{formatXOF(session.expectedCash)}</b>
+				</p>
+				<div class="mt-3 grid gap-3 md:grid-cols-3">
+					<select
+						class="rounded-xl border p-2"
+						bind:value={movementForm.direction}
+						data-testid="cash-movement-direction"
+					>
+						<option value="IN">{MOVEMENT_IN_LABEL}</option>
+						<option value="OUT">{MOVEMENT_OUT_LABEL}</option>
+					</select>
+					<input
+						class="rounded-xl border p-2"
+						type="number"
+						min="1"
+						bind:value={movementForm.amount}
+						placeholder="Montant"
+						data-testid="cash-movement-amount"
+					/>
+					<textarea
+						class="rounded-xl border p-2 md:col-span-3"
+						bind:value={movementForm.reason}
+						placeholder="Motif obligatoire"
+						data-testid="cash-movement-reason"></textarea>
+				</div>
+				{#if outWarn}<p class="mt-2 text-sm text-amber-800" data-testid="cash-movement-out-warn">
+						{outWarn}
+					</p>{/if}
+				<label class="mt-3 flex items-center gap-2 text-sm" data-testid="cash-movement-confirm">
+					<input type="checkbox" bind:checked={movementForm.confirm} />
+					Je confirme l’enregistrement de ce mouvement de caisse.
+				</label>
+				<button
+					class="mt-3 rounded-xl bg-slate-900 px-4 py-2 font-bold text-white disabled:opacity-40"
+					disabled={isSessionSubmitDisabled(moveCmd)}
+					data-testid="cash-movement-submit"
+					onclick={() => submitMovement()}
+					>{isSessionSubmitDisabled(moveCmd)
+						? 'Enregistrement…'
+						: movementForm.direction === 'IN'
+							? MOVEMENT_IN_LABEL
+							: MOVEMENT_OUT_LABEL}</button
+				>
+			</section>{/if}
 		<section class="rounded-2xl border bg-white p-5">
-			<h2 class="font-black">Opérations récentes</h2>
+			<h2 class="font-black">Opérations récentes (encaissements)</h2>
 			{#each journal.slice(0, 10) as r (r.id)}<a
 					class="grid gap-2 border-t py-2 md:grid-cols-4"
 					href={resolve(`/cash/receipts/${r.id}`)}
@@ -395,6 +532,21 @@
 					></a
 				>{:else}<p class="text-slate-500">Aucune opération.</p>{/each}
 		</section>
+		{#if movements.length}<section
+				class="rounded-2xl border bg-white p-5"
+				data-testid="cash-movements-list"
+			>
+				<h2 class="font-black">Mouvements de caisse</h2>
+				{#each movements as m (m.id)}<div
+						class="grid gap-2 border-t py-2 md:grid-cols-4"
+						data-testid="cash-movement-row"
+					>
+						<span>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</span>
+						<span>{m.type}</span>
+						<span class="truncate">{m.reason}</span>
+						<b>{formatXOF(m.amount)}</b>
+					</div>{/each}
+			</section>{/if}
 		{#if canCloseOwn}<section
 				class="rounded-2xl border bg-white p-5"
 				data-testid="cash-close-panel"

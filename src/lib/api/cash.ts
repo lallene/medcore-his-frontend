@@ -1,5 +1,8 @@
 import { api } from '$lib/api/client';
 import type {
+	CashMovement,
+	CashMovementDirection,
+	CashMovementType,
 	CashReceipt,
 	CashRegister,
 	SessionSummary,
@@ -82,3 +85,26 @@ export const cashPayment = async (
 };
 export const getReceipt = async (id: number) =>
 	(await api.get<CashReceipt>(`/api/cash/receipts/${id}`)).data;
+export const listMovements = async (sessionId: number) =>
+	(await api.get<CashMovement[]>(`/api/cash/sessions/${sessionId}/movements`)).data;
+export const getMovement = async (id: number) =>
+	(await api.get<CashMovement>(`/api/cash/movements/${id}`)).data;
+export const createMovement = async (
+	sessionId: number,
+	payload: {
+		direction: CashMovementDirection;
+		type: CashMovementType;
+		amount: number;
+		reason: string;
+		idempotencyKey: string;
+	}
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<CashMovement>(
+			`/api/cash/sessions/${sessionId}/movements`,
+			{ ...payload, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
