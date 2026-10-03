@@ -23,11 +23,30 @@ export const openSession = async (payload: {
 	cashRegisterId: number;
 	openingFloat: number;
 	note?: string;
-}) => (await api.post<SessionSummary>('/api/cash/sessions/open', payload)).data;
+	idempotencyKey: string;
+}) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<SessionSummary>(
+			'/api/cash/sessions/open',
+			{ ...payload, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
 export const closeSession = async (
 	id: number,
-	payload: { countedCashAmount: number; note?: string }
-) => (await api.post<SessionSummary>(`/api/cash/sessions/${id}/close`, payload)).data;
+	payload: { countedCashAmount: number; note?: string; idempotencyKey: string }
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<SessionSummary>(
+			`/api/cash/sessions/${id}/close`,
+			{ ...payload, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
 export const sessionJournal = async (id: number) =>
 	(await api.get<CashReceipt[]>(`/api/cash/sessions/${id}/journal`)).data;
 export const cashPayment = async (
