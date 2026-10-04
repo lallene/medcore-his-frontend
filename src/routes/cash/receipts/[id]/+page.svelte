@@ -26,6 +26,10 @@
 					{#if receipt.paymentReversedAt}<span class="block text-sm font-semibold"
 							>{new Date(receipt.paymentReversedAt).toLocaleString('fr-FR')}</span
 						>{/if}
+					{#if receipt.postCloseCorrection}<span
+							class="mt-1 block text-sm font-semibold"
+							data-testid="receipt-post-close-correction">Correction postérieure à la clôture</span
+						>{/if}
 				</p>{/if}
 			<p class="text-xl font-black">{receipt.receiptNumber}</p>
 		</header>

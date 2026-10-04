@@ -107,4 +107,6 @@ export interface CashReceipt {
 	/** LOT29D-C: underlying payment was fully reversed. */
 	paymentReversed?: boolean;
 	paymentReversedAt?: string | null;
+	/** LOT29F-E′: reversal after session close (derived). */
+	postCloseCorrection?: boolean;
 }

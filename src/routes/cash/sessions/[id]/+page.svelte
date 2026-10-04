@@ -211,6 +211,24 @@
 							Clôture effectuée par un autre utilisateur autorisé.
 						</p>{/if}
 				</section>
+				{#if rows.some((r) => r.postCloseCorrection)}
+					<section
+						class="mb-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4"
+						data-testid="cash-recon-post-close"
+					>
+						<h2 class="font-black">Corrections postérieures à la clôture</h2>
+						<p class="text-sm text-slate-600">
+							Informations documentaires — les totaux de clôture ci-dessus restent inchangés.
+						</p>
+						<ul class="mt-2 space-y-1 text-sm">
+							{#each rows.filter((r) => r.postCloseCorrection) as r (r.id)}
+								<li data-testid={`cash-recon-post-close-${r.id}`}>
+									{r.receiptNumber} — {formatXOF(r.amount)} — Correction postérieure
+								</li>
+							{/each}
+						</ul>
+					</section>
+				{/if}
 			</div>
 			<button
 				class="rounded-xl bg-slate-900 px-4 py-2 font-bold text-white print:hidden"
@@ -222,11 +240,15 @@
 		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-journal">
 			<h2 class="border-b p-3 font-black">Journal des encaissements (documentaire)</h2>
 			{#each rows as r (r.id)}<a
-					class="grid gap-2 border-b p-3 md:grid-cols-4"
+					class="grid gap-2 border-b p-3 md:grid-cols-5"
 					href={resolve(`/cash/receipts/${r.id}`)}
 					><b>{r.receiptNumber}</b><span>{r.invoiceNumber}</span><span>{r.paymentMethod}</span><b
 						>{formatXOF(r.amount)}</b
-					></a
+					>{#if r.postCloseCorrection}<span
+							class="text-xs font-semibold text-amber-900"
+							data-testid={`cash-journal-post-close-${r.id}`}>Correction postérieure</span
+						>{:else if r.paymentReversed}<span class="text-xs text-amber-800">Contrepassé</span
+						>{:else}<span></span>{/if}</a
 				>{:else}<p class="p-3 text-slate-500">Aucune opération.</p>{/each}
 		</section>
 		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-movements">

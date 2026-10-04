@@ -40,7 +40,9 @@
 		latestReceiptedPayment,
 		mergePaymentHistory,
 		paymentAmountErrorMessage,
+		paymentIsPostCloseCorrection,
 		paymentIsReversed,
+		POST_CLOSE_CORRECTION_LABEL,
 		REVERSAL_ACTION_LABEL,
 		validateReversalReason,
 		validatePaymentAmount,
@@ -589,7 +591,11 @@
 										>{#if paymentIsReversed(p)}<span
 												class="font-semibold text-amber-800"
 												data-testid={`invoice-reversed-${p.id}`}>Contrepassé</span
-											>{:else}<span class="text-slate-500">Effectif</span>{/if}</td
+											>{#if paymentIsPostCloseCorrection(p)}<span
+													class="mt-1 block text-xs font-semibold text-amber-900"
+													data-testid={`invoice-post-close-${p.id}`}
+													>{POST_CLOSE_CORRECTION_LABEL}</span
+												>{/if}{:else}<span class="text-slate-500">Effectif</span>{/if}</td
 									><td
 										>{#if canShowPaymentReceipt(p, permissions)}<a
 												class="font-semibold text-teal-800 underline"

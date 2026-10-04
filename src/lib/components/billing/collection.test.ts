@@ -22,6 +22,8 @@ import {
 	REVERSAL_ACTION_LABEL,
 	REVERSAL_PERMISSION,
 	cashSessionReversalWarning,
+	paymentIsPostCloseCorrection,
+	POST_CLOSE_CORRECTION_LABEL,
 	usesRefundWording,
 	validatePaymentAmount,
 	validateReversalReason
@@ -437,7 +439,7 @@ test('FR14 multiple payments only target selected payment', () => {
 	assert.equal(canShowReversePayment(b, [REVERSAL_PERMISSION]), false);
 });
 
-test('RCF01 OPEN CASH session payment can show reversal', () => {
+test('RCF01 / PCF02 OPEN CASH session payment can show reversal', () => {
 	assert.equal(
 		canShowReversePayment(
 			pay({ cashSessionId: 9, paymentMethod: 'CASH', cashSessionStatus: 'OPEN' }),
@@ -447,17 +449,30 @@ test('RCF01 OPEN CASH session payment can show reversal', () => {
 	);
 });
 
-test('RCF02 CLOSED session payment not presented as supported', () => {
+test('PCF01 CLOSED CASH payment eligible for authorized reversal', () => {
 	assert.equal(
 		canShowReversePayment(
 			pay({ cashSessionId: 9, paymentMethod: 'CASH', cashSessionStatus: 'CLOSED' }),
 			[REVERSAL_PERMISSION]
 		),
-		false
+		true
 	);
 });
 
-test('RCF03 non-CASH session payment not presented as supported', () => {
+test('PCF03–PCF06 CLOSED non-CASH unsupported', () => {
+	for (const method of ['CARD', 'MOBILE_MONEY', 'BANK_TRANSFER', 'CHECK'] as const) {
+		assert.equal(
+			canShowReversePayment(
+				pay({ cashSessionId: 9, paymentMethod: method, cashSessionStatus: 'CLOSED' }),
+				[REVERSAL_PERMISSION]
+			),
+			false,
+			method
+		);
+	}
+});
+
+test('RCF03 non-CASH OPEN session payment not presented as supported', () => {
 	assert.equal(
 		canShowReversePayment(
 			pay({ cashSessionId: 9, paymentMethod: 'CARD', cashSessionStatus: 'OPEN' }),
@@ -471,7 +486,20 @@ test('RCF04 sessionless reversal unchanged', () => {
 	assert.equal(canShowReversePayment(pay({ cashSessionId: null }), [REVERSAL_PERMISSION]), true);
 });
 
-test('RCF09 no refund wording in cash session warning', () => {
+test('PCF07–PCF08 post-close warning — no physical refund', () => {
+	const w = cashSessionReversalWarning(
+		pay({ cashSessionId: 3, paymentMethod: 'CASH', cashSessionStatus: 'CLOSED' })
+	);
+	assert.ok(w);
+	assert.match(w!, /clôtur/i);
+	assert.match(w!, /reconnaissance financière|HIS/i);
+	assert.match(w!, /rapprochement historique|reste inchangé/i);
+	assert.match(w!, /pas de retour d’espèces|sortie physique/i);
+	assert.equal(usesRefundWording(w!), false);
+	assert.doesNotMatch(w!, /Remboursé|Argent retourné|Refund completed/i);
+});
+
+test('RCF09 no refund wording in OPEN cash session warning', () => {
 	const w = cashSessionReversalWarning(
 		pay({ cashSessionId: 3, paymentMethod: 'CASH', cashSessionStatus: 'OPEN' })
 	);
@@ -479,11 +507,42 @@ test('RCF09 no refund wording in cash session warning', () => {
 	assert.equal(usesRefundWording(w!), false);
 });
 
-test('RCF11–RCF12 structured conflict classification', () => {
-	const closed = classifyReversalError(
-		new Error('PAYMENT_REVERSAL_CASH_SESSION_CLOSED: La session de caisse est fermée')
+test('PCF13–PCF15 post-close correction label / no remboursé', () => {
+	assert.equal(POST_CLOSE_CORRECTION_LABEL, 'Correction postérieure à la clôture');
+	assert.equal(usesRefundWording(POST_CLOSE_CORRECTION_LABEL), false);
+	assert.equal(usesRefundWording('Encaissement contrepassé'), false);
+	assert.equal(
+		paymentIsPostCloseCorrection(pay({ reversed: true, postCloseCorrection: true })),
+		true
 	);
-	assert.match(closed.message, /fermée/i);
+	assert.equal(paymentIsPostCloseCorrection(pay({ reversed: true })), false);
+});
+
+test('PCF09 reason mandatory', () => {
+	assert.equal(validateReversalReason('').ok, false);
+	assert.equal(validateReversalReason('ab').ok, false);
+	assert.equal(validateReversalReason('Motif valide').ok, true);
+});
+
+test('PCF10 pending disabled', () => {
+	let cmd = createPaymentCommandState();
+	cmd = beginPaymentCommand(cmd);
+	assert.equal(isPaymentSubmitDisabled(cmd), true);
+});
+
+test('PCF11 idempotency reuse on preserveKey', () => {
+	let cmd = createPaymentCommandState();
+	cmd = beginPaymentCommand(cmd);
+	const key = cmd.idempotencyKey;
+	cmd = completePaymentCommandError(cmd);
+	assert.equal(cmd.idempotencyKey, key);
+});
+
+test('PCF18 no FE amount authority in reversal label', () => {
+	assert.doesNotMatch(REVERSAL_ACTION_LABEL, /\d/);
+});
+
+test('RCF11–RCF12 structured conflict classification', () => {
 	const method = classifyReversalError(
 		new Error('PAYMENT_REVERSAL_SESSION_METHOD_UNSUPPORTED: Seuls les encaissements espèces')
 	);

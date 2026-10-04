@@ -59,6 +59,8 @@ export interface Payment {
 	reversedAt?: string | null;
 	reversalReason?: string | null;
 	reversedBy?: number | null;
+	/** LOT29F-E′: derived when reversal occurred after CashSession.ClosedAt. */
+	postCloseCorrection?: boolean;
 }
 /** LOT29F-B immutable credit note projection on invoice / document. */
 export interface CreditNote {

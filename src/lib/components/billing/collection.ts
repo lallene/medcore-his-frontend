@@ -289,7 +289,7 @@ export function paymentIsReversed(payment: Payment | undefined | null): boolean 
 
 /**
  * UX gate only — backend remains authority.
- * LOT29F-D: OPEN CASH session payments may reverse; CLOSED / non-CASH session stay unsupported.
+ * LOT29F-D / E′: session-linked CASH (OPEN or CLOSED) may reverse; non-CASH session stays unsupported.
  */
 export function canShowReversePayment(
 	payment: Payment | undefined | null,
@@ -300,15 +300,22 @@ export function canShowReversePayment(
 	const sessionId = payment.cashSessionId;
 	if (sessionId != null && sessionId > 0) {
 		if (payment.paymentMethod !== 'CASH') return false;
-		if (payment.cashSessionStatus === 'CLOSED') return false;
-		// Unknown status: show for CASH; CLOSED conflict is rendered from backend.
 		return true;
 	}
 	return true;
 }
 
+export const POST_CLOSE_CORRECTION_LABEL = 'Correction postérieure à la clôture';
+
+export function paymentIsPostCloseCorrection(payment: Payment | undefined | null): boolean {
+	return Boolean(payment?.postCloseCorrection);
+}
+
 export function cashSessionReversalWarning(payment: Payment | undefined | null): string | null {
 	if (!payment?.cashSessionId || payment.cashSessionId <= 0) return null;
+	if (payment.cashSessionStatus === 'CLOSED') {
+		return 'Session déjà clôturée — cette opération corrige la reconnaissance financière HIS. Elle n’enregistre pas de retour d’espèces ni de sortie physique. Le rapprochement historique de clôture reste inchangé.';
+	}
 	return 'Cette correction ajuste la session de caisse ouverte (mouvement système). Sans retour d’espèces automatique.';
 }
 
@@ -316,11 +323,8 @@ export function sessionReversalUnsupportedReason(
 	payment: Payment | undefined | null
 ): string | null {
 	if (!payment?.cashSessionId || payment.cashSessionId <= 0) return null;
-	if (payment.cashSessionStatus === 'CLOSED') {
-		return 'Session de caisse fermée — contrepassation impossible.';
-	}
 	if (payment.paymentMethod !== 'CASH') {
-		return 'Seuls les encaissements espèces de session ouverte peuvent être contrepassés.';
+		return 'Seuls les encaissements espèces de session de caisse peuvent être contrepassés.';
 	}
 	return null;
 }
@@ -338,18 +342,11 @@ export function validateReversalReason(
 export function classifyReversalError(error: unknown): PaymentUxError {
 	const base = classifyPaymentError(error);
 	const msg = base.message;
-	if (/PAYMENT_REVERSAL_CASH_SESSION_CLOSED|session de caisse est fermée/i.test(msg)) {
-		return {
-			...base,
-			kind: 'server',
-			message: 'Session de caisse fermée — contrepassation impossible.'
-		};
-	}
 	if (/PAYMENT_REVERSAL_SESSION_METHOD_UNSUPPORTED|Seuls les encaissements espèces/i.test(msg)) {
 		return {
 			...base,
 			kind: 'server',
-			message: 'Seuls les encaissements espèces de session ouverte peuvent être contrepassés.'
+			message: 'Seuls les encaissements espèces de session de caisse peuvent être contrepassés.'
 		};
 	}
 	if (base.kind === 'permission') {
