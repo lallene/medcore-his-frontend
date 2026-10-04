@@ -41,6 +41,8 @@ export interface SessionSummary {
 	cashMovementIn: number;
 	cashMovementOut: number;
 	netCashMovement: number;
+	cashMovementManualOut?: number;
+	cashMovementReversalOut?: number;
 	closingProofComplete: boolean;
 	finalReconciliation: boolean;
 	recoveryClose: boolean;

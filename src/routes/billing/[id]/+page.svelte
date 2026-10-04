@@ -35,6 +35,7 @@
 		isPaymentFormSubmitDisabled,
 		canShowPaymentReceipt,
 		canShowReversePayment,
+		cashSessionReversalWarning,
 		classifyReversalError,
 		latestReceiptedPayment,
 		mergePaymentHistory,
@@ -645,6 +646,12 @@
 					Corrige l’effet financier HIS de cet encaissement. Cela n’enregistre pas un remboursement
 					externe.
 				</p>
+				{#if cashSessionReversalWarning(reverseTarget)}<p
+						class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950"
+						data-testid="invoice-reverse-cash-session-warn"
+					>
+						{cashSessionReversalWarning(reverseTarget)}
+					</p>{/if}
 				<dl class="grid grid-cols-2 gap-2 text-sm">
 					<dt class="text-slate-500">Montant</dt>
 					<dd class="font-bold" data-testid="invoice-reverse-amount">

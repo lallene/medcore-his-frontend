@@ -48,6 +48,8 @@ export interface Payment {
 	paidAt: string;
 	receivedBy: number;
 	cashSessionId?: number | null;
+	/** LOT29F-D: OPEN/CLOSED when payment is session-linked (backend decoration). */
+	cashSessionStatus?: 'OPEN' | 'CLOSED' | string | null;
 	/** Canonical cash_receipts id when issued (LOT29D-B). */
 	receiptId?: number | null;
 	receiptNumber?: string | null;

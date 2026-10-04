@@ -32,6 +32,8 @@ export function presentSessionSummary(s: SessionSummary | null | undefined) {
 		movementIn: s.cashMovementIn ?? 0,
 		movementOut: s.cashMovementOut ?? 0,
 		netMovement: s.netCashMovement ?? 0,
+		manualOut: s.cashMovementManualOut ?? 0,
+		reversalOut: s.cashMovementReversalOut ?? 0,
 		card: s.cardPayments,
 		mobile: s.mobileMoneyPayments,
 		transfer: s.bankTransferPayments,

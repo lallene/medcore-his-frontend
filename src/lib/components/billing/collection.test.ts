@@ -21,6 +21,7 @@ import {
 	receiptHref,
 	REVERSAL_ACTION_LABEL,
 	REVERSAL_PERMISSION,
+	cashSessionReversalWarning,
 	usesRefundWording,
 	validatePaymentAmount,
 	validateReversalReason
@@ -434,8 +435,57 @@ test('FR14 multiple payments only target selected payment', () => {
 	const b = pay({ id: 2, amount: 3000, reversed: true });
 	assert.equal(canShowReversePayment(a, [REVERSAL_PERMISSION]), true);
 	assert.equal(canShowReversePayment(b, [REVERSAL_PERMISSION]), false);
+});
+
+test('RCF01 OPEN CASH session payment can show reversal', () => {
 	assert.equal(
-		canShowReversePayment(pay({ id: 3, cashSessionId: 9 }), [REVERSAL_PERMISSION]),
+		canShowReversePayment(
+			pay({ cashSessionId: 9, paymentMethod: 'CASH', cashSessionStatus: 'OPEN' }),
+			[REVERSAL_PERMISSION]
+		),
+		true
+	);
+});
+
+test('RCF02 CLOSED session payment not presented as supported', () => {
+	assert.equal(
+		canShowReversePayment(
+			pay({ cashSessionId: 9, paymentMethod: 'CASH', cashSessionStatus: 'CLOSED' }),
+			[REVERSAL_PERMISSION]
+		),
 		false
 	);
+});
+
+test('RCF03 non-CASH session payment not presented as supported', () => {
+	assert.equal(
+		canShowReversePayment(
+			pay({ cashSessionId: 9, paymentMethod: 'CARD', cashSessionStatus: 'OPEN' }),
+			[REVERSAL_PERMISSION]
+		),
+		false
+	);
+});
+
+test('RCF04 sessionless reversal unchanged', () => {
+	assert.equal(canShowReversePayment(pay({ cashSessionId: null }), [REVERSAL_PERMISSION]), true);
+});
+
+test('RCF09 no refund wording in cash session warning', () => {
+	const w = cashSessionReversalWarning(
+		pay({ cashSessionId: 3, paymentMethod: 'CASH', cashSessionStatus: 'OPEN' })
+	);
+	assert.ok(w);
+	assert.equal(usesRefundWording(w!), false);
+});
+
+test('RCF11–RCF12 structured conflict classification', () => {
+	const closed = classifyReversalError(
+		new Error('PAYMENT_REVERSAL_CASH_SESSION_CLOSED: La session de caisse est fermée')
+	);
+	assert.match(closed.message, /fermée/i);
+	const method = classifyReversalError(
+		new Error('PAYMENT_REVERSAL_SESSION_METHOD_UNSUPPORTED: Seuls les encaissements espèces')
+	);
+	assert.match(method.message, /espèces/i);
 });

@@ -163,6 +163,12 @@
 						<p data-testid="cash-recon-movement-out">
 							Sorties de caisse <b>{formatXOF(kpis.movementOut)}</b>
 						</p>
+						<p data-testid="cash-recon-manual-out">
+							Sorties manuelles <b>{formatXOF(kpis.manualOut)}</b>
+						</p>
+						<p data-testid="cash-recon-reversal-out">
+							Sorties contrepassation <b>{formatXOF(kpis.reversalOut)}</b>
+						</p>
 						<p data-testid="cash-recon-net-movement">
 							Net mouvements <b>{formatXOF(kpis.netMovement)}</b>
 						</p>

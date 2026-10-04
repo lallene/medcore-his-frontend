@@ -287,14 +287,42 @@ export function paymentIsReversed(payment: Payment | undefined | null): boolean 
 	return Boolean(payment?.reversed);
 }
 
+/**
+ * UX gate only — backend remains authority.
+ * LOT29F-D: OPEN CASH session payments may reverse; CLOSED / non-CASH session stay unsupported.
+ */
 export function canShowReversePayment(
 	payment: Payment | undefined | null,
 	permissions: string[]
 ): boolean {
 	if (!payment || paymentIsReversed(payment)) return false;
-	// Cash-session payments are rejected server-side; hide when session id is known.
-	if (payment.cashSessionId != null && payment.cashSessionId > 0) return false;
-	return can(permissions, REVERSAL_PERMISSION);
+	if (!can(permissions, REVERSAL_PERMISSION)) return false;
+	const sessionId = payment.cashSessionId;
+	if (sessionId != null && sessionId > 0) {
+		if (payment.paymentMethod !== 'CASH') return false;
+		if (payment.cashSessionStatus === 'CLOSED') return false;
+		// Unknown status: show for CASH; CLOSED conflict is rendered from backend.
+		return true;
+	}
+	return true;
+}
+
+export function cashSessionReversalWarning(payment: Payment | undefined | null): string | null {
+	if (!payment?.cashSessionId || payment.cashSessionId <= 0) return null;
+	return 'Cette correction ajuste la session de caisse ouverte (mouvement système). Sans retour d’espèces automatique.';
+}
+
+export function sessionReversalUnsupportedReason(
+	payment: Payment | undefined | null
+): string | null {
+	if (!payment?.cashSessionId || payment.cashSessionId <= 0) return null;
+	if (payment.cashSessionStatus === 'CLOSED') {
+		return 'Session de caisse fermée — contrepassation impossible.';
+	}
+	if (payment.paymentMethod !== 'CASH') {
+		return 'Seuls les encaissements espèces de session ouverte peuvent être contrepassés.';
+	}
+	return null;
 }
 
 export function validateReversalReason(
@@ -309,6 +337,21 @@ export function validateReversalReason(
 
 export function classifyReversalError(error: unknown): PaymentUxError {
 	const base = classifyPaymentError(error);
+	const msg = base.message;
+	if (/PAYMENT_REVERSAL_CASH_SESSION_CLOSED|session de caisse est fermée/i.test(msg)) {
+		return {
+			...base,
+			kind: 'server',
+			message: 'Session de caisse fermée — contrepassation impossible.'
+		};
+	}
+	if (/PAYMENT_REVERSAL_SESSION_METHOD_UNSUPPORTED|Seuls les encaissements espèces/i.test(msg)) {
+		return {
+			...base,
+			kind: 'server',
+			message: 'Seuls les encaissements espèces de session ouverte peuvent être contrepassés.'
+		};
+	}
 	if (base.kind === 'permission') {
 		return {
 			...base,
