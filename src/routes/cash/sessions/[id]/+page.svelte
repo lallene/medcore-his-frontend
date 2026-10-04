@@ -169,6 +169,9 @@
 						<p data-testid="cash-recon-reversal-out">
 							Sorties contrepassation <b>{formatXOF(kpis.reversalOut)}</b>
 						</p>
+						<p data-testid="cash-recon-post-close-out">
+							Corrections de caisse postérieures <b>{formatXOF(kpis.postCloseCorrectionOut)}</b>
+						</p>
 						<p data-testid="cash-recon-net-movement">
 							Net mouvements <b>{formatXOF(kpis.netMovement)}</b>
 						</p>

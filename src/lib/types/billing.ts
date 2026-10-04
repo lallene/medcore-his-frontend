@@ -61,6 +61,11 @@ export interface Payment {
 	reversedBy?: number | null;
 	/** LOT29F-E′: derived when reversal occurred after CashSession.ClosedAt. */
 	postCloseCorrection?: boolean;
+	/** LOT29F-F: physical correction execution on a later OPEN host session. */
+	cashCorrectionExecuted?: boolean;
+	cashCorrectionExecutionId?: number | null;
+	cashCorrectionExecutedAt?: string | null;
+	cashCorrectionHostSessionId?: number | null;
 }
 /** LOT29F-B immutable credit note projection on invoice / document. */
 export interface CreditNote {

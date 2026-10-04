@@ -5,6 +5,8 @@ import type {
 	CashMovementType,
 	CashReceipt,
 	CashRegister,
+	CashCorrectionExecution,
+	CorrectionEligibility,
 	SessionSummary,
 	SessionListPage,
 	SessionListQuery,
@@ -103,6 +105,23 @@ export const createMovement = async (
 	return (
 		await api.post<CashMovement>(
 			`/api/cash/sessions/${sessionId}/movements`,
+			{ ...payload, idempotencyKey: key },
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
+export const getCorrectionEligibility = async (paymentId: number) =>
+	(await api.get<CorrectionEligibility>(`/api/cash/corrections/eligibility/${paymentId}`)).data;
+export const executeCashCorrection = async (payload: {
+	paymentReversalId: number;
+	hostSessionId?: number;
+	note?: string;
+	idempotencyKey: string;
+}) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<CashCorrectionExecution>(
+			'/api/cash/corrections/execute',
 			{ ...payload, idempotencyKey: key },
 			{ headers: key ? { 'Idempotency-Key': key } : undefined }
 		)

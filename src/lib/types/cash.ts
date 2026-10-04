@@ -43,6 +43,7 @@ export interface SessionSummary {
 	netCashMovement: number;
 	cashMovementManualOut?: number;
 	cashMovementReversalOut?: number;
+	cashMovementPostCloseCorrectionOut?: number;
 	closingProofComplete: boolean;
 	finalReconciliation: boolean;
 	recoveryClose: boolean;
@@ -108,5 +109,40 @@ export interface CashReceipt {
 	paymentReversed?: boolean;
 	paymentReversedAt?: string | null;
 	/** LOT29F-E′: reversal after session close (derived). */
+	postCloseCorrection?: boolean;
+	/** LOT29F-F physical execution. */
+	cashCorrectionExecuted?: boolean;
+	cashCorrectionExecutionId?: number | null;
+	cashCorrectionExecutedAt?: string | null;
+	cashCorrectionHostSessionId?: number | null;
+}
+
+export interface CashCorrectionExecution {
+	id: number;
+	paymentReversalId: number;
+	originalPaymentId: number;
+	originalCashSessionId: number;
+	hostCashSessionId: number;
+	cashRegisterId: number;
+	cashMovementId?: number | null;
+	amount: number;
+	note?: string;
+	executedBy: number;
+	executedAt: string;
+	idempotencyKey: string;
+	createdAt: string;
+}
+
+export interface CorrectionEligibility {
+	eligible: boolean;
+	unavailableReason?: string;
+	paymentId: number;
+	paymentReversalId?: number;
+	amount: number;
+	originalSessionId?: number;
+	cashRegisterId?: number;
+	hostSession?: SessionSummary | null;
+	alreadyExecuted: boolean;
+	execution?: CashCorrectionExecution | null;
 	postCloseCorrection?: boolean;
 }

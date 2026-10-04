@@ -11,7 +11,17 @@
 		payInvoice,
 		reversePayment
 	} from '$lib/api/billing';
+	import { executeCashCorrection, getCorrectionEligibility } from '$lib/api/cash';
 	import { listInsuranceReceivables } from '$lib/api/insurance-receivables';
+	import {
+		canShowExecuteCorrection,
+		classifyCorrectionError,
+		CORRECTION_EXECUTE_LABEL,
+		CORRECTION_EXECUTED_LABEL,
+		CORRECTION_EXPLAIN,
+		correctionExecuteUnavailableReason
+	} from '$lib/components/cash/correction';
+	import type { CorrectionEligibility } from '$lib/types/cash';
 	import {
 		can,
 		formatBillingActType,
@@ -79,6 +89,13 @@
 	let creditConfirm = $state(false);
 	let creditCmd = $state(createPaymentCommandState());
 	let creditError = $state<PaymentUxError | null>(null);
+	let execTarget = $state<Payment | null>(null);
+	let execElig = $state<CorrectionEligibility | null>(null);
+	let execNote = $state('');
+	let execConfirm = $state(false);
+	let execCmd = $state(createPaymentCommandState());
+	let execError = $state<string | null>(null);
+	let execLoading = $state(false);
 
 	const collectibleKind = $derived(invoice ? invoiceCollectibleKind(invoice) : null);
 	const showCollection = $derived(invoice ? canShowEncaisser(invoice, permissions) : false);
@@ -197,6 +214,76 @@
 		reverseConfirm = false;
 		reverseError = null;
 		reverseCmd = createPaymentCommandState();
+	}
+
+	async function openExecute(p: Payment) {
+		execTarget = p;
+		execNote = '';
+		execConfirm = false;
+		execError = null;
+		execCmd = createPaymentCommandState();
+		execElig = null;
+		execLoading = true;
+		try {
+			execElig = await getCorrectionEligibility(p.id);
+		} catch (e) {
+			execError = e instanceof Error ? e.message : 'Éligibilité indisponible';
+		} finally {
+			execLoading = false;
+		}
+	}
+
+	function closeExecute() {
+		execTarget = null;
+		execElig = null;
+		execNote = '';
+		execConfirm = false;
+		execError = null;
+		execCmd = createPaymentCommandState();
+	}
+
+	async function submitExecute() {
+		if (!invoice || !execTarget || !execElig?.eligible || isPaymentSubmitDisabled(execCmd)) return;
+		if (!execConfirm) {
+			execError = 'Confirmez explicitement l’exécution de la sortie de caisse.';
+			return;
+		}
+		const revId = execElig.paymentReversalId || execTarget.reversalId;
+		if (!revId) {
+			execError = 'Contrepassation introuvable.';
+			return;
+		}
+		execCmd = beginPaymentCommand(execCmd);
+		const key = execCmd.idempotencyKey;
+		execError = null;
+		try {
+			await executeCashCorrection({
+				paymentReversalId: revId,
+				hostSessionId: execElig.hostSession?.session.id,
+				note: execNote.trim() || undefined,
+				idempotencyKey: key
+			});
+			execCmd = completePaymentCommandSuccess();
+			successMessage = 'Correction de caisse exécutée — sortie enregistrée sur la session hôte.';
+			closeExecute();
+			await refresh({ resetAmount: false });
+		} catch (e) {
+			const classified = classifyCorrectionError(e);
+			execError = classified.message;
+			if (classified.preserveKey) {
+				execCmd = completePaymentCommandError(execCmd);
+			} else {
+				execCmd = createPaymentCommandState();
+			}
+			if (classified.shouldRefresh) {
+				try {
+					execElig = await getCorrectionEligibility(execTarget.id);
+					await refresh({ resetAmount: false });
+				} catch {
+					/* keep */
+				}
+			}
+		}
 	}
 
 	async function submitReverse() {
@@ -595,6 +682,10 @@
 													class="mt-1 block text-xs font-semibold text-amber-900"
 													data-testid={`invoice-post-close-${p.id}`}
 													>{POST_CLOSE_CORRECTION_LABEL}</span
+												>{/if}{#if p.cashCorrectionExecuted}<span
+													class="mt-1 block text-xs font-semibold text-emerald-900"
+													data-testid={`invoice-correction-executed-${p.id}`}
+													>{CORRECTION_EXECUTED_LABEL}</span
 												>{/if}{:else}<span class="text-slate-500">Effectif</span>{/if}</td
 									><td
 										>{#if canShowPaymentReceipt(p, permissions)}<a
@@ -605,13 +696,23 @@
 												class="text-slate-400"
 												data-testid={`invoice-receipt-denied-${p.id}`}>Reçu</span
 											>{:else}<span class="text-slate-400">—</span>{/if}</td
-									><td class="print:hidden"
+									><td class="print:hidden space-y-1"
 										>{#if canShowReversePayment(p, permissions)}<button
 												type="button"
-												class="text-sm font-semibold text-amber-900 underline"
+												class="block text-sm font-semibold text-amber-900 underline"
 												data-testid={`invoice-reverse-${p.id}`}
 												onclick={() => openReverse(p)}>{REVERSAL_ACTION_LABEL}</button
-											>{:else}<span class="text-slate-400">—</span>{/if}</td
+											>{/if}{#if paymentIsPostCloseCorrection(p) && can(permissions, 'cash.correction.execute') && !p.cashCorrectionExecuted}<button
+												type="button"
+												class="block text-sm font-semibold text-teal-900 underline"
+												data-testid={`invoice-execute-correction-${p.id}`}
+												onclick={() => openExecute(p)}>{CORRECTION_EXECUTE_LABEL}</button
+											>{:else if p.cashCorrectionExecuted}<span
+												class="text-xs text-emerald-800"
+												data-testid={`invoice-correction-done-${p.id}`}>Exécutée</span
+											>{:else if !canShowReversePayment(p, permissions)}<span class="text-slate-400"
+												>—</span
+											>{/if}</td
 									></tr
 								>{/each}</tbody
 						>
@@ -711,6 +812,82 @@
 						>{isPaymentSubmitDisabled(reverseCmd)
 							? 'Contrepassation…'
 							: REVERSAL_ACTION_LABEL}</button
+					>
+				</div>
+			</div>
+		</div>{/if}
+	{#if execTarget}<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:hidden"
+			data-testid="invoice-execute-correction-modal"
+			role="dialog"
+			aria-modal="true"
+		>
+			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
+				<h2 class="text-lg font-black text-teal-950">{CORRECTION_EXECUTE_LABEL}</h2>
+				<p class="text-sm text-slate-600" data-testid="invoice-execute-correction-explain">
+					{CORRECTION_EXPLAIN}
+				</p>
+				{#if execLoading}<p data-testid="invoice-execute-correction-loading">Chargement…</p>{/if}
+				{#if execElig}
+					{#if !execElig.eligible}<p
+							class="rounded-xl bg-amber-50 p-3 text-sm text-amber-950"
+							data-testid="invoice-execute-correction-unavailable"
+						>
+							{correctionExecuteUnavailableReason(execElig)}
+						</p>{/if}
+					{#if execElig.hostSession}<dl class="grid grid-cols-2 gap-2 text-sm">
+							<dt class="text-slate-500">Montant</dt>
+							<dd class="font-bold" data-testid="invoice-execute-correction-amount">
+								{formatXOF(execElig.amount)}
+							</dd>
+							<dt class="text-slate-500">Session hôte</dt>
+							<dd data-testid="invoice-execute-correction-host">
+								#{execElig.hostSession.session.id} — {execElig.hostSession.session.register?.code}
+							</dd>
+							<dt class="text-slate-500">Espèces attendues</dt>
+							<dd data-testid="invoice-execute-correction-expected">
+								{formatXOF(execElig.hostSession.expectedCash)}
+							</dd>
+						</dl>{/if}
+				{/if}
+				<label class="block text-sm">
+					<span class="font-bold">Note d’exécution (optionnelle)</span>
+					<textarea
+						class="mt-1 w-full rounded-xl border p-2"
+						rows="2"
+						bind:value={execNote}
+						data-testid="invoice-execute-correction-note"></textarea>
+				</label>
+				<label class="flex items-start gap-2 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={execConfirm}
+						data-testid="invoice-execute-correction-confirm"
+					/>
+					<span>Je confirme l’enregistrement de la sortie d’espèces sur la session hôte.</span>
+				</label>
+				{#if execError}<p
+						class="text-sm text-amber-900"
+						data-testid="invoice-execute-correction-error"
+						role="alert"
+					>
+						{execError}
+					</p>{/if}
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded-xl border px-4 py-2 font-bold"
+						onclick={closeExecute}
+						data-testid="invoice-execute-correction-cancel">Fermer</button
+					>
+					<button
+						type="button"
+						class="rounded-xl bg-teal-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+						onclick={submitExecute}
+						disabled={isPaymentSubmitDisabled(execCmd) ||
+							!canShowExecuteCorrection(execTarget, permissions, execElig)}
+						data-testid="invoice-execute-correction-submit"
+						>{isPaymentSubmitDisabled(execCmd) ? 'Exécution…' : CORRECTION_EXECUTE_LABEL}</button
 					>
 				</div>
 			</div>
