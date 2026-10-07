@@ -92,6 +92,8 @@ export interface CreditNote {
 	patientName?: string;
 	patientCode?: string;
 	issuerName?: string;
+	customerCredit?: number;
+	holderPartyId?: number | null;
 }
 export interface Invoice {
 	id: number;
@@ -110,10 +112,12 @@ export interface Invoice {
 	createdAt: string;
 	lines?: InvoiceLine[];
 	payments?: Payment[];
-	/** LOT29F-B decorations */
+	/** LOT29F-B/H-C decorations */
 	creditedAmount?: number;
 	effectivePatientAmount?: number;
 	effectiveBalanceAmount?: number;
+	customerCreditAmount?: number;
+	creditHolderPartyId?: number | null;
 	creditNote?: CreditNote | null;
 }
 export interface InvoicePage {

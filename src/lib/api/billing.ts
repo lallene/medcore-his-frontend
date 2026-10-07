@@ -62,20 +62,31 @@ export const reversePayment = async (
 		)
 	).data;
 };
-/** LOT29F-B: immutable full-invoice credit note (avoir) — not a refund. */
+/** LOT29F-B/H-C: immutable credit note (avoir) with authoritative reduction amount — not a refund. */
 export const issueCreditNote = async (
 	invoiceId: number,
-	payload: { reason: string; idempotencyKey: string }
+	payload: { amount: number; reason: string; idempotencyKey: string }
 ) => {
 	const key = payload.idempotencyKey;
 	return (
 		await api.post<Invoice>(
 			`/api/billing/invoices/${invoiceId}/credit-notes`,
-			{ reason: payload.reason, idempotencyKey: key },
+			{ amount: payload.amount, reason: payload.reason, idempotencyKey: key },
 			{ headers: key ? { 'Idempotency-Key': key } : undefined }
 		)
 	).data;
 };
+export const getCreditSummary = async (holderPartyId: number, patientId: number) =>
+	(
+		await api.get<{
+			holderPartyId: number;
+			patientId: number;
+			totalCredited: number;
+			totalApplied: number;
+			totalRefunded: number;
+			availableCredit: number;
+		}>('/api/billing/credit-summary', { params: { holderPartyId, patientId } })
+	).data;
 export const getCreditNote = async (id: number) =>
 	(await api.get<CreditNote>(`/api/billing/credit-notes/${id}`)).data;
 export const listTariffs = async () => (await api.get<Tariff[]>('/api/billing/tariffs')).data;

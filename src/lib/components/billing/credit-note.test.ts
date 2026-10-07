@@ -9,7 +9,9 @@ import {
 	CREDIT_NOTE_CREATE_PERMISSION,
 	creditNoteAuthoritativeAmount,
 	creditNoteCopyIsSafe,
+	creditNoteDefaultAmount,
 	creditNoteDocumentHref,
+	validateCreditNoteAmount,
 	validateCreditNoteReason
 } from './credit-note.ts';
 import { usesRefundWording } from './collection.ts';
@@ -47,7 +49,7 @@ describe('LOT29F-B credit note FE', () => {
 			canShowIssueCreditNote(inv({ status: 'PAID', paidAmount: 20000, balanceAmount: 0 }), [
 				CREDIT_NOTE_CREATE_PERMISSION
 			]),
-			false
+			true
 		);
 		assert.equal(
 			canShowIssueCreditNote(inv({ insuranceAmount: 5000 }), [CREDIT_NOTE_CREATE_PERMISSION]),
@@ -108,9 +110,12 @@ describe('LOT29F-B credit note FE', () => {
 		assert.equal(creditNoteCopyIsSafe('Remboursement effectué'), false);
 	});
 
-	test('CFN12 no FE amount authority for full credit', () => {
-		// Modal displays patientAmount only — no setter for arbitrary amount.
-		assert.equal(creditNoteAuthoritativeAmount(inv()), inv().patientAmount);
+	test('CFN12 amount validation UX only', () => {
+		assert.equal(creditNoteDefaultAmount(inv()), inv().patientAmount);
+		assert.equal(validateCreditNoteAmount(0, 20000).ok, false);
+		assert.equal(validateCreditNoteAmount(25000, 20000).ok, false);
+		assert.equal(validateCreditNoteAmount(10000, 20000).ok, true);
+		assert.equal(creditNoteCopyIsSafe('Utiliser le crédit'), false);
 	});
 
 	test('CFN14 unauthorized create hidden', () => {

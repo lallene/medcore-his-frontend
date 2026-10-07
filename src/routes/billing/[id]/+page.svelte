@@ -63,7 +63,9 @@
 		canShowIssueCreditNote,
 		classifyCreditNoteError,
 		CREDIT_NOTE_ACTION_LABEL,
-		creditNoteAuthoritativeAmount,
+		canShowCustomerCredit,
+		creditNoteDefaultAmount,
+		validateCreditNoteAmount,
 		validateCreditNoteReason
 	} from '$lib/components/billing/credit-note';
 	import type { Payment } from '$lib/types/billing';
@@ -95,6 +97,7 @@
 	let reverseConfirm = $state(false);
 	let creditOpen = $state(false);
 	let creditReason = $state('');
+	let creditAmount = $state(0);
 	let creditConfirm = $state(false);
 	let creditCmd = $state(createPaymentCommandState());
 	let creditError = $state<PaymentUxError | null>(null);
@@ -380,6 +383,7 @@
 	function openCredit() {
 		creditOpen = true;
 		creditReason = '';
+		creditAmount = invoice ? creditNoteDefaultAmount(invoice) : 0;
 		creditConfirm = false;
 		creditError = null;
 		creditCmd = createPaymentCommandState();
@@ -388,6 +392,7 @@
 	function closeCredit() {
 		creditOpen = false;
 		creditReason = '';
+		creditAmount = 0;
 		creditConfirm = false;
 		creditError = null;
 		creditCmd = createPaymentCommandState();
@@ -395,6 +400,18 @@
 
 	async function submitCredit() {
 		if (!invoice || isPaymentSubmitDisabled(creditCmd)) return;
+		const maxAmt = creditNoteDefaultAmount(invoice);
+		const amtCheck = validateCreditNoteAmount(Number(creditAmount), maxAmt);
+		if (!amtCheck.ok) {
+			creditError = {
+				kind: 'validation',
+				message: amtCheck.message,
+				preserveKey: false,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
 		const check = validateCreditNoteReason(creditReason);
 		if (!check.ok) {
 			creditError = {
@@ -420,8 +437,16 @@
 		const key = creditCmd.idempotencyKey;
 		creditError = null;
 		try {
-			invoice = await issueCreditNote(invoice.id, { reason: check.reason, idempotencyKey: key });
-			successMessage = 'Avoir émis — facture corrigée par avoir.';
+			invoice = await issueCreditNote(invoice.id, {
+				amount: Number(creditAmount),
+				reason: check.reason,
+				idempotencyKey: key
+			});
+			const creditCreated = invoice.customerCreditAmount ?? 0;
+			successMessage =
+				creditCreated > 0
+					? `Avoir émis — crédit financier créé ${formatXOF(creditCreated)}.`
+					: 'Avoir émis — facture corrigée (aucun crédit client).';
 			creditCmd = completePaymentCommandSuccess();
 			closeCredit();
 		} catch (e) {
@@ -530,6 +555,18 @@
 				<p class="text-sm text-slate-600" data-testid="invoice-credit-note-issued-at">
 					Émis le {new Date(invoice.creditNote.issuedAt).toLocaleString('fr-FR')}
 				</p>
+				{#if canShowCustomerCredit(invoice, permissions)}
+					<p
+						class="mt-2 text-sm font-semibold text-emerald-900"
+						data-testid="invoice-customer-credit"
+					>
+						Crédit financier créé : {formatXOF(invoice.customerCreditAmount ?? 0)}
+					</p>
+				{:else if (invoice.customerCreditAmount ?? 0) > 0}
+					<p class="mt-2 text-sm text-slate-600" data-testid="invoice-customer-credit-present">
+						Crédit financier créé (détail réservé aux comptes financiers).
+					</p>
+				{/if}
 				{#if canShowCreditNoteDocument(invoice, permissions)}
 					<a
 						class="mt-3 inline-block font-bold text-amber-950 underline"
@@ -980,11 +1017,22 @@
 				<dl class="grid grid-cols-2 gap-2 text-sm">
 					<dt class="text-slate-500">Facture</dt>
 					<dd class="font-bold">{invoice.number}</dd>
-					<dt class="text-slate-500">Montant de l’avoir</dt>
-					<dd class="font-bold" data-testid="invoice-credit-note-modal-amount">
-						{formatXOF(creditNoteAuthoritativeAmount(invoice))}
+					<dt class="text-slate-500">Max corrigible</dt>
+					<dd class="font-bold" data-testid="invoice-credit-note-modal-max">
+						{formatXOF(creditNoteDefaultAmount(invoice))}
 					</dd>
 				</dl>
+				<label class="block text-sm">
+					<span class="font-bold">Montant de la réduction</span>
+					<input
+						class="mt-1 w-full rounded-xl border p-2"
+						type="number"
+						min="1"
+						max={creditNoteDefaultAmount(invoice)}
+						bind:value={creditAmount}
+						data-testid="invoice-credit-note-amount-input"
+					/>
+				</label>
 				<label class="block text-sm">
 					<span class="font-bold">Motif</span>
 					<textarea

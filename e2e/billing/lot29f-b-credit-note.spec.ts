@@ -129,7 +129,8 @@ test.describe('LOT29F-B credit note', () => {
 		await expect(page.getByTestId('invoice-credit-note')).toBeVisible();
 		await page.getByTestId('invoice-credit-note').click();
 		await expect(page.getByTestId('invoice-credit-note-modal')).toBeVisible();
-		await expect(page.getByTestId('invoice-credit-note-modal-amount')).toContainText('18');
+		await expect(page.getByTestId('invoice-credit-note-modal-max')).toContainText('18');
+		await page.getByTestId('invoice-credit-note-amount-input').fill('18000');
 		await page.getByTestId('invoice-credit-note-reason-input').fill('Correction QA-29F-B-001');
 		await page.getByTestId('invoice-credit-note-confirm').check();
 		await page.getByTestId('invoice-credit-note-submit').click();
@@ -158,7 +159,7 @@ test.describe('LOT29F-B credit note', () => {
 		const admin = await loginApi(request, adminEmail);
 		const { invoice } = await seedEligibleInvoice(request, admin, 14_000);
 		const key = `qa29fb-cn-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
-		const payload = { reason: 'Replay QA-29F-B-002', idempotencyKey: key };
+		const payload = { amount: 14_000, reason: 'Replay QA-29F-B-002', idempotencyKey: key };
 		const first = await request.post(`${api}/api/billing/invoices/${invoice.id}/credit-notes`, {
 			headers: { ...bearer(admin), 'Idempotency-Key': key },
 			data: payload
