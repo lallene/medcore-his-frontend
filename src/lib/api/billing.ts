@@ -25,7 +25,19 @@ export const cancelInvoice = async (id: number, reason: string) =>
 	(await api.post<Invoice>(`/api/billing/invoices/${id}/cancel`, { reason })).data;
 export const payInvoice = async (
 	id: number,
-	payload: { amount: number; paymentMethod: string; reference?: string; idempotencyKey: string }
+	payload: {
+		amount: number;
+		paymentMethod: string;
+		reference?: string;
+		idempotencyKey: string;
+		payer: {
+			mode: string;
+			displayName?: string;
+			phone?: string;
+			relationship?: string;
+			partyId?: number;
+		};
+	}
 ) => {
 	const key = payload.idempotencyKey;
 	return (

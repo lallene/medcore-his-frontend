@@ -115,6 +115,14 @@ export interface CashReceipt {
 	cashCorrectionExecutionId?: number | null;
 	cashCorrectionExecutedAt?: string | null;
 	cashCorrectionHostSessionId?: number | null;
+	/** LOT29F-H-B immutable payer snapshot (from payment). */
+	payerPartyId?: number | null;
+	payerKind?: string | null;
+	payerDisplayName?: string | null;
+	payerPhone?: string | null;
+	payerRelationship?: string | null;
+	payerIsPatient?: boolean;
+	payerProvenance?: string | null;
 }
 
 export interface CashCorrectionExecution {

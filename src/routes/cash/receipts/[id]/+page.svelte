@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { getReceipt } from '$lib/api/cash';
 	import { formatXOF } from '$lib/components/billing/state';
+	import { formatPayerDisplay } from '$lib/components/billing/payer';
 	import type { CashReceipt } from '$lib/types/cash';
 	let receipt = $state<CashReceipt | null>(null),
 		duplicate = $state(false);
@@ -40,8 +41,9 @@
 				>{receipt.registerCode
 					? `${receipt.registerCode} — ${receipt.registerName}`
 					: 'Encaissement facturation'}</b
-			><span>Patient</span><b>{receipt.patientCode} — {receipt.patientName}</b><span>Facture</span
-			><b>{receipt.invoiceNumber}</b><span>Montant facture</span><b
+			><span>Patient</span><b>{receipt.patientCode} — {receipt.patientName}</b><span>Payeur</span><b
+				data-testid="receipt-payer">{formatPayerDisplay(receipt)}</b
+			><span>Facture</span><b>{receipt.invoiceNumber}</b><span>Montant facture</span><b
 				>{formatXOF(receipt.invoiceGrossAmount)}</b
 			><span>Part assurance</span><b>{formatXOF(receipt.insuranceAmount)}</b><span
 				>Part patient</span

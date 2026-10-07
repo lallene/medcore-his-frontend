@@ -172,7 +172,8 @@ test.describe('LOT29D-B billing receipt convergence', () => {
 		const payload = {
 			amount: 9_000,
 			paymentMethod: 'CASH',
-			idempotencyKey: key
+			idempotencyKey: key,
+			payer: { mode: 'PATIENT' }
 		};
 		const first = await request.post(`${api}/api/billing/invoices/${invoice.id}/payments`, {
 			headers: { ...bearer(admin), 'Idempotency-Key': key },

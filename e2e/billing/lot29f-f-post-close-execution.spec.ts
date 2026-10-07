@@ -157,7 +157,8 @@ test.describe('LOT29F-F post-close cash correction execution', () => {
 				invoiceId: invId,
 				amount: 8000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(paid.ok(), await paid.text()).toBeTruthy();
@@ -278,7 +279,8 @@ test.describe('LOT29F-F post-close cash correction execution', () => {
 				invoiceId: invId,
 				amount: 4000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(paid.ok()).toBeTruthy();

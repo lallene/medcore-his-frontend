@@ -66,6 +66,14 @@ export interface Payment {
 	cashCorrectionExecutionId?: number | null;
 	cashCorrectionExecutedAt?: string | null;
 	cashCorrectionHostSessionId?: number | null;
+	/** LOT29F-H-B immutable payer snapshot. */
+	payerPartyId?: number | null;
+	payerKind?: string | null;
+	payerDisplayName?: string | null;
+	payerPhone?: string | null;
+	payerRelationship?: string | null;
+	payerIsPatient?: boolean;
+	payerProvenance?: string | null;
 }
 /** LOT29F-B immutable credit note projection on invoice / document. */
 export interface CreditNote {

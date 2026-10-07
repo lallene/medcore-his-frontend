@@ -207,7 +207,12 @@ test.describe('LOT29D-C payment reversal', () => {
 		const payKey = `qa29dc-pay-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 		const pay = await request.post(`${api}/api/billing/invoices/${invoice.id}/payments`, {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
-			data: { amount: 11_000, paymentMethod: 'CASH', idempotencyKey: payKey }
+			data: {
+				amount: 11_000,
+				paymentMethod: 'CASH',
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
+			}
 		});
 		expect(pay.ok(), await pay.text()).toBeTruthy();
 		const paidBody = (JSON.parse(await pay.text()).data ?? JSON.parse(await pay.text())) as {

@@ -160,7 +160,8 @@ test.describe('LOT29F-C cash movement foundation', () => {
 						invoiceId: invCash,
 						amount: 20000,
 						paymentMethod: 'CASH',
-						idempotencyKey: payKey
+						idempotencyKey: payKey,
+						payer: { mode: 'PATIENT' }
 					}
 				})
 			).ok()

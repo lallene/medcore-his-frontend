@@ -160,7 +160,8 @@ test.describe('LOT29F-D open cash session reversal', () => {
 				invoiceId: invId,
 				amount: 20000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(paid.ok(), await paid.text()).toBeTruthy();
@@ -244,7 +245,8 @@ test.describe('LOT29F-D open cash session reversal', () => {
 				invoiceId: invId,
 				amount: 3000,
 				paymentMethod: 'CARD',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(paid.ok()).toBeTruthy();

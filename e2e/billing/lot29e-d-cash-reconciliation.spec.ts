@@ -165,7 +165,8 @@ test.describe('LOT29E-D cash reconciliation', () => {
 						invoiceId: invCash,
 						amount: 20000,
 						paymentMethod: 'CASH',
-						idempotencyKey: payCashKey
+						idempotencyKey: payCashKey,
+						payer: { mode: 'PATIENT' }
 					}
 				})
 			).ok()
@@ -179,7 +180,8 @@ test.describe('LOT29E-D cash reconciliation', () => {
 						invoiceId: invCard,
 						amount: 30000,
 						paymentMethod: 'CARD',
-						idempotencyKey: payCardKey
+						idempotencyKey: payCardKey,
+						payer: { mode: 'PATIENT' }
 					}
 				})
 			).ok()
@@ -253,7 +255,8 @@ test.describe('LOT29E-D cash reconciliation', () => {
 						invoiceId: inv,
 						amount: 10000,
 						paymentMethod: 'CASH',
-						idempotencyKey: payKey
+						idempotencyKey: payKey,
+						payer: { mode: 'PATIENT' }
 					}
 				})
 			).ok()

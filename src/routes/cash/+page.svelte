@@ -55,6 +55,12 @@
 		createPaymentCommandState,
 		isPaymentSubmitDisabled
 	} from '$lib/components/billing/payment-command';
+	import {
+		PAYER_PATIENT_LABEL,
+		buildPayerPayload,
+		createPayerFormState,
+		validatePayerForm
+	} from '$lib/components/billing/payer';
 	import type {
 		CashMovement,
 		CashMovementDirection,
@@ -88,6 +94,8 @@
 		externalReference: '',
 		mobileOperator: ''
 	});
+	let payerForm = $state(createPayerFormState());
+	let payerHint = $state('');
 	let paymentCmd = $state(createPaymentCommandState());
 	let openCmd = $state(createSessionCommandState('cash-open'));
 	let closeCmd = $state(createSessionCommandState('cash-close'));
@@ -189,6 +197,12 @@
 	}
 	async function collect() {
 		if (!session || !selected || !ownSession || isPaymentSubmitDisabled(paymentCmd)) return;
+		const payerErr = validatePayerForm(payerForm);
+		if (payerErr) {
+			payerHint = payerErr;
+			return;
+		}
+		payerHint = '';
 		paymentCmd = beginPaymentCommand(paymentCmd);
 		const key = paymentCmd.idempotencyKey;
 		error = '';
@@ -196,9 +210,11 @@
 			const r = await cashPayment(session.session.id, {
 				invoiceId: selected.id,
 				...payment,
-				idempotencyKey: key
+				idempotencyKey: key,
+				payer: buildPayerPayload(payerForm)
 			});
 			paymentCmd = completePaymentCommandSuccess();
+			payerForm = createPayerFormState();
 			await refresh();
 			selected = null;
 			await goto(resolve(`/cash/receipts/${r.id}`));
@@ -415,6 +431,8 @@
 								selected = x;
 								payment.amount = x.balanceAmount;
 								paymentCmd = createPaymentCommandState();
+								payerForm = createPayerFormState();
+								payerHint = '';
 							}}
 							><strong>{x.number}</strong><span>{x.patientCode} — {x.patientName}</span><span
 								>Assurance {formatXOF(x.insuranceAmount)}</span
@@ -437,6 +455,7 @@
 							min="1"
 							max={selected.balanceAmount}
 							bind:value={payment.amount}
+							data-testid="cash-pay-amount"
 						/><select class="rounded-xl border p-2" bind:value={payment.paymentMethod}
 							>{#each methods as m (m.value)}<option value={m.value}>{m.label}</option
 								>{/each}</select
@@ -460,6 +479,57 @@
 							onclick={collect}
 							>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
 						>
+					</div>
+					<div
+						class="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+						data-testid="cash-payer-panel"
+					>
+						<label class="flex items-center gap-2 text-sm font-semibold"
+							><input
+								type="checkbox"
+								bind:checked={payerForm.patientIsPayer}
+								data-testid="cash-payer-is-patient"
+							/>{PAYER_PATIENT_LABEL}</label
+						>
+						{#if !payerForm.patientIsPayer}
+							<div class="grid gap-2 md:grid-cols-4">
+								<label class="block text-sm"
+									><span class="font-bold">Type</span><select
+										class="mt-1 w-full rounded-xl border p-2"
+										bind:value={payerForm.mode}
+										data-testid="cash-payer-mode"
+										><option value="INDIVIDUAL">Personne physique</option><option
+											value="ORGANIZATION">Organisation</option
+										></select
+									></label
+								><label class="block text-sm"
+									><span class="font-bold">Nom</span><input
+										class="mt-1 w-full rounded-xl border p-2"
+										bind:value={payerForm.displayName}
+										data-testid="cash-payer-name"
+									/></label
+								><label class="block text-sm"
+									><span class="font-bold">Téléphone</span><input
+										class="mt-1 w-full rounded-xl border p-2"
+										bind:value={payerForm.phone}
+										data-testid="cash-payer-phone"
+									/></label
+								>{#if payerForm.mode === 'INDIVIDUAL'}<label class="block text-sm"
+										><span class="font-bold">Lien</span><input
+											class="mt-1 w-full rounded-xl border p-2"
+											placeholder="Parent, conjoint…"
+											bind:value={payerForm.relationship}
+											data-testid="cash-payer-relationship"
+										/></label
+									>{/if}
+							</div>
+						{/if}
+						{#if payerHint}<p
+								class="text-sm font-medium text-red-700"
+								data-testid="cash-payer-hint"
+							>
+								{payerHint}
+							</p>{/if}
 					</div>
 				</section>{/if}
 		{:else}<p

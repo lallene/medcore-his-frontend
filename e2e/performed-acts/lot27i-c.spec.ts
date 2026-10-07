@@ -548,7 +548,8 @@ test.describe('LOT27I-C PerformedAct → billing', () => {
 			data: {
 				amount: issuedBody.balanceAmount || issuedBody.patientAmount || 5000,
 				paymentMethod: 'CASH',
-				idempotencyKey: `qa27ic-paid-${invoice.id}-${Date.now()}`
+				idempotencyKey: `qa27ic-paid-${invoice.id}-${Date.now()}`,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(pay.ok(), await pay.text()).toBeTruthy();

@@ -157,7 +157,8 @@ test.describe('LOT29F-E′ post-close cash accounting reversal', () => {
 				invoiceId: invId,
 				amount: 15000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(paid.ok(), await paid.text()).toBeTruthy();

@@ -154,7 +154,8 @@ test.describe('LOT29E-C cash session summary', () => {
 				invoiceId: invCash,
 				amount: 20000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payCashKey
+				idempotencyKey: payCashKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(payCash.ok(), await payCash.text()).toBeTruthy();
@@ -165,7 +166,8 @@ test.describe('LOT29E-C cash session summary', () => {
 				invoiceId: invCard,
 				amount: 30000,
 				paymentMethod: 'CARD',
-				idempotencyKey: payCardKey
+				idempotencyKey: payCardKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(payCard.ok(), await payCard.text()).toBeTruthy();

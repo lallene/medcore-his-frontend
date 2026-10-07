@@ -200,7 +200,8 @@ test.describe('LOT29E-B cash session lifecycle', () => {
 				invoiceId: draft.id,
 				amount: 8000,
 				paymentMethod: 'CASH',
-				idempotencyKey: payKey
+				idempotencyKey: payKey,
+				payer: { mode: 'PATIENT' }
 			}
 		});
 		expect(pay.ok(), await pay.text()).toBeTruthy();

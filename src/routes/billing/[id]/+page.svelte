@@ -69,6 +69,13 @@
 	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
+	import {
+		PAYER_PATIENT_LABEL,
+		buildPayerPayload,
+		createPayerFormState,
+		formatPayerDisplay,
+		validatePayerForm
+	} from '$lib/components/billing/payer';
 
 	let invoice = $state<Invoice | null>(null);
 	let error = $state('');
@@ -77,6 +84,8 @@
 	let permissions = $state<string[]>([]);
 	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
 	let payment = $state({ amount: 0, paymentMethod: 'CASH', reference: '' });
+	let payerForm = $state(createPayerFormState());
+	let payerHint = $state('');
 	let paymentCmd = $state(createPaymentCommandState());
 	let amountHint = $state('');
 	let reverseTarget = $state<Payment | null>(null);
@@ -142,6 +151,8 @@
 		paymentCmd = createPaymentCommandState();
 		paymentError = null;
 		amountHint = '';
+		payerHint = '';
+		payerForm = createPayerFormState();
 		if (invoice) payment.amount = invoice.balanceAmount;
 	}
 
@@ -152,19 +163,30 @@
 			amountHint = paymentAmountErrorMessage(check.reason);
 			return;
 		}
+		const payerErr = validatePayerForm(payerForm);
+		if (payerErr) {
+			payerHint = payerErr;
+			return;
+		}
 		amountHint = '';
+		payerHint = '';
 		paymentCmd = beginPaymentCommand(paymentCmd);
 		const key = paymentCmd.idempotencyKey;
 		paymentError = null;
 		successMessage = '';
 		error = '';
 		try {
-			const updated = await payInvoice(invoice.id, { ...payment, idempotencyKey: key });
+			const updated = await payInvoice(invoice.id, {
+				...payment,
+				idempotencyKey: key,
+				payer: buildPayerPayload(payerForm)
+			});
 			invoice = {
 				...updated,
 				payments: mergePaymentHistory(invoice.payments, updated.payments)
 			};
 			paymentCmd = completePaymentCommandSuccess();
+			payerForm = createPayerFormState();
 			payment.amount = updated.balanceAmount;
 			const receipted = latestReceiptedPayment(updated.payments);
 			successMessage =
@@ -648,6 +670,57 @@
 						>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
 					>
 				</div>
+				<div
+					class="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+					data-testid="invoice-payer-panel"
+				>
+					<label class="flex items-center gap-2 text-sm font-semibold"
+						><input
+							type="checkbox"
+							bind:checked={payerForm.patientIsPayer}
+							data-testid="invoice-payer-is-patient"
+						/>{PAYER_PATIENT_LABEL}</label
+					>
+					{#if !payerForm.patientIsPayer}
+						<div class="grid gap-2 md:grid-cols-4">
+							<label class="block text-sm"
+								><span class="font-bold">Type</span><select
+									class="mt-1 w-full rounded-xl border p-2"
+									bind:value={payerForm.mode}
+									data-testid="invoice-payer-mode"
+									><option value="INDIVIDUAL">Personne physique</option><option value="ORGANIZATION"
+										>Organisation</option
+									></select
+								></label
+							><label class="block text-sm md:col-span-1"
+								><span class="font-bold">Nom</span><input
+									class="mt-1 w-full rounded-xl border p-2"
+									bind:value={payerForm.displayName}
+									data-testid="invoice-payer-name"
+								/></label
+							><label class="block text-sm"
+								><span class="font-bold">Téléphone</span><input
+									class="mt-1 w-full rounded-xl border p-2"
+									bind:value={payerForm.phone}
+									data-testid="invoice-payer-phone"
+								/></label
+							>{#if payerForm.mode === 'INDIVIDUAL'}<label class="block text-sm"
+									><span class="font-bold">Lien</span><input
+										class="mt-1 w-full rounded-xl border p-2"
+										placeholder="Parent, conjoint…"
+										bind:value={payerForm.relationship}
+										data-testid="invoice-payer-relationship"
+									/></label
+								>{/if}
+						</div>
+					{/if}
+					{#if payerHint}<p
+							class="text-sm font-medium text-red-700"
+							data-testid="invoice-payer-hint"
+						>
+							{payerHint}
+						</p>{/if}
+				</div>
 			</section>{:else if paymentAllowed(invoice) && !can(permissions, COLLECTION_PERMISSION)}
 			<p
 				class="rounded-xl bg-slate-50 p-3 text-sm text-slate-600 print:hidden"
@@ -663,8 +736,8 @@
 						<thead class="bg-slate-50 text-xs uppercase text-slate-500"
 							><tr
 								><th class="p-2">Date</th><th>Mode</th><th>Référence</th><th>Montant</th><th
-									>Reçu par</th
-								><th>État</th><th>Reçu</th><th class="print:hidden">Action</th></tr
+									>Payeur</th
+								><th>Reçu par</th><th>État</th><th>Reçu</th><th class="print:hidden">Action</th></tr
 							></thead
 						><tbody
 							>{#each invoice.payments as p (p.id)}<tr
@@ -673,8 +746,8 @@
 									><td class="p-2">{new Date(p.paidAt).toLocaleString('fr-FR')}</td><td
 										>{p.paymentMethod}</td
 									><td>{p.reference || '—'}</td><td class="font-bold">{formatXOF(p.amount)}</td><td
-										>{p.receivedBy}</td
-									><td
+										data-testid={`invoice-payment-payer-${p.id}`}>{formatPayerDisplay(p)}</td
+									><td>{p.receivedBy}</td><td
 										>{#if paymentIsReversed(p)}<span
 												class="font-semibold text-amber-800"
 												data-testid={`invoice-reversed-${p.id}`}>Contrepassé</span

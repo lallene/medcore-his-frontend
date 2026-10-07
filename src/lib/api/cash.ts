@@ -74,6 +74,13 @@ export const cashPayment = async (
 		externalReference?: string;
 		mobileOperator?: string;
 		idempotencyKey: string;
+		payer: {
+			mode: string;
+			displayName?: string;
+			phone?: string;
+			relationship?: string;
+			partyId?: number;
+		};
 	}
 ) => {
 	const key = payload.idempotencyKey;
