@@ -1,65 +1,102 @@
-import { expect, test, type APIRequestContext } from '@playwright/test';
+/**
+ * LOT29F-H-C — Credit ledger + paid/partial CreditNote.
+ * Credit can be created/read; not spent; not refunded.
+ */
+import { expect, type APIRequestContext } from '@playwright/test';
+import { test } from '../fixtures/medcore';
 
-const api = process.env.QA_API_URL || 'http://127.0.0.1:8080';
-const adminEmail = process.env.QA_ADMIN_EMAIL || 'admin@medcore.local';
-const password = process.env.QA_ADMIN_PASSWORD || 'admin123';
-
-const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
+const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 
 async function loginApi(request: APIRequestContext, email: string) {
-	const res = await request.post(`${api}/api/auth/login`, {
+	const response = await request.post(`${api}/api/auth/login`, {
 		data: { email, password }
 	});
-	expect(res.ok(), await res.text()).toBeTruthy();
-	const body = JSON.parse(await res.text()) as { token?: string; accessToken?: string };
-	return body.token || body.accessToken!;
+	expect(response.ok(), await response.text()).toBeTruthy();
+	const body = await response.json();
+	return (body.data?.token ?? body.token) as string;
 }
 
-async function seedIssuedInvoice(request: APIRequestContext, token: string, amount: number) {
-	const patients = await request.get(`${api}/api/patients?limit=5`, { headers: bearer(token) });
-	expect(patients.ok()).toBeTruthy();
-	const plist = JSON.parse(await patients.text()) as { data?: Array<{ id: number }> };
-	const patientId = plist.data?.[0]?.id;
-	expect(patientId).toBeTruthy();
-	const tariffs = await request.get(`${api}/api/billing/tariffs`, { headers: bearer(token) });
-	expect(tariffs.ok()).toBeTruthy();
-	const tlist = JSON.parse(await tariffs.text()) as Array<{
-		id: number;
-		unitPrice: number;
-		actType: string;
-	}>;
-	let tariff = tlist.find((x) => x.unitPrice === amount);
-	if (!tariff) {
-		const created = await request.post(`${api}/api/billing/tariffs`, {
-			headers: bearer(token),
-			data: {
-				actType: 'CONSULTATION',
-				code: `QA-HC-${Date.now()}`,
-				label: 'QA H-C',
-				unitPrice: amount,
-				effectiveFrom: new Date().toISOString()
-			}
-		});
-		expect(created.ok(), await created.text()).toBeTruthy();
-		tariff = JSON.parse(await created.text()) as { id: number; unitPrice: number; actType: string };
-	}
-	const acts = await request.get(`${api}/api/billing/billable-acts?patientId=${patientId}`, {
-		headers: bearer(token)
-	});
-	const actBody = JSON.parse(await acts.text()) as Array<{ actType: string; referenceId: number }>;
-	const act = actBody.find((a) => a.actType === 'CONSULTATION') ?? actBody[0];
-	expect(act).toBeTruthy();
-	const inv = await request.post(`${api}/api/billing/invoices`, {
+function bearer(token: string) {
+	return { Authorization: `Bearer ${token}` };
+}
+
+async function createPatient(request: APIRequestContext, token: string, tag: string) {
+	const nom = `QA29FHC-${tag}-${Date.now()}-${Math.floor(Math.random() * 1e5)}`;
+	const response = await request.post(`${api}/api/patients`, {
 		headers: bearer(token),
 		data: {
-			patientId,
-			lines: [{ actType: act.actType, referenceId: act.referenceId, tariffId: tariff!.id }]
+			nom,
+			prenoms: 'Credit',
+			sexe: 'M',
+			dateNaissance: '1990-01-15',
+			telephone: `+22507${String(Date.now()).slice(-8)}`,
+			isAssure: false
 		}
 	});
-	expect([200, 201].includes(inv.status()), await inv.text()).toBeTruthy();
-	const draft = (JSON.parse(await inv.text()).data ?? JSON.parse(await inv.text())) as {
-		id: number;
-	};
+	const text = await response.text();
+	expect([200, 201].includes(response.status()), text).toBeTruthy();
+	const data = JSON.parse(text).data ?? JSON.parse(text);
+	const patient = data as { id: number; codePatient: string };
+	const mr = await request.get(`${api}/api/patients/${patient.id}/medical-record`, {
+		headers: bearer(token)
+	});
+	expect(mr.ok(), await mr.text()).toBeTruthy();
+	return patient;
+}
+
+async function seedIssuedInvoice(request: APIRequestContext, token: string, unitPrice: number) {
+	const patient = await createPatient(request, token, 'INV');
+	const stamp = `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
+	const catalog = await request.post(`${api}/api/act-catalog`, {
+		headers: bearer(token),
+		data: {
+			code: `QA29HC-${stamp}`.slice(0, 20),
+			label: `Acte credit ${stamp}`,
+			category: 'PROCEDURE',
+			basePrice: 1,
+			currency: 'XOF',
+			billable: true,
+			insuranceEligible: false,
+			isActive: true
+		}
+	});
+	expect([200, 201].includes(catalog.status()), await catalog.text()).toBeTruthy();
+	const catalogBody = JSON.parse(await catalog.text()) as { id: number };
+	const tariff = await request.post(`${api}/api/billing/tariffs`, {
+		headers: bearer(token),
+		data: {
+			actType: 'PERFORMED_ACT',
+			referenceId: catalogBody.id,
+			code: `T29HC-${stamp}`.slice(0, 20),
+			label: `Tarif 29HC ${stamp}`,
+			unitPrice,
+			effectiveFrom: new Date().toISOString().slice(0, 10),
+			effectiveTo: null,
+			isActive: true
+		}
+	});
+	expect([200, 201].includes(tariff.status()), await tariff.text()).toBeTruthy();
+	const tariffBody = JSON.parse(await tariff.text()) as { id: number };
+	const act = await request.post(`${api}/api/performed-acts`, {
+		headers: bearer(token),
+		data: { patientId: patient.id, actCatalogEntryId: catalogBody.id, quantity: 1 }
+	});
+	const actText = await act.text();
+	expect([200, 201].includes(act.status()), actText).toBeTruthy();
+	const actParsed = JSON.parse(actText);
+	const actBody = (actParsed.data ?? actParsed) as { id: number };
+	const invoice = await request.post(`${api}/api/billing/invoices`, {
+		headers: bearer(token),
+		data: {
+			patientId: patient.id,
+			lines: [{ actType: 'PERFORMED_ACT', referenceId: actBody.id, tariffId: tariffBody.id }]
+		}
+	});
+	const invText = await invoice.text();
+	expect([200, 201].includes(invoice.status()), invText).toBeTruthy();
+	const draft = (JSON.parse(invText).data ?? JSON.parse(invText)) as { id: number };
 	const issued = await request.post(`${api}/api/billing/invoices/${draft.id}/issue`, {
 		headers: bearer(token)
 	});
@@ -92,7 +129,7 @@ test.describe('LOT29F-H-C credit ledger', () => {
 		const cnKey = `qa-hc001-cn-${Date.now()}`;
 		const cn = await request.post(`${api}/api/billing/invoices/${invoice.id}/credit-notes`, {
 			headers: { ...bearer(admin), 'Idempotency-Key': cnKey },
-			data: { amount: 10_000, reason: 'QA-29F-HC-001 réduction', idempotencyKey: cnKey }
+			data: { amount: 10_000, reason: 'QA-29F-HC-001 reduction', idempotencyKey: cnKey }
 		});
 		expect(cn.ok(), await cn.text()).toBeTruthy();
 		const body = (JSON.parse(await cn.text()).data ?? JSON.parse(await cn.text())) as {
@@ -168,10 +205,10 @@ test.describe('LOT29F-H-C credit ledger', () => {
 		const revKey = `qa-hc003-rev-${Date.now()}`;
 		const rev = await request.post(`${api}/api/billing/payments/${paymentId}/reverse`, {
 			headers: { ...bearer(admin), 'Idempotency-Key': revKey },
-			data: { reason: 'Should block', idempotencyKey: revKey }
+			data: { reason: 'Should block after credit', idempotencyKey: revKey }
 		});
 		expect(rev.status()).toBe(409);
 		const err = await rev.text();
-		expect(/CREDIT_REVERSAL_BLOCKED|crédit client/i.test(err)).toBeTruthy();
+		expect(/CREDIT_REVERSAL_BLOCKED|credit client|crédit client/i.test(err)).toBeTruthy();
 	});
 });
