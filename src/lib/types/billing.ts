@@ -119,6 +119,40 @@ export interface Invoice {
 	customerCreditAmount?: number;
 	creditHolderPartyId?: number | null;
 	creditNote?: CreditNote | null;
+	/** LOT29F-H-D: credit applications settle receivable without increasing paidAmount/CashCollected. */
+	creditAppliedAmount?: number;
+	moneyPaidAmount?: number;
+	totalSettledAmount?: number;
+}
+
+export interface CreditSummary {
+	holderPartyId: number;
+	patientId: number;
+	totalCredited: number;
+	totalApplied: number;
+	totalRefunded: number;
+	availableCredit: number;
+}
+
+export interface CreditApplicationResult {
+	application: {
+		id: number;
+		holderPartyId: number;
+		patientId: number;
+		invoiceId: number;
+		amount: number;
+		idempotencyKey: string;
+		createdAt: string;
+	};
+	amountApplied: number;
+	remainingAvailableCredit: number;
+	remainingReceivable: number;
+	invoiceStatus: string;
+	invoiceId: number;
+	holderPartyId: number;
+	patientId: number;
+	creditAppliedOnInvoice: number;
+	moneyPaidOnInvoice: number;
 }
 export interface InvoicePage {
 	data: Invoice[];

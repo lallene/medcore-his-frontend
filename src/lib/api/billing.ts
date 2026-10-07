@@ -2,7 +2,9 @@ import { api } from '$lib/api/client';
 import type {
 	BillableAct,
 	BillingKPIs,
+	CreditApplicationResult,
 	CreditNote,
+	CreditSummary,
 	Invoice,
 	InvoicePage,
 	Tariff
@@ -78,15 +80,31 @@ export const issueCreditNote = async (
 };
 export const getCreditSummary = async (holderPartyId: number, patientId: number) =>
 	(
-		await api.get<{
-			holderPartyId: number;
-			patientId: number;
-			totalCredited: number;
-			totalApplied: number;
-			totalRefunded: number;
-			availableCredit: number;
-		}>('/api/billing/credit-summary', { params: { holderPartyId, patientId } })
+		await api.get<CreditSummary>('/api/billing/credit-summary', {
+			params: { holderPartyId, patientId }
+		})
 	).data;
+export const listPatientCreditBalances = async (patientId: number) =>
+	(await api.get<CreditSummary[]>(`/api/billing/patients/${patientId}/credit-balances`)).data;
+/** LOT29F-H-D: allocate existing customer credit — not a Payment / not Cash. */
+export const applyCredit = async (
+	invoiceId: number,
+	payload: { holderPartyId: number; amount: number; reason?: string; idempotencyKey: string }
+) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<CreditApplicationResult>(
+			`/api/billing/invoices/${invoiceId}/credit-applications`,
+			{
+				holderPartyId: payload.holderPartyId,
+				amount: payload.amount,
+				reason: payload.reason,
+				idempotencyKey: key
+			},
+			{ headers: key ? { 'Idempotency-Key': key } : undefined }
+		)
+	).data;
+};
 export const getCreditNote = async (id: number) =>
 	(await api.get<CreditNote>(`/api/billing/credit-notes/${id}`)).data;
 export const listTariffs = async () => (await api.get<Tariff[]>('/api/billing/tariffs')).data;

@@ -4,10 +4,12 @@
 	import { resolve } from '$app/paths';
 	import { jwtDecode } from 'jwt-decode';
 	import {
+		applyCredit,
 		cancelInvoice,
 		getInvoice,
 		issueCreditNote,
 		issueInvoice,
+		listPatientCreditBalances,
 		payInvoice,
 		reversePayment
 	} from '$lib/api/billing';
@@ -68,6 +70,19 @@
 		validateCreditNoteAmount,
 		validateCreditNoteReason
 	} from '$lib/components/billing/credit-note';
+	import {
+		canShowApplyCredit,
+		canShowCreditBalances,
+		classifyCreditApplyError,
+		CREDIT_APPLY_ACTION_LABEL,
+		CREDIT_APPLIED_LABEL,
+		CREDIT_AVAILABLE_LABEL,
+		CREDIT_SETTLEMENT_LABEL,
+		eligibleHolders,
+		maxApplicableAmount,
+		validateCreditApplyAmount,
+		type CreditBalance
+	} from '$lib/components/billing/credit-application';
 	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
@@ -101,6 +116,13 @@
 	let creditConfirm = $state(false);
 	let creditCmd = $state(createPaymentCommandState());
 	let creditError = $state<PaymentUxError | null>(null);
+	let creditBalances = $state<CreditBalance[]>([]);
+	let applyOpen = $state(false);
+	let applyHolderId = $state(0);
+	let applyAmount = $state(0);
+	let applyConfirm = $state(false);
+	let applyCmd = $state(createPaymentCommandState());
+	let applyError = $state<PaymentUxError | null>(null);
 	let execTarget = $state<Payment | null>(null);
 	let execElig = $state<CorrectionEligibility | null>(null);
 	let execNote = $state('');
@@ -112,6 +134,28 @@
 	const collectibleKind = $derived(invoice ? invoiceCollectibleKind(invoice) : null);
 	const showCollection = $derived(invoice ? canShowEncaisser(invoice, permissions) : false);
 	const showCreditNote = $derived(invoice ? canShowIssueCreditNote(invoice, permissions) : false);
+	const showCreditBalances = $derived(
+		invoice ? canShowCreditBalances(invoice, permissions) : false
+	);
+	const showApplyCredit = $derived(
+		invoice ? canShowApplyCredit(invoice, permissions, creditBalances) : false
+	);
+	const applyHolders = $derived(eligibleHolders(creditBalances));
+	const selectedApplyHolder = $derived(
+		applyHolders.find((h) => h.holderPartyId === applyHolderId) ?? applyHolders[0] ?? null
+	);
+
+	async function refreshCreditBalances(patientId: number) {
+		if (!can(permissions, 'billing.credit.read')) {
+			creditBalances = [];
+			return;
+		}
+		try {
+			creditBalances = await listPatientCreditBalances(patientId);
+		} catch {
+			creditBalances = [];
+		}
+	}
 
 	async function refresh(opts?: { resetAmount?: boolean }) {
 		const id = Number(page.params.id);
@@ -126,6 +170,7 @@
 			...invoice,
 			payments: mergePaymentHistory(invoice.payments, invoice.payments)
 		};
+		await refreshCreditBalances(invoice.patientId);
 		if (opts?.resetAmount !== false && invoice) {
 			payment.amount = invoice.balanceAmount;
 		}
@@ -467,6 +512,87 @@
 		}
 	}
 
+	function openApplyCredit() {
+		applyOpen = true;
+		applyError = null;
+		applyConfirm = false;
+		applyCmd = createPaymentCommandState();
+		const holders = eligibleHolders(creditBalances);
+		applyHolderId = holders[0]?.holderPartyId ?? 0;
+		const holder = holders[0] ?? null;
+		applyAmount = invoice && holder ? maxApplicableAmount(invoice, holder) : 0;
+	}
+
+	function closeApplyCredit() {
+		applyOpen = false;
+		applyHolderId = 0;
+		applyAmount = 0;
+		applyConfirm = false;
+		applyError = null;
+		applyCmd = createPaymentCommandState();
+	}
+
+	function onApplyHolderChange() {
+		if (!invoice || !selectedApplyHolder) return;
+		applyAmount = maxApplicableAmount(invoice, selectedApplyHolder);
+	}
+
+	async function submitApplyCredit() {
+		if (!invoice || isPaymentSubmitDisabled(applyCmd)) return;
+		const holder = selectedApplyHolder;
+		const amtCheck = validateCreditApplyAmount(Number(applyAmount), invoice, holder);
+		if (amtCheck) {
+			applyError = {
+				kind: 'validation',
+				message: amtCheck,
+				preserveKey: true,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		if (!applyConfirm) {
+			applyError = {
+				kind: 'validation',
+				message: 'Confirmez le règlement par crédit disponible.',
+				preserveKey: true,
+				shouldRefresh: false,
+				allowNewIntent: false
+			};
+			return;
+		}
+		applyCmd = beginPaymentCommand(applyCmd);
+		const key = applyCmd.idempotencyKey;
+		applyError = null;
+		try {
+			const res = await applyCredit(invoice.id, {
+				holderPartyId: holder!.holderPartyId,
+				amount: Number(applyAmount),
+				idempotencyKey: key
+			});
+			applyCmd = completePaymentCommandSuccess();
+			successMessage = `${CREDIT_SETTLEMENT_LABEL} ${formatXOF(res.amountApplied)} — reste dû ${formatXOF(res.remainingReceivable)}.`;
+			closeApplyCredit();
+			await refresh();
+		} catch (e) {
+			const classified = classifyCreditApplyError(e);
+			applyError = classified;
+			if (classified.preserveKey) {
+				applyCmd = completePaymentCommandError(applyCmd);
+			} else {
+				applyCmd = createPaymentCommandState();
+			}
+			if (classified.shouldRefresh) {
+				try {
+					await refresh();
+					onApplyHolderChange();
+				} catch {
+					/* keep */
+				}
+			}
+		}
+	}
+
 	onMount(() => {
 		const raw = localStorage.getItem('medcore_token');
 		if (raw)
@@ -534,6 +660,10 @@
 						class="rounded-xl border border-amber-400 px-4 py-2 font-bold text-amber-900"
 						data-testid="invoice-credit-note"
 						onclick={openCredit}>{CREDIT_NOTE_ACTION_LABEL}</button
+					>{/if}{#if showApplyCredit}<button
+						class="rounded-xl border border-indigo-400 px-4 py-2 font-bold text-indigo-900"
+						data-testid="invoice-apply-credit"
+						onclick={openApplyCredit}>{CREDIT_APPLY_ACTION_LABEL}</button
 					>{/if}<button class="rounded-xl border px-4 py-2" onclick={() => print()}>Imprimer</button
 				>
 			</div>
@@ -618,13 +748,44 @@
 				>{formatXOF(invoice.insuranceAmount)}</strong
 			><span>Part patient</span><strong class="text-right" data-testid="invoice-patient"
 				>{formatXOF(invoice.patientAmount)}</strong
-			><span>Déjà payé</span><strong class="text-right" data-testid="invoice-paid"
+			><span>Déjà payé (argent)</span><strong class="text-right" data-testid="invoice-paid"
 				>{formatXOF(invoice.paidAmount)}</strong
+			><span>{CREDIT_APPLIED_LABEL}</span><strong
+				class="text-right"
+				data-testid="invoice-credit-applied">{formatXOF(invoice.creditAppliedAmount ?? 0)}</strong
 			><span class="text-lg">Reste patient</span><strong
 				class="text-right text-lg text-blue-700"
 				data-testid="invoice-balance">{formatXOF(invoice.balanceAmount)}</strong
 			>
 		</div>
+		{#if showCreditBalances}<section
+				class="space-y-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 print:hidden"
+				data-testid="invoice-credit-balances"
+			>
+				<h2 class="font-black text-indigo-950">{CREDIT_AVAILABLE_LABEL}</h2>
+				<p class="text-sm text-slate-600">
+					Soldes autoritatifs du serveur (titulaire × patient). Ce n’est pas un encaissement.
+				</p>
+				{#if applyHolders.length === 0}
+					<p class="text-sm text-slate-600" data-testid="invoice-credit-balances-empty">
+						Aucun crédit disponible pour ce patient.
+					</p>
+				{:else}
+					<ul class="space-y-1 text-sm" data-testid="invoice-credit-balances-list">
+						{#each applyHolders as bal (bal.holderPartyId)}
+							<li data-testid={`invoice-credit-holder-${bal.holderPartyId}`}>
+								Titulaire #{bal.holderPartyId} —
+								<strong>{formatXOF(bal.availableCredit)}</strong>
+								<span class="text-slate-500"
+									>(crédité {formatXOF(bal.totalCredited)}, utilisé {formatXOF(
+										bal.totalApplied
+									)})</span
+								>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</section>{/if}
 		{#if showCollection}<section
 				class="space-y-3 rounded-2xl border border-emerald-200 bg-white p-5 print:hidden"
 				data-testid="invoice-collection"
@@ -1072,6 +1233,96 @@
 						disabled={isPaymentSubmitDisabled(creditCmd)}
 						data-testid="invoice-credit-note-submit"
 						>{isPaymentSubmitDisabled(creditCmd) ? 'Émission…' : CREDIT_NOTE_ACTION_LABEL}</button
+					>
+				</div>
+			</div>
+		</div>{/if}
+	{#if applyOpen && invoice}<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:hidden"
+			data-testid="invoice-apply-credit-modal"
+			role="dialog"
+			aria-modal="true"
+		>
+			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
+				<h2 class="text-lg font-black text-indigo-950">{CREDIT_APPLY_ACTION_LABEL}</h2>
+				<p class="text-sm text-slate-600">
+					{CREDIT_SETTLEMENT_LABEL} — allocation du crédit déjà disponible. Aucun nouvel argent n’entre
+					en caisse.
+				</p>
+				<dl class="grid grid-cols-2 gap-2 text-sm">
+					<dt class="text-slate-500">Facture</dt>
+					<dd class="font-bold">{invoice.number}</dd>
+					<dt class="text-slate-500">Reste dû</dt>
+					<dd class="font-bold" data-testid="invoice-apply-credit-receivable">
+						{formatXOF(invoice.balanceAmount)}
+					</dd>
+				</dl>
+				{#if applyHolders.length > 1}
+					<label class="block text-sm">
+						<span class="font-bold">Titulaire du crédit</span>
+						<select
+							class="mt-1 w-full rounded-xl border p-2"
+							bind:value={applyHolderId}
+							onchange={onApplyHolderChange}
+							data-testid="invoice-apply-credit-holder"
+						>
+							{#each applyHolders as bal (bal.holderPartyId)}
+								<option value={bal.holderPartyId}>
+									#{bal.holderPartyId} — {formatXOF(bal.availableCredit)}
+								</option>
+							{/each}
+						</select>
+					</label>
+				{:else if selectedApplyHolder}
+					<p class="text-sm" data-testid="invoice-apply-credit-holder-single">
+						Titulaire #{selectedApplyHolder.holderPartyId} — {CREDIT_AVAILABLE_LABEL}
+						{formatXOF(selectedApplyHolder.availableCredit)}
+					</p>
+				{/if}
+				<label class="block text-sm">
+					<span class="font-bold">Montant à appliquer</span>
+					<input
+						class="mt-1 w-full rounded-xl border p-2"
+						type="number"
+						min="1"
+						max={selectedApplyHolder ? maxApplicableAmount(invoice, selectedApplyHolder) : 0}
+						bind:value={applyAmount}
+						data-testid="invoice-apply-credit-amount"
+					/>
+				</label>
+				<label class="flex items-start gap-2 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={applyConfirm}
+						data-testid="invoice-apply-credit-confirm"
+					/>
+					<span
+						>Je confirme le {CREDIT_SETTLEMENT_LABEL.toLowerCase()} (pas un encaissement, pas un remboursement).</span
+					>
+				</label>
+				{#if applyError}<p
+						class="text-sm text-amber-900"
+						data-testid="invoice-apply-credit-error"
+						role="alert"
+					>
+						{applyError.message}
+					</p>{/if}
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded-xl border px-4 py-2 font-bold"
+						onclick={closeApplyCredit}
+						data-testid="invoice-apply-credit-cancel">Fermer</button
+					>
+					<button
+						type="button"
+						class="rounded-xl bg-indigo-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+						onclick={submitApplyCredit}
+						disabled={isPaymentSubmitDisabled(applyCmd)}
+						data-testid="invoice-apply-credit-submit"
+						>{isPaymentSubmitDisabled(applyCmd)
+							? 'Application…'
+							: CREDIT_APPLY_ACTION_LABEL}</button
 					>
 				</div>
 			</div>
