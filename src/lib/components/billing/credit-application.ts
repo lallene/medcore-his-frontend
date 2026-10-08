@@ -8,7 +8,9 @@ export const CREDIT_APPLY_PERMISSION = 'billing.credit.apply';
 export const CREDIT_READ_PERMISSION = 'billing.credit.read';
 
 export const CREDIT_APPLY_ACTION_LABEL = 'Utiliser le crédit';
-export const CREDIT_AVAILABLE_LABEL = 'Crédit disponible';
+/** Backend `availableCredit` === `spendableCredit` (ledger − reserved for refund requests). */
+export const CREDIT_AVAILABLE_LABEL = 'Crédit utilisable';
+export const CREDIT_RESERVED_LABEL = 'Montant réservé';
 export const CREDIT_APPLIED_LABEL = 'Crédit utilisé';
 export const CREDIT_SETTLEMENT_LABEL = 'Règlement par crédit';
 
@@ -18,6 +20,10 @@ export type CreditBalance = {
 	totalCredited: number;
 	totalApplied: number;
 	totalRefunded: number;
+	ledgerAvailable?: number;
+	reservedForRefund?: number;
+	spendableCredit?: number;
+	/** Backend-authoritative apply ceiling (= spendableCredit). */
 	availableCredit: number;
 };
 
@@ -72,7 +78,7 @@ export function validateCreditApplyAmount(
 	}
 	if (!holder) return 'Titulaire financier obligatoire';
 	if (amount > holder.availableCredit) {
-		return 'Crédit disponible insuffisant';
+		return 'Crédit utilisable insuffisant';
 	}
 	if (amount > (invoice.balanceAmount ?? 0)) {
 		return 'Montant supérieur au reste dû patient';
@@ -83,11 +89,11 @@ export function validateCreditApplyAmount(
 export function classifyCreditApplyError(error: unknown): PaymentUxError {
 	const base = classifyPaymentError(error);
 	const msg = base.message;
-	if (/CREDIT_APPLICATION_INSUFFICIENT|Crédit disponible insuffisant/i.test(msg)) {
+	if (/CREDIT_APPLICATION_INSUFFICIENT|Crédit (disponible|utilisable) insuffisant/i.test(msg)) {
 		return {
 			...base,
 			kind: 'stale_balance',
-			message: 'Crédit disponible insuffisant — actualisez les soldes.'
+			message: 'Crédit utilisable insuffisant — actualisez les soldes.'
 		};
 	}
 	if (/CREDIT_APPLICATION_EXCEEDS_BALANCE|reste dû patient/i.test(msg)) {

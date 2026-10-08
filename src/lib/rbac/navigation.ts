@@ -78,6 +78,11 @@ export const workspaceMenu: NavItem[] = [
 	},
 	{ title: 'Facturation', href: '/billing', permissions: ['billing.read'] },
 	{
+		title: 'Remboursements',
+		href: '/billing/refunds',
+		permissions: ['billing.refund.read', 'billing.refund.request']
+	},
+	{
 		title: 'Caisse',
 		href: '/cash',
 		permissions: ['cash.session.read', 'cash.payment.create']
@@ -183,6 +188,10 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/insurance/authorizations', permissions: ['insurance.authorization.read'] },
 	{ prefix: '/insurance/vouchers', permissions: ['insurance.voucher.read'] },
 	{ prefix: '/insurance', permissions: ['insurance.company.read', 'insurance.coverage.read'] },
+	{
+		prefix: '/billing/refunds',
+		permissions: ['billing.refund.read', 'billing.refund.request']
+	},
 	{ prefix: '/billing', permissions: ['billing.read'] },
 	{
 		prefix: '/cash',

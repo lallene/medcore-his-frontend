@@ -77,6 +77,7 @@
 		CREDIT_APPLY_ACTION_LABEL,
 		CREDIT_APPLIED_LABEL,
 		CREDIT_AVAILABLE_LABEL,
+		CREDIT_RESERVED_LABEL,
 		CREDIT_SETTLEMENT_LABEL,
 		eligibleHolders,
 		maxApplicableAmount,
@@ -87,6 +88,7 @@
 		canShowFinancialStatement,
 		STATEMENT_PAGE_TITLE
 	} from '$lib/components/billing/financial-statement';
+	import { canShowRefundLink, REFUND_LINK_LABEL } from '$lib/components/billing/refund';
 	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
@@ -145,6 +147,7 @@
 		invoice ? canShowApplyCredit(invoice, permissions, creditBalances) : false
 	);
 	const showFinancialStatement = $derived(canShowFinancialStatement(permissions));
+	const showRefundLink = $derived(canShowRefundLink(permissions));
 	const applyHolders = $derived(eligibleHolders(creditBalances));
 	const selectedApplyHolder = $derived(
 		applyHolders.find((h) => h.holderPartyId === applyHolderId) ?? applyHolders[0] ?? null
@@ -559,7 +562,7 @@
 		if (!applyConfirm) {
 			applyError = {
 				kind: 'validation',
-				message: 'Confirmez le règlement par crédit disponible.',
+				message: 'Confirmez le règlement par crédit utilisable.',
 				preserveKey: true,
 				shouldRefresh: false,
 				allowNewIntent: false
@@ -649,6 +652,14 @@
 							class="text-sm font-bold text-indigo-800 underline"
 							href={resolve(`/billing/patients/${invoice.patientId}/statement`)}
 							data-testid="invoice-financial-statement-link">{STATEMENT_PAGE_TITLE}</a
+						>
+					{/if}
+					{#if showRefundLink}
+						·
+						<a
+							class="text-sm font-bold text-indigo-800 underline"
+							href={resolve(`/billing/refunds?patientId=${invoice.patientId}`)}
+							data-testid="invoice-refund-link">{REFUND_LINK_LABEL}</a
 						>
 					{/if}
 				</p>
@@ -783,7 +794,7 @@
 				</p>
 				{#if applyHolders.length === 0}
 					<p class="text-sm text-slate-600" data-testid="invoice-credit-balances-empty">
-						Aucun crédit disponible pour ce patient.
+						Aucun crédit utilisable pour ce patient.
 					</p>
 				{:else}
 					<ul class="space-y-1 text-sm" data-testid="invoice-credit-balances-list">
@@ -794,7 +805,10 @@
 								<span class="text-slate-500"
 									>(crédité {formatXOF(bal.totalCredited)}, utilisé {formatXOF(
 										bal.totalApplied
-									)})</span
+									)}{#if (bal.reservedForRefund ?? 0) > 0}, {CREDIT_RESERVED_LABEL.toLowerCase()}
+										<span data-testid={`invoice-credit-reserved-${bal.holderPartyId}`}
+											>{formatXOF(bal.reservedForRefund ?? 0)}</span
+										>{/if})</span
 								>
 							</li>
 						{/each}

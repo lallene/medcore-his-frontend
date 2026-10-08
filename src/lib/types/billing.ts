@@ -131,6 +131,13 @@ export interface CreditSummary {
 	totalCredited: number;
 	totalApplied: number;
 	totalRefunded: number;
+	/** LOT29F-I-A: backend ledger balance (credit − apply − executed refund). */
+	ledgerAvailable: number;
+	/** LOT29F-I-A: Σ active (en attente / autorisé) refund requests — backend authoritative. */
+	reservedForRefund: number;
+	/** LOT29F-I-A: ledgerAvailable − reservedForRefund (never computed client-side). */
+	spendableCredit: number;
+	/** Alias of spendableCredit (apply ceiling). */
 	availableCredit: number;
 }
 
@@ -176,7 +183,11 @@ export type FinancialHistoryEventType =
 	| 'CREDIT_NOTE_ISSUED'
 	| 'CREDIT_EARNED'
 	| 'CREDIT_APPLIED'
-	| 'CREDIT_APPLICATION_REVERSED';
+	| 'CREDIT_APPLICATION_REVERSED'
+	| 'REFUND_REQUESTED'
+	| 'REFUND_APPROVED'
+	| 'REFUND_REJECTED'
+	| 'REFUND_CANCELLED';
 
 export interface FinancialStatementSummary {
 	grossPatientObligation: number;
@@ -189,7 +200,11 @@ export interface FinancialStatementSummary {
 	creditEarned: number;
 	creditRestored: number;
 	creditUsed: number;
+	/** Backend: spendable credit (ledger − reserved). */
 	creditAvailable: number;
+	ledgerCreditAvailable: number;
+	reservedForRefund: number;
+	spendableCredit: number;
 }
 
 export interface FinancialStatementInvoiceLine {
@@ -218,6 +233,10 @@ export interface FinancialStatementHolder {
 	creditRestored: number;
 	creditUsed: number;
 	creditRefunded: number;
+	ledgerAvailable: number;
+	reservedForRefund: number;
+	spendableCredit: number;
+	/** Alias of spendableCredit. */
 	availableCredit: number;
 }
 
@@ -268,3 +287,92 @@ export type FinancialHistoryQuery = {
 	invoiceId?: number;
 	holderPartyId?: number;
 };
+
+/** LOT29F-I-A refund request workflow — no money execution in this lot. */
+export type RefundStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+export type RefundReasonCode =
+	| 'DUPLICATE_OR_OVERPAYMENT'
+	| 'SERVICE_CANCELLED_OR_NOT_PERFORMED'
+	| 'INVOICE_CORRECTION'
+	| 'UNUSED_ADVANCE'
+	| 'INSURANCE_COVERAGE_AFTER_PAYMENT'
+	| 'TRANSFER_OR_DEATH_BEFORE_SERVICE'
+	| 'OTHER';
+
+export type RefundBeneficiaryMode = 'HOLDER' | 'ALTERNATE';
+
+export type RefundIntendedMethod = 'UNSPECIFIED' | 'CASH' | 'CARD' | 'MOBILE_MONEY' | 'TRANSFER';
+
+export interface Refund {
+	id: number;
+	patientId: number;
+	holderPartyId: number;
+	amount: number;
+	status: RefundStatus;
+	reasonCode: RefundReasonCode | string;
+	reasonComment?: string;
+	beneficiaryMode: RefundBeneficiaryMode | string;
+	beneficiaryDisplayName: string;
+	beneficiaryKind: string;
+	beneficiaryPhone?: string;
+	beneficiaryRelationship?: string;
+	holderConsentRef?: string;
+	intendedMethod: RefundIntendedMethod | string;
+	methodOverrideReason?: string;
+	clinicalAttestationRef?: string;
+	requestedBy: number;
+	requestedAt: string;
+	approvedBy?: number | null;
+	approvedAt?: string | null;
+	rejectedBy?: number | null;
+	rejectedAt?: string | null;
+	rejectionReason?: string;
+	cancelledBy?: number | null;
+	cancelledAt?: string | null;
+	cancellationReason?: string;
+	idempotencyKey: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface RefundPage {
+	data: Refund[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+}
+
+export type RefundListQuery = {
+	page?: number;
+	limit?: number;
+	status?: string;
+	patientId?: number;
+	holderPartyId?: number;
+	reasonCode?: string;
+	dateFrom?: string;
+	dateTo?: string;
+};
+
+export interface RefundRequestPayload {
+	patientId: number;
+	holderPartyId: number;
+	amount: number;
+	reasonCode: string;
+	reasonComment?: string;
+	beneficiaryMode?: string;
+	beneficiaryDisplayName?: string;
+	beneficiaryRelationship?: string;
+	holderConsentRef?: string;
+	intendedMethod?: string;
+	methodOverrideReason?: string;
+	clinicalAttestationRef?: string;
+	idempotencyKey: string;
+}
+
+export interface RefundDecisionPayload {
+	reason?: string;
+	/** OTHER reason code requires explicit managerial approval acknowledgement. */
+	managerialApproval?: boolean;
+}

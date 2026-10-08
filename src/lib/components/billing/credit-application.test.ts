@@ -4,6 +4,7 @@ import {
 	CREDIT_APPLY_ACTION_LABEL,
 	CREDIT_APPLY_PERMISSION,
 	CREDIT_AVAILABLE_LABEL,
+	CREDIT_RESERVED_LABEL,
 	CREDIT_READ_PERMISSION,
 	CREDIT_SETTLEMENT_LABEL,
 	canShowApplyCredit,
@@ -104,7 +105,7 @@ describe('LOT29F-H-D credit application FE', () => {
 		);
 		assert.equal(
 			validateCreditApplyAmount(15000, inv({ balanceAmount: 20000 }), bal()),
-			'Crédit disponible insuffisant'
+			'Crédit utilisable insuffisant'
 		);
 		assert.equal(
 			validateCreditApplyAmount(
@@ -129,6 +130,23 @@ describe('LOT29F-H-D credit application FE', () => {
 			new Error('CREDIT_APPLICATION_EXCEEDS_BALANCE reste dû patient')
 		);
 		assert.equal(b.kind, 'stale_balance');
+	});
+
+	test('uses backend spendable credit (availableCredit) — reserved credit is not applicable', () => {
+		const reserved = bal({
+			ledgerAvailable: 10000,
+			reservedForRefund: 10000,
+			spendableCredit: 0,
+			availableCredit: 0
+		});
+		assert.equal(
+			canShowApplyCredit(inv(), [CREDIT_APPLY_PERMISSION, CREDIT_READ_PERMISSION], [reserved]),
+			false
+		);
+		assert.equal(eligibleHolders([reserved]).length, 0);
+		assert.equal(validateCreditApplyAmount(1000, inv(), reserved), 'Crédit utilisable insuffisant');
+		assert.equal(CREDIT_AVAILABLE_LABEL, 'Crédit utilisable');
+		assert.equal(CREDIT_RESERVED_LABEL, 'Montant réservé');
 	});
 
 	test('copy is not cash / refund / avoir', () => {

@@ -10,6 +10,11 @@ import type {
 	FinancialStatement,
 	Invoice,
 	InvoicePage,
+	Refund,
+	RefundDecisionPayload,
+	RefundListQuery,
+	RefundPage,
+	RefundRequestPayload,
 	Tariff
 } from '$lib/types/billing';
 export const listInvoices = async (params: Record<string, string | number> = {}) =>
@@ -124,6 +129,25 @@ export const listFinancialHistory = async (patientId: number, params: FinancialH
 			params
 		})
 	).data;
+/** LOT29F-I-A: refund request workflow (reserve spendable credit) — no money execution. */
+export const requestRefund = async (payload: RefundRequestPayload) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<Refund>('/api/billing/refunds', payload, {
+			headers: key ? { 'Idempotency-Key': key } : undefined
+		})
+	).data;
+};
+export const listRefunds = async (params: RefundListQuery = {}) =>
+	(await api.get<RefundPage>('/api/billing/refunds', { params })).data;
+export const getRefund = async (id: number) =>
+	(await api.get<Refund>(`/api/billing/refunds/${id}`)).data;
+export const approveRefund = async (id: number, payload: RefundDecisionPayload = {}) =>
+	(await api.post<Refund>(`/api/billing/refunds/${id}/approve`, payload)).data;
+export const rejectRefund = async (id: number, payload: { reason: string }) =>
+	(await api.post<Refund>(`/api/billing/refunds/${id}/reject`, payload)).data;
+export const cancelRefund = async (id: number, payload: { reason: string }) =>
+	(await api.post<Refund>(`/api/billing/refunds/${id}/cancel`, payload)).data;
 export const getActBillingStatus = async (
 	patientId: number,
 	actType: string,

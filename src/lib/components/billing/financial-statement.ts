@@ -29,7 +29,11 @@ export const summaryFieldLabels: Record<SummaryFieldKey, string> = {
 	creditEarned: 'Crédit acquis',
 	creditRestored: 'Crédit restauré',
 	creditUsed: 'Crédit consommé',
-	creditAvailable: 'Crédit disponible'
+	// Backend creditAvailable = spendable (ledger − reserved).
+	creditAvailable: 'Crédit utilisable',
+	ledgerCreditAvailable: 'Crédit au registre',
+	reservedForRefund: 'Montant réservé',
+	spendableCredit: 'Crédit utilisable'
 };
 
 export const summaryFieldOrder: SummaryFieldKey[] = [
@@ -43,6 +47,9 @@ export const summaryFieldOrder: SummaryFieldKey[] = [
 	'creditEarned',
 	'creditRestored',
 	'creditUsed',
+	'ledgerCreditAvailable',
+	'reservedForRefund',
+	// creditAvailable === spendableCredit on the backend; one tile avoids duplicates.
 	'creditAvailable'
 ];
 
@@ -61,7 +68,10 @@ export const holderFieldLabels = {
 	creditRestored: 'Crédit restauré',
 	creditUsed: 'Crédit utilisé',
 	creditRefunded: 'Crédit restitué',
-	availableCredit: 'Crédit disponible'
+	ledgerAvailable: 'Crédit au registre',
+	reservedForRefund: 'Montant réservé',
+	spendableCredit: 'Crédit utilisable',
+	availableCredit: 'Crédit utilisable'
 } as const;
 
 export const financialEventTypeLabels: Record<FinancialHistoryEventType, string> = {
@@ -71,7 +81,11 @@ export const financialEventTypeLabels: Record<FinancialHistoryEventType, string>
 	CREDIT_NOTE_ISSUED: 'Avoir émis',
 	CREDIT_EARNED: 'Crédit acquis',
 	CREDIT_APPLIED: 'Crédit utilisé',
-	CREDIT_APPLICATION_REVERSED: 'Utilisation de crédit annulée'
+	CREDIT_APPLICATION_REVERSED: 'Utilisation de crédit annulée',
+	REFUND_REQUESTED: 'Demande de remboursement',
+	REFUND_APPROVED: 'Remboursement autorisé',
+	REFUND_REJECTED: 'Demande rejetée',
+	REFUND_CANCELLED: 'Demande annulée'
 };
 
 export const financialEventTypeFilterOptions: { value: string; label: string }[] = [
@@ -133,7 +147,13 @@ export function allStatementCreditLabelsSafe(): boolean {
 		summaryFieldLabels.creditApplied,
 		summaryFieldLabels.creditAvailable,
 		summaryFieldLabels.creditEarned,
+		summaryFieldLabels.ledgerCreditAvailable,
+		summaryFieldLabels.reservedForRefund,
+		summaryFieldLabels.spendableCredit,
 		holderFieldLabels.creditUsed,
+		holderFieldLabels.ledgerAvailable,
+		holderFieldLabels.reservedForRefund,
+		holderFieldLabels.spendableCredit,
 		holderFieldLabels.availableCredit,
 		financialEventTypeLabels.CREDIT_APPLIED,
 		financialEventTypeLabels.CREDIT_EARNED,

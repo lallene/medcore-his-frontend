@@ -21,6 +21,7 @@
 		summaryFieldLabels,
 		summaryFieldOrder
 	} from '$lib/components/billing/financial-statement';
+	import { canShowRefundLink, REFUND_LINK_LABEL } from '$lib/components/billing/refund';
 	import type {
 		FinancialHistoryEvent,
 		FinancialStatement,
@@ -49,6 +50,7 @@
 
 	const patientId = $derived(Number(page.params.id));
 	const canRead = $derived(canShowFinancialStatement(permissions));
+	const showRefundLink = $derived(canShowRefundLink(permissions));
 
 	function readPermissions() {
 		const raw = localStorage.getItem('medcore_token');
@@ -140,6 +142,14 @@
 				href={resolve(`/billing?patientId=${statement.patientId}`)}
 				data-testid="financial-statement-patient-billing">Factures patient</a
 			>
+			{#if showRefundLink}
+				·
+				<a
+					class="text-sm font-bold text-blue-700"
+					href={resolve(`/billing/refunds?patientId=${statement.patientId}`)}
+					data-testid="financial-statement-refund-link">{REFUND_LINK_LABEL}</a
+				>
+			{/if}
 		{/if}
 	</p>
 
@@ -200,7 +210,7 @@
 				{/each}
 			</div>
 			<p class="mt-3 text-sm text-slate-600" data-testid="financial-statement-credit-total">
-				Total crédit disponible (information) :
+				Total crédit utilisable (information) :
 				<b>{formatXOF(statement.patientCreditTotalAvailable)}</b>
 			</p>
 		</section>
@@ -320,7 +330,25 @@
 									</dd>
 								</div>
 								<div>
-									<dt class="text-slate-500">{holderFieldLabels.availableCredit}</dt>
+									<dt class="text-slate-500">{holderFieldLabels.ledgerAvailable}</dt>
+									<dd
+										class="font-bold"
+										data-testid={`financial-statement-holder-${h.holderPartyId}-ledgerAvailable`}
+									>
+										{formatXOF(h.ledgerAvailable)}
+									</dd>
+								</div>
+								<div>
+									<dt class="text-slate-500">{holderFieldLabels.reservedForRefund}</dt>
+									<dd
+										class="font-bold"
+										data-testid={`financial-statement-holder-${h.holderPartyId}-reservedForRefund`}
+									>
+										{formatXOF(h.reservedForRefund)}
+									</dd>
+								</div>
+								<div>
+									<dt class="text-slate-500">{holderFieldLabels.spendableCredit}</dt>
 									<dd
 										class="font-bold"
 										data-testid={`financial-statement-holder-${h.holderPartyId}-availableCredit`}

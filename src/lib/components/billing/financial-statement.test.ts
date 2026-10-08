@@ -8,8 +8,10 @@ import {
 	holderFieldLabels,
 	STATEMENT_READ_PERMISSION,
 	statementCreditCopyIsSafe,
-	summaryFieldLabels
+	summaryFieldLabels,
+	summaryFieldOrder
 } from './financial-statement.ts';
+import { refundCopyIsSafe } from './refund.ts';
 
 describe('LOT29F-H-E financial statement FE', () => {
 	test('canShowFinancialStatement requires billing.statement.read', () => {
@@ -23,7 +25,31 @@ describe('LOT29F-H-E financial statement FE', () => {
 		assert.equal(summaryFieldLabels.grossPatientObligation, 'Facturé');
 		assert.equal(summaryFieldLabels.creditNoteReduction, 'Avoirs');
 		assert.equal(summaryFieldLabels.receivableOutstanding, 'Reste à payer');
-		assert.equal(summaryFieldLabels.creditAvailable, 'Crédit disponible');
+		assert.equal(summaryFieldLabels.creditAvailable, 'Crédit utilisable');
+	});
+
+	test('LOT29F-I-A labels for ledger / reserved / spendable credit', () => {
+		assert.equal(summaryFieldLabels.ledgerCreditAvailable, 'Crédit au registre');
+		assert.equal(summaryFieldLabels.reservedForRefund, 'Montant réservé');
+		assert.equal(summaryFieldLabels.spendableCredit, 'Crédit utilisable');
+		assert.equal(holderFieldLabels.reservedForRefund, 'Montant réservé');
+		assert.equal(holderFieldLabels.spendableCredit, 'Crédit utilisable');
+		assert.equal(holderFieldLabels.availableCredit, 'Crédit utilisable');
+		assert.equal(summaryFieldOrder.includes('reservedForRefund'), true);
+		assert.equal(summaryFieldOrder.includes('ledgerCreditAvailable'), true);
+		assert.equal(financialEventTypeLabel('REFUND_REQUESTED'), 'Demande de remboursement');
+		assert.equal(financialEventTypeLabel('REFUND_APPROVED'), 'Remboursement autorisé');
+		assert.equal(financialEventTypeLabel('REFUND_REJECTED'), 'Demande rejetée');
+		assert.equal(financialEventTypeLabel('REFUND_CANCELLED'), 'Demande annulée');
+		for (const t of [
+			'REFUND_REQUESTED',
+			'REFUND_APPROVED',
+			'REFUND_REJECTED',
+			'REFUND_CANCELLED'
+		]) {
+			assert.equal(refundCopyIsSafe(financialEventTypeLabel(t)), true);
+		}
+		assert.equal(refundCopyIsSafe(summaryFieldLabels.reservedForRefund), true);
 	});
 
 	test('event type labels match backend vocabulary', () => {
