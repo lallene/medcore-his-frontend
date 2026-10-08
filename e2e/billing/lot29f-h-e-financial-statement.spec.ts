@@ -244,8 +244,12 @@ test.describe('LOT29F-H-E financial statement', () => {
 			formatFcfa(30_000)
 		);
 		await expect(page.getByTestId(`financial-statement-holder-${holder}`)).toBeVisible();
+		// LOT29F-I-B: holders expose "Remboursé" (EXECUTED only). This scenario has zero refunded.
+		await expect(
+			page.getByTestId(`financial-statement-holder-${holder}-creditRefunded`)
+		).toContainText(formatFcfa(0));
 		await expect(page.getByTestId('financial-statement-holders')).not.toContainText(
-			/rembours|refund/i
+			/Remboursement effectué|refunded|paid out/i
 		);
 
 		await page.getByTestId('financial-statement-filter-event-type').selectOption('CREDIT_APPLIED');
