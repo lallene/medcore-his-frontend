@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { clinicBranding } from '$lib/config/clinic';
 	import {
+		BanknoteArrowDown,
 		BarChart3,
 		BookOpen,
 		CalendarDays,
@@ -53,6 +54,7 @@
 		'/insurance/vouchers': FileText,
 		'/insurance/authorizations': FileCheck2,
 		'/billing': CreditCard,
+		'/billing/refunds': BanknoteArrowDown,
 		'/cash': CreditCard,
 		'/receivables': ReceiptText,
 		'/insurance-receivables': Shield,

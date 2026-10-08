@@ -10,6 +10,7 @@ export type NavHref =
 	| '/insurance/vouchers'
 	| '/insurance/authorizations'
 	| '/billing'
+	| '/billing/refunds'
 	| '/cash'
 	| '/receivables'
 	| '/insurance-receivables'
