@@ -8,12 +8,17 @@
 	let {
 		title = 'Accès non autorisé',
 		description = 'Vous ne disposez pas des autorisations nécessaires pour accéder à cette fonctionnalité.',
-		homeHref = defaultLandingRoute(getStoredPermissions())
+		homeHref
 	}: {
 		title?: string;
 		description?: string;
 		homeHref?: string;
 	} = $props();
+
+	// Avoid evaluating localStorage during SSR (default prop init); fall back safely.
+	const resolvedHome = $derived(
+		homeHref ?? defaultLandingRoute(getStoredPermissions())
+	);
 </script>
 
 <section
@@ -25,7 +30,7 @@
 	</div>
 	<h2 class="text-xl font-bold text-slate-900">{title}</h2>
 	<p class="text-sm text-muted-foreground">{description}</p>
-	<a href={resolve(homeHref as '/dashboard')}>
+	<a href={resolve(resolvedHome as '/dashboard')}>
 		<Button>Retour à mon espace</Button>
 	</a>
 </section>

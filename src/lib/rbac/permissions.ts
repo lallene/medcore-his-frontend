@@ -4,10 +4,16 @@ export type PermissionClaims = { permissions?: string[] };
 
 /** Read permissions embedded in the current JWT (login snapshot). */
 export function getStoredPermissions(): string[] {
-	if (typeof localStorage === 'undefined') return [];
-	const raw = localStorage.getItem('medcore_token');
-	if (!raw) return [];
+	// Node may expose a non-Web Storage `localStorage` stub (getItem missing) — fail closed.
+	if (
+		typeof localStorage === 'undefined' ||
+		typeof localStorage?.getItem !== 'function'
+	) {
+		return [];
+	}
 	try {
+		const raw = localStorage.getItem('medcore_token');
+		if (!raw) return [];
 		return jwtDecode<PermissionClaims>(raw).permissions ?? [];
 	} catch {
 		return [];
