@@ -41,6 +41,8 @@ describe('LOT29F-H-E financial statement FE', () => {
 		assert.equal(financialEventTypeLabel('REFUND_APPROVED'), 'Remboursement autorisé');
 		assert.equal(financialEventTypeLabel('REFUND_REJECTED'), 'Demande rejetée');
 		assert.equal(financialEventTypeLabel('REFUND_CANCELLED'), 'Demande annulée');
+		assert.equal(financialEventTypeLabel('REFUND_EXECUTED'), 'Remboursement effectué');
+		assert.equal(holderFieldLabels.creditRefunded, 'Remboursé');
 		for (const t of [
 			'REFUND_REQUESTED',
 			'REFUND_APPROVED',
@@ -50,6 +52,9 @@ describe('LOT29F-H-E financial statement FE', () => {
 			assert.equal(refundCopyIsSafe(financialEventTypeLabel(t)), true);
 		}
 		assert.equal(refundCopyIsSafe(summaryFieldLabels.reservedForRefund), true);
+		// EXECUTED / Remboursé are intentional I-B payout vocabulary.
+		assert.equal(refundCopyIsSafe(financialEventTypeLabel('REFUND_EXECUTED')), false);
+		assert.equal(refundCopyIsSafe(holderFieldLabels.creditRefunded), false);
 	});
 
 	test('event type labels match backend vocabulary', () => {

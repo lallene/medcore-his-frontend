@@ -187,7 +187,8 @@ export type FinancialHistoryEventType =
 	| 'REFUND_REQUESTED'
 	| 'REFUND_APPROVED'
 	| 'REFUND_REJECTED'
-	| 'REFUND_CANCELLED';
+	| 'REFUND_CANCELLED'
+	| 'REFUND_EXECUTED';
 
 export interface FinancialStatementSummary {
 	grossPatientObligation: number;
@@ -288,8 +289,8 @@ export type FinancialHistoryQuery = {
 	holderPartyId?: number;
 };
 
-/** LOT29F-I-A refund request workflow — no money execution in this lot. */
-export type RefundStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+/** LOT29F-I-A/I-B refund workflow — EXECUTED is the only money-leaving state. */
+export type RefundStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXECUTED';
 
 export type RefundReasonCode =
 	| 'DUPLICATE_OR_OVERPAYMENT'
@@ -334,6 +335,35 @@ export interface Refund {
 	idempotencyKey: string;
 	createdAt: string;
 	updatedAt: string;
+	execution?: RefundExecution | null;
+}
+
+export interface RefundExecution {
+	id: number;
+	refundId: number;
+	method: string;
+	executedBy: number;
+	executedAt: string;
+	externalReference?: string;
+	evidenceReference?: string;
+	beneficiaryRailRef?: string;
+	cashSessionId?: number | null;
+	cashRegisterId?: number | null;
+	cashMovementId?: number | null;
+	beneficiaryMode: string;
+	beneficiaryDisplayName: string;
+	beneficiaryKind: string;
+	idempotencyKey: string;
+	createdAt: string;
+}
+
+export interface RefundExecutePayload {
+	method?: string;
+	externalReference?: string;
+	evidenceReference?: string;
+	beneficiaryRailRef?: string;
+	hostSessionId?: number;
+	idempotencyKey: string;
 }
 
 export interface RefundPage {

@@ -6,6 +6,7 @@
 	import {
 		approveRefund,
 		cancelRefund,
+		executeRefund,
 		getCreditSummary,
 		getRefund,
 		listPatientCreditBalances,
@@ -13,6 +14,7 @@
 		rejectRefund,
 		requestRefund
 	} from '$lib/api/billing';
+	import { currentSession } from '$lib/api/cash';
 	import {
 		beginPaymentCommand,
 		completePaymentCommandError,
@@ -23,20 +25,31 @@
 	import { can, formatXOF } from '$lib/components/billing/state';
 	import { CREDIT_READ_PERMISSION } from '$lib/components/billing/credit-application';
 	import {
+		buildRefundExecutePayload,
 		buildRefundPayload,
 		canRequestRefund,
 		canReadRefunds,
 		canShowApproveAction,
 		canShowCancelAction,
+		canShowExecuteAction,
 		canShowRejectAction,
 		classifyRefundError,
+		createRefundExecuteFormState,
 		createRefundFormState,
+		isCashRefundMethod,
+		isExternalRefundMethod,
+		isOwnRefundApproval,
 		isOwnRefundRequest,
 		reasonRequiresAttestation,
 		reasonRequiresComment,
 		reasonRequiresManagerialApproval,
+		resolveExecuteMethod,
 		REFUND_APPROVE_ACTION_LABEL,
 		REFUND_CANCEL_ACTION_LABEL,
+		REFUND_EXECUTE_ACTION_LABEL,
+		REFUND_EXECUTE_CASH_NOTICE,
+		REFUND_EXECUTE_EXTERNAL_ACTION_LABEL,
+		REFUND_EXECUTE_EXTERNAL_NOTICE,
 		REFUND_LEDGER_LABEL,
 		REFUND_NO_PAYOUT_NOTICE,
 		REFUND_PAGE_TITLE,
@@ -58,12 +71,14 @@
 		refundStatusTone,
 		validateRefundApproval,
 		validateRefundDecisionReason,
+		validateRefundExecuteForm,
 		validateRefundForm,
 		type RefundUxError
 	} from '$lib/components/billing/refund';
 	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
 	import { isAccessDeniedError } from '$lib/rbac/permissions';
 	import type { CreditSummary, Refund } from '$lib/types/billing';
+	import type { SessionSummary } from '$lib/types/cash';
 
 	type DecisionMode = 'approve' | 'reject' | 'cancel';
 
@@ -106,6 +121,14 @@
 	let decisionBusy = $state(false);
 	let decisionError = $state('');
 
+	let executeOpen = $state(false);
+	let executeForm = $state(createRefundExecuteFormState());
+	let executeCmd = $state(createPaymentCommandState());
+	let executeError = $state<RefundUxError | null>(null);
+	let openCashSession = $state<SessionSummary | null>(null);
+	let cashSessionLoading = $state(false);
+	let cashSessionError = $state('');
+
 	const canRead = $derived(canReadRefunds(permissions));
 	const showRequest = $derived(canRequestRefund(permissions));
 	const canReadCredit = $derived(can(permissions, CREDIT_READ_PERMISSION));
@@ -113,6 +136,15 @@
 	const needsAttestation = $derived(reasonRequiresAttestation(form.reasonCode));
 	const isAlternate = $derived(form.beneficiaryMode === 'ALTERNATE');
 	const ownSelected = $derived(selected ? isOwnRefundRequest(selected, userId) : false);
+	const ownApproval = $derived(selected ? isOwnRefundApproval(selected, userId) : false);
+	const executeMethod = $derived(
+		selected ? resolveExecuteMethod(selected, executeForm.method) : ''
+	);
+	const executeIsCash = $derived(isCashRefundMethod(executeMethod));
+	const executeIsExternal = $derived(isExternalRefundMethod(executeMethod));
+	const methodNeedsPick = $derived(
+		!!selected && (!selected.intendedMethod || selected.intendedMethod === 'UNSPECIFIED')
+	);
 
 	function readClaims() {
 		const raw = localStorage.getItem('medcore_token');
@@ -212,6 +244,7 @@
 		selectedSummary = null;
 		detailError = '';
 		resetDecision();
+		resetExecute();
 	}
 
 	function resetDecision() {
@@ -222,11 +255,57 @@
 		decisionError = '';
 	}
 
+	function resetExecute() {
+		executeOpen = false;
+		executeForm = createRefundExecuteFormState();
+		executeCmd = createPaymentCommandState();
+		executeError = null;
+		openCashSession = null;
+		cashSessionError = '';
+		cashSessionLoading = false;
+	}
+
 	function startDecision(mode: DecisionMode) {
+		resetExecute();
 		decisionMode = mode;
 		decisionReason = '';
 		decisionManagerial = false;
 		decisionError = '';
+	}
+
+	async function loadOpenCashSession() {
+		cashSessionLoading = true;
+		cashSessionError = '';
+		try {
+			openCashSession = await currentSession();
+			if (!openCashSession || openCashSession.session.status !== 'OPEN') {
+				openCashSession = null;
+				cashSessionError = 'Aucune session de caisse ouverte pour votre compte.';
+			}
+		} catch (e: unknown) {
+			openCashSession = null;
+			cashSessionError = classifyRefundError(e).message;
+		} finally {
+			cashSessionLoading = false;
+		}
+	}
+
+	async function startExecute() {
+		if (!selected) return;
+		resetDecision();
+		executeOpen = true;
+		executeError = null;
+		executeForm = createRefundExecuteFormState({
+			method:
+				selected.intendedMethod && selected.intendedMethod !== 'UNSPECIFIED'
+					? selected.intendedMethod
+					: ''
+		});
+		executeCmd = createPaymentCommandState();
+		const method = resolveExecuteMethod(selected, executeForm.method);
+		if (isCashRefundMethod(method) || !method) {
+			await loadOpenCashSession();
+		}
 	}
 
 	async function submitRequest() {
@@ -322,6 +401,79 @@
 			}
 		} finally {
 			decisionBusy = false;
+		}
+	}
+
+	async function submitExecute() {
+		if (!selected || isPaymentSubmitDisabled(executeCmd)) return;
+		const current = selected;
+		executeError = null;
+		const invalid = validateRefundExecuteForm(current, executeForm);
+		if (invalid) {
+			executeError = {
+				kind: 'validation',
+				message: invalid,
+				preserveKey: true,
+				shouldRefresh: false
+			};
+			return;
+		}
+		const method = resolveExecuteMethod(current, executeForm.method);
+		if (isCashRefundMethod(method)) {
+			if (!openCashSession || openCashSession.session.status !== 'OPEN') {
+				executeError = {
+					kind: 'cash_session_required',
+					message: 'Une session de caisse ouverte est requise pour un remboursement en espèces.',
+					preserveKey: false,
+					shouldRefresh: true
+				};
+				await loadOpenCashSession();
+				return;
+			}
+			if ((openCashSession.expectedCash ?? 0) < current.amount) {
+				executeError = {
+					kind: 'insufficient_cash',
+					message: 'Espèces insuffisantes dans la caisse ouverte — actualisez la session.',
+					preserveKey: false,
+					shouldRefresh: true
+				};
+				await loadOpenCashSession();
+				return;
+			}
+		}
+		executeCmd = beginPaymentCommand(executeCmd);
+		try {
+			const updated = await executeRefund(
+				current.id,
+				buildRefundExecutePayload(current, executeForm, executeCmd.idempotencyKey)
+			);
+			executeCmd = completePaymentCommandSuccess();
+			selected = updated;
+			resetExecute();
+			successMessage = `Remboursement n° ${updated.id} effectué (${refundStatusLabel(updated.status)}).`;
+			await Promise.all([
+				loadList(listPageNum),
+				refreshSelectedSummary(updated),
+				balancesPatientId === updated.patientId
+					? loadBalances(updated.patientId)
+					: Promise.resolve()
+			]);
+		} catch (e: unknown) {
+			const classified = classifyRefundError(e);
+			executeError = classified;
+			executeCmd = classified.preserveKey
+				? completePaymentCommandError(executeCmd)
+				: createPaymentCommandState();
+			if (classified.shouldRefresh) {
+				void loadList(listPageNum);
+				void getRefund(current.id)
+					.then((fresh) => {
+						selected = fresh;
+						return refreshSelectedSummary(fresh);
+					})
+					.catch(() => undefined);
+				if (isCashRefundMethod(method)) void loadOpenCashSession();
+			}
 		}
 	}
 
@@ -733,6 +885,30 @@
 								</dd>
 							</div>
 						{/if}
+						{#if selected.execution}
+							<div class="sm:col-span-2" data-testid="refund-execution-block">
+								<dt class="text-xs font-bold uppercase text-slate-500">Exécution</dt>
+								<dd class="space-y-1">
+									<p>
+										{refundMethodLabel(selected.execution.method)} · {fmtDate(
+											selected.execution.executedAt
+										)} · utilisateur #{selected.execution.executedBy}
+									</p>
+									{#if selected.execution.externalReference}
+										<p data-testid="refund-execution-ext-ref">
+											Réf. externe : {selected.execution.externalReference}
+										</p>
+									{/if}
+									{#if selected.execution.cashSessionId}
+										<p data-testid="refund-execution-cash">
+											Caisse session #{selected.execution.cashSessionId}
+											{#if selected.execution.cashRegisterId}
+												· registre #{selected.execution.cashRegisterId}{/if}
+										</p>
+									{/if}
+								</dd>
+							</div>
+						{/if}
 						{#if selected.reasonComment}
 							<div class="sm:col-span-2">
 								<dt class="text-xs font-bold uppercase text-slate-500">Commentaire</dt>
@@ -773,6 +949,12 @@
 							autorise ou rejette cette demande.
 						</p>
 					{/if}
+					{#if ownApproval && selected.status === 'APPROVED'}
+						<p class="text-sm text-slate-600" data-testid="refund-exec-sod-hint">
+							Vous avez autorisé cette demande : un autre utilisateur doit exécuter le
+							remboursement.
+						</p>
+					{/if}
 
 					<div class="flex flex-wrap gap-2" data-testid="refund-actions">
 						{#if canShowApproveAction(selected, permissions)}
@@ -801,7 +983,151 @@
 								onclick={() => startDecision('cancel')}>{REFUND_CANCEL_ACTION_LABEL}</button
 							>
 						{/if}
+						{#if canShowExecuteAction(selected, permissions)}
+							<button
+								type="button"
+								class="rounded-xl bg-sky-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+								data-testid="refund-execute"
+								disabled={ownApproval || executeOpen}
+								onclick={() => void startExecute()}
+								>{executeIsExternal ||
+								(selected.intendedMethod && isExternalRefundMethod(selected.intendedMethod))
+									? REFUND_EXECUTE_EXTERNAL_ACTION_LABEL
+									: REFUND_EXECUTE_ACTION_LABEL}</button
+							>
+						{/if}
 					</div>
+
+					{#if executeOpen && selected.status === 'APPROVED'}
+						<div
+							class="space-y-3 rounded-xl border border-sky-200 bg-sky-50/70 p-4"
+							data-testid="refund-execute-panel"
+						>
+							{#if executeIsCash}
+								<p class="text-sm text-slate-700" data-testid="refund-execute-cash-notice">
+									{REFUND_EXECUTE_CASH_NOTICE}
+								</p>
+								{#if cashSessionLoading}
+									<p class="text-sm text-slate-500">Chargement de la session de caisse…</p>
+								{:else if openCashSession}
+									<div
+										class="rounded-lg border bg-white p-3 text-sm"
+										data-testid="refund-execute-cash-session"
+									>
+										<p>
+											<span class="font-bold">Session ouverte</span> #{openCashSession.session.id}
+											· {openCashSession.session.register?.name ??
+												`registre #${openCashSession.session.cashRegisterId}`}
+										</p>
+										<p>
+											Espèces attendues :
+											<b data-testid="refund-execute-expected-cash"
+												>{formatXOF(openCashSession.expectedCash)}</b
+											>
+										</p>
+									</div>
+								{:else}
+									<p
+										class="text-sm font-bold text-amber-900"
+										data-testid="refund-execute-cash-missing"
+										role="alert"
+									>
+										{cashSessionError ||
+											'Ouvrez une session de caisse avant d’exécuter un remboursement en espèces.'}
+									</p>
+								{/if}
+							{:else if executeIsExternal}
+								<p class="text-sm text-slate-700" data-testid="refund-execute-external-notice">
+									{REFUND_EXECUTE_EXTERNAL_NOTICE}
+								</p>
+							{/if}
+
+							{#if methodNeedsPick}
+								<label class="block text-sm">
+									<span class="font-bold">Mode d’exécution</span>
+									<select
+										class="mt-1 w-full rounded-lg border p-2"
+										data-testid="refund-execute-method"
+										bind:value={executeForm.method}
+										onchange={() => {
+											const m = resolveExecuteMethod(selected!, executeForm.method);
+											if (isCashRefundMethod(m)) void loadOpenCashSession();
+										}}
+									>
+										<option value="">Choisir…</option>
+										{#each refundMethodOptions.filter((o) => o.value !== 'UNSPECIFIED') as opt (opt.value)}
+											<option value={opt.value}>{opt.label}</option>
+										{/each}
+									</select>
+								</label>
+							{:else}
+								<p class="text-sm" data-testid="refund-execute-method-locked">
+									Mode autorisé : <b>{refundMethodLabel(selected.intendedMethod)}</b>
+								</p>
+							{/if}
+
+							{#if executeIsExternal}
+								<label class="block text-sm">
+									<span class="font-bold">Référence externe (obligatoire)</span>
+									<input
+										class="mt-1 w-full rounded-lg border p-2"
+										data-testid="refund-execute-ext-ref"
+										bind:value={executeForm.externalReference}
+										maxlength="120"
+									/>
+								</label>
+								<label class="block text-sm">
+									<span class="font-bold">Compte / numéro bénéficiaire</span>
+									<input
+										class="mt-1 w-full rounded-lg border p-2"
+										data-testid="refund-execute-rail-ref"
+										bind:value={executeForm.beneficiaryRailRef}
+										maxlength="120"
+									/>
+								</label>
+								<label class="block text-sm">
+									<span class="font-bold">Référence de preuve (optionnel)</span>
+									<input
+										class="mt-1 w-full rounded-lg border p-2"
+										data-testid="refund-execute-evidence"
+										bind:value={executeForm.evidenceReference}
+										maxlength="120"
+									/>
+								</label>
+							{/if}
+
+							{#if executeError}
+								<p
+									class="text-sm font-bold text-amber-900"
+									data-testid="refund-execute-error"
+									role="alert"
+								>
+									{executeError.message}
+								</p>
+							{/if}
+							<div class="flex gap-2">
+								<button
+									type="button"
+									class="rounded-xl border px-4 py-2 font-bold"
+									data-testid="refund-execute-cancel"
+									onclick={resetExecute}>Retour</button
+								>
+								<button
+									type="button"
+									class="rounded-xl bg-sky-900 px-4 py-2 font-bold text-white disabled:opacity-40"
+									data-testid="refund-execute-submit"
+									disabled={isPaymentSubmitDisabled(executeCmd) ||
+										(executeIsCash && !openCashSession)}
+									onclick={() => void submitExecute()}
+									>{isPaymentSubmitDisabled(executeCmd)
+										? 'Traitement…'
+										: executeIsExternal
+											? REFUND_EXECUTE_EXTERNAL_ACTION_LABEL
+											: REFUND_EXECUTE_ACTION_LABEL}</button
+								>
+							</div>
+						</div>
+					{/if}
 
 					{#if decisionMode}
 						<div

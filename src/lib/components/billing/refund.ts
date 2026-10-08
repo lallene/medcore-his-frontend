@@ -1,6 +1,6 @@
 /**
- * LOT29F-I-A — Refund request workflow (reserve spendable credit → decision).
- * Presentation + UX validation only. No money execution, no client financial arithmetic.
+ * LOT29F-I-A/I-B — Refund request → approval → genuine execution.
+ * Presentation + UX validation only. No client financial arithmetic.
  */
 
 import axios from 'axios';
@@ -8,6 +8,7 @@ import { can } from './state.ts';
 import type {
 	Refund,
 	RefundBeneficiaryMode,
+	RefundExecutePayload,
 	RefundIntendedMethod,
 	RefundReasonCode,
 	RefundRequestPayload,
@@ -17,6 +18,7 @@ import type {
 export const REFUND_REQUEST_PERMISSION = 'billing.refund.request';
 export const REFUND_APPROVE_PERMISSION = 'billing.refund.approve';
 export const REFUND_CANCEL_PERMISSION = 'billing.refund.cancel';
+export const REFUND_EXECUTE_PERMISSION = 'billing.refund.execute';
 export const REFUND_READ_PERMISSION = 'billing.refund.read';
 
 export const REFUND_PAGE_TITLE = 'Demandes de remboursement';
@@ -25,18 +27,29 @@ export const REFUND_REQUEST_ACTION_LABEL = 'Enregistrer la demande';
 export const REFUND_APPROVE_ACTION_LABEL = 'Autoriser';
 export const REFUND_REJECT_ACTION_LABEL = 'Rejeter la demande';
 export const REFUND_CANCEL_ACTION_LABEL = 'Annuler la demande';
+export const REFUND_EXECUTE_ACTION_LABEL = 'Exécuter le remboursement';
+export const REFUND_EXECUTE_EXTERNAL_ACTION_LABEL = 'Enregistrer un remboursement déjà effectué';
 export const REFUND_RESERVED_LABEL = 'Montant réservé';
 export const REFUND_SPENDABLE_LABEL = 'Crédit utilisable';
 export const REFUND_LEDGER_LABEL = 'Crédit au registre';
+export const REFUND_REFUNDED_LABEL = 'Remboursé';
 export const REFUND_LINK_LABEL = 'Demandes de remboursement';
 
 export const MIN_REFUND_DECISION_REASON_LEN = 3;
 export const MAX_REFUND_DECISION_REASON_LEN = 1000;
 export const MAX_REFUND_COMMENT_LEN = 1000;
+export const MIN_EXTERNAL_REF_LEN = 3;
+export const MAX_EXTERNAL_REF_LEN = 120;
 
 /** UX copy: authorization only — no payout implied. */
 export const REFUND_NO_PAYOUT_NOTICE =
 	'Cette demande réserve du crédit utilisable. Aucune sortie d’argent n’est enregistrée à cette étape.';
+
+export const REFUND_EXECUTE_CASH_NOTICE =
+	'Le remboursement en espèces sortira de la caisse ouverte de l’exécutant. Confirmation définitive.';
+
+export const REFUND_EXECUTE_EXTERNAL_NOTICE =
+	'MedCore enregistre un remboursement déjà effectué hors système. Aucun paiement n’est initié par MedCore.';
 
 // ── Permissions ────────────────────────────────────────────────────────────────
 
@@ -66,6 +79,10 @@ export function canRejectRefund(permissions: string[]): boolean {
 	return canApproveRefund(permissions);
 }
 
+export function canExecuteRefund(permissions: string[]): boolean {
+	return can(permissions, REFUND_EXECUTE_PERMISSION);
+}
+
 export function canShowRefundLink(permissions: string[]): boolean {
 	return canReadRefunds(permissions);
 }
@@ -76,7 +93,8 @@ export const refundStatusLabels: Record<RefundStatus, string> = {
 	REQUESTED: 'En attente de validation',
 	APPROVED: 'Remboursement autorisé',
 	REJECTED: 'Demande rejetée',
-	CANCELLED: 'Demande annulée'
+	CANCELLED: 'Demande annulée',
+	EXECUTED: 'Remboursement effectué'
 };
 
 export const refundStatusFilterOptions: { value: string; label: string }[] = [
@@ -102,6 +120,8 @@ export function refundStatusTone(status: string): string {
 			return 'bg-amber-100 text-amber-900';
 		case 'APPROVED':
 			return 'bg-emerald-100 text-emerald-900';
+		case 'EXECUTED':
+			return 'bg-sky-100 text-sky-900';
 		case 'REJECTED':
 			return 'bg-red-100 text-red-800';
 		case 'CANCELLED':
@@ -321,6 +341,22 @@ export function canShowCancelAction(
 	);
 }
 
+/** Execute only on APPROVED; SoD (executor ≠ approver) is enforced by the backend. */
+export function canShowExecuteAction(
+	refund: Pick<Refund, 'status'>,
+	permissions: string[]
+): boolean {
+	return refund.status === 'APPROVED' && canExecuteRefund(permissions);
+}
+
+export function isCashRefundMethod(method: string): boolean {
+	return method === 'CASH';
+}
+
+export function isExternalRefundMethod(method: string): boolean {
+	return method === 'CARD' || method === 'MOBILE_MONEY' || method === 'TRANSFER';
+}
+
 /** Hint only (SoD is enforced by the backend). */
 export function isOwnRefundRequest(
 	refund: Pick<Refund, 'requestedBy'>,
@@ -329,14 +365,101 @@ export function isOwnRefundRequest(
 	return typeof userId === 'number' && userId > 0 && refund.requestedBy === userId;
 }
 
+/** Hint only — approver must not execute (backend enforces). */
+export function isOwnRefundApproval(
+	refund: Pick<Refund, 'approvedBy'>,
+	userId: number | null | undefined
+): boolean {
+	return (
+		typeof userId === 'number' &&
+		userId > 0 &&
+		typeof refund.approvedBy === 'number' &&
+		refund.approvedBy === userId
+	);
+}
+
+export type RefundExecuteFormState = {
+	method: string;
+	externalReference: string;
+	evidenceReference: string;
+	beneficiaryRailRef: string;
+};
+
+export function createRefundExecuteFormState(
+	partial: Partial<RefundExecuteFormState> = {}
+): RefundExecuteFormState {
+	return {
+		method: '',
+		externalReference: '',
+		evidenceReference: '',
+		beneficiaryRailRef: '',
+		...partial
+	};
+}
+
+export function resolveExecuteMethod(
+	refund: Pick<Refund, 'intendedMethod'>,
+	formMethod: string
+): string {
+	const intended = (refund.intendedMethod || '').trim().toUpperCase();
+	if (intended && intended !== 'UNSPECIFIED') return intended;
+	return (formMethod || '').trim().toUpperCase();
+}
+
+export function validateRefundExecuteForm(
+	refund: Pick<Refund, 'intendedMethod' | 'beneficiaryDisplayName'>,
+	form: RefundExecuteFormState
+): string | null {
+	const method = resolveExecuteMethod(refund, form.method);
+	if (!method) return 'Mode d’exécution obligatoire';
+	if (!['CASH', 'CARD', 'MOBILE_MONEY', 'TRANSFER'].includes(method)) {
+		return 'Mode d’exécution invalide';
+	}
+	if (isExternalRefundMethod(method)) {
+		const ref = form.externalReference.trim();
+		if (!ref) return 'Référence externe obligatoire';
+		if (ref.length < MIN_EXTERNAL_REF_LEN) {
+			return `Référence externe trop courte (min. ${MIN_EXTERNAL_REF_LEN} caractères)`;
+		}
+		if (ref.length > MAX_EXTERNAL_REF_LEN) return 'Référence externe trop longue';
+		if (!form.beneficiaryRailRef.trim()) {
+			return 'Référence bénéficiaire (compte/numéro) obligatoire';
+		}
+	}
+	return null;
+}
+
+export function buildRefundExecutePayload(
+	refund: Pick<Refund, 'intendedMethod'>,
+	form: RefundExecuteFormState,
+	idempotencyKey: string
+): RefundExecutePayload {
+	const method = resolveExecuteMethod(refund, form.method);
+	const payload: RefundExecutePayload = { idempotencyKey };
+	if (!(refund.intendedMethod && refund.intendedMethod !== 'UNSPECIFIED')) {
+		payload.method = method;
+	}
+	if (isExternalRefundMethod(method)) {
+		payload.externalReference = form.externalReference.trim();
+		payload.beneficiaryRailRef = form.beneficiaryRailRef.trim();
+		const evidence = form.evidenceReference.trim();
+		if (evidence) payload.evidenceReference = evidence;
+	}
+	return payload;
+}
+
 // ── Error classification ───────────────────────────────────────────────────────
 
 export type RefundUxErrorKind =
 	| 'validation'
 	| 'permission'
 	| 'insufficient_spendable'
+	| 'insufficient_cash'
+	| 'cash_session_required'
 	| 'invalid_status'
 	| 'sod'
+	| 'method_mismatch'
+	| 'external_ref_required'
 	| 'manager_required'
 	| 'attestation_required'
 	| 'consent_required'
@@ -402,10 +525,63 @@ export function classifyRefundError(error: unknown): RefundUxError {
 			shouldRefresh: false
 		};
 	}
-	if (by('REFUND_INVALID_STATUS', /ne peut plus être annulée|Seule une demande/i)) {
+	if (by('REFUND_EXEC_SOD_VIOLATION', /autorisateur ne peut pas exécuter/i)) {
+		return {
+			kind: 'sod',
+			message:
+				'Séparation des tâches : l’autorisateur ne peut pas finaliser ce remboursement. Un autre utilisateur doit intervenir.',
+			preserveKey: false,
+			shouldRefresh: false
+		};
+	}
+	if (
+		by('REFUND_INVALID_STATUS', /ne peut plus être annulée|Seule une demande/i) ||
+		by('REFUND_EXEC_INVALID_STATUS', /APPROVED peut être exécuté|déjà exécuté/i) ||
+		by('REFUND_EXEC_ALREADY_EXECUTED', /déjà exécuté/i)
+	) {
 		return {
 			kind: 'invalid_status',
 			message: 'Le statut de cette demande a changé — actualisez avant de continuer.',
+			preserveKey: false,
+			shouldRefresh: true
+		};
+	}
+	if (by('REFUND_EXEC_INSUFFICIENT_CASH', /espèces insuffisant|caisse insuffisant/i)) {
+		return {
+			kind: 'insufficient_cash',
+			message: 'Espèces insuffisantes dans la caisse ouverte — actualisez la session.',
+			preserveKey: false,
+			shouldRefresh: true
+		};
+	}
+	if (by('REFUND_EXEC_CASH_SESSION_REQUIRED', /session.*ouverte|caisse ouverte/i)) {
+		return {
+			kind: 'cash_session_required',
+			message: 'Une session de caisse ouverte est requise pour un remboursement en espèces.',
+			preserveKey: false,
+			shouldRefresh: true
+		};
+	}
+	if (by('REFUND_EXEC_METHOD_MISMATCH', /mode d'exécution|mode autorisé/i)) {
+		return {
+			kind: 'method_mismatch',
+			message: 'Le mode d’exécution doit correspondre au mode autorisé.',
+			preserveKey: false,
+			shouldRefresh: false
+		};
+	}
+	if (by('REFUND_EXEC_EXTERNAL_REF_REQUIRED', /Référence externe obligatoire/i)) {
+		return {
+			kind: 'external_ref_required',
+			message: 'Référence externe obligatoire pour enregistrer ce remboursement.',
+			preserveKey: true,
+			shouldRefresh: false
+		};
+	}
+	if (by('REFUND_EXEC_IDEMPOTENCY_CONFLICT', /idempotence/i)) {
+		return {
+			kind: 'idempotency_conflict',
+			message: 'Clé d’idempotence déjà utilisée avec une autre exécution.',
 			preserveKey: false,
 			shouldRefresh: true
 		};
@@ -474,10 +650,10 @@ export function classifyRefundError(error: unknown): RefundUxError {
 	};
 }
 
-// ── Copy safety (no money-execution wording) ───────────────────────────────────
+// ── Copy safety (request/decision stage must not imply payout) ─────────────────
 
-/** Wording that would imply money left the clinic. Refund *request* wording stays allowed. */
-const FORBIDDEN_EXECUTION_PATTERNS: RegExp[] = [
+/** Wording that would imply money left the clinic at the request/decision stage. */
+const FORBIDDEN_REQUEST_STAGE_PATTERNS: RegExp[] = [
 	/rembours[ée]e?s?(?![\p{L}])/iu,
 	/rembours(ement|ements)\s+(effectu|ex[ée]cut|vers[ée])/iu,
 	/montant\s+vers[ée]/iu,
@@ -489,11 +665,12 @@ const FORBIDDEN_EXECUTION_PATTERNS: RegExp[] = [
 	/\bexecute[d]?\b/i
 ];
 
+/** Request/decision-stage copy must not imply a completed payout. */
 export function refundCopyIsSafe(text: string): boolean {
-	return !FORBIDDEN_EXECUTION_PATTERNS.some((re) => re.test(text));
+	return !FORBIDDEN_REQUEST_STAGE_PATTERNS.some((re) => re.test(text));
 }
 
-/** All static refund UX strings pass the execution-wording guard. */
+/** Request/decision static labels only (EXECUTED / execute CTAs intentionally excluded). */
 export function allRefundLabelsSafe(): boolean {
 	const samples: string[] = [
 		REFUND_PAGE_TITLE,
@@ -507,7 +684,10 @@ export function allRefundLabelsSafe(): boolean {
 		REFUND_LEDGER_LABEL,
 		REFUND_LINK_LABEL,
 		REFUND_NO_PAYOUT_NOTICE,
-		...Object.values(refundStatusLabels),
+		refundStatusLabels.REQUESTED,
+		refundStatusLabels.APPROVED,
+		refundStatusLabels.REJECTED,
+		refundStatusLabels.CANCELLED,
 		...Object.values(refundReasonLabels),
 		...Object.values(refundBeneficiaryModeLabels),
 		...Object.values(refundMethodLabels)

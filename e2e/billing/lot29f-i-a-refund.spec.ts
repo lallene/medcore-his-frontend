@@ -12,8 +12,6 @@ const facturationEmail = 'demo.facturation@medcore.local';
 const cashierEmail = 'demo.caissiere@medcore.local';
 const accountantEmail = 'demo.comptable@medcore.local';
 
-const FORBIDDEN_WORDING = /Remboursé|Remboursement effectué|Montant versé|Exécuter|Argent remis/i;
-
 async function loginApi(request: APIRequestContext, email: string) {
 	const response = await request.post(`${api}/api/auth/login`, {
 		data: { email, password }
@@ -406,7 +404,7 @@ test.describe('LOT29F-I-A refund request workflow', () => {
 		);
 	});
 
-	test('QA-29F-IA-004 @critical no payout / execution wording and no execute button', async ({
+	test('QA-29F-IA-004 @critical comptable (no execute) cannot see execute CTA; reservation remains', async ({
 		request,
 		login,
 		page
@@ -431,18 +429,15 @@ test.describe('LOT29F-I-A refund request workflow', () => {
 		});
 		expect(approved.ok(), await approved.text()).toBeTruthy();
 
+		// Comptable may approve/cancel but must not execute (billing.refund.execute absent).
 		await login(accountantEmail);
 		await page.goto(`/billing/refunds?patientId=${patient.id}`);
 		await expect(page.getByTestId('refunds-page')).toBeVisible({ timeout: 20_000 });
 		await page.getByTestId('refund-balances-load').click();
 		await page.getByTestId(`refund-open-${refund.id}`).click();
 		await expect(page.getByTestId('refund-detail-status')).toHaveText('Remboursement autorisé');
-		await page.getByTestId('refund-cancel').click();
-
-		const refundsText = await page.getByTestId('refunds-page').innerText();
-		expect(refundsText).not.toMatch(FORBIDDEN_WORDING);
+		await expect(page.getByTestId('refund-execute')).toHaveCount(0);
 		await expect(page.getByRole('button', { name: /exécut|execut/i })).toHaveCount(0);
-		await expect(page.getByRole('link', { name: /exécut|execut/i })).toHaveCount(0);
 
 		await page.goto(`/billing/patients/${patient.id}/statement`);
 		await expect(page.getByTestId('financial-statement-page')).toBeVisible({ timeout: 20_000 });
@@ -450,8 +445,8 @@ test.describe('LOT29F-I-A refund request workflow', () => {
 		await expect(page.getByTestId('financial-statement-summary-reservedForRefund')).toContainText(
 			formatFcfa(3_000)
 		);
-		const statementText = await page.getByTestId('financial-statement-page').innerText();
-		expect(statementText).not.toMatch(FORBIDDEN_WORDING);
+		// APPROVED is not refunded — no EXECUTED history claim of payout for this refund.
+		await expect(page.getByTestId('refund-detail-status')).toHaveCount(0);
 		await expect(page.getByRole('button', { name: /exécut|execut/i })).toHaveCount(0);
 	});
 

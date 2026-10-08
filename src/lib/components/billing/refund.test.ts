@@ -4,21 +4,27 @@ import { AxiosError, type AxiosResponse } from 'axios';
 import {
 	REFUND_APPROVE_PERMISSION,
 	REFUND_CANCEL_PERMISSION,
+	REFUND_EXECUTE_PERMISSION,
 	REFUND_READ_PERMISSION,
 	REFUND_REQUEST_PERMISSION,
 	allRefundLabelsSafe,
+	buildRefundExecutePayload,
 	buildRefundPayload,
 	canApproveRefund,
 	canCancelRefund,
+	canExecuteRefund,
 	canReadRefunds,
 	canRejectRefund,
 	canRequestRefund,
 	canShowApproveAction,
 	canShowCancelAction,
+	canShowExecuteAction,
 	canShowRefundLink,
 	canShowRejectAction,
 	classifyRefundError,
+	createRefundExecuteFormState,
 	createRefundFormState,
+	isOwnRefundApproval,
 	isOwnRefundRequest,
 	reasonRequiresAttestation,
 	reasonRequiresComment,
@@ -32,11 +38,17 @@ import {
 	refundStatusLabels,
 	validateRefundApproval,
 	validateRefundDecisionReason,
+	validateRefundExecuteForm,
 	validateRefundForm
 } from './refund.ts';
 
-const cashier = [REFUND_REQUEST_PERMISSION, REFUND_READ_PERMISSION];
-const facturation = [REFUND_REQUEST_PERMISSION, REFUND_CANCEL_PERMISSION, REFUND_READ_PERMISSION];
+const cashier = [REFUND_REQUEST_PERMISSION, REFUND_EXECUTE_PERMISSION, REFUND_READ_PERMISSION];
+const facturation = [
+	REFUND_REQUEST_PERMISSION,
+	REFUND_CANCEL_PERMISSION,
+	REFUND_EXECUTE_PERMISSION,
+	REFUND_READ_PERMISSION
+];
 const comptable = [
 	REFUND_REQUEST_PERMISSION,
 	REFUND_APPROVE_PERMISSION,
@@ -60,6 +72,7 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(refundStatusLabels.APPROVED, 'Remboursement autorisé');
 		assert.equal(refundStatusLabels.REJECTED, 'Demande rejetée');
 		assert.equal(refundStatusLabels.CANCELLED, 'Demande annulée');
+		assert.equal(refundStatusLabels.EXECUTED, 'Remboursement effectué');
 		assert.equal(refundStatusLabel('UNKNOWN'), 'UNKNOWN');
 	});
 
@@ -68,6 +81,7 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(refundHoldsReservation('APPROVED'), true);
 		assert.equal(refundHoldsReservation('REJECTED'), false);
 		assert.equal(refundHoldsReservation('CANCELLED'), false);
+		assert.equal(refundHoldsReservation('EXECUTED'), false);
 	});
 
 	test('permission helpers mirror backend RBAC', () => {
@@ -76,16 +90,20 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(canApproveRefund(cashier), false);
 		assert.equal(canRejectRefund(cashier), false);
 		assert.equal(canCancelRefund(cashier), true); // request permission may cancel
+		assert.equal(canExecuteRefund(cashier), true);
 		assert.equal(canApproveRefund(comptable), true);
 		assert.equal(canRejectRefund(comptable), true);
+		assert.equal(canExecuteRefund(comptable), false);
 		assert.equal(canCancelRefund(facturation), true);
 		assert.equal(canApproveRefund(facturation), false);
+		assert.equal(canExecuteRefund(facturation), true);
 		assert.equal(canReadRefunds(['billing.read']), false);
 		assert.equal(canRequestRefund(['billing.read']), false);
 		assert.equal(canCancelRefund(['billing.read']), false);
 		assert.equal(canShowRefundLink(['billing.refund.read']), true);
 		assert.equal(canShowRefundLink(['billing.statement.read']), false);
 		assert.equal(canApproveRefund(['*']), true);
+		assert.equal(canExecuteRefund(['*']), true);
 	});
 
 	test('row actions are gated by status and permission', () => {
@@ -98,12 +116,80 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(canShowCancelAction({ status: 'APPROVED' }, facturation), true);
 		assert.equal(canShowCancelAction({ status: 'CANCELLED' }, comptable), false);
 		assert.equal(canShowCancelAction({ status: 'REJECTED' }, comptable), false);
+		assert.equal(canShowCancelAction({ status: 'EXECUTED' }, comptable), false);
+		assert.equal(canShowExecuteAction({ status: 'APPROVED' }, cashier), true);
+		assert.equal(canShowExecuteAction({ status: 'APPROVED' }, comptable), false);
+		assert.equal(canShowExecuteAction({ status: 'REQUESTED' }, cashier), false);
+		assert.equal(canShowExecuteAction({ status: 'EXECUTED' }, cashier), false);
+		assert.equal(canShowExecuteAction({ status: 'REJECTED' }, cashier), false);
+		assert.equal(canShowExecuteAction({ status: 'CANCELLED' }, facturation), false);
 	});
 
-	test('isOwnRefundRequest is a hint only', () => {
+	test('isOwnRefundRequest / isOwnRefundApproval are hints only', () => {
 		assert.equal(isOwnRefundRequest({ requestedBy: 5 }, 5), true);
 		assert.equal(isOwnRefundRequest({ requestedBy: 5 }, 6), false);
 		assert.equal(isOwnRefundRequest({ requestedBy: 5 }, null), false);
+		assert.equal(isOwnRefundApproval({ approvedBy: 7 }, 7), true);
+		assert.equal(isOwnRefundApproval({ approvedBy: 7 }, 8), false);
+		assert.equal(isOwnRefundApproval({ approvedBy: undefined }, 7), false);
+	});
+
+	test('LOT29F-I-B execute form validation and payload', () => {
+		const approved = { intendedMethod: 'CASH' as const, beneficiaryDisplayName: 'Awa' };
+		assert.equal(validateRefundExecuteForm(approved, createRefundExecuteFormState()), null);
+		const unspecified = { intendedMethod: 'UNSPECIFIED' as const, beneficiaryDisplayName: 'Awa' };
+		assert.match(
+			validateRefundExecuteForm(unspecified, createRefundExecuteFormState()) ?? '',
+			/Mode/
+		);
+		assert.equal(
+			validateRefundExecuteForm(unspecified, createRefundExecuteFormState({ method: 'CASH' })),
+			null
+		);
+		const external = { intendedMethod: 'TRANSFER' as const, beneficiaryDisplayName: 'Awa' };
+		assert.match(
+			validateRefundExecuteForm(external, createRefundExecuteFormState()) ?? '',
+			/Référence externe/
+		);
+		assert.match(
+			validateRefundExecuteForm(
+				external,
+				createRefundExecuteFormState({ externalReference: 'TX-1' })
+			) ?? '',
+			/bénéficiaire/
+		);
+		assert.equal(
+			validateRefundExecuteForm(
+				external,
+				createRefundExecuteFormState({
+					externalReference: 'TX-99',
+					beneficiaryRailRef: 'CI00'
+				})
+			),
+			null
+		);
+		const cashPayload = buildRefundExecutePayload(
+			approved,
+			createRefundExecuteFormState({ method: 'CARD' }),
+			'exec-1'
+		);
+		assert.deepEqual(cashPayload, { idempotencyKey: 'exec-1' });
+		const extPayload = buildRefundExecutePayload(
+			{ intendedMethod: 'UNSPECIFIED' },
+			createRefundExecuteFormState({
+				method: 'MOBILE_MONEY',
+				externalReference: ' MM-1 ',
+				beneficiaryRailRef: ' 0700 ',
+				evidenceReference: ' EV-1 '
+			}),
+			'exec-2'
+		);
+		assert.equal(extPayload.method, 'MOBILE_MONEY');
+		assert.equal(extPayload.externalReference, 'MM-1');
+		assert.equal(extPayload.beneficiaryRailRef, '0700');
+		assert.equal(extPayload.evidenceReference, 'EV-1');
+		assert.equal('amount' in extPayload, false);
+		assert.equal('holderPartyId' in extPayload, false);
 	});
 
 	test('reason codes cover the backend set', () => {
@@ -246,6 +332,28 @@ describe('LOT29F-I-A refund FE helpers', () => {
 			classifyRefundError(axiosErr(409, { error: { code: 'IDEMPOTENCY_CONFLICT' } })).kind,
 			'idempotency_conflict'
 		);
+		assert.equal(
+			classifyRefundError(axiosErr(409, { error: { code: 'REFUND_EXEC_SOD_VIOLATION' } })).kind,
+			'sod'
+		);
+		assert.equal(
+			classifyRefundError(axiosErr(409, { error: { code: 'REFUND_EXEC_INSUFFICIENT_CASH' } })).kind,
+			'insufficient_cash'
+		);
+		assert.equal(
+			classifyRefundError(axiosErr(409, { error: { code: 'REFUND_EXEC_CASH_SESSION_REQUIRED' } }))
+				.kind,
+			'cash_session_required'
+		);
+		assert.equal(
+			classifyRefundError(axiosErr(409, { error: { code: 'REFUND_EXEC_METHOD_MISMATCH' } })).kind,
+			'method_mismatch'
+		);
+		assert.equal(
+			classifyRefundError(axiosErr(409, { error: { code: 'REFUND_EXEC_EXTERNAL_REF_REQUIRED' } }))
+				.kind,
+			'external_ref_required'
+		);
 		assert.equal(classifyRefundError(axiosErr(403, {}, 'ACCESS_DENIED')).kind, 'permission');
 		assert.equal(classifyRefundError(axiosErr(404, {})).kind, 'not_found');
 		const net = classifyRefundError(new AxiosError('Network Error'));
@@ -254,7 +362,7 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(classifyRefundError(new Error('boom')).message, 'boom');
 	});
 
-	test('error messages never use execution wording', () => {
+	test('request-stage error messages never use execution wording', () => {
 		const kinds = [
 			'REFUND_INSUFFICIENT_SPENDABLE',
 			'REFUND_SOD_VIOLATION',
@@ -271,6 +379,12 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		}
 		assert.equal(refundCopyIsSafe(classifyRefundError(axiosErr(403, {})).message), true);
 		assert.equal(refundCopyIsSafe(classifyRefundError(new AxiosError('x')).message), true);
+		// I-B SoD message intentionally names finalization without request-stage payout verbs.
+		const execSod = classifyRefundError(
+			axiosErr(409, { error: { code: 'REFUND_EXEC_SOD_VIOLATION' } })
+		);
+		assert.equal(execSod.kind, 'sod');
+		assert.match(execSod.message, /autorisateur/i);
 	});
 
 	test('copy safety rejects money-execution wording but allows request/authorization wording', () => {

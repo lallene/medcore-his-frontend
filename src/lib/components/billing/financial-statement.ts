@@ -67,7 +67,7 @@ export const holderFieldLabels = {
 	creditEarned: 'Crédit acquis',
 	creditRestored: 'Crédit restauré',
 	creditUsed: 'Crédit utilisé',
-	creditRefunded: 'Crédit restitué',
+	creditRefunded: 'Remboursé',
 	ledgerAvailable: 'Crédit au registre',
 	reservedForRefund: 'Montant réservé',
 	spendableCredit: 'Crédit utilisable',
@@ -85,7 +85,8 @@ export const financialEventTypeLabels: Record<FinancialHistoryEventType, string>
 	REFUND_REQUESTED: 'Demande de remboursement',
 	REFUND_APPROVED: 'Remboursement autorisé',
 	REFUND_REJECTED: 'Demande rejetée',
-	REFUND_CANCELLED: 'Demande annulée'
+	REFUND_CANCELLED: 'Demande annulée',
+	REFUND_EXECUTED: 'Remboursement effectué'
 };
 
 export const financialEventTypeFilterOptions: { value: string; label: string }[] = [

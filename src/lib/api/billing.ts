@@ -12,6 +12,7 @@ import type {
 	InvoicePage,
 	Refund,
 	RefundDecisionPayload,
+	RefundExecutePayload,
 	RefundListQuery,
 	RefundPage,
 	RefundRequestPayload,
@@ -148,6 +149,15 @@ export const rejectRefund = async (id: number, payload: { reason: string }) =>
 	(await api.post<Refund>(`/api/billing/refunds/${id}/reject`, payload)).data;
 export const cancelRefund = async (id: number, payload: { reason: string }) =>
 	(await api.post<Refund>(`/api/billing/refunds/${id}/cancel`, payload)).data;
+/** LOT29F-I-B: execute approved refund (CASH REFUND_OUT or external recording). */
+export const executeRefund = async (id: number, payload: RefundExecutePayload) => {
+	const key = payload.idempotencyKey;
+	return (
+		await api.post<Refund>(`/api/billing/refunds/${id}/execute`, payload, {
+			headers: key ? { 'Idempotency-Key': key } : undefined
+		})
+	).data;
+};
 export const getActBillingStatus = async (
 	patientId: number,
 	actType: string,

@@ -44,13 +44,16 @@ export interface SessionSummary {
 	cashMovementManualOut?: number;
 	cashMovementReversalOut?: number;
 	cashMovementPostCloseCorrectionOut?: number;
+	/** LOT29F-I-B — genuine cash refund OUT (not PaymentReversal). */
+	cashMovementRefundOut?: number;
 	closingProofComplete: boolean;
 	finalReconciliation: boolean;
 	recoveryClose: boolean;
 	varianceKind?: VarianceKind | '';
 }
 export type CashMovementDirection = 'IN' | 'OUT';
-export type CashMovementType = 'MANUAL_IN' | 'MANUAL_OUT';
+export type CashMovementType =
+	'MANUAL_IN' | 'MANUAL_OUT' | 'PAYMENT_REVERSAL_OUT' | 'POST_CLOSE_CORRECTION_OUT' | 'REFUND_OUT';
 /** Append-only physical cash journal entry (not a Payment / Refund). */
 export interface CashMovement {
 	id: number;
