@@ -5,6 +5,9 @@ import type {
 	CreditApplicationResult,
 	CreditNote,
 	CreditSummary,
+	FinancialHistoryPage,
+	FinancialHistoryQuery,
+	FinancialStatement,
 	Invoice,
 	InvoicePage,
 	Tariff
@@ -111,6 +114,16 @@ export const listTariffs = async () => (await api.get<Tariff[]>('/api/billing/ta
 export const createTariff = async (payload: Omit<Tariff, 'id' | 'currency'>) =>
 	(await api.post<Tariff>('/api/billing/tariffs', payload)).data;
 export const getBillingKPIs = async () => (await api.get<BillingKPIs>('/api/billing/kpis')).data;
+/** LOT29F-H-E: read-only patient financial statement. */
+export const getFinancialStatement = async (patientId: number) =>
+	(await api.get<FinancialStatement>(`/api/billing/patients/${patientId}/financial-statement`))
+		.data;
+export const listFinancialHistory = async (patientId: number, params: FinancialHistoryQuery = {}) =>
+	(
+		await api.get<FinancialHistoryPage>(`/api/billing/patients/${patientId}/financial-history`, {
+			params
+		})
+	).data;
 export const getActBillingStatus = async (
 	patientId: number,
 	actType: string,

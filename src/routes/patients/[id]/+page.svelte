@@ -513,6 +513,7 @@
 				{consultations}
 				{hospitalizations}
 				canReadInvoices={caps.canReadBillingInvoices}
+				canReadFinancialStatement={caps.canReadFinancialStatement}
 				canReadReceivables={caps.canReadReceivables}
 				canReadInsuranceReceivables={caps.canReadInsuranceReceivables}
 			/>

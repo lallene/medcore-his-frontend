@@ -83,6 +83,10 @@
 		validateCreditApplyAmount,
 		type CreditBalance
 	} from '$lib/components/billing/credit-application';
+	import {
+		canShowFinancialStatement,
+		STATEMENT_PAGE_TITLE
+	} from '$lib/components/billing/financial-statement';
 	import type { Payment } from '$lib/types/billing';
 	import type { Invoice } from '$lib/types/billing';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
@@ -140,6 +144,7 @@
 	const showApplyCredit = $derived(
 		invoice ? canShowApplyCredit(invoice, permissions, creditBalances) : false
 	);
+	const showFinancialStatement = $derived(canShowFinancialStatement(permissions));
 	const applyHolders = $derived(eligibleHolders(creditBalances));
 	const selectedApplyHolder = $derived(
 		applyHolders.find((h) => h.holderPartyId === applyHolderId) ?? applyHolders[0] ?? null
@@ -636,7 +641,17 @@
 			<div>
 				<p class="text-sm font-bold text-blue-700">FACTURE</p>
 				<h1 class="text-3xl font-black" data-testid="invoice-number">{invoice.number}</h1>
-				<p>{invoice.patientCode} — {invoice.patientName}</p>
+				<p>
+					{invoice.patientCode} — {invoice.patientName}
+					{#if showFinancialStatement}
+						·
+						<a
+							class="text-sm font-bold text-indigo-800 underline"
+							href={resolve(`/billing/patients/${invoice.patientId}/statement`)}
+							data-testid="invoice-financial-statement-link">{STATEMENT_PAGE_TITLE}</a
+						>
+					{/if}
+				</p>
 				<p class="text-sm text-slate-500" data-testid="invoice-status">
 					{new Date(invoice.createdAt).toLocaleString('fr-FR')} · {invoice.status}
 					{#if collectibleKind}

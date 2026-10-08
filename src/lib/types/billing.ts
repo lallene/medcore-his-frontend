@@ -167,3 +167,104 @@ export interface BillingKPIs {
 	paidInvoices: number;
 	insuranceExpected: number;
 }
+
+/** LOT29F-H-E read-only patient financial statement (backend-authoritative). */
+export type FinancialHistoryEventType =
+	| 'INVOICE_ISSUED'
+	| 'PAYMENT_RECEIVED'
+	| 'PAYMENT_REVERSED'
+	| 'CREDIT_NOTE_ISSUED'
+	| 'CREDIT_EARNED'
+	| 'CREDIT_APPLIED'
+	| 'CREDIT_APPLICATION_REVERSED';
+
+export interface FinancialStatementSummary {
+	grossPatientObligation: number;
+	creditNoteReduction: number;
+	correctedPatientObligation: number;
+	effectiveMoneyPaid: number;
+	creditApplied: number;
+	totalSettled: number;
+	receivableOutstanding: number;
+	creditEarned: number;
+	creditRestored: number;
+	creditUsed: number;
+	creditAvailable: number;
+}
+
+export interface FinancialStatementInvoiceLine {
+	invoiceId: number;
+	number: string;
+	status: string;
+	issuedAt?: string | null;
+	createdAt: string;
+	grossPatientObligation: number;
+	creditNoteReduction: number;
+	correctedObligation: number;
+	effectiveMoneyPaid: number;
+	creditApplied: number;
+	totalSettled: number;
+	remainingReceivable: number;
+	creditNoteId?: number;
+	creditNoteNumber?: string;
+}
+
+export interface FinancialStatementHolder {
+	holderPartyId: number;
+	kind: string;
+	displayName: string;
+	phone?: string;
+	creditEarned: number;
+	creditRestored: number;
+	creditUsed: number;
+	creditRefunded: number;
+	availableCredit: number;
+}
+
+export interface FinancialStatement {
+	patientId: number;
+	patientCode: string;
+	patientName: string;
+	asOf: string;
+	summary: FinancialStatementSummary;
+	invoices: FinancialStatementInvoiceLine[];
+	holders: FinancialStatementHolder[];
+	patientCreditTotalAvailable: number;
+}
+
+export interface FinancialHistoryEvent {
+	eventType: FinancialHistoryEventType | string;
+	occurredAt: string;
+	amount: number;
+	sourceType: string;
+	sourceId: number;
+	invoiceId?: number;
+	invoiceNumber?: string;
+	holderPartyId?: number;
+	paymentId?: number;
+	creditNoteId?: number;
+	creditApplicationId?: number;
+	payerDisplay?: string;
+	payerProvenance?: string;
+	payerUnknown?: boolean;
+	label: string;
+	sortKey: string;
+}
+
+export interface FinancialHistoryPage {
+	data: FinancialHistoryEvent[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+}
+
+export type FinancialHistoryQuery = {
+	page?: number;
+	limit?: number;
+	dateFrom?: string;
+	dateTo?: string;
+	eventType?: string;
+	invoiceId?: number;
+	holderPartyId?: number;
+};

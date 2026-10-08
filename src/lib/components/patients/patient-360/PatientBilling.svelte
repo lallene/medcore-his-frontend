@@ -10,6 +10,7 @@
 	import type { ReceivableItem } from '$lib/types/receivables';
 	import type { InsuranceReceivable } from '$lib/types/insurance-receivables';
 	import { formatXOF } from '$lib/components/billing/state';
+	import { STATEMENT_PAGE_TITLE } from '$lib/components/billing/financial-statement';
 	import type { Invoice } from '$lib/types/billing';
 	import type { Patient } from '$lib/types/patient';
 	import type { PatientConsultation } from '$lib/api/patient-consultations';
@@ -28,6 +29,7 @@
 		consultations: PatientConsultation[];
 		hospitalizations: Hospitalization[];
 		canReadInvoices?: boolean;
+		canReadFinancialStatement?: boolean;
 		canReadReceivables?: boolean;
 		canReadInsuranceReceivables?: boolean;
 	}
@@ -36,6 +38,7 @@
 		consultations,
 		hospitalizations,
 		canReadInvoices = false,
+		canReadFinancialStatement = false,
 		canReadReceivables = false,
 		canReadInsuranceReceivables = false
 	}: Props = $props();
@@ -196,14 +199,23 @@
 				Factures persistées · {consultations.length} consultation(s) · {hospitalizations.length} séjour(s).
 			</p>
 		</div>
-		{#if canReadInvoices}
-			<button
-				class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
-				data-testid="patient-billing-open"
-				onclick={() => goto(resolve(`/billing?patientId=${patient.id}`))}
-				><ReceiptText size={16} class="inline" /> Ouvrir la facturation</button
-			>
-		{/if}
+		<div class="flex flex-wrap gap-2">
+			{#if canReadInvoices}
+				<button
+					class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+					data-testid="patient-billing-open"
+					onclick={() => goto(resolve(`/billing?patientId=${patient.id}`))}
+					><ReceiptText size={16} class="inline" /> Ouvrir la facturation</button
+				>
+			{/if}
+			{#if canReadFinancialStatement}
+				<a
+					class="rounded-xl border border-indigo-300 px-4 py-2 font-bold text-indigo-900"
+					href={resolve(`/billing/patients/${patient.id}/statement`)}
+					data-testid="patient-billing-statement-link">{STATEMENT_PAGE_TITLE}</a
+				>
+			{/if}
+		</div>
 	</header>
 	{#if canReadInvoices}
 		{#if invoicesBranch.denied}

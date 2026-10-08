@@ -19,6 +19,7 @@ export type Patient360Capabilities = {
 	canReadInsuranceAuthorizations: boolean;
 	canReadInsurance: boolean;
 	canReadBillingInvoices: boolean;
+	canReadFinancialStatement: boolean;
 	canReadReceivables: boolean;
 	canReadInsuranceReceivables: boolean;
 	canReadBilling: boolean;
@@ -36,6 +37,7 @@ export function derivePatient360Capabilities(permissions: string[]): Patient360C
 	const canReadInsuranceCoverage = can(permissions, 'insurance.coverage.read');
 	const canReadInsuranceAuthorizations = can(permissions, 'insurance.authorization.read');
 	const canReadBillingInvoices = can(permissions, 'billing.read');
+	const canReadFinancialStatement = can(permissions, 'billing.statement.read');
 	const canReadReceivables = can(permissions, 'receivables.read');
 	const canReadInsuranceReceivables = can(permissions, 'insurance_receivables.read');
 
@@ -55,6 +57,7 @@ export function derivePatient360Capabilities(permissions: string[]): Patient360C
 		canReadInsuranceAuthorizations,
 		canReadInsurance: canReadInsuranceCoverage || canReadInsuranceAuthorizations,
 		canReadBillingInvoices,
+		canReadFinancialStatement,
 		canReadReceivables,
 		canReadInsuranceReceivables,
 		canReadBilling: canReadBillingInvoices || canReadReceivables || canReadInsuranceReceivables,
