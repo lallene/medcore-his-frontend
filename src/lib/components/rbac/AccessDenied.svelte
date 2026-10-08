@@ -16,9 +16,7 @@
 	} = $props();
 
 	// Avoid evaluating localStorage during SSR (default prop init); fall back safely.
-	const resolvedHome = $derived(
-		homeHref ?? defaultLandingRoute(getStoredPermissions())
-	);
+	const resolvedHome = $derived(homeHref ?? defaultLandingRoute(getStoredPermissions()));
 </script>
 
 <section

@@ -5,10 +5,7 @@ export type PermissionClaims = { permissions?: string[] };
 /** Read permissions embedded in the current JWT (login snapshot). */
 export function getStoredPermissions(): string[] {
 	// Node may expose a non-Web Storage `localStorage` stub (getItem missing) — fail closed.
-	if (
-		typeof localStorage === 'undefined' ||
-		typeof localStorage?.getItem !== 'function'
-	) {
+	if (typeof localStorage === 'undefined' || typeof localStorage?.getItem !== 'function') {
 		return [];
 	}
 	try {
