@@ -55,6 +55,7 @@
 		'/insurance/authorizations': FileCheck2,
 		'/billing': CreditCard,
 		'/billing/refunds': BanknoteArrowDown,
+		'/billing/refunds/report': BanknoteArrowDown,
 		'/cash': CreditCard,
 		'/receivables': ReceiptText,
 		'/insurance-receivables': Shield,

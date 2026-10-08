@@ -440,11 +440,14 @@
 			{/if}
 			<table class="mt-4 w-full text-left text-sm">
 				<thead class="bg-slate-50 text-xs uppercase text-slate-500">
-					<tr
-						><th class="p-2">Date</th><th>Événement</th><th>Libellé</th><th>Facture</th><th
-							>Montant</th
-						></tr
-					>
+					<tr>
+						<th class="p-2">Date</th>
+						<th>Événement</th>
+						<th>Libellé</th>
+						<th>Document</th>
+						<th>Facture</th>
+						<th>Montant</th>
+					</tr>
 				</thead>
 				<tbody>
 					{#each history as ev, i (ev.sortKey || `${ev.sourceType}-${ev.sourceId}-${i}`)}
@@ -452,6 +455,19 @@
 							<td class="p-2">{new Date(ev.occurredAt).toLocaleString('fr-FR')}</td>
 							<td>{financialEventTypeLabel(ev.eventType)}</td>
 							<td data-testid={`financial-statement-history-label-${i}`}>{ev.label}</td>
+							<td data-testid={`financial-statement-history-doc-${i}`}>
+								{#if ev.documentNumber}
+									<span class="font-bold">{ev.documentNumber}</span>
+									{#if ev.eventType === 'REFUND_EXECUTED' && showRefundLink && ev.sourceId}
+										·
+										<a
+											class="text-blue-700 print:hidden"
+											href={resolve(`/billing/refunds/${ev.sourceId}/voucher`)}
+											data-testid={`financial-statement-history-voucher-${i}`}>Bon</a
+										>
+									{/if}
+								{:else}—{/if}
+							</td>
 							<td>
 								{#if ev.invoiceId}
 									<a class="text-blue-700" href={resolve(`/billing/${ev.invoiceId}`)}
@@ -462,7 +478,7 @@
 							<td>{formatXOF(ev.amount)}</td>
 						</tr>
 					{:else}
-						<tr><td colspan="5" class="p-8 text-center text-slate-500">Aucun événement.</td></tr>
+						<tr><td colspan="6" class="p-8 text-center text-slate-500">Aucun événement.</td></tr>
 					{/each}
 				</tbody>
 			</table>

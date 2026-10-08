@@ -29,10 +29,14 @@
 		buildRefundPayload,
 		canRequestRefund,
 		canReadRefunds,
+		canReadRefundReport,
 		canShowApproveAction,
 		canShowCancelAction,
 		canShowExecuteAction,
+		canShowRefundVoucher,
 		canShowRejectAction,
+		REFUND_REPORT_LINK_LABEL,
+		REFUND_VOUCHER_PRINT_LABEL,
 		classifyRefundError,
 		createRefundExecuteFormState,
 		createRefundFormState,
@@ -100,6 +104,7 @@
 	let filterHolderId = $state('');
 	let filterDateFrom = $state('');
 	let filterDateTo = $state('');
+	let filterRefundNumber = $state('');
 
 	let form = $state(createRefundFormState());
 	let requestCmd = $state(createPaymentCommandState());
@@ -173,6 +178,8 @@
 			if (holder > 0) params.holderPartyId = holder;
 			if (filterDateFrom) params.dateFrom = filterDateFrom;
 			if (filterDateTo) params.dateTo = filterDateTo;
+			const rmb = filterRefundNumber.trim().toUpperCase();
+			if (rmb) params.refundNumber = rmb;
 			const res = await listRefunds(params);
 			refunds = res.data;
 			listPageNum = res.page;
@@ -522,12 +529,21 @@
 			/>
 		</section>
 	{:else}
-		<header>
-			<p class="text-sm font-bold text-indigo-700">FACTURATION</p>
-			<h1 class="text-3xl font-black" data-testid="refunds-title">{REFUND_PAGE_TITLE}</h1>
-			<p class="mt-1 text-sm text-slate-600" data-testid="refunds-notice">
-				{REFUND_NO_PAYOUT_NOTICE}
-			</p>
+		<header class="flex flex-wrap items-end justify-between gap-3">
+			<div>
+				<p class="text-sm font-bold text-indigo-700">FACTURATION</p>
+				<h1 class="text-3xl font-black" data-testid="refunds-title">{REFUND_PAGE_TITLE}</h1>
+				<p class="mt-1 text-sm text-slate-600" data-testid="refunds-notice">
+					{REFUND_NO_PAYOUT_NOTICE}
+				</p>
+			</div>
+			{#if canReadRefundReport(permissions)}
+				<a
+					class="rounded-xl border px-4 py-2 text-sm font-bold"
+					href={resolve('/billing/refunds/report')}
+					data-testid="refund-report-link">{REFUND_REPORT_LINK_LABEL}</a
+				>
+			{/if}
 		</header>
 
 		{#if successMessage}
@@ -799,6 +815,12 @@
 								class={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-black ${refundStatusTone(selected.status)}`}
 								data-testid="refund-detail-status">{refundStatusLabel(selected.status)}</span
 							>
+							{#if selected.refundNumber}
+								<span
+									class="ml-2 text-sm font-black text-sky-900"
+									data-testid="refund-detail-number">{selected.refundNumber}</span
+								>
+							{/if}
 							{#if refundHoldsReservation(selected.status)}
 								<span
 									class="ml-2 text-xs font-bold text-indigo-900"
@@ -994,6 +1016,13 @@
 								(selected.intendedMethod && isExternalRefundMethod(selected.intendedMethod))
 									? REFUND_EXECUTE_EXTERNAL_ACTION_LABEL
 									: REFUND_EXECUTE_ACTION_LABEL}</button
+							>
+						{/if}
+						{#if canShowRefundVoucher(selected)}
+							<a
+								class="rounded-xl border border-sky-700 px-4 py-2 font-bold text-sky-900"
+								href={resolve(`/billing/refunds/${selected.id}/voucher`)}
+								data-testid="refund-voucher-link">{REFUND_VOUCHER_PRINT_LABEL}</a
 							>
 						{/if}
 					</div>
@@ -1270,6 +1299,15 @@
 						bind:value={filterDateTo}
 					/>
 				</label>
+				<label class="text-xs font-bold uppercase text-slate-500 md:col-span-2">
+					N° RMB
+					<input
+						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						data-testid="refund-filter-number"
+						placeholder="RMB-2026-000001"
+						bind:value={filterRefundNumber}
+					/>
+				</label>
 				<div class="md:col-span-6">
 					<button
 						type="submit"
@@ -1295,7 +1333,8 @@
 				<table class="w-full min-w-[860px] text-left text-sm">
 					<thead class="bg-slate-50 text-xs uppercase text-slate-500">
 						<tr>
-							<th class="p-2">N°</th>
+							<th class="p-2">Id</th>
+							<th>RMB</th>
 							<th>Date</th>
 							<th>Patient</th>
 							<th>Titulaire</th>
@@ -1309,6 +1348,7 @@
 						{#each refunds as r (r.id)}
 							<tr class="border-t" data-testid={`refund-row-${r.id}`}>
 								<td class="p-2 font-bold">{r.id}</td>
+								<td data-testid={`refund-row-number-${r.id}`}>{r.refundNumber || '—'}</td>
 								<td>{fmtDate(r.requestedAt)}</td>
 								<td>#{r.patientId}</td>
 								<td>#{r.holderPartyId}</td>
@@ -1332,7 +1372,7 @@
 						{:else}
 							<tr
 								><td
-									colspan="8"
+									colspan="9"
 									class="p-8 text-center text-slate-500"
 									data-testid="refund-list-empty">Aucune demande.</td
 								></tr

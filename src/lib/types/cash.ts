@@ -46,6 +46,8 @@ export interface SessionSummary {
 	cashMovementPostCloseCorrectionOut?: number;
 	/** LOT29F-I-B — genuine cash refund OUT (not PaymentReversal). */
 	cashMovementRefundOut?: number;
+	/** LOT29F-I-C — count of REFUND_OUT movements. */
+	cashRefundCount?: number;
 	closingProofComplete: boolean;
 	finalReconciliation: boolean;
 	recoveryClose: boolean;

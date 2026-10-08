@@ -260,6 +260,8 @@ export interface FinancialHistoryEvent {
 	sourceId: number;
 	invoiceId?: number;
 	invoiceNumber?: string;
+	/** Official document number e.g. RMB-YYYY-XXXXXX for REFUND_EXECUTED. */
+	documentNumber?: string;
 	holderPartyId?: number;
 	paymentId?: number;
 	creditNoteId?: number;
@@ -311,6 +313,8 @@ export interface Refund {
 	holderPartyId: number;
 	amount: number;
 	status: RefundStatus;
+	/** Official RMB-YYYY-XXXXXX — set only when EXECUTED (LOT29F-I-C). */
+	refundNumber?: string;
 	reasonCode: RefundReasonCode | string;
 	reasonComment?: string;
 	beneficiaryMode: RefundBeneficiaryMode | string;
@@ -383,6 +387,94 @@ export type RefundListQuery = {
 	reasonCode?: string;
 	dateFrom?: string;
 	dateTo?: string;
+	refundNumber?: string;
+	method?: string;
+	executedBy?: number;
+};
+
+export interface RefundVoucher {
+	refundId: number;
+	refundNumber: string;
+	clinicHeader: string;
+	status: string;
+	amount: number;
+	patientId: number;
+	patientCode?: string;
+	patientName?: string;
+	holderPartyId: number;
+	holderDisplay: string;
+	holderKind: string;
+	beneficiaryMode: string;
+	beneficiaryDisplayName: string;
+	beneficiaryKind: string;
+	beneficiaryRelationship?: string;
+	holderConsentRef?: string;
+	reasonCode: string;
+	reasonComment?: string;
+	clinicalAttestationRef?: string;
+	method: string;
+	executedAt: string;
+	executedBy: number;
+	approvedBy: number;
+	approvedAt?: string | null;
+	requestedBy: number;
+	requestedAt: string;
+	cashSessionId?: number | null;
+	cashRegisterId?: number | null;
+	registerCode?: string;
+	registerName?: string;
+	externalReference?: string;
+	evidenceReference?: string;
+	beneficiaryRailRef?: string;
+	copyLabels: string[];
+	signatureZones: string[];
+	documentaryNote: string;
+}
+
+export interface RefundReportSummary {
+	executedRefundCount: number;
+	executedRefundAmount: number;
+	cashRefundCount: number;
+	cashRefundAmount: number;
+	externalRefundCount: number;
+	externalRefundAmount: number;
+	byMethod: { method: string; count: number; amount: number }[];
+}
+
+export interface RefundReportRow {
+	refundId: number;
+	refundNumber: string;
+	amount: number;
+	method: string;
+	executedAt: string;
+	executedBy: number;
+	patientId: number;
+	holderPartyId: number;
+	beneficiaryDisplayName: string;
+	cashSessionId?: number | null;
+	cashRegisterId?: number | null;
+	externalReference?: string;
+}
+
+export interface RefundReportPage {
+	summary: RefundReportSummary;
+	data: RefundReportRow[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+}
+
+export type RefundReportQuery = {
+	page?: number;
+	limit?: number;
+	dateFrom?: string;
+	dateTo?: string;
+	method?: string;
+	cashRegisterId?: number;
+	executedBy?: number;
+	patientId?: number;
+	holderPartyId?: number;
 };
 
 export interface RefundRequestPayload {

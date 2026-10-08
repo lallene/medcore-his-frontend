@@ -20,6 +20,9 @@ export const REFUND_APPROVE_PERMISSION = 'billing.refund.approve';
 export const REFUND_CANCEL_PERMISSION = 'billing.refund.cancel';
 export const REFUND_EXECUTE_PERMISSION = 'billing.refund.execute';
 export const REFUND_READ_PERMISSION = 'billing.refund.read';
+export const REFUND_REPORT_PERMISSION = 'billing.refund.report';
+export const REFUND_VOUCHER_PRINT_LABEL = 'Imprimer le bon de remboursement';
+export const REFUND_REPORT_LINK_LABEL = 'Rapport des remboursements';
 
 export const REFUND_PAGE_TITLE = 'Demandes de remboursement';
 export const REFUND_REQUEST_SECTION = 'Demande de remboursement';
@@ -83,8 +86,16 @@ export function canExecuteRefund(permissions: string[]): boolean {
 	return can(permissions, REFUND_EXECUTE_PERMISSION);
 }
 
+export function canReadRefundReport(permissions: string[]): boolean {
+	return can(permissions, REFUND_REPORT_PERMISSION);
+}
+
 export function canShowRefundLink(permissions: string[]): boolean {
 	return canReadRefunds(permissions);
+}
+
+export function canShowRefundVoucher(refund: Pick<Refund, 'status' | 'refundNumber'>): boolean {
+	return refund.status === 'EXECUTED' && !!refund.refundNumber;
 }
 
 // ── Status ─────────────────────────────────────────────────────────────────────

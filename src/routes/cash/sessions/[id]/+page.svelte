@@ -169,9 +169,11 @@
 						<p data-testid="cash-recon-reversal-out">
 							Sorties contrepassation <b>{formatXOF(kpis.reversalOut)}</b>
 						</p>
-						{#if (kpis.refundOut ?? 0) > 0}
+						{#if (kpis.refundOut ?? 0) > 0 || (kpis.refundCount ?? 0) > 0}
 							<p data-testid="cash-recon-refund-out">
-								Sorties remboursement <b>{formatXOF(kpis.refundOut)}</b>
+								Remboursements exécutés
+								<b>{formatXOF(kpis.refundOut)}</b>
+								<span class="text-slate-500"> ({kpis.refundCount ?? 0})</span>
 							</p>
 						{/if}
 						<p data-testid="cash-recon-post-close-out">

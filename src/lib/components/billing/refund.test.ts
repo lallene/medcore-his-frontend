@@ -13,7 +13,10 @@ import {
 	canApproveRefund,
 	canCancelRefund,
 	canExecuteRefund,
+	canReadRefundReport,
 	canReadRefunds,
+	canShowRefundVoucher,
+	REFUND_REPORT_PERMISSION,
 	canRejectRefund,
 	canRequestRefund,
 	canShowApproveAction,
@@ -123,6 +126,14 @@ describe('LOT29F-I-A refund FE helpers', () => {
 		assert.equal(canShowExecuteAction({ status: 'EXECUTED' }, cashier), false);
 		assert.equal(canShowExecuteAction({ status: 'REJECTED' }, cashier), false);
 		assert.equal(canShowExecuteAction({ status: 'CANCELLED' }, facturation), false);
+		assert.equal(
+			canShowRefundVoucher({ status: 'EXECUTED', refundNumber: 'RMB-2026-000001' }),
+			true
+		);
+		assert.equal(canShowRefundVoucher({ status: 'APPROVED', refundNumber: '' }), false);
+		assert.equal(canShowRefundVoucher({ status: 'EXECUTED', refundNumber: '' }), false);
+		assert.equal(canReadRefundReport([REFUND_REPORT_PERMISSION]), true);
+		assert.equal(canReadRefundReport(cashier), false);
 	});
 
 	test('isOwnRefundRequest / isOwnRefundApproval are hints only', () => {

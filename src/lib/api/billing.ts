@@ -15,7 +15,10 @@ import type {
 	RefundExecutePayload,
 	RefundListQuery,
 	RefundPage,
+	RefundReportPage,
+	RefundReportQuery,
 	RefundRequestPayload,
+	RefundVoucher,
 	Tariff
 } from '$lib/types/billing';
 export const listInvoices = async (params: Record<string, string | number> = {}) =>
@@ -158,6 +161,10 @@ export const executeRefund = async (id: number, payload: RefundExecutePayload) =
 		})
 	).data;
 };
+export const getRefundVoucher = async (id: number) =>
+	(await api.get<RefundVoucher>(`/api/billing/refunds/${id}/voucher`)).data;
+export const getRefundReport = async (params: RefundReportQuery = {}) =>
+	(await api.get<RefundReportPage>('/api/billing/refunds/report', { params })).data;
 export const getActBillingStatus = async (
 	patientId: number,
 	actType: string,

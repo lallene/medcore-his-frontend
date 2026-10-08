@@ -11,6 +11,7 @@ export type NavHref =
 	| '/insurance/authorizations'
 	| '/billing'
 	| '/billing/refunds'
+	| '/billing/refunds/report'
 	| '/cash'
 	| '/receivables'
 	| '/insurance-receivables'
@@ -82,6 +83,11 @@ export const workspaceMenu: NavItem[] = [
 		title: 'Remboursements',
 		href: '/billing/refunds',
 		permissions: ['billing.refund.read', 'billing.refund.request']
+	},
+	{
+		title: 'Rapport remboursements',
+		href: '/billing/refunds/report',
+		permissions: ['billing.refund.report']
 	},
 	{
 		title: 'Caisse',
@@ -189,6 +195,10 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/insurance/authorizations', permissions: ['insurance.authorization.read'] },
 	{ prefix: '/insurance/vouchers', permissions: ['insurance.voucher.read'] },
 	{ prefix: '/insurance', permissions: ['insurance.company.read', 'insurance.coverage.read'] },
+	{
+		prefix: '/billing/refunds/report',
+		permissions: ['billing.refund.report']
+	},
 	{
 		prefix: '/billing/refunds',
 		permissions: ['billing.refund.read', 'billing.refund.request']
