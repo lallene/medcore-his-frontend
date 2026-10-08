@@ -325,13 +325,16 @@ test.describe('LOT29F-H-E financial statement', () => {
 			`${api}/api/billing/patients/${patient.id}/financial-history?page=2&limit=2`,
 			{ headers: bearer(admin) }
 		);
-		const body1 = (JSON.parse(await p1.text()).data ?? JSON.parse(await p1.text())) as {
+		// History payload is already a page object `{ data, page, totalPages }` (not double-wrapped).
+		const body1 = JSON.parse(await p1.text()) as {
 			data: { sortKey: string }[];
 			totalPages: number;
 		};
-		const body2 = (JSON.parse(await p2.text()).data ?? JSON.parse(await p2.text())) as {
+		const body2 = JSON.parse(await p2.text()) as {
 			data: { sortKey: string }[];
 		};
+		expect(Array.isArray(body1.data)).toBeTruthy();
+		expect(body1.totalPages).toBeGreaterThan(1);
 		const keys = new Set<string>();
 		for (const ev of [...body1.data, ...body2.data]) {
 			expect(keys.has(ev.sortKey)).toBe(false);
@@ -341,9 +344,8 @@ test.describe('LOT29F-H-E financial statement', () => {
 		await login(facturationEmail);
 		await page.goto(`/billing/patients/${patient.id}/statement`);
 		await expect(page.getByTestId('financial-statement-history')).toBeVisible({ timeout: 20_000 });
-		await expect(page.getByTestId('financial-statement-history-meta')).toContainText(
-			`/ ${body1.totalPages}`
-		);
+		// UI default page size is 10 — only assert multi-page navigation, not API limit=2 totals.
+		await expect(page.getByTestId('financial-statement-history-meta')).toContainText('Page 1');
 		await page.getByTestId('financial-statement-history-next').click();
 		await expect(page.getByTestId('financial-statement-history-meta')).toContainText('Page 2');
 
