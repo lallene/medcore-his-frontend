@@ -70,6 +70,7 @@ async function earnCredit(
 	});
 	expect([200, 201].includes(catalog.status())).toBeTruthy();
 	const catalogBody = JSON.parse(await catalog.text()) as { id: number };
+	const unitPrice = Math.max(credit, 50_000);
 	const tariff = await request.post(`${api}/api/billing/tariffs`, {
 		headers: bearer(token),
 		data: {
@@ -77,13 +78,13 @@ async function earnCredit(
 			referenceId: catalogBody.id,
 			code: `TIC-${stamp}`.slice(0, 20),
 			label: `Tarif IC ${stamp}`,
-			unitPrice: 50000,
+			unitPrice,
 			effectiveFrom: new Date().toISOString().slice(0, 10),
 			effectiveTo: null,
 			isActive: true
 		}
 	});
-	expect([200, 201].includes(tariff.status())).toBeTruthy();
+	expect([200, 201].includes(tariff.status()), await tariff.text()).toBeTruthy();
 	const tariffBody = JSON.parse(await tariff.text()) as { id: number };
 	const act = await request.post(`${api}/api/performed-acts`, {
 		headers: bearer(token),
@@ -105,7 +106,7 @@ async function earnCredit(
 			await request.post(`${api}/api/billing/invoices/${draft.id}/payments`, {
 				headers: { ...bearer(token), 'Idempotency-Key': payKey },
 				data: {
-					amount: 50000,
+					amount: unitPrice,
 					paymentMethod: 'CASH',
 					idempotencyKey: payKey,
 					payer: { mode: 'PATIENT' }
@@ -235,7 +236,6 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 		await login(cashierEmail);
 		await page.goto(`/billing/refunds/${refund.id}/voucher`);
 		await expect(page.getByTestId('refund-voucher-page')).toBeVisible({ timeout: 20_000 });
-		await expect(page.getByTestId('refund-voucher-number')).toContainText(row.refundNumber!);
 		await expect(page.getByTestId('refund-voucher-copy-0')).toBeVisible();
 		await expect(page.getByTestId('refund-voucher-copy-1')).toBeVisible();
 		const n0 = await page
@@ -246,6 +246,8 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 			.getByTestId('refund-voucher-copy-1')
 			.getByTestId('refund-voucher-number')
 			.innerText();
+		expect(n0).toContain(row.refundNumber!);
+		expect(n1).toContain(row.refundNumber!);
 		expect(n0).toBe(n1);
 	});
 
@@ -288,18 +290,17 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 		expect(voucher.status()).toBeGreaterThanOrEqual(400);
 
 		const today = new Date().toISOString().slice(0, 10);
+		const reportRes = await request.get(
+			`${api}/api/billing/refunds/report?dateFrom=${today}&dateTo=${today}&limit=100`,
+			{ headers: bearer(accountant) }
+		);
+		expect(reportRes.ok(), await reportRes.text()).toBeTruthy();
 		const report = unwrap<{
 			summary: { executedRefundCount: number };
 			data: { refundId: number }[];
-		}>(
-			await (
-				await request.get(
-					`${api}/api/billing/refunds/report?dateFrom=${today}&dateTo=${today}&limit=100`,
-					{ headers: bearer(accountant) }
-				)
-			).text()
-		);
-		expect(report.data.some((r) => r.refundId === refund.id)).toBeFalsy();
+		}>(await reportRes.text());
+		const rows = Array.isArray(report.data) ? report.data : [];
+		expect(rows.some((r) => r.refundId === refund.id)).toBeFalsy();
 	});
 
 	test('QA-29F-IC-003 @critical two executions get distinct sequential numbers; reprint stable', async ({
@@ -526,6 +527,12 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 		await page.getByTestId(`refund-open-${created.id}`).click();
 		await expect(page.getByTestId('refund-detail-number')).toHaveText(executed.refundNumber!);
 		await page.getByTestId('refund-voucher-link').click();
-		await expect(page.getByTestId('refund-voucher-number')).toContainText(executed.refundNumber!);
+		await expect(page.getByTestId('refund-voucher-page')).toBeVisible({ timeout: 20_000 });
+		await expect(
+			page.getByTestId('refund-voucher-copy-0').getByTestId('refund-voucher-number')
+		).toContainText(executed.refundNumber!);
+		await expect(
+			page.getByTestId('refund-voucher-copy-1').getByTestId('refund-voucher-number')
+		).toContainText(executed.refundNumber!);
 	});
 });
