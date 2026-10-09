@@ -28,6 +28,24 @@ function unwrap<T>(text: string): T {
 	return (parsed.data ?? parsed) as T;
 }
 
+/** Report pages include a `data` rows array; naive unwrap would return rows instead of the page. */
+function unwrapRefundReport(text: string): {
+	summary: {
+		executedRefundCount: number;
+		executedRefundAmount: number;
+		cashRefundCount: number;
+		cashRefundAmount: number;
+		externalRefundCount: number;
+		externalRefundAmount: number;
+	};
+	data: { refundId: number; refundNumber?: string; amount?: number; method?: string }[];
+} {
+	const parsed = JSON.parse(text);
+	if (parsed?.summary && Array.isArray(parsed?.data)) return parsed;
+	if (parsed?.data?.summary && Array.isArray(parsed.data.data)) return parsed.data;
+	throw new Error(`unexpected refund report shape: ${text.slice(0, 240)}`);
+}
+
 async function createPatient(request: APIRequestContext, token: string, tag: string) {
 	const nom = `QA29FIC-${tag}-${Date.now()}-${Math.floor(Math.random() * 1e5)}`;
 	const response = await request.post(`${api}/api/patients`, {
@@ -294,13 +312,10 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 			`${api}/api/billing/refunds/report?dateFrom=${today}&dateTo=${today}&limit=100`,
 			{ headers: bearer(accountant) }
 		);
-		expect(reportRes.ok(), await reportRes.text()).toBeTruthy();
-		const report = unwrap<{
-			summary: { executedRefundCount: number };
-			data: { refundId: number }[];
-		}>(await reportRes.text());
-		const rows = Array.isArray(report.data) ? report.data : [];
-		expect(rows.some((r) => r.refundId === refund.id)).toBeFalsy();
+		const reportText = await reportRes.text();
+		expect(reportRes.ok(), reportText).toBeTruthy();
+		const report = unwrapRefundReport(reportText);
+		expect(report.data.some((r) => r.refundId === refund.id)).toBeFalsy();
 	});
 
 	test('QA-29F-IC-003 @critical two executions get distinct sequential numbers; reprint stable', async ({
@@ -442,34 +457,29 @@ test.describe('LOT29F-I-C refund voucher & report', () => {
 		).toBeTruthy();
 
 		const today = new Date().toISOString().slice(0, 10);
-		const report = unwrap<{
-			summary: {
-				executedRefundAmount: number;
-				cashRefundAmount: number;
-				externalRefundAmount: number;
-			};
-		}>(
-			await (
-				await request.get(
-					`${api}/api/billing/refunds/report?dateFrom=${today}&dateTo=${today}&limit=100`,
-					{ headers: bearer(accountant) }
-				)
-			).text()
+		const reportRes = await request.get(
+			`${api}/api/billing/refunds/report?dateFrom=${today}&dateTo=${today}&limit=100`,
+			{ headers: bearer(accountant) }
 		);
+		const reportText = await reportRes.text();
+		expect(reportRes.ok(), reportText).toBeTruthy();
+		const report = unwrapRefundReport(reportText);
 		expect(report.summary.cashRefundAmount).toBeGreaterThanOrEqual(8000);
 		expect(report.summary.externalRefundAmount).toBeGreaterThanOrEqual(6000);
 		expect(report.summary.cashRefundAmount + report.summary.externalRefundAmount).toBe(
 			report.summary.executedRefundAmount
 		);
 
-		const sess = await (
+		const sessionBody = await (
 			await request.get(`${api}/api/cash/sessions/${session.session.id}`, {
 				headers: bearer(cashier)
 			})
 		).json();
-		expect(sess.cashMovementRefundOut).toBeGreaterThanOrEqual(8000);
+		const sess = sessionBody?.session ? sessionBody : (sessionBody?.data ?? sessionBody);
+		const refundOut = sess.cashMovementRefundOut ?? sess.summary?.refundOut ?? 0;
+		expect(refundOut).toBeGreaterThanOrEqual(8000);
 		// External MOBILE must not inflate cash refund OUT beyond CASH executions on this session.
-		expect(sess.cashMovementRefundOut).toBeLessThan(8000 + 6000);
+		expect(refundOut).toBeLessThan(8000 + 6000);
 	});
 
 	test('QA-29F-IC-005 @critical statement shows Remboursé + RMB; voucher navigation', async ({
