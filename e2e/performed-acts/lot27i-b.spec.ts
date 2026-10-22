@@ -2,12 +2,13 @@
  * LOT27I-B — PerformedAct → PEC / insurance frontend.
  * Seeded via API (patient, coverage, catalog, performed act). No fake auth intercepts.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const billingEmail = 'demo.facturation@medcore.local';
 

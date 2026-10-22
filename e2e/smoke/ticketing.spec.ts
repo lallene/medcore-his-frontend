@@ -1,7 +1,8 @@
+import { requiredQaPassword } from '../fixtures/credentials';
 import { test, expect, type APIRequestContext } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:8080';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const cashierEmail = 'demo.caissiere@medcore.local';
 const peerEmail = 'demo.generaliste@medcore.local';
 const supportAgentEmail = 'demo.support.agent@medcore.local';

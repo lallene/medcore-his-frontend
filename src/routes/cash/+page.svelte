@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -388,7 +389,9 @@
 				data-testid="cash-summary"
 			>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-opening">
-					<small>Fond initial</small><strong class="block">{formatXOF(kpis.opening)}</strong>
+					<small class="inline-flex items-center gap-1"
+						>Fond initial <HelpHint helpKey="cash.session.opening_float" /></small
+					><strong class="block">{formatXOF(kpis.opening)}</strong>
 				</div>
 				<div class="rounded-xl border bg-white p-3" data-testid="cash-kpi-cash">
 					<small>Espèces encaissées</small><strong class="block">{formatXOF(kpis.cash)}</strong>
@@ -542,7 +545,10 @@
 				class="rounded-2xl border bg-white p-5"
 				data-testid="cash-movement-panel"
 			>
-				<h2 class="font-black">Mouvement de caisse</h2>
+				<div class="flex items-center gap-2">
+					<h2 class="font-black">Mouvement de caisse</h2>
+					<HelpHint helpKey="cash.movement.justification" />
+				</div>
 				<p class="text-sm text-slate-600">
 					Entrée / sortie physique hors encaissement. Distinct des encaissements et des avoirs.
 				</p>
@@ -621,7 +627,10 @@
 				class="rounded-2xl border bg-white p-5"
 				data-testid="cash-close-panel"
 			>
-				<h2 class="font-black">Clôture</h2>
+				<div class="flex items-center gap-2">
+					<h2 class="font-black">Clôture</h2>
+					<HelpHint helpKey="cash.session.close" />
+				</div>
 				<p>
 					Espèces théoriques <b data-testid="cash-close-expected-preview"
 						>{formatXOF(session.expectedCash)}</b
@@ -656,7 +665,10 @@
 			</p>{/if}
 	{:else if !summaryLoading}
 		<section class="max-w-3xl rounded-2xl border bg-white p-6" data-testid="cash-open-panel">
-			<h2 class="text-xl font-black">Ouvrir la caisse</h2>
+			<div class="flex items-center gap-2">
+				<h2 class="text-xl font-black">Ouvrir la caisse</h2>
+				<HelpHint helpKey="cash.session.opening_float" />
+			</div>
 			<div class="mt-4 grid gap-3 md:grid-cols-2">
 				<select
 					class="rounded-xl border p-3"

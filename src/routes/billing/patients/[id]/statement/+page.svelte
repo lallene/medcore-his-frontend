@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -198,7 +199,10 @@
 		</header>
 
 		<section class="rounded-2xl border bg-white p-5" data-testid="financial-statement-summary">
-			<h2 class="text-lg font-black">{STATEMENT_SUMMARY_SECTION}</h2>
+			<div class="flex items-center gap-2">
+				<h2 class="text-lg font-black">{STATEMENT_SUMMARY_SECTION}</h2>
+				<HelpHint helpKey="billing.statement.balances" />
+			</div>
 			<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 				{#each summaryFieldOrder as key (key)}
 					<div class="rounded-xl bg-slate-50 p-3">

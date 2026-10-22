@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
@@ -661,19 +662,25 @@
 							</p>{/each}
 					</div>{/if}
 			</section>
-			<label for="auth-requested-amount"
-				>Montant demandé <span class="text-xs text-slate-500"
-					>(prérempli depuis la tarification si disponible — jamais depuis le prix catalogue de
-					référence)</span
-				><input
+			<div>
+				<div class="flex items-center gap-1">
+					<label for="auth-requested-amount"
+						>Montant demandé <span class="text-xs text-slate-500"
+							>(prérempli depuis la tarification si disponible — jamais depuis le prix catalogue de
+							référence)</span
+						></label
+					>
+					<HelpHint helpKey="insurance.authorization.requested_amount" />
+				</div>
+				<input
 					id="auth-requested-amount"
 					type="number"
 					min="0"
 					bind:value={requestedAmount}
 					class="mt-1 block h-10 w-full rounded-lg border px-3"
 					data-testid="auth-requested-amount"
-				/></label
-			>
+				/>
+			</div>
 			<label for="auth-comment"
 				>Commentaire<textarea
 					id="auth-comment"
@@ -774,7 +781,10 @@
 				>
 			{/if}
 			{#if actions.decidable && canDecide}<section class="mt-5 space-y-3 rounded-xl border p-4">
-					<h3 class="font-black">Décision saisie depuis le portail assureur</h3>
+					<div class="flex items-center gap-2">
+						<h3 class="font-black">Décision saisie depuis le portail assureur</h3>
+						<HelpHint helpKey="insurance.authorization.decision" />
+					</div>
 					<div class="grid gap-3 sm:grid-cols-2">
 						<select bind:value={decisionStatus} class="h-10 rounded-lg border px-3"
 							><option value="APPROVED">Accordée</option><option value="PARTIALLY_APPROVED"
@@ -789,26 +799,35 @@
 							type="date"
 							bind:value={decisionDate}
 							class="h-10 rounded-lg border px-3"
-						/><input
-							type="number"
-							min="0"
-							max="100"
-							bind:value={approvedRate}
-							placeholder="Taux accordé"
-							class="h-10 rounded-lg border px-3"
-						/><input
-							type="number"
-							min="0"
-							bind:value={approvedAmount}
-							placeholder="Montant accordé"
-							class="h-10 rounded-lg border px-3"
-						/><input
-							type="number"
-							min="0"
-							bind:value={ceilingAmount}
-							placeholder="Plafond"
-							class="h-10 rounded-lg border px-3"
-						/>
+						/><span class="flex items-center gap-1"
+							><input
+								type="number"
+								min="0"
+								max="100"
+								bind:value={approvedRate}
+								placeholder="Taux accordé"
+								aria-label="Taux accordé"
+								class="h-10 min-w-0 flex-1 rounded-lg border px-3"
+							/><HelpHint helpKey="insurance.authorization.approved_rate" /></span
+						><span class="flex items-center gap-1"
+							><input
+								type="number"
+								min="0"
+								bind:value={approvedAmount}
+								placeholder="Montant accordé"
+								aria-label="Montant accordé"
+								class="h-10 min-w-0 flex-1 rounded-lg border px-3"
+							/><HelpHint helpKey="insurance.authorization.approved_amount" /></span
+						><span class="flex items-center gap-1"
+							><input
+								type="number"
+								min="0"
+								bind:value={ceilingAmount}
+								placeholder="Plafond"
+								aria-label="Plafond"
+								class="h-10 min-w-0 flex-1 rounded-lg border px-3"
+							/><HelpHint helpKey="insurance.authorization.ceiling" /></span
+						>
 					</div>
 					{#if decisionStatus === 'REJECTED'}<textarea
 							bind:value={rejectionReason}

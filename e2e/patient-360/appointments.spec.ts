@@ -1,12 +1,13 @@
 /**
  * LOT 23H / 23K — Patient 360 appointments E2E (upcoming + history).
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 import { bookPastAppointment } from '../agenda/fixtures';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const receptionEmail = 'demo.accueil@medcore.local';
 const doctorEmail = 'demo.generaliste@medcore.local';

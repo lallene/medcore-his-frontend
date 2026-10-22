@@ -2,10 +2,11 @@
  * LOT 23G.2 — deterministic scheduling E2E fixtures.
  * Creates dedicated QA patients per scenario and cleans only owned rows.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 export const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-export const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+export const password = requiredQaPassword();
 export const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 export const receptionEmail = 'demo.accueil@medcore.local';
 export const doctorEmail = 'demo.generaliste@medcore.local';

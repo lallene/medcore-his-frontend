@@ -33,7 +33,8 @@ export type NavHref =
 	| '/queue'
 	| '/queue/reception'
 	| '/queue/triage'
-	| '/queue/doctor';
+	| '/queue/doctor'
+	| '/help';
 
 export type NavItem = {
 	title: string;
@@ -100,7 +101,9 @@ export const workspaceMenu: NavItem[] = [
 		href: '/insurance-receivables',
 		permissions: ['insurance_receivables.read']
 	},
-	{ title: 'Mes tickets', href: '/tickets', permissions: ['ticket.read.own'] }
+	{ title: 'Mes tickets', href: '/tickets', permissions: ['ticket.read.own'] },
+	// LOT AIDE: every authenticated user; entries are filtered by the backend.
+	{ title: 'Aide', href: '/help', permissions: [] }
 ];
 
 export const servicesMenu: NavItem[] = [

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import {
@@ -222,7 +223,10 @@
 				</FormField>
 			{/if}
 			{#if walkInFinanceStatus}
-				<p class="text-sm text-slate-600">Statut financier : {walkInFinanceStatus}</p>
+				<p class="flex items-center gap-1 text-sm text-slate-600">
+					Statut financier : {walkInFinanceStatus}
+					<HelpHint helpKey="queue.ticket.finance_status" />
+				</p>
 			{/if}
 		</div>
 		<div class="mt-4">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { jwtDecode } from 'jwt-decode';
 	import {
@@ -313,7 +314,7 @@
 						><option value="">Tous les statuts</option><option value="PENDING">À dispenser</option
 						><option value="PARTIAL">Partielle</option><option value="COMPLETED">Dispensée</option
 						><option value="CANCELLED">Annulée</option></select
-					><input
+					><HelpHint helpKey="pharmacy.dispensation.status" class="self-center" /><input
 						aria-label="Date du bon"
 						type="date"
 						bind:value={period}
@@ -530,7 +531,11 @@
 							><tr
 								><th class="p-3">Lot</th><th>Médicament / DCI</th><th>Présentation</th><th
 									>Quantité</th
-								><th>Expiration</th><th>État</th><th>Priorité FEFO</th></tr
+								><th>Expiration</th><th>État</th><th
+									><span class="inline-flex items-center gap-1"
+										>Priorité FEFO <HelpHint helpKey="pharmacy.batch.fefo" /></span
+									></th
+								></tr
 							></thead
 						><tbody
 							>{#each filteredBatches as b (b.id)}{@const rank =

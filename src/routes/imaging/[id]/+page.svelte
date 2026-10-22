@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -186,7 +187,7 @@
 						act(() => startImagingOrder(id, { technicalNotes, contrastUsed, contrastProduct }))}
 					class="mt-3 rounded-xl bg-blue-700 px-5 py-3 font-bold text-white"
 					>Démarrer l’examen</button
-				>
+				><HelpHint helpKey="imaging.exam.start" class="ml-2" />
 			</section>{/if}
 		{#if canReport && actions.report}<section class="rounded-2xl border bg-white p-6">
 				<h2 class="font-black">Compte rendu radiologique</h2>
@@ -197,13 +198,28 @@
 						class="rounded-xl border p-3"></textarea><textarea
 						bind:value={report.technique}
 						placeholder="Technique"
-						class="rounded-xl border p-3"></textarea><textarea
-						bind:value={report.findings}
-						placeholder="Constatations *"
-						class="rounded-xl border p-3 md:col-span-2"></textarea><textarea
-						bind:value={report.conclusion}
-						placeholder="Conclusion *"
-						class="rounded-xl border p-3 md:col-span-2"></textarea><textarea
+						class="rounded-xl border p-3"></textarea>
+					<div class="flex items-start gap-1 md:col-span-2">
+						<textarea
+							bind:value={report.findings}
+							placeholder="Constatations *"
+							aria-label="Constatations"
+							class="min-w-0 flex-1 rounded-xl border p-3"></textarea><HelpHint
+							helpKey="imaging.report.findings"
+							class="mt-2"
+						/>
+					</div>
+					<div class="flex items-start gap-1 md:col-span-2">
+						<textarea
+							bind:value={report.conclusion}
+							placeholder="Conclusion *"
+							aria-label="Conclusion"
+							class="min-w-0 flex-1 rounded-xl border p-3"></textarea><HelpHint
+							helpKey="imaging.report.conclusion"
+							class="mt-2"
+						/>
+					</div>
+					<textarea
 						bind:value={report.recommendation}
 						placeholder="Recommandations"
 						class="rounded-xl border p-3"></textarea><input

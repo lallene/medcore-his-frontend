@@ -8,6 +8,7 @@
 		BarChart3,
 		BookOpen,
 		CalendarDays,
+		CircleHelp,
 		CreditCard,
 		FileCheck2,
 		FileText,
@@ -73,7 +74,8 @@
 		'/admin/scheduling': CalendarDays,
 		'/admin/qa': BarChart3,
 		'/admin/design-system': LayoutDashboard,
-		'/support/tickets': LifeBuoy
+		'/support/tickets': LifeBuoy,
+		'/help': CircleHelp
 	};
 
 	function withIcons(items: NavItem[]): MenuItem[] {

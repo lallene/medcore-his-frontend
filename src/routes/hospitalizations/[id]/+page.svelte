@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -124,11 +125,15 @@
 			</div>{/if}
 		{#if actions.includes('discharge')}<section class="space-y-3 rounded-2xl border bg-white p-6">
 				<h2 class="text-xl font-black">Enregistrer la sortie</h2>
-				<input
-					bind:value={diagnosis}
-					placeholder="Diagnostic de sortie"
-					class="w-full rounded-xl border p-3"
-				/><textarea
+				<div class="flex items-center gap-1">
+					<input
+						bind:value={diagnosis}
+						placeholder="Diagnostic de sortie"
+						aria-label="Diagnostic de sortie"
+						class="w-full rounded-xl border p-3"
+					/><HelpHint helpKey="hospitalization.discharge.diagnosis" />
+				</div>
+				<textarea
 					bind:value={summary}
 					placeholder="Résumé de sortie"
 					class="w-full rounded-xl border p-3"></textarea><button

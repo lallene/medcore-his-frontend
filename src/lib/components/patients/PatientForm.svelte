@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import {
 		PATIENT_EMAIL_MAX_LENGTH,
@@ -118,9 +119,12 @@
 	</div>
 
 	<div class="space-y-1.5">
-		<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-personneContact"
-			>Contact d’urgence</label
-		>
+		<div class="flex items-center gap-1">
+			<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-personneContact"
+				>Contact d’urgence</label
+			>
+			<HelpHint helpKey="patient.contact.emergency" />
+		</div>
 		<Input
 			id="{idPrefix}-personneContact"
 			name="personneContact"
@@ -132,16 +136,19 @@
 </div>
 
 <div class="mt-6 grid gap-4 md:grid-cols-2">
-	<label class="flex items-center gap-3 text-sm font-semibold text-slate-700">
-		<input
-			type="checkbox"
-			bind:checked={values.isAssure}
-			{disabled}
-			data-testid="qa-patient-is-assure"
-			class="h-4 w-4 rounded border-slate-300 text-[#0E4C92] focus:ring-[#0E4C92]"
-		/>
-		Patient assuré
-	</label>
+	<div class="flex items-center gap-2">
+		<label class="flex items-center gap-3 text-sm font-semibold text-slate-700">
+			<input
+				type="checkbox"
+				bind:checked={values.isAssure}
+				{disabled}
+				data-testid="qa-patient-is-assure"
+				class="h-4 w-4 rounded border-slate-300 text-[#0E4C92] focus:ring-[#0E4C92]"
+			/>
+			Patient assuré
+		</label>
+		<HelpHint helpKey="patient.insurance.is_insured" />
+	</div>
 
 	{#if insuranceDetailsHidden}
 		<p class="text-sm text-slate-500 md:col-span-2" data-testid="qa-patient-insurance-redacted">
@@ -149,9 +156,12 @@
 		</p>
 	{:else}
 		<div class="space-y-1.5">
-			<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-tauxCouverture"
-				>Taux de couverture (%)</label
-			>
+			<div class="flex items-center gap-1">
+				<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-tauxCouverture"
+					>Taux de couverture (%)</label
+				>
+				<HelpHint helpKey="patient.insurance.member_details" />
+			</div>
 			<input
 				id="{idPrefix}-tauxCouverture"
 				name="tauxCouverture"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -404,7 +405,11 @@
 										>{t.label} — {formatXOF(t.unitPrice)}</option
 									>{/each}</select
 							></label
-						>{/if}{:else}<p class="text-slate-500">Aucun acte disponible.</p>{/each}<button
+						><HelpHint helpKey="billing.invoice.tariff_choice" class="ml-1" />{/if}{:else}<p
+						class="text-slate-500"
+					>
+						Aucun acte disponible.
+					</p>{/each}<button
 					class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-40"
 					disabled={!selectedLines.length}
 					data-testid="billing-create-draft"

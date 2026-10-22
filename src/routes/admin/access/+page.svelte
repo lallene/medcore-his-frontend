@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -149,10 +150,13 @@
 				<option value="privileged">Privilégiés</option>
 				<option value="standard">Standard</option>
 			</Select>
-			<label class="flex items-center gap-2 text-sm">
-				<input type="checkbox" bind:checked={overridesOnly} />
-				Exceptions seulement
-			</label>
+			<span class="flex items-center gap-1">
+				<label class="flex items-center gap-2 text-sm">
+					<input type="checkbox" bind:checked={overridesOnly} />
+					Exceptions seulement
+				</label>
+				<HelpHint helpKey="administration.access.exceptions_only" />
+			</span>
 			<Button onclick={() => void load()}>Filtrer</Button>
 		</FilterBar>
 

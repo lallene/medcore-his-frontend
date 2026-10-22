@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { completeTriage, listQueueTickets, takeTriage } from '$lib/api/queue';
@@ -68,6 +69,12 @@
 	onMount(() => {
 		void load();
 	});
+	// LOT AIDE: help keys for non-obvious triage columns.
+	const triageColumnHelp: Partial<Record<string, string>> = {
+		Priorité: 'queue.ticket.priority',
+		Attente: 'queue.ticket.wait_time',
+		Étape: 'queue.ticket.stage'
+	};
 </script>
 
 <div class="space-y-6" data-testid="queue-triage">
@@ -97,7 +104,13 @@
 					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
 						<tr>
 							{#each triageQueueColumns as column (column)}
-								<th class="p-3">{column}</th>
+								<th class="p-3"
+									><span class="inline-flex items-center gap-1"
+										>{column}{#if triageColumnHelp[column]}<HelpHint
+												helpKey={triageColumnHelp[column]}
+											/>{/if}</span
+									></th
+								>
 							{/each}
 						</tr>
 					</thead>

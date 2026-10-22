@@ -2,11 +2,12 @@
  * LOT29F-I-B — Genuine refund execution (APPROVED → EXECUTED).
  * CASH: REFUND_OUT + ledger REFUND. External: record completed off-system restitution.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const cashierEmail = 'demo.caissiere@medcore.local';
 const accountantEmail = 'demo.comptable@medcore.local';

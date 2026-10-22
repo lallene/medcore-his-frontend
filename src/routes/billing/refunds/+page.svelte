@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -662,9 +663,13 @@
 							bind:value={form.amount}
 						/>
 					</label>
-					<label class="text-xs font-bold uppercase text-slate-500 md:col-span-1">
-						Motif
-						<select
+					<div class="text-xs font-bold uppercase text-slate-500 md:col-span-1">
+						<span class="flex items-center gap-1"
+							><label for="refund-reason-code-select">Motif</label><HelpHint
+								helpKey="billing.refund.reason"
+							/></span
+						><select
+							id="refund-reason-code-select"
 							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
 							data-testid="refund-reason-code"
 							bind:value={form.reasonCode}
@@ -673,7 +678,7 @@
 								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>
-					</label>
+					</div>
 					<label class="text-xs font-bold uppercase text-slate-500 md:col-span-2">
 						Commentaire {otherReason ? '(obligatoire)' : '(facultatif)'}
 						<textarea
@@ -684,20 +689,28 @@
 							bind:value={form.reasonComment}></textarea>
 					</label>
 					{#if needsAttestation}
-						<label class="text-xs font-bold uppercase text-slate-500 md:col-span-3">
-							Référence d’attestation clinique (obligatoire)
-							<input
+						<div class="text-xs font-bold uppercase text-slate-500 md:col-span-3">
+							<span class="flex items-center gap-1"
+								><label for="refund-attestation-ref-input"
+									>Référence d’attestation clinique (obligatoire)</label
+								><HelpHint helpKey="billing.refund.attestation_ref" /></span
+							><input
+								id="refund-attestation-ref-input"
 								type="text"
 								class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
 								maxlength="200"
 								data-testid="refund-attestation-ref"
 								bind:value={form.clinicalAttestationRef}
 							/>
-						</label>
+						</div>
 					{/if}
-					<label class="text-xs font-bold uppercase text-slate-500">
-						Bénéficiaire
-						<select
+					<div class="text-xs font-bold uppercase text-slate-500">
+						<span class="flex items-center gap-1"
+							><label for="refund-beneficiary-mode-select">Bénéficiaire</label><HelpHint
+								helpKey="billing.refund.alternate_beneficiary"
+							/></span
+						><select
+							id="refund-beneficiary-mode-select"
 							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
 							data-testid="refund-beneficiary-mode"
 							bind:value={form.beneficiaryMode}
@@ -706,7 +719,7 @@
 								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>
-					</label>
+					</div>
 					<label class="text-xs font-bold uppercase text-slate-500">
 						Mode prévu
 						<select
@@ -1072,9 +1085,13 @@
 							{/if}
 
 							{#if methodNeedsPick}
-								<label class="block text-sm">
-									<span class="font-bold">Mode d’exécution</span>
-									<select
+								<div class="block text-sm">
+									<span class="flex items-center gap-1"
+										><label for="refund-execute-method-select">Mode d’exécution</label><HelpHint
+											helpKey="billing.refund.execution_method"
+										/></span
+									><select
+										id="refund-execute-method-select"
 										class="mt-1 w-full rounded-lg border p-2"
 										data-testid="refund-execute-method"
 										bind:value={executeForm.method}
@@ -1088,7 +1105,7 @@
 											<option value={opt.value}>{opt.label}</option>
 										{/each}
 									</select>
-								</label>
+								</div>
 							{:else}
 								<p class="text-sm" data-testid="refund-execute-method-locked">
 									Mode autorisé : <b>{refundMethodLabel(selected.intendedMethod)}</b>
@@ -1299,15 +1316,19 @@
 						bind:value={filterDateTo}
 					/>
 				</label>
-				<label class="text-xs font-bold uppercase text-slate-500 md:col-span-2">
-					N° RMB
-					<input
+				<div class="text-xs font-bold uppercase text-slate-500 md:col-span-2">
+					<span class="flex items-center gap-1"
+						><label for="refund-filter-number-input">N° RMB</label><HelpHint
+							helpKey="billing.refund.rmb_number"
+						/></span
+					><input
+						id="refund-filter-number-input"
 						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
 						data-testid="refund-filter-number"
 						placeholder="RMB-2026-000001"
 						bind:value={filterRefundNumber}
 					/>
-				</label>
+				</div>
 				<div class="md:col-span-6">
 					<button
 						type="submit"
@@ -1340,7 +1361,11 @@
 							<th>Titulaire</th>
 							<th>{REFUND_RESERVED_LABEL}</th>
 							<th>Motif</th>
-							<th>Statut</th>
+							<th
+								><span class="inline-flex items-center gap-1"
+									>Statut <HelpHint helpKey="billing.refund.workflow" /></span
+								></th
+							>
 							<th></th>
 						</tr>
 					</thead>

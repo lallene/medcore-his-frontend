@@ -1,10 +1,11 @@
+import { requiredQaPassword } from '../fixtures/credentials';
 import { test, expect, type APIRequestContext } from '@playwright/test';
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:8080';
 async function auth(request: APIRequestContext) {
 	const response = await request.post(`${api}/api/auth/login`, {
 		data: {
 			email: process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local',
-			password: process.env.QA_ADMIN_PASSWORD ?? 'admin123'
+			password: requiredQaPassword()
 		}
 	});
 	expect(response.ok()).toBeTruthy();

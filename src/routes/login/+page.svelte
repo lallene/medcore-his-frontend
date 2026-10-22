@@ -24,7 +24,7 @@
 
 	let showPassword = $state(false);
 	let email = $state('admin@medcore.local');
-	let password = $state('admin123');
+	let password = $state('');
 	let loading = $state(false);
 	let error = $state('');
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { untrack } from 'svelte';
 	import { Save, Activity, HeartPulse, Building2, ClipboardPlus } from 'lucide-svelte';
 
@@ -328,9 +329,10 @@
 
 		<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
 			<div>
-				<label for="temperature" class="mb-2 block text-sm font-bold text-slate-700">
-					Température
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="temperature" class="block text-sm font-bold text-slate-700">Température</label
+					><HelpHint helpKey="consultation.vitals.temperature" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -352,9 +354,10 @@
 			</div>
 
 			<div>
-				<label for="systolic" class="mb-2 block text-sm font-bold text-slate-700">
-					TA systolique
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="systolic" class="block text-sm font-bold text-slate-700">TA systolique</label
+					><HelpHint helpKey="consultation.vitals.systolic_bp" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -376,9 +379,11 @@
 			</div>
 
 			<div>
-				<label for="diastolic" class="mb-2 block text-sm font-bold text-slate-700">
-					TA diastolique
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="diastolic" class="block text-sm font-bold text-slate-700"
+						>TA diastolique</label
+					><HelpHint helpKey="consultation.vitals.diastolic_bp" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -400,9 +405,11 @@
 			</div>
 
 			<div>
-				<label for="heart-rate" class="mb-2 block text-sm font-bold text-slate-700">
-					Fréquence cardiaque
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="heart-rate" class="block text-sm font-bold text-slate-700"
+						>Fréquence cardiaque</label
+					><HelpHint helpKey="consultation.vitals.heart_rate" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -424,9 +431,11 @@
 			</div>
 
 			<div>
-				<label for="respiratory-rate" class="mb-2 block text-sm font-bold text-slate-700">
-					Fréquence respiratoire
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="respiratory-rate" class="block text-sm font-bold text-slate-700"
+						>Fréquence respiratoire</label
+					><HelpHint helpKey="consultation.vitals.respiratory_rate" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -448,9 +457,11 @@
 			</div>
 
 			<div>
-				<label for="oxygen" class="mb-2 block text-sm font-bold text-slate-700">
-					Saturation en oxygène
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="oxygen" class="block text-sm font-bold text-slate-700"
+						>Saturation en oxygène</label
+					><HelpHint helpKey="consultation.vitals.spo2" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -516,7 +527,10 @@
 			</div>
 
 			<div>
-				<label for="glucose" class="mb-2 block text-sm font-bold text-slate-700"> Glycémie </label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="glucose" class="block text-sm font-bold text-slate-700">Glycémie</label
+					><HelpHint helpKey="consultation.vitals.glycemia" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -538,9 +552,10 @@
 			</div>
 
 			<div>
-				<label for="pain" class="mb-2 block text-sm font-bold text-slate-700">
-					Score de douleur
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="pain" class="block text-sm font-bold text-slate-700">Score de douleur</label
+					><HelpHint helpKey="consultation.vitals.pain_score" />
+				</div>
 
 				<div class="relative">
 					<input
@@ -759,9 +774,11 @@
 
 		<div class="mt-5 grid gap-5 md:grid-cols-3">
 			<div>
-				<label for="visit-type" class="mb-2 block text-sm font-bold text-slate-700">
-					Type de visite
-				</label>
+				<div class="mb-2 flex items-center gap-1">
+					<label for="visit-type" class="block text-sm font-bold text-slate-700"
+						>Type de visite</label
+					><HelpHint helpKey="consultation.context.visit_type" />
+				</div>
 
 				<select
 					id="visit-type"
@@ -924,9 +941,11 @@
 
 					<div class="grid gap-5 sm:grid-cols-2">
 						<div>
-							<label for="hospitalization-type" class="mb-2 block text-sm font-bold text-slate-700">
-								Type d’hospitalisation
-							</label>
+							<div class="mb-2 flex items-center gap-1">
+								<label for="hospitalization-type" class="block text-sm font-bold text-slate-700"
+									>Type d’hospitalisation</label
+								><HelpHint helpKey="consultation.decision.hospitalization_type" />
+							</div>
 
 							<select
 								id="hospitalization-type"
@@ -978,6 +997,9 @@
 		</Card>
 
 		<Card title="Repos maladie" subtitle="Prescription d’un arrêt ou repos médical">
+			<div class="mb-2 flex items-center justify-end gap-1 text-xs text-slate-500">
+				Certificat de repos <HelpHint helpKey="consultation.decision.sick_leave" />
+			</div>
 			<label
 				class={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition ${
 					sickLeaveRequired ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'

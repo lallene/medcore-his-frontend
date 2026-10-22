@@ -47,11 +47,18 @@ jobs:
       QA_BASE_URL: http://127.0.0.1:4173
       QA_API_URL: http://127.0.0.1:8080
       QA_ADMIN_EMAIL: admin@medcore.local
-      QA_ADMIN_PASSWORD: admin123
       QA_ENVIRONMENT: ci
       QA_RUN_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
       QA_SUITE: ${{ inputs.suite || 'critical' }}
     steps:
+      # LOT AIDE+SEED — no fixed demo password: an ephemeral random one per run, masked in logs,
+      # shared with the demo seed (MEDCORE_DEMO_SEED_PASSWORD) and Playwright (QA_ADMIN_PASSWORD).
+      - name: Generate ephemeral demo credentials
+        run: |
+          pw="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
+          echo "::add-mask::$pw"
+          echo "MEDCORE_DEMO_SEED_PASSWORD=$pw" >> "$GITHUB_ENV"
+          echo "QA_ADMIN_PASSWORD=$pw" >> "$GITHUB_ENV"
       - name: Checkout frontend
         uses: actions/checkout@v4
         with: { path: frontend }
@@ -113,6 +120,8 @@ jobs:
 
       - name: Seed ephemeral DEMO database
         working-directory: backend
+        env:
+          MEDCORE_ALLOW_DEMO_SEED: '1'
         run: go run ./cmd/seed --demo-full
       - name: Start backend
         working-directory: backend
@@ -135,7 +144,7 @@ jobs:
           curl --fail-with-body \
             -X POST \
             -H "Content-Type: application/json" \
-            -d '{"email":"admin@medcore.local","password":"admin123"}' \
+            -d "$(printf '{"email":"admin@medcore.local","password":"%s"}' "$QA_ADMIN_PASSWORD")" \
             http://127.0.0.1:8080/api/auth/login
       - name: Frontend quality gate
         working-directory: frontend

@@ -4,11 +4,12 @@
  * Active-care stale-response proof is unit-tested (patient-360-load.test.ts):
  * QA queue fixtures are not reliably present for deterministic banner E2E.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const doctorEmail = 'demo.generaliste@medcore.local';
 

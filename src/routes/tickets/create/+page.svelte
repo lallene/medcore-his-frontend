@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -94,13 +95,18 @@
 				class="mt-2 w-full rounded-xl border p-3"
 				placeholder="Ex. Consultation, imprimante"
 			/></label
-		><label class="font-bold"
-			>Urgence perçue<select bind:value={urgency} class="mt-2 w-full rounded-xl border p-3"
+		>
+		<div class="font-bold">
+			<span class="flex items-center gap-1"
+				><label for="ticket-urgency">Urgence perçue</label><HelpHint
+					helpKey="ticket.create.urgency"
+				/></span
+			><select id="ticket-urgency" bind:value={urgency} class="mt-2 w-full rounded-xl border p-3"
 				><option value="LOW">Faible</option><option value="MEDIUM">Moyenne</option><option
 					value="HIGH">Haute</option
 				><option value="CRITICAL">Critique</option></select
-			></label
-		>
+			>
+		</div>
 		<div class="rounded-xl bg-slate-50 p-4 text-sm md:col-span-2">
 			<b>Contexte automatique</b>
 			<p>Module : {moduleName}</p>

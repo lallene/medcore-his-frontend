@@ -1,11 +1,12 @@
 /**
  * LOT29D-B — Canonical receipt after billing payment.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 
 async function loginApi(request: APIRequestContext, email: string) {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import {
 		createActCatalogEntry,
@@ -338,12 +339,18 @@
 			/>
 			<span class="text-xs font-normal text-slate-500">{BASE_PRICE_HINT}</span>
 		</label>
-		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-			<input type="checkbox" bind:checked={form.billable} /> Facturable
-		</label>
-		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-			<input type="checkbox" bind:checked={form.insuranceEligible} /> Éligible PEC
-		</label>
+		<div class="flex items-center gap-1">
+			<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+				<input type="checkbox" bind:checked={form.billable} /> Facturable
+			</label>
+			<HelpHint helpKey="administration.act_catalog.billable" />
+		</div>
+		<div class="flex items-center gap-1">
+			<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+				<input type="checkbox" bind:checked={form.insuranceEligible} /> Éligible PEC
+			</label>
+			<HelpHint helpKey="administration.act_catalog.insurance_eligible" />
+		</div>
 		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
 			<input type="checkbox" bind:checked={form.isActive} /> Actif
 		</label>

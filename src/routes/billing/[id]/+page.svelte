@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -874,16 +875,23 @@
 							data-testid="invoice-pay-amount"
 							aria-invalid={amountHint ? 'true' : undefined}
 						/></label
-					><label class="block text-sm"
-						><span class="font-bold">Mode</span><select
+					>
+					<div class="block text-sm">
+						<span class="flex items-center gap-1"
+							><label for="invoice-pay-method-select" class="font-bold">Mode</label><HelpHint
+								helpKey="billing.payment.method"
+							/></span
+						><select
+							id="invoice-pay-method-select"
 							class="mt-1 w-full rounded-xl border p-2"
 							bind:value={payment.paymentMethod}
 							data-testid="invoice-pay-method"
 							>{#each SESSIONLESS_PAYMENT_METHODS as m (m.value)}<option value={m.value}
 									>{m.label}</option
 								>{/each}</select
-						></label
-					><label class="block text-sm md:col-span-1"
+						>
+					</div>
+					<label class="block text-sm md:col-span-1"
 						><span class="font-bold">Référence</span><input
 							class="mt-1 w-full rounded-xl border p-2"
 							placeholder="Facultatif"
@@ -916,7 +924,7 @@
 							bind:checked={payerForm.patientIsPayer}
 							data-testid="invoice-payer-is-patient"
 						/>{PAYER_PATIENT_LABEL}</label
-					>
+					><HelpHint helpKey="billing.payment.payer" class="ml-1" />
 					{#if !payerForm.patientIsPayer}
 						<div class="grid gap-2 md:grid-cols-4">
 							<label class="block text-sm"
@@ -991,7 +999,9 @@
 													class="mt-1 block text-xs font-semibold text-amber-900"
 													data-testid={`invoice-post-close-${p.id}`}
 													>{POST_CLOSE_CORRECTION_LABEL}</span
-												>{/if}{#if p.cashCorrectionExecuted}<span
+												><HelpHint
+													helpKey="cash.correction.post_close"
+												/>{/if}{#if p.cashCorrectionExecuted}<span
 													class="mt-1 block text-xs font-semibold text-emerald-900"
 													data-testid={`invoice-correction-executed-${p.id}`}
 													>{CORRECTION_EXECUTED_LABEL}</span
@@ -1057,7 +1067,10 @@
 			aria-modal="true"
 		>
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
-				<h2 class="text-lg font-black text-amber-950">{REVERSAL_ACTION_LABEL}</h2>
+				<div class="flex items-center gap-2">
+					<h2 class="text-lg font-black text-amber-950">{REVERSAL_ACTION_LABEL}</h2>
+					<HelpHint helpKey="billing.payment.reverse" />
+				</div>
 				<p class="text-sm text-slate-600">
 					Corrige l’effet financier HIS de cet encaissement. Cela n’enregistre pas un remboursement
 					externe.
@@ -1221,9 +1234,14 @@
 						{formatXOF(creditNoteDefaultAmount(invoice))}
 					</dd>
 				</dl>
-				<label class="block text-sm">
-					<span class="font-bold">Montant de la réduction</span>
+				<div class="block text-sm">
+					<span class="flex items-center gap-1"
+						><label for="invoice-credit-note-amount" class="font-bold"
+							>Montant de la réduction</label
+						><HelpHint helpKey="billing.credit_note.amount" /></span
+					>
 					<input
+						id="invoice-credit-note-amount"
 						class="mt-1 w-full rounded-xl border p-2"
 						type="number"
 						min="1"
@@ -1231,7 +1249,7 @@
 						bind:value={creditAmount}
 						data-testid="invoice-credit-note-amount-input"
 					/>
-				</label>
+				</div>
 				<label class="block text-sm">
 					<span class="font-bold">Motif</span>
 					<textarea
@@ -1317,9 +1335,13 @@
 						{formatXOF(selectedApplyHolder.availableCredit)}
 					</p>
 				{/if}
-				<label class="block text-sm">
-					<span class="font-bold">Montant à appliquer</span>
+				<div class="block text-sm">
+					<span class="flex items-center gap-1"
+						><label for="invoice-credit-apply-amount" class="font-bold">Montant à appliquer</label
+						><HelpHint helpKey="billing.credit.apply_amount" /></span
+					>
 					<input
+						id="invoice-credit-apply-amount"
 						class="mt-1 w-full rounded-xl border p-2"
 						type="number"
 						min="1"
@@ -1327,7 +1349,7 @@
 						bind:value={applyAmount}
 						data-testid="invoice-apply-credit-amount"
 					/>
-				</label>
+				</div>
 				<label class="flex items-start gap-2 text-sm">
 					<input
 						type="checkbox"

@@ -2,11 +2,12 @@
  * LOT29F-I-A — Refund request workflow (reserve spendable credit → decision).
  * No money execution: UI must never claim a payout happened.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const facturationEmail = 'demo.facturation@medcore.local';
 const cashierEmail = 'demo.caissiere@medcore.local';

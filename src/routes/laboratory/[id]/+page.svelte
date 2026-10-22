@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -228,7 +229,7 @@
 							onclick={() => act(() => validateLaboratoryOrder(id))}
 							class="rounded-xl bg-emerald-700 px-5 py-2 font-bold text-white"
 							>Valider définitivement</button
-						>{/if}
+						><HelpHint helpKey="laboratory.result.validate" class="self-center" />{/if}
 				</div>
 			</section>{/if}
 		{#if order.status === 'VALIDATED'}<section

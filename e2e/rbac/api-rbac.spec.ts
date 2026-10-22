@@ -1,3 +1,4 @@
+import { requiredQaPassword } from '../fixtures/credentials';
 import { test, expect } from '@playwright/test';
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:8080';
 test('QA-RBAC-001 @critical API rejects missing JWT and forbidden cashier clinical access', async ({
@@ -7,7 +8,7 @@ test('QA-RBAC-001 @critical API rejects missing JWT and forbidden cashier clinic
 	const login = await request.post(`${api}/api/auth/login`, {
 		data: {
 			email: 'demo.caissiere@medcore.local',
-			password: process.env.QA_ADMIN_PASSWORD ?? 'admin123'
+			password: requiredQaPassword()
 		}
 	});
 	expect(login.ok()).toBeTruthy();
@@ -34,7 +35,7 @@ test('QA-AUTH-002 @critical invalid and inactive accounts are refused', async ({
 			await request.post(`${api}/api/auth/login`, {
 				data: {
 					email: 'demo.inactive@medcore.local',
-					password: process.env.QA_ADMIN_PASSWORD ?? 'admin123'
+					password: requiredQaPassword()
 				}
 			})
 		).status()

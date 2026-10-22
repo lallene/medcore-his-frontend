@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -366,7 +367,9 @@
 						</p>
 					</div>
 					<div>
-						<p class="text-xs font-semibold text-slate-500">Facturable</p>
+						<p class="flex items-center gap-1 text-xs font-semibold text-slate-500">
+							Facturable <HelpHint helpKey="performed_act.billable" />
+						</p>
 						<p class="font-medium text-slate-900">{selected.billable ? 'Oui' : 'Non'}</p>
 					</div>
 					<div>
@@ -431,7 +434,7 @@
 						variant="danger"
 						data-testid="performed-act-void"
 						onclick={() => openVoid(selected!)}>Annuler l'acte (VOID)</Button
-					>
+					><HelpHint helpKey="performed_act.void" class="self-center" />
 				{/if}
 			</div>
 		</div>

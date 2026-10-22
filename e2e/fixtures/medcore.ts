@@ -1,3 +1,4 @@
+import { requiredQaPassword } from './credentials';
 import { test as base, expect } from '@playwright/test';
 type Fixtures = {
 	login: (email?: string, password?: string) => Promise<void>;
@@ -8,7 +9,7 @@ export const test = base.extend<Fixtures>({
 		await use(
 			async (
 				email = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local',
-				password = process.env.QA_ADMIN_PASSWORD ?? 'admin123'
+				password = requiredQaPassword()
 			) => {
 				await page.goto('/login');
 				await page.getByTestId('qa-login-email').fill(email);

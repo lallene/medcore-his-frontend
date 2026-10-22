@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { resolve } from '$app/paths';
 	import {
 		appointmentDurationMinutes,
@@ -241,7 +242,7 @@
 							loading={acting === 'checkin'}
 							disabled={acting !== null}
 							data-testid="agenda-action-checkin">Check-in</Button
-						>
+						><HelpHint helpKey="agenda.appointment.check_in" class="self-center" />
 					{/if}
 					<Button variant="ghost" onclick={() => (open = false)}>Fermer</Button>
 				</div>

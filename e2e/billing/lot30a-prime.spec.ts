@@ -4,11 +4,12 @@
  * QA-30APRIME-002 an arbitrary tariffId cannot alter the invoice gross.
  * QA-30APRIME-003 insurance member details are redacted for non-insurance roles.
  */
+import { requiredQaPassword } from '../fixtures/credentials';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { test } from '../fixtures/medcore';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:18082';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 const adminEmail = process.env.QA_ADMIN_EMAIL ?? 'admin@medcore.local';
 const accueilEmail = 'demo.accueil@medcore.local';
 

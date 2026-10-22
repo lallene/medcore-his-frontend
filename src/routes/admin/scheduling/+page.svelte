@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import {
 		cancelScheduleException,
@@ -1051,24 +1052,33 @@
 				</select>
 			</label>
 			<div class="grid grid-cols-2 gap-3">
-				<label class="block text-sm">
-					<span class="font-medium">Début (wall-clock)</span>
+				<div class="block text-sm">
+					<span class="flex items-center gap-1"
+						><label for="schedule-slot-start" class="font-medium">Début (wall-clock)</label
+						><HelpHint helpKey="administration.scheduling.start_wallclock" /></span
+					>
 					<input
+						id="schedule-slot-start"
 						type="time"
 						class="mt-1 w-full rounded-xl border px-3 py-2"
 						bind:value={schedStart}
 						data-testid="schedule-form-start"
 					/>
-				</label>
-				<label class="block text-sm">
-					<span class="font-medium">Fin (exclusive)</span>
+				</div>
+				<div class="block text-sm">
+					<span class="flex items-center gap-1"
+						><label for="schedule-slot-end" class="font-medium">Fin (exclusive)</label><HelpHint
+							helpKey="administration.scheduling.end_exclusive"
+						/></span
+					>
 					<input
+						id="schedule-slot-end"
 						type="time"
 						class="mt-1 w-full rounded-xl border px-3 py-2"
 						bind:value={schedEnd}
 						data-testid="schedule-form-end"
 					/>
-				</label>
+				</div>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<label class="block text-sm">

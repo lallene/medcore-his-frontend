@@ -31,7 +31,9 @@ Préparer `medcore_full_demo`, démarrer un backend **courant** (LOT 23F.1+ / 23
 
 ```bash
 # Backend courant + fixtures scheduling si besoin:
-#   DATABASE_URL=... go run ./cmd/seed --demo-scheduling
+#   DATABASE_URL=... MEDCORE_ALLOW_DEMO_SEED=1 MEDCORE_DEMO_SEED_PASSWORD=<12+ caractères> go run ./cmd/seed --demo-scheduling
+#   (seed DEMO refusé si APP_ENV=production, base non autorisée, Neon, ou variables absentes ;
+#   utiliser le même mot de passe pour QA_ADMIN_PASSWORD)
 PUBLIC_API_URL=http://127.0.0.1:18082 QA_API_URL=http://127.0.0.1:18082 npm run test:e2e:scheduling
 ```
 

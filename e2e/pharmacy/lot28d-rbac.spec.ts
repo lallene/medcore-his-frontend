@@ -1,7 +1,8 @@
+import { requiredQaPassword } from '../fixtures/credentials';
 import { test, expect, type APIRequestContext } from '@playwright/test';
 
 const api = process.env.QA_API_URL ?? 'http://127.0.0.1:8080';
-const password = process.env.QA_ADMIN_PASSWORD ?? 'admin123';
+const password = requiredQaPassword();
 
 async function login(request: APIRequestContext, email: string) {
 	const res = await request.post(`${api}/api/auth/login`, {
