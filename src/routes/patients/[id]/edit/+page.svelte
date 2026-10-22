@@ -33,6 +33,7 @@
 	let loadError = $state('');
 	let patientId = $state(0);
 	let values = $state<PatientFormValues>(emptyPatientFormValues());
+	let insuranceDetailsHidden = $state(false);
 	let ready = $state(false);
 
 	onMount(async () => {
@@ -53,6 +54,7 @@
 		try {
 			const patient = await getPatient(patientId);
 			values = patientToFormValues(patient);
+			insuranceDetailsHidden = patient.insuranceDetailsVisible === false;
 			ready = true;
 		} catch (err) {
 			if (isAccessDeniedError(err)) {
@@ -138,7 +140,7 @@
 			subtitle="Les champs vides d’email effacent l’adresse enregistrée"
 		>
 			<form onsubmit={submit} class="space-y-6" data-testid="qa-patient-edit-form">
-				<PatientForm bind:values disabled={submitting} idPrefix="edit" />
+				<PatientForm bind:values disabled={submitting} idPrefix="edit" {insuranceDetailsHidden} />
 
 				<div class="flex flex-wrap gap-3">
 					<Button type="submit" loading={submitting} data-testid="qa-patient-edit-submit">

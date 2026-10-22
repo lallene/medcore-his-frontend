@@ -171,7 +171,7 @@ test.describe('LOT29D-B billing receipt convergence', () => {
 		const key = `qa29db-replay-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 		const payload = {
 			amount: 9_000,
-			paymentMethod: 'CASH',
+			paymentMethod: 'CARD',
 			idempotencyKey: key,
 			payer: { mode: 'PATIENT' }
 		};

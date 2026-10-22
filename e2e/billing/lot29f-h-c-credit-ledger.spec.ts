@@ -120,7 +120,7 @@ test.describe('LOT29F-H-C credit ledger', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 50_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}
@@ -153,7 +153,7 @@ test.describe('LOT29F-H-C credit ledger', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 30_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}
@@ -186,7 +186,7 @@ test.describe('LOT29F-H-C credit ledger', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 40_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}

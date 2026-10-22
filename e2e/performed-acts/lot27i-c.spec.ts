@@ -547,7 +547,7 @@ test.describe('LOT27I-C PerformedAct → billing', () => {
 			headers: bearer(admin),
 			data: {
 				amount: issuedBody.balanceAmount || issuedBody.patientAmount || 5000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: `qa27ic-paid-${invoice.id}-${Date.now()}`,
 				payer: { mode: 'PATIENT' }
 			}

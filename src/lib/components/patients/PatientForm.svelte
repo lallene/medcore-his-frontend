@@ -9,9 +9,16 @@
 		values: PatientFormValues;
 		disabled?: boolean;
 		idPrefix?: string;
+		/** LOT30-A′ — hide redacted insurance details; the backend keeps stored values. */
+		insuranceDetailsHidden?: boolean;
 	}
 
-	let { values = $bindable(), disabled = false, idPrefix = 'patient' }: Props = $props();
+	let {
+		values = $bindable(),
+		disabled = false,
+		idPrefix = 'patient',
+		insuranceDetailsHidden = false
+	}: Props = $props();
 </script>
 
 <div class="grid gap-4 md:grid-cols-2">
@@ -136,34 +143,40 @@
 		Patient assuré
 	</label>
 
-	<div class="space-y-1.5">
-		<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-tauxCouverture"
-			>Taux de couverture (%)</label
-		>
-		<input
-			id="{idPrefix}-tauxCouverture"
-			name="tauxCouverture"
-			type="number"
-			min="0"
-			max="100"
-			step="1"
-			bind:value={values.tauxCouverture}
-			{disabled}
-			data-testid="qa-patient-taux-couverture"
-			class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0E4C92] focus:ring-4 focus:ring-[#0E4C92]/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
-		/>
-	</div>
+	{#if insuranceDetailsHidden}
+		<p class="text-sm text-slate-500 md:col-span-2" data-testid="qa-patient-insurance-redacted">
+			Taux et matricule d’assurance réservés aux profils assurance — valeurs existantes conservées.
+		</p>
+	{:else}
+		<div class="space-y-1.5">
+			<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-tauxCouverture"
+				>Taux de couverture (%)</label
+			>
+			<input
+				id="{idPrefix}-tauxCouverture"
+				name="tauxCouverture"
+				type="number"
+				min="0"
+				max="100"
+				step="1"
+				bind:value={values.tauxCouverture}
+				{disabled}
+				data-testid="qa-patient-taux-couverture"
+				class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0E4C92] focus:ring-4 focus:ring-[#0E4C92]/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+			/>
+		</div>
 
-	<div class="space-y-1.5 md:col-span-2">
-		<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-matriculeAssure"
-			>Matricule assuré</label
-		>
-		<Input
-			id="{idPrefix}-matriculeAssure"
-			name="matriculeAssure"
-			bind:value={values.matriculeAssure}
-			{disabled}
-			data-testid="qa-patient-matricule"
-		/>
-	</div>
+		<div class="space-y-1.5 md:col-span-2">
+			<label class="text-sm font-semibold text-slate-700" for="{idPrefix}-matriculeAssure"
+				>Matricule assuré</label
+			>
+			<Input
+				id="{idPrefix}-matriculeAssure"
+				name="matriculeAssure"
+				bind:value={values.matriculeAssure}
+				{disabled}
+				data-testid="qa-patient-matricule"
+			/>
+		</div>
+	{/if}
 </div>

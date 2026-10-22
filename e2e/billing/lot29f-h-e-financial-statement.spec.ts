@@ -134,7 +134,7 @@ test.describe('LOT29F-H-E financial statement', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 50_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}
@@ -196,7 +196,7 @@ test.describe('LOT29F-H-E financial statement', () => {
 					headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 					data: {
 						amount: 50_000,
-						paymentMethod: 'CASH',
+						paymentMethod: 'CARD',
 						idempotencyKey: payKey,
 						payer: { mode: 'PATIENT' }
 					}
@@ -257,6 +257,12 @@ test.describe('LOT29F-H-E financial statement', () => {
 		await expect(page.getByTestId('financial-statement-history-row-0')).toBeVisible({
 			timeout: 15_000
 		});
+		// Row 0 of the unfiltered (ascending) history stays visible until the filtered page
+		// arrives: wait for the filtered row instead of reading a stale label.
+		await expect(page.getByTestId('financial-statement-history-label-0')).toContainText(
+			/crédit utilisé/i,
+			{ timeout: 15_000 }
+		);
 		const label = await page.getByTestId('financial-statement-history-label-0').innerText();
 		expect(label).toMatch(/crédit utilisé/i);
 		expect(label).not.toMatch(/rembours|refund/i);
@@ -305,7 +311,7 @@ test.describe('LOT29F-H-E financial statement', () => {
 						headers: { ...bearer(admin), 'Idempotency-Key': key },
 						data: {
 							amount: 1_000,
-							paymentMethod: 'CASH',
+							paymentMethod: 'CARD',
 							idempotencyKey: key,
 							payer: { mode: 'PATIENT' }
 						}

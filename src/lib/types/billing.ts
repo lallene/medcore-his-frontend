@@ -21,6 +21,8 @@ export interface BillableAct {
 	date: string;
 	quantity: number;
 	tariff?: Tariff | null;
+	/** LOT30-A′ — server-authoritative tariff choice set for this occurrence. */
+	eligibleTariffs?: Tariff[];
 	coverageResolution: 'NONE' | 'DIRECT' | 'COVERED';
 	authorizationNumber?: string;
 	alreadyBilled: boolean;

@@ -16,6 +16,8 @@
 	import {
 		BILLING_ACT_TYPES,
 		billableActSelectable,
+		eligibleTariffsOf,
+		resolveSelectedTariff,
 		can,
 		formatBillingActType,
 		formatXOF,
@@ -49,6 +51,7 @@
 	let acts = $state<BillableAct[]>([]);
 	let selectedPatient = $state(0);
 	let selected = $state<string[]>([]);
+	let tariffChoice = $state<Record<string, number>>({});
 	let deepLinkActType = $state('');
 	let deepLinkReferenceId = $state(0);
 	let invoiceSearch = $state('');
@@ -72,7 +75,11 @@
 	const selectedLines = $derived(
 		acts
 			.filter((a) => selected.includes(a.billableKey) && billableActSelectable(a))
-			.map((a) => ({ actType: a.actType, referenceId: a.referenceId, tariffId: a.tariff!.id }))
+			.map((a) => ({
+				actType: a.actType,
+				referenceId: a.referenceId,
+				tariffId: resolveSelectedTariff(a, tariffChoice)!.id
+			}))
 	);
 
 	const missingTariffActs = $derived(acts.filter((a) => !a.alreadyBilled && !a.tariff));
@@ -373,13 +380,31 @@
 							data-testid={`billing-act-check-${act.billableKey}`}
 						/><span class="flex-1"
 							><strong>{act.label}</strong><small class="block text-slate-500"
-								>{formatBillingActType(act.actType)} · {act.quantity} × {act.tariff
-									? formatXOF(act.tariff.unitPrice)
+								>{formatBillingActType(act.actType)} · {act.quantity} × {resolveSelectedTariff(
+									act,
+									tariffChoice
+								)
+									? formatXOF(resolveSelectedTariff(act, tariffChoice)!.unitPrice)
 									: 'Tarif manquant'} · {act.authorizationNumber || act.coverageResolution}</small
 							></span
 						><span>{act.alreadyBilled ? 'Déjà facturé' : !act.tariff ? 'Tarif manquant' : ''}</span
 						></label
-					>{:else}<p class="text-slate-500">Aucun acte disponible.</p>{/each}<button
+					>{#if !act.alreadyBilled && eligibleTariffsOf(act).length > 1}<label
+							class="ml-8 block text-sm"
+							data-testid={`billing-act-tariff-${act.billableKey}`}
+							><span class="font-semibold">Tarif applicable</span><select
+								class="ml-2 rounded-xl border p-1"
+								value={resolveSelectedTariff(act, tariffChoice)?.id}
+								onchange={(e) =>
+									(tariffChoice = {
+										...tariffChoice,
+										[act.billableKey]: Number((e.currentTarget as HTMLSelectElement).value)
+									})}
+								>{#each eligibleTariffsOf(act) as t (t.id)}<option value={t.id}
+										>{t.label} — {formatXOF(t.unitPrice)}</option
+									>{/each}</select
+							></label
+						>{/if}{:else}<p class="text-slate-500">Aucun acte disponible.</p>{/each}<button
 					class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-40"
 					disabled={!selectedLines.length}
 					data-testid="billing-create-draft"

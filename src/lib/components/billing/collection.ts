@@ -16,6 +16,31 @@ export const BILLING_PAYMENT_METHODS = [
 
 export type BillingPaymentMethod = (typeof BILLING_PAYMENT_METHODS)[number]['value'];
 
+/**
+ * LOT30-A′ — the invoice page collects outside any cash drawer (sessionless). Physical cash
+ * must be collected from an OPEN cash session (/cash), so CASH is not offered here; the
+ * backend rejects sessionless CASH with PAYMENT_CASH_SESSION_REQUIRED.
+ */
+export const SESSIONLESS_PAYMENT_METHODS = BILLING_PAYMENT_METHODS.filter(
+	(m) => m.value !== 'CASH'
+);
+export const DEFAULT_SESSIONLESS_PAYMENT_METHOD: BillingPaymentMethod = 'CARD';
+export const CASH_SESSION_REQUIRED_CODE = 'PAYMENT_CASH_SESSION_REQUIRED';
+export const CASH_SESSION_REQUIRED_MESSAGE =
+	'Les espèces doivent être encaissées depuis une session de caisse ouverte (menu Caisse).';
+
+export function isSessionlessPaymentMethod(method: string): boolean {
+	return SESSIONLESS_PAYMENT_METHODS.some((m) => m.value === method);
+}
+
+/** Backend AppError code (`{ error: { code } }`) or legacy top-level `code`. */
+export function backendErrorCode(data: unknown): string {
+	const body = data as { code?: unknown; error?: { code?: unknown } } | undefined;
+	if (typeof body?.error?.code === 'string') return body.error.code;
+	if (typeof body?.code === 'string') return body.code;
+	return '';
+}
+
 export const COLLECTION_PERMISSION = 'billing.payment.create';
 /** Canonical receipt read — same permission as /cash/receipts/:id (LOT29D-B). */
 export const RECEIPT_READ_PERMISSION = 'cash.receipt.read';
@@ -105,6 +130,7 @@ export function paymentAmountErrorMessage(
 
 export type PaymentUxErrorKind =
 	| 'validation'
+	| 'cash_session_required'
 	| 'permission'
 	| 'not_collectible'
 	| 'stale_balance'
@@ -161,6 +187,15 @@ export function classifyPaymentError(error: unknown): PaymentUxError {
 			};
 		}
 		if (status === 409) {
+			if (backendErrorCode(error.response.data) === CASH_SESSION_REQUIRED_CODE) {
+				return {
+					kind: 'cash_session_required',
+					message: CASH_SESSION_REQUIRED_MESSAGE,
+					preserveKey: false,
+					shouldRefresh: false,
+					allowNewIntent: false
+				};
+			}
 			if (lower.includes("clé d'idempotence") || lower.includes('idempoten')) {
 				return {
 					kind: 'idempotency_conflict',

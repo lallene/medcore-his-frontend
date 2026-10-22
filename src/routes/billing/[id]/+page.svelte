@@ -38,7 +38,9 @@
 		isPaymentSubmitDisabled
 	} from '$lib/components/billing/payment-command';
 	import {
-		BILLING_PAYMENT_METHODS,
+		SESSIONLESS_PAYMENT_METHODS,
+		DEFAULT_SESSIONLESS_PAYMENT_METHOD,
+		CASH_SESSION_REQUIRED_MESSAGE,
 		canShowEncaisser,
 		classifyPaymentError,
 		collectibleStatusLabel,
@@ -106,7 +108,11 @@
 	let successMessage = $state('');
 	let permissions = $state<string[]>([]);
 	let insuranceReceivables = $state<InsuranceReceivable[]>([]);
-	let payment = $state({ amount: 0, paymentMethod: 'CASH', reference: '' });
+	let payment = $state({
+		amount: 0,
+		paymentMethod: DEFAULT_SESSIONLESS_PAYMENT_METHOD as string,
+		reference: ''
+	});
 	let payerForm = $state(createPayerFormState());
 	let payerHint = $state('');
 	let paymentCmd = $state(createPaymentCommandState());
@@ -873,7 +879,7 @@
 							class="mt-1 w-full rounded-xl border p-2"
 							bind:value={payment.paymentMethod}
 							data-testid="invoice-pay-method"
-							>{#each BILLING_PAYMENT_METHODS as m (m.value)}<option value={m.value}
+							>{#each SESSIONLESS_PAYMENT_METHODS as m (m.value)}<option value={m.value}
 									>{m.label}</option
 								>{/each}</select
 						></label
@@ -897,6 +903,9 @@
 						>{isPaymentSubmitDisabled(paymentCmd) ? 'Encaissement…' : 'Encaisser'}</button
 					>
 				</div>
+				<p class="mt-2 text-xs text-slate-600" data-testid="invoice-pay-cash-hint">
+					{CASH_SESSION_REQUIRED_MESSAGE}
+				</p>
 				<div
 					class="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3"
 					data-testid="invoice-payer-panel"

@@ -128,7 +128,7 @@ async function earnCredit(
 		headers: { ...bearer(token), 'Idempotency-Key': payKey },
 		data: {
 			amount: 50_000,
-			paymentMethod: 'CASH',
+			paymentMethod: 'CARD',
 			idempotencyKey: payKey,
 			payer: { mode: 'PATIENT' }
 		}
@@ -220,7 +220,7 @@ test.describe('LOT29F-H-D credit application', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 20_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}

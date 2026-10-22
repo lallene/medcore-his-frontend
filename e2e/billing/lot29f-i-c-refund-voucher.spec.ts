@@ -125,7 +125,7 @@ async function earnCredit(
 				headers: { ...bearer(token), 'Idempotency-Key': payKey },
 				data: {
 					amount: unitPrice,
-					paymentMethod: 'CASH',
+					paymentMethod: 'CARD',
 					idempotencyKey: payKey,
 					payer: { mode: 'PATIENT' }
 				}

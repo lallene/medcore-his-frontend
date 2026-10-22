@@ -15,6 +15,8 @@ export interface Patient {
 	isAssure: boolean;
 	tauxCouverture: number;
 	matriculeAssure?: string;
+	/** LOT30-A′ — false when coverage rate / member number are redacted (no insurance.coverage.read). */
+	insuranceDetailsVisible?: boolean;
 }
 
 export interface CreatePatientPayload {

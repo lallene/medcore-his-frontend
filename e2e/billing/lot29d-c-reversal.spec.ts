@@ -209,7 +209,7 @@ test.describe('LOT29D-C payment reversal', () => {
 			headers: { ...bearer(admin), 'Idempotency-Key': payKey },
 			data: {
 				amount: 11_000,
-				paymentMethod: 'CASH',
+				paymentMethod: 'CARD',
 				idempotencyKey: payKey,
 				payer: { mode: 'PATIENT' }
 			}

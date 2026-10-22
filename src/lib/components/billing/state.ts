@@ -95,6 +95,27 @@ export function billableActSelectable(act: Pick<BillableAct, 'alreadyBilled' | '
 	return !act.alreadyBilled && !!act.tariff && act.tariff.unitPrice > 0;
 }
 
+/**
+ * LOT30-A′ — tariffs the backend accepts for this occurrence. The client may choose among
+ * them only; the backend re-validates (TARIFF_NOT_ELIGIBLE) and owns the gross amount.
+ */
+export function eligibleTariffsOf(act: Pick<BillableAct, 'tariff' | 'eligibleTariffs'>): Tariff[] {
+	if (act.eligibleTariffs && act.eligibleTariffs.length) return act.eligibleTariffs;
+	return act.tariff ? [act.tariff] : [];
+}
+
+export function resolveSelectedTariff(
+	act: Pick<BillableAct, 'billableKey' | 'tariff' | 'eligibleTariffs'>,
+	chosen: Record<string, number>
+): Tariff | null {
+	const eligible = eligibleTariffsOf(act);
+	const wanted = chosen[act.billableKey];
+	const picked = wanted ? eligible.find((t) => t.id === wanted) : undefined;
+	if (picked) return picked;
+	const suggested = act.tariff ? eligible.find((t) => t.id === act.tariff!.id) : undefined;
+	return suggested ?? eligible[0] ?? null;
+}
+
 export function tariffReferenceLabel(tariff: Pick<Tariff, 'actType' | 'referenceId'>): string {
 	const typeLabel = formatBillingActType(tariff.actType);
 	if (tariff.actType === 'PERFORMED_ACT') {
