@@ -6,6 +6,29 @@ import { defineConfig } from 'vite';
 import path from 'node:path';
 
 export default defineConfig({
+	server: {
+		proxy: {
+			'/api': {
+				target: 'http://127.0.0.1:8080',
+				changeOrigin: true,
+				secure: false,
+				configure: (proxy) => {
+					proxy.on('proxyReq', (proxyReq, req) => {
+						const method = req.method ?? 'GET';
+						const url = req.url ?? '';
+
+						const allowed =
+							method === 'GET' || (method === 'POST' && url.startsWith('/api/auth/login'));
+
+						if (!allowed) {
+							proxyReq.destroy(new Error(`Blocked local preview mutation: ${method} ${url}`));
+						}
+					});
+				}
+			}
+		}
+	},
+
 	resolve: {
 		alias: {
 			'@': path.resolve('./src')

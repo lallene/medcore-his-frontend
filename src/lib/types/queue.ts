@@ -143,6 +143,41 @@ export interface QueueAppointmentPage {
 	limit: number;
 }
 
+export interface AppointmentStats {
+	total: number;
+	scheduled: number;
+	arrived: number;
+	inProgress: number;
+	completed: number;
+	noShow: number;
+	cancelled: number;
+}
+
+/** Tickets de file arrivés et terminés d’un jour civil. */
+export interface DailyQueueFlow {
+	date: string;
+	arrived: number;
+	completed: number;
+}
+
+/** Rendez-vous prévus un jour civil, par statut actuel. */
+export interface DailyAppointments {
+	date: string;
+	scheduled: number;
+	arrived: number;
+	inProgress: number;
+	completed: number;
+	noShow: number;
+	cancelled: number;
+}
+
+/** Heures de présence planifiées d’un membre du personnel sur [from,to). */
+export interface StaffPlannedHours {
+	practitionerId: number;
+	name: string;
+	hours: number;
+}
+
 export interface QueueKPIs {
 	arrivedToday: number;
 	waitingReception: number;

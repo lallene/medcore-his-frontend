@@ -1,6 +1,8 @@
 import { api } from '$lib/api/client';
+import type { DashboardFilters as ActivityFilters } from '$lib/api/dashboard';
 import type {
 	CreateTicketPayload,
+	DailyTicketFlow,
 	TicketAgent,
 	TicketCategory,
 	TicketComment,
@@ -17,7 +19,12 @@ export const createTicket = async (payload: CreateTicketPayload) =>
 	(await api.post<TicketDetail>('/api/tickets', payload)).data;
 export const listTicketCategories = async () =>
 	(await api.get<TicketCategory[]>('/api/ticketing/categories')).data;
-export const getTicketKPIs = async () => (await api.get<TicketKPIs>('/api/ticketing/kpis')).data;
+/** Sans filtre : comportement historique. Avec from/to : période civile [from,to). */
+export const getTicketKPIs = async (filters: ActivityFilters = {}) =>
+	(await api.get<TicketKPIs>('/api/ticketing/kpis', { params: filters })).data;
+/** Tickets créés vs résolus par jour ; from et to requis. */
+export const getTicketDailyFlow = async (filters: ActivityFilters) =>
+	(await api.get<DailyTicketFlow[]>('/api/ticketing/kpis/daily', { params: filters })).data;
 export const commentTicket = async (
 	id: number,
 	content: string,

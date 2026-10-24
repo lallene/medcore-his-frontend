@@ -275,9 +275,16 @@
 							</span>
 						</div>
 
-						<div class="h-3 overflow-hidden rounded-full bg-slate-100">
+						<div
+							class="h-3 overflow-hidden rounded-full bg-surface-sunken"
+							role="progressbar"
+							aria-label={`Couverture assurance : ${coverageRate} %`}
+							aria-valuemin="0"
+							aria-valuemax="100"
+							aria-valuenow={coverageRate}
+						>
 							<div
-								class="h-full rounded-full bg-violet-600 transition-all"
+								class="mc-coverage-fill h-full rounded-full bg-primary"
 								style={`width: ${coverageRate}%`}
 							></div>
 						</div>
@@ -453,3 +460,25 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.mc-coverage-fill {
+		transform-origin: left center;
+		animation: mc-coverage-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes mc-coverage-reveal {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.mc-coverage-fill {
+			animation: none;
+		}
+	}
+</style>

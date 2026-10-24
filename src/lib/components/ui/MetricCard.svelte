@@ -50,9 +50,16 @@
 		<p class="mt-1 text-xs text-muted-foreground">{trend}</p>
 	{/if}
 	{#if clampedProgress != null}
-		<div class="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+		<div
+			class="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
+			role="progressbar"
+			aria-label={`${title} : ${clampedProgress} %`}
+			aria-valuemin="0"
+			aria-valuemax="100"
+			aria-valuenow={clampedProgress}
+		>
 			<div
-				class="h-full rounded-full"
+				class="mc-progress-fill h-full rounded-full"
 				style={`width:${clampedProgress}%;background:${accent}`}
 			></div>
 		</div>
@@ -61,3 +68,25 @@
 		<p class="mt-2 text-xs text-muted-foreground">{detail}</p>
 	{/if}
 </div>
+
+<style>
+	.mc-progress-fill {
+		transform-origin: left center;
+		animation: mc-progress-reveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes mc-progress-reveal {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.mc-progress-fill {
+			animation: none;
+		}
+	}
+</style>

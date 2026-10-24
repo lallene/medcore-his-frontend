@@ -1,23 +1,47 @@
 import { api } from '$lib/api/client';
+import type { DashboardFilters as ActivityFilters } from '$lib/api/dashboard';
 import type {
 	AppointmentCheckInPayload,
 	CancelTicketPayload,
 	CompleteTriagePayload,
 	CreateAppointmentPayload,
+	DailyAppointments,
+	DailyQueueFlow,
 	DoctorWorklistPage,
 	FinanceEvaluation,
 	QueueAppointmentPage,
 	QueueAppointmentRow,
 	QueueKPIs,
+	AppointmentStats,
 	QueueTicketDetail,
 	QueueTicketPage,
 	QueueTicketRow,
 	SetPriorityPayload,
+	StaffPlannedHours,
 	TakeDoctorPayload,
 	WalkInCheckInPayload
 } from '$lib/types/queue';
 
-export const getQueueKPIs = async () => (await api.get<QueueKPIs>('/api/queue/kpis')).data;
+/** Sans filtre : jour courant (historique). Avec from/to : période civile [from,to). */
+export const getQueueKPIs = async (filters: ActivityFilters = {}) =>
+	(await api.get<QueueKPIs>('/api/queue/kpis', { params: filters })).data;
+
+/** Rendez-vous planifiés sur la période civile [from,to), par statut. */
+export const getAppointmentStats = async (filters: ActivityFilters = {}) =>
+	(await api.get<AppointmentStats>('/api/queue/appointments/stats', { params: filters })).data;
+
+/** Arrivées et sorties de la file par jour ; from et to requis. */
+export const getQueueDailyFlow = async (filters: ActivityFilters) =>
+	(await api.get<DailyQueueFlow[]>('/api/queue/kpis/daily', { params: filters })).data;
+
+/** Rendez-vous par jour et par statut ; from et to requis. */
+export const getAppointmentDaily = async (filters: ActivityFilters) =>
+	(await api.get<DailyAppointments[]>('/api/queue/appointments/daily', { params: filters })).data;
+
+/** Heures planifiées par membre du personnel, triées décroissantes ; from et to requis. */
+export const getPlannedHoursByStaff = async (filters: ActivityFilters) =>
+	(await api.get<StaffPlannedHours[]>('/api/schedules/planned-hours/by-staff', { params: filters }))
+		.data;
 
 export const getDoctorWorklist = async (params: Record<string, string | number> = {}) =>
 	(await api.get<DoctorWorklistPage>('/api/queue/doctor/worklist', { params })).data;

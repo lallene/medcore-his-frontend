@@ -8,33 +8,84 @@
 
 	let { activities = [] }: Props = $props();
 
-	function getIcon(type: string) {
-		if (type.includes('patient')) return Users;
-		if (type.includes('consultation')) return HeartPulse;
-		if (type.includes('workflow')) return Shield;
-		if (type.includes('voucher')) return FileText;
-		if (type.includes('payment')) return CreditCard;
-		return Shield;
+	function getActivityVisual(type: string) {
+		if (type.includes('patient')) {
+			return {
+				icon: Users,
+				iconClasses: 'bg-success-soft text-success-strong',
+				lineClasses: 'border-success-border'
+			};
+		}
+
+		if (type.includes('consultation')) {
+			return {
+				icon: HeartPulse,
+				iconClasses: 'bg-primary-soft text-primary',
+				lineClasses: 'border-primary-border'
+			};
+		}
+
+		if (type.includes('workflow')) {
+			return {
+				icon: Shield,
+				iconClasses: 'bg-info-soft text-info-strong',
+				lineClasses: 'border-info-border'
+			};
+		}
+
+		if (type.includes('voucher')) {
+			return {
+				icon: FileText,
+				iconClasses: 'bg-warning-soft text-warning-strong',
+				lineClasses: 'border-warning-border'
+			};
+		}
+
+		if (type.includes('payment')) {
+			return {
+				icon: CreditCard,
+				iconClasses: 'bg-success-soft text-success-strong',
+				lineClasses: 'border-success-border'
+			};
+		}
+
+		return {
+			icon: Shield,
+			iconClasses: 'bg-surface-muted text-muted-foreground',
+			lineClasses: 'border-border'
+		};
 	}
 </script>
 
-<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-	<h2 class="text-lg font-semibold text-slate-900">Activité récente</h2>
-	<p class="mt-1 text-sm text-slate-500">Timeline opérationnelle</p>
+<div class="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+	<div class="flex items-start justify-between gap-4">
+		<div>
+			<h2 class="text-lg font-semibold text-foreground">Activité récente</h2>
+			<p class="mt-1 text-sm text-muted-foreground">Timeline opérationnelle</p>
+		</div>
+
+		<div
+			class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info-strong"
+			aria-hidden="true"
+		>
+			<HeartPulse size={18} />
+		</div>
+	</div>
 
 	<div class="mt-6 space-y-5">
 		{#each activities as activity, index (`${activity.time}-${activity.description}-${index}`)}
-			{@const Icon = getIcon(activity.type)}
+			{@const visual = getActivityVisual(activity.type)}
+			{@const Icon = visual.icon}
 
-			<div class="relative border-l-2 border-slate-200 pl-8">
+			<div class={`relative border-l-2 pl-8 ${visual.lineClasses}`}>
 				<div
-					class="absolute -left-[14px] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-primary ring-4 ring-white"
+					class={`absolute -left-[14px] top-0 flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-white ${visual.iconClasses}`}
 				>
-					<Icon size={15} />
+					<Icon size={15} aria-hidden="true" />
 				</div>
 
-				<p class="text-sm font-semibold text-slate-800">{activity.description}</p>
-				<p class="mt-1 text-xs text-slate-500">{activity.time} · {activity.type}</p>
+				<p class="text-sm font-semibold text-foreground">{activity.description}</p>
+				<p class="mt-1 text-xs text-muted-foreground">{activity.time} · {activity.type}</p>
 			</div>
 		{/each}
 	</div>

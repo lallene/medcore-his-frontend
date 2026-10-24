@@ -93,6 +93,13 @@ export interface TicketCategory {
 	parentId?: number;
 	active: boolean;
 }
+/** Tickets créés et résolus par jour civil de la période [from,to). */
+export interface DailyTicketFlow {
+	date: string;
+	created: number;
+	resolved: number;
+}
+
 export interface TicketKPIs {
 	open: number;
 	newToday: number;

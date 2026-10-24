@@ -14,6 +14,22 @@ export interface ActivityItem {
 }
 
 export interface Dashboard {
+	consultations: number;
+	/** Activité filtrée (service + période [from,to)). */
+	hospitalizations: number;
+	pharmacyPurchases: number;
+	patientsSeen: number;
+	queueTickets: number;
+	billedAmount: number;
+	/** Factures créées sur la période dont le solde patient / assurance reste dû. */
+	patientReceivables: number;
+	insuranceReceivables: number;
+	/** Remboursements exécutés ; null quand un service est filtré (non ventilable). */
+	refunds: number | null;
+	/** Actes réalisés non annulés. */
+	labExams: number;
+	imagingExams: number;
+	otherActs: number;
 	patients: number;
 	insured: number;
 	companies: number;
@@ -27,6 +43,22 @@ export interface Dashboard {
 }
 
 export interface DashboardResponse {
+	consultations: number;
+	/** Activité filtrée (service + période [from,to)). */
+	hospitalizations: number;
+	pharmacyPurchases: number;
+	patientsSeen: number;
+	queueTickets: number;
+	billedAmount: number;
+	/** Factures créées sur la période dont le solde patient / assurance reste dû. */
+	patientReceivables: number;
+	insuranceReceivables: number;
+	/** Remboursements exécutés ; null quand un service est filtré (non ventilable). */
+	refunds: number | null;
+	/** Actes réalisés non annulés. */
+	labExams: number;
+	imagingExams: number;
+	otherActs: number;
 	patients: number;
 	insured: number;
 	companies: number;
