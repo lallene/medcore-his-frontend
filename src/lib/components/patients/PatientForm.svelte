@@ -57,7 +57,7 @@
 			{disabled}
 			aria-label="Sexe"
 			data-testid="qa-patient-sexe"
-			class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0E4C92] focus:ring-4 focus:ring-[#0E4C92]/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+			class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
 		>
 			<option value="">Non renseigné</option>
 			<option value="M">Homme</option>
@@ -143,7 +143,7 @@
 				bind:checked={values.isAssure}
 				{disabled}
 				data-testid="qa-patient-is-assure"
-				class="h-4 w-4 rounded border-slate-300 text-[#0E4C92] focus:ring-[#0E4C92]"
+				class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
 			/>
 			Patient assuré
 		</label>
@@ -172,7 +172,7 @@
 				bind:value={values.tauxCouverture}
 				{disabled}
 				data-testid="qa-patient-taux-couverture"
-				class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0E4C92] focus:ring-4 focus:ring-[#0E4C92]/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+				class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
 			/>
 		</div>
 

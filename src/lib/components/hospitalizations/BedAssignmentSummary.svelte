@@ -20,11 +20,11 @@
 </script>
 
 {#if failed}<p class="mt-2 text-xs text-red-600">Affectation de lit indisponible.</p>
-{:else if current}<p class="mt-2 text-sm font-bold text-[#0E4C92]">
+{:else if current}<p class="mt-2 text-sm font-bold text-primary">
 		{current.assignmentType === 'RESERVED' ? 'Réservation' : 'Lit actuel'} : {current.bed.room.name} ·
 		{current.bed.label}
 	</p>
-{:else}<p class="mt-2 text-xs text-slate-400">Aucun lit actif</p>{/if}
+{:else}<p class="mt-2 text-xs text-slate-500">Aucun lit actif</p>{/if}
 {#if showHistory && assignments.length}<ul class="mt-3 space-y-2 text-xs text-slate-500">
 		{#each assignments as assignment (assignment.id)}<li>
 				{assignment.bed.room.name} · {assignment.bed.label} — {new Date(

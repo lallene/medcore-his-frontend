@@ -115,17 +115,13 @@
 	</div>
 {:else if ready}
 	<div class="space-y-6">
-		<section
-			class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-[#0E4C92] via-[#155DA8] to-[#18B893] p-8 text-white shadow-xl"
-		>
-			<div
-				class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-			></div>
-
+		<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
 			<div class="relative">
-				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">Patients</p>
-				<h1 class="mt-3 text-3xl font-bold leading-tight sm:text-4xl">Modifier le patient</h1>
-				<p class="mt-3 max-w-2xl text-lg text-blue-50">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Patients</p>
+				<h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+					Modifier le patient
+				</h1>
+				<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">
 					Mettre à jour l’identité et les coordonnées de contact.
 				</p>
 			</div>

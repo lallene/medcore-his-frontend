@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Table from '$lib/components/ui/Table.svelte';
 	import { getAppointmentSeries } from '$lib/api/appointments';
 	import {
 		formatSeriesRecurrenceSummary,
@@ -78,32 +79,32 @@
 				{formatSeriesRecurrenceSummary(series)}
 			</p>
 
-			<div class="overflow-hidden rounded-xl border border-border">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-slate-50 text-xs uppercase text-slate-500">
+			<div>
+				<Table>
+					<thead>
 						<tr>
-							<th class="px-3 py-2">#</th>
-							<th class="px-3 py-2">Créneau</th>
-							<th class="px-3 py-2">Statut</th>
-							<th class="px-3 py-2">Type</th>
+							<th>#</th>
+							<th>Créneau</th>
+							<th>Statut</th>
+							<th>Type</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each series.occurrences as occ (occ.id)}
-							<tr class="border-t border-border" data-testid="agenda-series-occurrence">
-								<td class="px-3 py-2 font-medium">{occ.index}</td>
-								<td class="px-3 py-2">{formatAgendaDateTime(occ.scheduledAt)}</td>
-								<td class="px-3 py-2">
+							<tr data-testid="agenda-series-occurrence">
+								<td>{occ.index}</td>
+								<td>{formatAgendaDateTime(occ.scheduledAt)}</td>
+								<td>
 									{appointmentStatusLabels[occ.status as keyof typeof appointmentStatusLabels] ??
 										occ.status}
 								</td>
-								<td class="px-3 py-2 text-slate-600">
+								<td>
 									{seriesOccurrenceKindLabels[occ.kind as SeriesOccurrenceKind] ?? occ.kind}
 								</td>
 							</tr>
 						{/each}
 					</tbody>
-				</table>
+				</Table>
 			</div>
 		</div>
 	{/if}

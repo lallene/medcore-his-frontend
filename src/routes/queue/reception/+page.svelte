@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -29,8 +31,6 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let appointments = $state<QueueAppointmentRow[]>([]);
 	let waitingTickets = $state<QueueTicketRow[]>([]);
@@ -141,55 +141,56 @@
 		<Alert tone="success">{success}</Alert>
 	{/if}
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-4 py-3">
 			<h2 class="text-sm font-bold text-slate-700">Rendez-vous du jour</h2>
 		</div>
 
-		{#if loading}
-			<LoadingState />
-		{:else if appointments.length === 0}
-			<div class="p-4"><EmptyState title="Aucun rendez-vous aujourd’hui" /></div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table>
+			<thead>
+				<tr>
+					<th>Patient</th>
+					<th>Service</th>
+					<th>Heure</th>
+					<th>Statut</th>
+					<th class="mc-actions">Actions</th>
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={5}
+					/>{:else if appointments.length === 0}<TableState
+						state="empty"
+						colspan={5}
+						title="Aucun rendez-vous aujourd’hui"
+					/>{:else}
+					{#each appointments as appt (appt.id)}
 						<tr>
-							<th class="p-3">Patient</th>
-							<th class="p-3">Service</th>
-							<th class="p-3">Heure</th>
-							<th class="p-3">Statut</th>
-							<th class="p-3">Actions</th>
+							<td>{appt.patientName || appt.patientCode || '—'}</td>
+							<td>{appt.serviceName || '—'}</td>
+							<td>{formatAppointmentTime(appt.scheduledAt)}</td>
+							<td><StatusBadge status={appt.status} /></td>
+							<td class="mc-actions">
+								{#if !appt.hasActiveTicket && appt.status !== 'CHECKED_IN' && appt.status !== 'COMPLETED' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW'}
+									<Button
+										size="sm"
+										data-testid="queue-appt-checkin"
+										onclick={() => checkIn(appt.id)}>Enregistrer</Button
+									>
+								{:else}
+									<span class="text-slate-500">—</span>
+								{/if}
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each appointments as appt (appt.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">{appt.patientName || appt.patientCode || '—'}</td>
-								<td class="p-3">{appt.serviceName || '—'}</td>
-								<td class="p-3">{formatAppointmentTime(appt.scheduledAt)}</td>
-								<td class="p-3"><StatusBadge status={appt.status} /></td>
-								<td class="p-3">
-									{#if !appt.hasActiveTicket && appt.status !== 'CHECKED_IN' && appt.status !== 'COMPLETED' && appt.status !== 'CANCELLED' && appt.status !== 'NO_SHOW'}
-										<Button
-											size="sm"
-											data-testid="queue-appt-checkin"
-											onclick={() => checkIn(appt.id)}>Enregistrer</Button
-										>
-									{:else}
-										<span class="text-slate-400">—</span>
-									{/if}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 
 	<section
-		class="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card)]"
+		class="rounded-2xl border border-border bg-surface p-4 shadow-xs"
 		data-testid="queue-checkin-walkin"
 	>
 		<h2 class="text-sm font-bold text-slate-700">Enregistrement sans rendez-vous</h2>
@@ -234,49 +235,47 @@
 		</div>
 	</section>
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-4 py-3">
 			<h2 class="text-sm font-bold text-slate-700">Patients en attente</h2>
 		</div>
 
-		{#if loading}
-			<LoadingState />
-		{:else if waitingTickets.length === 0}
-			<div class="p-4"><EmptyState title="Aucun patient en attente" /></div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table>
+			<thead>
+				<tr>
+					{#each receptionQueueColumns as column (column)}
+						<th>{column}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={receptionQueueColumns.length}
+					/>{:else if waitingTickets.length === 0}<TableState
+						state="empty"
+						colspan={receptionQueueColumns.length}
+						title="Aucun patient en attente"
+					/>{:else}
+					{#each waitingTickets as ticket (ticket.id)}
 						<tr>
-							{#each receptionQueueColumns as column (column)}
-								<th class="p-3">{column}</th>
-							{/each}
+							<td>
+								<a href={resolve(`/queue/${ticket.id}`)}>{queuePatientLabel(ticket)}</a>
+							</td>
+							<td>{queueServiceLabel(ticket)}</td>
+							<td>{formatAppointmentTime(ticket.appointmentTime)}</td>
+							<td>{sourceLabels[ticket.source]}</td>
+							<td>
+								<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
+							</td>
+							<td>{formatWaitMinutes(ticket.waitMinutes)}</td>
+							<td>
+								<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each waitingTickets as ticket (ticket.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">
-									<a
-										class="font-bold text-primary hover:underline"
-										href={resolve(`/queue/${ticket.id}`)}>{queuePatientLabel(ticket)}</a
-									>
-								</td>
-								<td class="p-3">{queueServiceLabel(ticket)}</td>
-								<td class="p-3">{formatAppointmentTime(ticket.appointmentTime)}</td>
-								<td class="p-3">{sourceLabels[ticket.source]}</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
-								</td>
-								<td class="p-3">{formatWaitMinutes(ticket.waitMinutes)}</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

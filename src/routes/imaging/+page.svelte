@@ -1,8 +1,13 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { ScanLine, Search, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { Search } from 'lucide-svelte';
 	import { listImagingOrders } from '$lib/api/imaging';
 	import {
 		imagingModalities,
@@ -93,34 +98,34 @@
 
 <div class="space-y-6">
 	<header>
-		<p class="text-xs font-black uppercase tracking-[.18em] text-cyan-700">Imagerie médicale</p>
-		<h1 class="mt-1 text-3xl font-black">File d’imagerie</h1>
+		<p class="text-xs font-semibold uppercase tracking-eyebrow text-cyan-700">Imagerie médicale</p>
+		<h1 class="mt-1 text-3xl font-bold">File d’imagerie</h1>
 		<p class="mt-2 text-sm text-slate-500">{total} demande(s) opérationnelle(s).</p>
 	</header>
 	<section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
 		{#each [['ORDERED', 'Prescrits'], ['SCHEDULED', 'Planifiés'], ['IN_PROGRESS', 'En cours'], ['REPORT_DRAFTED', 'À valider'], ['VALIDATED_TODAY', 'Validés aujourd’hui'], ['URGENT', 'Urgents']] as metric (metric[0])}<div
 				class="rounded-2xl border bg-white p-4"
 			>
-				<p class="text-xs font-black uppercase text-slate-500">{metric[1]}</p>
-				<p class="mt-2 text-2xl font-black text-cyan-800">
+				<p class="text-xs font-semibold uppercase text-slate-500">{metric[1]}</p>
+				<p class="mt-2 text-2xl font-bold text-cyan-800">
 					{stats[metric[0]] ?? 0}
 				</p>
 			</div>{/each}
 	</section>
 	<section class="grid gap-3 rounded-2xl border bg-white p-5 md:grid-cols-3 xl:grid-cols-6">
 		<label class="relative"
-			><Search class="absolute left-3 top-3 text-slate-400" size={18} /><input
+			><Search class="absolute left-3 top-3 text-slate-500" size={18} /><input
 				aria-label="Rechercher"
 				bind:value={search}
 				oninput={filter}
 				placeholder="Patient, examen, N°..."
-				class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm"
+				class="w-full rounded-lg border py-2 pl-10 pr-3 text-sm"
 			/></label
 		><select
 			aria-label="Statut"
 			bind:value={status}
 			onchange={filter}
-			class="rounded-xl border px-3"
+			class="rounded-lg border px-3"
 			><option value="">Tous les statuts</option>{#each imagingStatuses as s (s)}<option value={s}
 					>{imagingStatusLabel(s)}</option
 				>{/each}</select
@@ -128,7 +133,7 @@
 			aria-label="Modalité"
 			bind:value={modality}
 			onchange={filter}
-			class="rounded-xl border px-3"
+			class="rounded-lg border px-3"
 			><option value="">Toutes les modalités</option>{#each imagingModalities as m (m)}<option
 					value={m}>{imagingModalityLabel(m)}</option
 				>{/each}</select
@@ -136,7 +141,7 @@
 			aria-label="Priorité"
 			bind:value={priority}
 			onchange={filter}
-			class="rounded-xl border px-3"
+			class="rounded-lg border px-3"
 			><option value="">Toutes priorités</option><option>ROUTINE</option><option>URGENT</option
 			><option>STAT</option></select
 		><input
@@ -144,78 +149,75 @@
 			bind:value={service}
 			oninput={filter}
 			placeholder="Service"
-			class="rounded-xl border px-3"
+			class="rounded-lg border px-3"
 		/><input
 			aria-label="Date"
 			type="date"
 			bind:value={dateFilter}
 			onchange={filter}
-			class="rounded-xl border px-3"
+			class="rounded-lg border px-3"
 		/>
 	</section>
-	{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{/if}
-	<section class="overflow-hidden rounded-2xl border bg-white">
-		{#if loading}<p class="p-12 text-center">Chargement...</p>{:else if !items.length}<div
-				class="p-14 text-center"
-			>
-				<ScanLine class="mx-auto text-slate-300" size={42} />
-				<h2 class="mt-4 font-black">Aucune demande d’imagerie</h2>
-			</div>{:else}<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-slate-50 text-xs uppercase text-slate-500"
-						><tr
-							><th class="p-4">Demande / patient</th><th class="p-4">Examen</th><th class="p-4"
-								>Consultation</th
-							><th class="p-4">Priorité</th><th class="p-4">Statut</th><th class="p-4"
-								>Planifié / réalisé</th
+	{#if error}<Alert tone="danger">{error}</Alert>{/if}
+	<section>
+		<Table>
+			<thead
+				><tr
+					><th>Demande / patient</th><th>Examen</th><th>Consultation</th><th>Priorité</th><th
+						>Statut</th
+					><th>Planifié / réalisé</th></tr
+				></thead
+			><tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={6}
+						title="Chargement…"
+					/>{:else if error && items.length === 0}<TableState
+						state="error"
+						colspan={6}
+					/>{:else if items.length === 0}<TableState
+						state="empty"
+						colspan={6}
+						title="Aucune demande d’imagerie"
+					/>{:else}{#each items as item (item.id)}<tr
+							class="cursor-pointer"
+							onclick={() => goto(resolve(`/imaging/${item.id}`))}
+							><td
+								><a
+									class="mc-id"
+									href={resolve(`/imaging/${item.id}`)}
+									onclick={(e) => e.stopPropagation()}>{item.orderNumber}</a
+								>
+								<p>{item.patientName}</p>
+								<small>{item.patientCode}</small></td
+							><td
+								><b>{item.examName}</b>
+								<p class="text-slate-500">
+									{imagingModalityLabel(item.modality)} · {item.category}
+								</p></td
+							><td
+								>{item.service || '—'}
+								<p class="text-slate-500">
+									{item.prescriber || '—'} · {formatDate(item.prescribedAt)}
+								</p></td
+							><td>{item.priority}</td><td
+								><StatusBadge status={item.status} label={imagingStatusLabel(item.status)} /></td
+							><td
+								><p>{formatDate(item.scheduledAt)}</p>
+								<small class="text-slate-500">{formatDate(item.performedAt)}</small></td
 							></tr
-						></thead
-					><tbody
-						>{#each items as item (item.id)}<tr
-								class="cursor-pointer border-t hover:bg-cyan-50/40"
-								onclick={() => goto(resolve(`/imaging/${item.id}`))}
-								><td class="p-4"
-									><b>{item.orderNumber}</b>
-									<p>{item.patientName}</p>
-									<small>{item.patientCode}</small></td
-								><td class="p-4"
-									><b>{item.examName}</b>
-									<p class="text-slate-500">
-										{imagingModalityLabel(item.modality)} · {item.category}
-									</p></td
-								><td class="p-4"
-									>{item.service || '—'}
-									<p class="text-slate-500">
-										{item.prescriber || '—'} · {formatDate(item.prescribedAt)}
-									</p></td
-								><td class="p-4 font-bold">{item.priority}</td><td class="p-4"
-									><span class="rounded-full bg-cyan-50 px-3 py-1 font-bold text-cyan-700"
-										>{imagingStatusLabel(item.status)}</span
-									></td
-								><td class="p-4"
-									><p>{formatDate(item.scheduledAt)}</p>
-									<small class="text-slate-500">{formatDate(item.performedAt)}</small></td
-								></tr
-							>{/each}</tbody
-					>
-				</table>
-			</div>{/if}
-		<footer class="flex items-center justify-between border-t p-4">
-			<button
-				disabled={page <= 1}
-				onclick={() => {
-					page--;
-					load();
-				}}
-				class="rounded-lg border p-2 disabled:opacity-30"><ChevronLeft size={18} /></button
-			><span class="text-sm font-bold">Page {page} / {Math.max(totalPages, 1)}</span><button
-				disabled={page >= totalPages}
-				onclick={() => {
-					page++;
-					load();
-				}}
-				class="rounded-lg border p-2 disabled:opacity-30"><ChevronRight size={18} /></button
+						>{/each}{/if}</tbody
 			>
-		</footer>
+		</Table>
+		<Pagination
+			class="mt-3"
+			{page}
+			totalPages={Math.max(totalPages, 1)}
+			disabled={loading}
+			onpage={(next) => {
+				page = next;
+				load();
+			}}
+		/>
 	</section>
 </div>

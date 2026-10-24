@@ -309,11 +309,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Facteurs de risque cardiovasculaire
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Antécédents et mode de vie</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Antécédents et mode de vie</h4>
 		</div>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -333,7 +333,7 @@
 					type="date"
 					bind:value={form.hypertensionDiagnosisDate}
 					disabled={!form.hasHypertension}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -352,7 +352,7 @@
 					id="diabetes-type"
 					bind:value={form.diabetesType}
 					disabled={!form.hasDiabetes}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				>
 					<option value=""> Sélectionner </option>
 					<option value="TYPE_1"> Type 1 </option>
@@ -370,7 +370,7 @@
 				<select
 					id="smoking-status"
 					bind:value={form.smokingStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value=""> Sélectionner </option>
 					<option value="NEVER"> Jamais </option>
@@ -390,7 +390,7 @@
 					min="0"
 					bind:value={form.cigarettesPerDay}
 					disabled={form.smokingStatus === 'NEVER'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -405,7 +405,7 @@
 					min="0"
 					bind:value={form.smokingYears}
 					disabled={form.smokingStatus === 'NEVER'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -417,7 +417,7 @@
 				<select
 					id="activity-level"
 					bind:value={form.physicalActivityLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value=""> Sélectionner </option>
 					<option value="SEDENTARY"> Sédentaire </option>
@@ -441,7 +441,7 @@
 					step="0.1"
 					bind:value={form.weightKg}
 					placeholder="kg"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -457,7 +457,7 @@
 					step="0.1"
 					bind:value={form.heightCm}
 					placeholder="cm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -471,7 +471,7 @@
 					type="number"
 					value={form.bmi ?? ''}
 					readonly
-					class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+					class="w-full rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm text-slate-600"
 				/>
 			</div>
 		</div>
@@ -480,7 +480,7 @@
 			<label class="flex items-center gap-3">
 				<input type="checkbox" bind:checked={form.hasHypercholesterolemia} />
 
-				<span class="text-sm font-black text-slate-800"> Antécédent de cholestérol élevé </span>
+				<span class="text-sm font-bold text-slate-800"> Antécédent de cholestérol élevé </span>
 			</label>
 
 			<div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -489,7 +489,7 @@
 					step="0.01"
 					bind:value={form.totalCholesterol}
 					placeholder="Cholestérol total"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 
 				<input
@@ -497,7 +497,7 @@
 					step="0.01"
 					bind:value={form.hdlCholesterol}
 					placeholder="HDL"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 
 				<input
@@ -505,7 +505,7 @@
 					step="0.01"
 					bind:value={form.ldlCholesterol}
 					placeholder="LDL"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 
 				<input
@@ -513,7 +513,7 @@
 					step="0.01"
 					bind:value={form.triglycerides}
 					placeholder="Triglycérides"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -530,17 +530,17 @@
 				id="family-cardiovascular-history"
 				bind:value={form.familyCardiovascularHistory}
 				rows="4"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Symptômes cardiovasculaires
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Douleur, dyspnée, malaise et œdèmes</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Douleur, dyspnée, malaise et œdèmes</h4>
 		</div>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -586,7 +586,7 @@
 				bind:value={form.chestPainType}
 				disabled={!form.chestPain}
 				placeholder="Type de douleur"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -594,7 +594,7 @@
 				bind:value={form.chestPainLocation}
 				disabled={!form.chestPain}
 				placeholder="Localisation"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -602,7 +602,7 @@
 				bind:value={form.chestPainDuration}
 				disabled={!form.chestPain}
 				placeholder="Durée"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -612,7 +612,7 @@
 				bind:value={form.chestPainIntensity}
 				disabled={!form.chestPain}
 				placeholder="Intensité /10"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -620,7 +620,7 @@
 				bind:value={form.palpitationsFrequency}
 				disabled={!form.palpitations}
 				placeholder="Fréquence des palpitations"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -628,14 +628,14 @@
 				bind:value={form.palpitationsDuration}
 				disabled={!form.palpitations}
 				placeholder="Durée des palpitations"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<select
 				bind:value={form.dyspneaContext}
 				disabled={!form.dyspnea}
 				aria-label="Contexte de l’essoufflement"
-				class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 			>
 				<option value=""> Essoufflement </option>
 				<option value="EXERTION"> À l’effort </option>
@@ -648,7 +648,7 @@
 				bind:value={form.discomfortCircumstances}
 				disabled={!form.discomfort}
 				placeholder="Circonstances du malaise"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -656,7 +656,7 @@
 				bind:value={form.syncopeFrequency}
 				disabled={!form.syncope}
 				placeholder="Fréquence des syncopes"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -664,7 +664,7 @@
 				bind:value={form.syncopeContext}
 				disabled={!form.syncope}
 				placeholder="Contexte des syncopes"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -672,7 +672,7 @@
 				bind:value={form.edemaLocation}
 				disabled={!form.edema}
 				placeholder="Localisation des œdèmes"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -682,18 +682,18 @@
 				bind:value={form.fatigueIntensity}
 				disabled={!form.fatigue}
 				placeholder="Intensité fatigue /10"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Examen cardiovasculaire
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Constantes et auscultation</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Constantes et auscultation</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -707,7 +707,7 @@
 					type="number"
 					bind:value={form.heartRate}
 					placeholder="bpm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -719,7 +719,7 @@
 				<select
 					id="heart-rhythm"
 					bind:value={form.heartRhythm}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value=""> Sélectionner </option>
 					<option value="REGULAR"> Régulier </option>
@@ -740,7 +740,7 @@
 					step="0.1"
 					bind:value={form.oxygenSaturation}
 					placeholder="%"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -750,7 +750,7 @@
 				bind:value={form.peripheralPulses}
 				rows="4"
 				placeholder="Évaluation des pouls périphériques"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
 				<label class="flex items-center gap-3">
@@ -764,7 +764,7 @@
 					disabled={!form.heartMurmurPresent}
 					rows="3"
 					placeholder="Caractéristiques du souffle"
-					class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				></textarea>
 			</div>
 		</div>
@@ -772,7 +772,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Historique de tension artérielle</p>
+					<p class="font-bold text-slate-900">Historique de tension artérielle</p>
 
 					<p class="mt-1 text-sm text-slate-500">Valeurs et contexte de mesure.</p>
 				</div>
@@ -796,28 +796,28 @@
 							type="datetime-local"
 							bind:value={item.dateTime}
 							aria-label={`Date de tension ${index + 1}`}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.systolic}
 							placeholder="Systolique"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.diastolic}
 							placeholder="Diastolique"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.context}
 							placeholder="Contexte"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<button
@@ -836,11 +836,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Examens cardiologiques
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				ECG, échographie, Holter et explorations
 			</h4>
 		</div>
@@ -912,7 +912,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="font-black text-slate-900">
+				<p class="font-bold text-slate-900">
 					{title}
 				</p>
 
@@ -939,7 +939,7 @@
 							type="date"
 							bind:value={item.date}
 							aria-label={`Date ${title} ${index + 1}`}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						{#if showDuration}
@@ -947,7 +947,7 @@
 								type="text"
 								bind:value={item.duration}
 								placeholder="Durée"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 						{/if}
 
@@ -955,21 +955,21 @@
 							type="text"
 							bind:value={item.result}
 							placeholder="Résultat"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.conclusion}
 							placeholder="Conclusion"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.fileUrl}
 							placeholder="Lien ou référence du fichier"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 					</div>
 

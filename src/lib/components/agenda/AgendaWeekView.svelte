@@ -45,7 +45,7 @@
 				{#each list as appt (appt.id)}
 					<button
 						type="button"
-						class="w-full rounded-lg border px-1.5 py-1 text-left text-[11px] leading-snug transition {selectedId ===
+						class="w-full rounded-lg border px-1.5 py-1 text-left text-2xs leading-snug transition {selectedId ===
 						appt.id
 							? 'border-primary bg-blue-50'
 							: 'border-border bg-slate-50 hover:border-primary/40'}"
@@ -61,7 +61,7 @@
 					</button>
 				{/each}
 				{#if list.length === 0}
-					<p class="px-1 py-4 text-center text-[11px] text-slate-400">—</p>
+					<p class="px-1 py-4 text-center text-2xs text-slate-500">—</p>
 				{/if}
 			</div>
 		</section>

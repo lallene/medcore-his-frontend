@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -177,11 +179,11 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Dossier clinique longitudinal
 			</p>
 
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Dossier médical</h2>
+			<h2 class="mt-2 text-2xl font-bold text-slate-900">Dossier médical</h2>
 
 			<p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
 				Synthèse des allergies, maladies chroniques, traitements, diagnostics, prescriptions,
@@ -205,9 +207,11 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-red-500">Allergies actives</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-red-500">
+						Allergies actives
+					</p>
 
-					<p class="text-2xl font-black text-red-800">
+					<p class="text-2xl font-bold text-red-800">
 						{activeAllergyCount}
 					</p>
 				</div>
@@ -223,11 +227,11 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-rose-500">
+					<p class="text-xs font-semibold uppercase tracking-wide text-rose-500">
 						Maladies chroniques
 					</p>
 
-					<p class="text-2xl font-black text-rose-800">
+					<p class="text-2xl font-bold text-rose-800">
 						{chronicDiseaseCount}
 					</p>
 				</div>
@@ -243,11 +247,11 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-orange-500">
+					<p class="text-xs font-semibold uppercase tracking-wide text-orange-500">
 						Traitements actifs
 					</p>
 
-					<p class="text-2xl font-black text-orange-800">
+					<p class="text-2xl font-bold text-orange-800">
 						{activeTreatmentCount}
 					</p>
 				</div>
@@ -263,11 +267,11 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-blue-500">
+					<p class="text-xs font-semibold uppercase tracking-wide text-blue-500">
 						Consultations terminées
 					</p>
 
-					<p class="text-2xl font-black text-blue-900">
+					<p class="text-2xl font-bold text-blue-900">
 						{completedConsultations.length}
 					</p>
 				</div>
@@ -287,7 +291,7 @@
 						</div>
 
 						<div>
-							<p class="font-black text-red-800">
+							<p class="font-bold text-red-800">
 								{alert.title}
 							</p>
 
@@ -302,7 +306,7 @@
 	{/if}
 
 	<div class="grid gap-6 xl:grid-cols-3">
-		<div class="space-y-6 xl:col-span-2">
+		<div class="min-w-0 space-y-6 xl:col-span-2">
 			<Card
 				title="Dernières constantes"
 				subtitle={latestConsultation
@@ -357,7 +361,7 @@
 								class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
 							>
 								<div
-									class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#0E4C92] shadow-sm"
+									class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-primary shadow-sm"
 								>
 									<Stethoscope size={17} />
 								</div>
@@ -381,65 +385,39 @@
 				title="Historique médicamenteux"
 				subtitle={`${totalPrescriptions} prescription(s) enregistrée(s)`}
 			>
-				{#if prescribedMedications.length > 0}
-					<div class="overflow-hidden rounded-2xl border border-slate-200">
+				<Table aria-label="Historique médicamenteux">
+					<thead>
+						<tr>
+							<th>Médicament</th>
+							<th>Fréquence</th>
+							<th>Durée</th>
+							<th>Date</th>
+							<th class="mc-actions">Action</th>
+						</tr>
+					</thead>
+					<tbody>
 						{#each prescribedMedications as medication (medication.key)}
-							<div
-								class="grid gap-4 border-b border-slate-100 p-4 last:border-b-0 md:grid-cols-[1.2fr_1fr_1fr_auto]"
-							>
-								<div>
-									<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
-										Médicament
-									</p>
-
-									<p class="mt-1 font-black text-slate-900">
-										{medication.name}
-									</p>
-
-									<p class="mt-1 text-xs text-slate-500">
-										{medicationDescription(medication)}
-									</p>
-								</div>
-
-								<div>
-									<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
-										Fréquence
-									</p>
-
-									<p class="mt-1 text-sm font-bold text-slate-700">
-										{medication.frequency || '—'}
-									</p>
-								</div>
-
-								<div>
-									<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">Durée</p>
-
-									<p class="mt-1 text-sm font-bold text-slate-700">
-										{medication.duration || '—'}
-									</p>
-
-									<p class="mt-1 text-xs text-slate-400">
-										{formatDate(medication.date)}
-									</p>
-								</div>
-
-								<button
-									type="button"
-									onclick={() => openConsultation(medication.consultationId)}
-									class="self-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#0E4C92] transition hover:bg-blue-50"
-								>
-									Voir
-								</button>
-							</div>
+							<tr>
+								<td>
+									<p class="font-medium text-foreground">{medication.name}</p>
+									<p class="text-xs text-muted-foreground">{medicationDescription(medication)}</p>
+								</td>
+								<td>{medication.frequency || '—'}</td>
+								<td>{medication.duration || '—'}</td>
+								<td class="whitespace-nowrap">{formatDate(medication.date)}</td>
+								<td class="mc-actions">
+									<Button
+										size="sm"
+										variant="ghost"
+										onclick={() => openConsultation(medication.consultationId)}>Voir</Button
+									>
+								</td>
+							</tr>
+						{:else}
+							<TableState state="empty" colspan={5} title="Aucun médicament prescrit." />
 						{/each}
-					</div>
-				{:else}
-					<div
-						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-semibold text-slate-500"
-					>
-						Aucun médicament prescrit.
-					</div>
-				{/if}
+					</tbody>
+				</Table>
 			</Card>
 
 			<Card title="Examens demandés" subtitle={`${totalExams} examen(s) enregistré(s)`}>
@@ -458,7 +436,7 @@
 								</div>
 
 								<div>
-									<p class="font-black text-violet-900">
+									<p class="font-bold text-violet-900">
 										{exam.name}
 									</p>
 
@@ -489,7 +467,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Consultations </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{consultations.length}
 						</span>
 					</div>
@@ -499,7 +477,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Prescriptions </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{totalPrescriptions}
 						</span>
 					</div>
@@ -509,7 +487,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Examens </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{totalExams}
 						</span>
 					</div>
@@ -519,7 +497,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Hospitalisations </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{hospitalizations.length}
 						</span>
 					</div>
@@ -531,13 +509,13 @@
 					<div class="space-y-4">
 						<div class="flex items-center gap-3 rounded-2xl bg-blue-50 p-4">
 							<div
-								class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#0E4C92] shadow-sm"
+								class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-primary shadow-sm"
 							>
 								<Stethoscope size={19} />
 							</div>
 
 							<div>
-								<p class="font-black text-slate-900">
+								<p class="font-bold text-slate-900">
 									{latestConsultation.service || 'Service non renseigné'}
 								</p>
 
@@ -553,7 +531,7 @@
 						</div>
 
 						<div class="rounded-2xl border border-slate-200 p-4">
-							<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+							<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 								Diagnostic
 							</p>
 
@@ -584,19 +562,19 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#0E4C92] shadow-sm"
+							class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary shadow-sm"
 						>
 							<FileText size={18} />
 						</div>
 
 						<div>
-							<p class="font-black text-slate-900">Documents</p>
+							<p class="font-bold text-slate-900">Documents</p>
 
 							<p class="mt-1 text-xs text-slate-500">Ordonnances, examens et certificats</p>
 						</div>
 					</div>
 
-					<span class="rounded-full bg-blue-50 px-3 py-1 text-sm font-black text-[#0E4C92]">
+					<span class="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-primary">
 						{summary?.statistics.documents ?? 0}
 					</span>
 				</div>

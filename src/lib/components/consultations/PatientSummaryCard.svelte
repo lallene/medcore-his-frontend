@@ -289,7 +289,7 @@
 			<header class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
 				<div class="flex items-start gap-4">
 					<div
-						class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-[#0E4C92]"
+						class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-primary"
 					>
 						{#if summary.patient.photo_url}
 							<img
@@ -298,7 +298,7 @@
 								class="h-full w-full object-cover"
 							/>
 						{:else if patientInitials}
-							<span class="text-xl font-black">
+							<span class="text-xl font-bold">
 								{patientInitials}
 							</span>
 						{:else}
@@ -307,11 +307,11 @@
 					</div>
 
 					<div>
-						<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+						<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 							Résumé clinique
 						</p>
 
-						<h2 class="mt-1 text-2xl font-black text-slate-900">
+						<h2 class="mt-1 text-2xl font-bold text-slate-900">
 							{patientName}
 						</h2>
 
@@ -332,9 +332,9 @@
 
 				<div class="grid gap-3 sm:grid-cols-2 xl:min-w-[420px]">
 					<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-						<div class="flex items-center gap-2 text-[#0E4C92]">
+						<div class="flex items-center gap-2 text-primary">
 							<ShieldCheck size={17} />
-							<p class="text-xs font-black uppercase tracking-wide">Couverture</p>
+							<p class="text-xs font-semibold uppercase tracking-wide">Couverture</p>
 						</div>
 
 						<p class="mt-2 text-sm font-bold text-slate-900">
@@ -347,13 +347,13 @@
 					</div>
 
 					<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-						<div class="flex items-center gap-2 text-[#0E4C92]">
+						<div class="flex items-center gap-2 text-primary">
 							<CalendarDays size={17} />
 
-							<p class="text-xs font-black uppercase tracking-wide">Dernière consultation</p>
+							<p class="text-xs font-semibold uppercase tracking-wide">Dernière consultation</p>
 						</div>
 
-						<p class="mt-2 text-sm font-black text-slate-900">
+						<p class="mt-2 text-sm font-bold text-slate-900">
 							{summary.last_consultation?.service || 'Aucune consultation'}
 						</p>
 
@@ -370,7 +370,7 @@
 							{/if}
 						{/if}
 
-						<p class="mt-2 text-xs text-slate-400">
+						<p class="mt-2 text-xs text-slate-500">
 							{formatDateTime(summary.last_consultation?.date)}
 						</p>
 					</div>
@@ -382,7 +382,7 @@
 					<div class="mb-3 flex items-center gap-2">
 						<AlertTriangle size={18} class="text-red-600" />
 
-						<h3 class="text-sm font-black uppercase tracking-wide text-slate-900">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-900">
 							Alertes cliniques
 						</h3>
 					</div>
@@ -390,7 +390,7 @@
 					<div class="grid gap-3 lg:grid-cols-2">
 						{#each summary.clinical_alerts as alert, index (`${alert.code}-${index}`)}
 							<div class={`rounded-xl border p-4 ${alertClasses(alert)}`}>
-								<p class="text-sm font-black">
+								<p class="text-sm font-bold">
 									{alert.title}
 								</p>
 
@@ -406,12 +406,12 @@
 			<div class="grid gap-4 lg:grid-cols-3">
 				<section class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-3">
-						<div class="flex items-center gap-2 text-[#0E4C92]">
+						<div class="flex items-center gap-2 text-primary">
 							<AlertTriangle size={18} />
-							<h3 class="font-black text-slate-900">Allergies</h3>
+							<h3 class="font-bold text-slate-900">Allergies</h3>
 						</div>
 
-						<span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600">
+						<span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600">
 							{summary.medical_record.active_allergies}
 						</span>
 					</div>
@@ -424,7 +424,7 @@
 								<div class="rounded-xl border border-slate-200 bg-white p-3">
 									<div class="flex items-start justify-between gap-3">
 										<div class="min-w-0">
-											<p class="truncate text-sm font-black text-slate-900">
+											<p class="truncate text-sm font-bold text-slate-900">
 												{allergy.name}
 											</p>
 
@@ -434,7 +434,7 @@
 										</div>
 
 										<span
-											class={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${severityClasses(
+											class={`shrink-0 rounded-full border px-2.5 py-1 text-2xs font-semibold uppercase tracking-wide ${severityClasses(
 												allergy.severity
 											)}`}
 										>
@@ -449,12 +449,12 @@
 
 				<section class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-3">
-						<div class="flex items-center gap-2 text-[#0E4C92]">
+						<div class="flex items-center gap-2 text-primary">
 							<HeartPulse size={18} />
-							<h3 class="font-black text-slate-900">Maladies chroniques</h3>
+							<h3 class="font-bold text-slate-900">Maladies chroniques</h3>
 						</div>
 
-						<span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600">
+						<span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600">
 							{summary.medical_record.chronic_diseases}
 						</span>
 					</div>
@@ -480,12 +480,12 @@
 
 				<section class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-3">
-						<div class="flex items-center gap-2 text-[#0E4C92]">
+						<div class="flex items-center gap-2 text-primary">
 							<Pill size={18} />
-							<h3 class="font-black text-slate-900">Traitements actifs</h3>
+							<h3 class="font-bold text-slate-900">Traitements actifs</h3>
 						</div>
 
-						<span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600">
+						<span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600">
 							{summary.medical_record.current_treatments}
 						</span>
 					</div>
@@ -514,11 +514,11 @@
 			<section class="rounded-2xl border border-slate-200 bg-white">
 				<div class="border-b border-slate-200 px-5 py-4">
 					<div class="flex items-center gap-2">
-						<Activity size={18} class="text-[#0E4C92]" />
+						<Activity size={18} class="text-primary" />
 
-						<h3 class="font-black text-slate-900">Dernières constantes</h3>
+						<h3 class="font-bold text-slate-900">Dernières constantes</h3>
 					</div>
-					<div class="mt-3 flex flex-wrap gap-4 text-[11px] font-bold text-slate-500">
+					<div class="mt-3 flex flex-wrap gap-4 text-2xs font-bold text-slate-500">
 						<span class="inline-flex items-center gap-1.5">
 							<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
 							Normal
@@ -595,56 +595,56 @@
 
 			<section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
 				<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-					<div class="flex items-center gap-2 text-[#0E4C92]">
+					<div class="flex items-center gap-2 text-primary">
 						<Stethoscope size={17} />
-						<p class="text-xs font-black uppercase tracking-wide">Consultations</p>
+						<p class="text-xs font-semibold uppercase tracking-wide">Consultations</p>
 					</div>
 
-					<p class="mt-3 text-2xl font-black text-slate-900">
+					<p class="mt-3 text-2xl font-bold text-slate-900">
 						{summary.statistics.consultations}
 					</p>
 				</div>
 
 				<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-					<div class="flex items-center gap-2 text-[#0E4C92]">
+					<div class="flex items-center gap-2 text-primary">
 						<HeartPulse size={17} />
-						<p class="text-xs font-black uppercase tracking-wide">Hospitalisations</p>
+						<p class="text-xs font-semibold uppercase tracking-wide">Hospitalisations</p>
 					</div>
 
-					<p class="mt-3 text-2xl font-black text-slate-900">
+					<p class="mt-3 text-2xl font-bold text-slate-900">
 						{summary.statistics.hospitalizations}
 					</p>
 				</div>
 
 				<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-					<div class="flex items-center gap-2 text-[#0E4C92]">
+					<div class="flex items-center gap-2 text-primary">
 						<Pill size={17} />
-						<p class="text-xs font-black uppercase tracking-wide">Prescriptions</p>
+						<p class="text-xs font-semibold uppercase tracking-wide">Prescriptions</p>
 					</div>
 
-					<p class="mt-3 text-2xl font-black text-slate-900">
+					<p class="mt-3 text-2xl font-bold text-slate-900">
 						{summary.statistics.prescriptions}
 					</p>
 				</div>
 
 				<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-					<div class="flex items-center gap-2 text-[#0E4C92]">
+					<div class="flex items-center gap-2 text-primary">
 						<Activity size={17} />
-						<p class="text-xs font-black uppercase tracking-wide">Examens</p>
+						<p class="text-xs font-semibold uppercase tracking-wide">Examens</p>
 					</div>
 
-					<p class="mt-3 text-2xl font-black text-slate-900">
+					<p class="mt-3 text-2xl font-bold text-slate-900">
 						{summary.statistics.exams}
 					</p>
 				</div>
 
 				<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-					<div class="flex items-center gap-2 text-[#0E4C92]">
+					<div class="flex items-center gap-2 text-primary">
 						<FileText size={17} />
-						<p class="text-xs font-black uppercase tracking-wide">Documents</p>
+						<p class="text-xs font-semibold uppercase tracking-wide">Documents</p>
 					</div>
 
-					<p class="mt-3 text-2xl font-black text-slate-900">
+					<p class="mt-3 text-2xl font-bold text-slate-900">
 						{summary.statistics.documents}
 					</p>
 				</div>
@@ -660,16 +660,16 @@
 			aria-label={`Statut ${status}`}
 		></span>
 
-		<p class="pr-5 text-xs font-bold uppercase tracking-wide text-slate-400">
+		<p class="pr-5 text-xs font-bold uppercase tracking-wide text-slate-500">
 			{label}
 		</p>
 
-		<p class="mt-2 text-lg font-black text-slate-900">
+		<p class="mt-2 text-lg font-bold text-slate-900">
 			{value}
 		</p>
 
 		{#if unit}
-			<p class="mt-1 text-xs text-slate-400">
+			<p class="mt-1 text-xs text-slate-500">
 				{unit}
 			</p>
 		{/if}

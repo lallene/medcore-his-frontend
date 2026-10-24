@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -12,8 +14,6 @@
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let rows = $state<Ticket[]>([]);
 	let loading = $state(true);
@@ -54,7 +54,7 @@
 		<Alert tone="danger">{error}</Alert>
 	{/if}
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<FilterBar class="rounded-none border-0 border-b border-border shadow-none">
 			<SearchInput
 				id="ticket-search"
@@ -77,58 +77,53 @@
 			<Button variant="secondary" onclick={load}>Filtrer</Button>
 		</FilterBar>
 
-		{#if loading}
-			<LoadingState label="Chargement des tickets…" />
-		{:else if rows.length === 0}
-			<div class="p-4">
-				<EmptyState
-					title="Aucun ticket"
-					description="Utilisez « Créer un ticket » pour contacter le support."
-				/>
-			</div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table>
+			<thead>
+				<tr>
+					<th>Référence</th>
+					<th>Sujet</th>
+					<th>Type</th>
+					<th>Priorité</th>
+					<th>Statut</th>
+					<th>SLA</th>
+					<th>Créé</th>
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={7}
+						title="Chargement des tickets…"
+					/>{:else if rows.length === 0}<TableState
+						state="empty"
+						colspan={7}
+						title="Aucun ticket"
+						description="Utilisez « Créer un ticket » pour contacter le support."
+					/>{:else}
+					{#each rows as ticket (ticket.id)}
 						<tr>
-							<th class="p-3">Référence</th>
-							<th>Sujet</th>
-							<th>Type</th>
-							<th>Priorité</th>
-							<th>Statut</th>
-							<th>SLA</th>
-							<th>Créé</th>
+							<td>
+								<a href={resolve(`/tickets/${ticket.id}`)}>{ticket.reference}</a>
+							</td>
+							<td>
+								<b>{ticket.title}</b>
+								<small class="block text-slate-500"
+									>{ticket.applicationModule || ticket.categoryCode || 'Général'}</small
+								>
+							</td>
+							<td>{ticket.type}</td>
+							<td><StatusBadge status={ticket.priority} /></td>
+							<td><StatusBadge status={ticket.status} label={statusLabels[ticket.status]} /></td>
+							<td class:text-danger={ticket.responseSlaBreached || ticket.resolutionSlaBreached}>
+								{ticket.responseSlaBreached || ticket.resolutionSlaBreached
+									? 'Dépassé'
+									: 'Dans les délais'}
+							</td>
+							<td>{new Date(ticket.createdAt).toLocaleString('fr-FR')}</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each rows as ticket (ticket.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">
-									<a
-										class="font-bold text-primary hover:underline"
-										href={resolve(`/tickets/${ticket.id}`)}>{ticket.reference}</a
-									>
-								</td>
-								<td>
-									<b>{ticket.title}</b>
-									<small class="block text-slate-500"
-										>{ticket.applicationModule || ticket.categoryCode || 'Général'}</small
-									>
-								</td>
-								<td>{ticket.type}</td>
-								<td><StatusBadge status={ticket.priority} /></td>
-								<td><StatusBadge status={ticket.status} label={statusLabels[ticket.status]} /></td>
-								<td class:text-danger={ticket.responseSlaBreached || ticket.resolutionSlaBreached}>
-									{ticket.responseSlaBreached || ticket.resolutionSlaBreached
-										? 'Dépassé'
-										: 'Dans les délais'}
-								</td>
-								<td>{new Date(ticket.createdAt).toLocaleString('fr-FR')}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

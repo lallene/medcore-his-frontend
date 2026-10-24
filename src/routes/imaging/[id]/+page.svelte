@@ -115,7 +115,7 @@
 					<p class="text-sm font-bold text-cyan-700">
 						{order.orderNumber} · Accession {order.accessionNumber}
 					</p>
-					<h1 class="text-2xl font-black">{order.examName}</h1>
+					<h1 class="text-2xl font-bold">{order.examName}</h1>
 					<p class="text-slate-500">
 						{order.patientName} ({order.patientCode}) · {order.service || '—'} · {order.prescriber ||
 							'—'} · Consultation #{order.consultationId}
@@ -140,16 +140,16 @@
 				</p>{/if}
 		</section>
 		{#if canSchedule && actions.schedule}<section class="rounded-2xl border bg-white p-6">
-				<h2 class="font-black">Planifier l’examen</h2>
+				<h2 class="font-bold">Planifier l’examen</h2>
 				<div class="mt-3 grid gap-3 md:grid-cols-2">
 					<input
 						type="datetime-local"
 						bind:value={scheduledAt}
-						class="rounded-xl border p-3"
+						class="min-h-control rounded-lg border px-3 py-2"
 					/><input
 						bind:value={scheduleComment}
 						placeholder="Commentaire (facultatif)"
-						class="rounded-xl border p-3"
+						class="min-h-control rounded-lg border px-3 py-2"
 					/>
 				</div>
 				<button
@@ -165,19 +165,19 @@
 				>
 			</section>{/if}
 		{#if canPerform && actions.start}<section class="rounded-2xl border bg-white p-6">
-				<h2 class="font-black">Réalisation</h2>
+				<h2 class="font-bold">Réalisation</h2>
 				<div class="mt-3 grid gap-3 md:grid-cols-2">
 					<textarea
 						bind:value={technicalNotes}
 						placeholder="Notes techniques"
-						class="rounded-xl border p-3"></textarea>
+						class="rounded-lg border p-3"></textarea>
 					<div class="space-y-3">
 						<label class="flex gap-2"
 							><input type="checkbox" bind:checked={contrastUsed} />Produit de contraste</label
 						>{#if contrastUsed}<input
 								bind:value={contrastProduct}
 								placeholder="Produit utilisé"
-								class="w-full rounded-xl border p-3"
+								class="min-h-control w-full rounded-lg border px-3 py-2"
 							/>{/if}
 					</div>
 				</div>
@@ -190,21 +190,21 @@
 				><HelpHint helpKey="imaging.exam.start" class="ml-2" />
 			</section>{/if}
 		{#if canReport && actions.report}<section class="rounded-2xl border bg-white p-6">
-				<h2 class="font-black">Compte rendu radiologique</h2>
+				<h2 class="font-bold">Compte rendu radiologique</h2>
 				<div class="mt-4 grid gap-3 md:grid-cols-2">
 					<textarea
 						bind:value={report.clinicalIndication}
 						placeholder="Indication clinique"
-						class="rounded-xl border p-3"></textarea><textarea
+						class="rounded-lg border p-3"></textarea><textarea
 						bind:value={report.technique}
 						placeholder="Technique"
-						class="rounded-xl border p-3"></textarea>
+						class="rounded-lg border p-3"></textarea>
 					<div class="flex items-start gap-1 md:col-span-2">
 						<textarea
 							bind:value={report.findings}
 							placeholder="Constatations *"
 							aria-label="Constatations"
-							class="min-w-0 flex-1 rounded-xl border p-3"></textarea><HelpHint
+							class="min-w-0 flex-1 rounded-lg border p-3"></textarea><HelpHint
 							helpKey="imaging.report.findings"
 							class="mt-2"
 						/>
@@ -214,7 +214,7 @@
 							bind:value={report.conclusion}
 							placeholder="Conclusion *"
 							aria-label="Conclusion"
-							class="min-w-0 flex-1 rounded-xl border p-3"></textarea><HelpHint
+							class="min-w-0 flex-1 rounded-lg border p-3"></textarea><HelpHint
 							helpKey="imaging.report.conclusion"
 							class="mt-2"
 						/>
@@ -222,10 +222,10 @@
 					<textarea
 						bind:value={report.recommendation}
 						placeholder="Recommandations"
-						class="rounded-xl border p-3"></textarea><input
+						class="rounded-lg border p-3"></textarea><input
 						bind:value={report.documentUrl}
 						placeholder="URL du compte rendu ou document"
-						class="rounded-xl border p-3"
+						class="min-h-control rounded-lg border px-3 py-2"
 					/>
 				</div>
 				<div class="mt-4 flex gap-3">
@@ -255,7 +255,7 @@
 		{#if order.report && (order.status === 'VALIDATED' || order.status === 'REPORT_CLOSED' || !canReport)}<section
 				class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
 			>
-				<h2 class="font-black text-emerald-900">
+				<h2 class="font-bold text-emerald-900">
 					Compte rendu {order.status === 'VALIDATED'
 						? 'validé'
 						: order.status === 'REPORT_CLOSED'

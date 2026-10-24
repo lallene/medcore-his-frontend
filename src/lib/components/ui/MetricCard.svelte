@@ -24,40 +24,40 @@
 		accent = medcoreColors.primary,
 		class: className = ''
 	}: Props = $props();
+
+	const clampedProgress = $derived(
+		progress == null ? null : Math.min(Math.max(Number(progress) || 0, 0), 100)
+	);
 </script>
 
 <div
-	class={cn(
-		'rounded-2xl border border-border bg-surface p-5 shadow-[var(--shadow-card)] transition hover:shadow-[var(--shadow-card-hover)]',
-		className
-	)}
+	class={cn('rounded-xl border border-border bg-surface p-5 shadow-xs', className)}
 	data-testid="metric-card"
 >
-	<div class="flex items-center justify-between">
+	<div class="flex items-start justify-between gap-3">
+		<p class="text-small font-medium text-muted-foreground">{title}</p>
 		{#if Icon}
 			<div
-				class="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-				style={`background:${accent}`}
+				class="flex size-9 shrink-0 items-center justify-center rounded-lg"
+				style={`color:${accent};background:color-mix(in srgb, ${accent} 10%, white)`}
 			>
-				<Icon size={20} aria-hidden="true" />
+				<Icon size={18} aria-hidden="true" />
 			</div>
-		{:else}
-			<div></div>
-		{/if}
-		{#if trend}
-			<span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-				{trend}
-			</span>
 		{/if}
 	</div>
-	<p class="mt-4 text-sm text-slate-500">{title}</p>
-	<p class={cn('mt-1', medcoreTypography.kpi)}>{value}</p>
-	{#if progress != null}
-		<div class="mt-4 h-2 rounded-full bg-slate-100">
-			<div class="h-2 rounded-full" style={`width:${progress}%;background:${accent}`}></div>
+	<p class={cn('mt-2', medcoreTypography.kpi)}>{value}</p>
+	{#if trend}
+		<p class="mt-1 text-xs text-muted-foreground">{trend}</p>
+	{/if}
+	{#if clampedProgress != null}
+		<div class="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+			<div
+				class="h-full rounded-full"
+				style={`width:${clampedProgress}%;background:${accent}`}
+			></div>
 		</div>
 	{/if}
 	{#if detail}
-		<p class="mt-2 text-xs text-slate-400">{detail}</p>
+		<p class="mt-2 text-xs text-muted-foreground">{detail}</p>
 	{/if}
 </div>

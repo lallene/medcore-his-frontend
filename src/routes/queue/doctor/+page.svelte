@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -27,6 +29,7 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import LinkButton from '$lib/components/ui/LinkButton.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -249,7 +252,7 @@
 
 	<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
 		<section class="min-w-0 space-y-4">
-			<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+			<section class="rounded-2xl border border-border bg-surface shadow-xs">
 				<FilterBar class="rounded-none border-0 border-b border-border shadow-none">
 					<SearchInput
 						bind:value={search}
@@ -270,93 +273,88 @@
 					</Select>
 				</FilterBar>
 
-				{#if loading}
-					<LoadingState label="Chargement de la file médecin…" />
-				{:else if displayWaiting.length === 0 && stageFilter !== 'DOCTOR_IN_PROGRESS'}
-					<div class="p-4">
-						<EmptyState
-							title="Aucun patient prêt"
-							description="Les patients n’apparaissent ici qu’après validation complète du triage."
-						/>
-					</div>
-				{:else if displayWaiting.length === 0}
-					<div class="p-4"><EmptyState title="Aucun résultat pour ces filtres" /></div>
-				{:else}
-					<div class="overflow-x-auto">
-						<table class="w-full text-left text-sm" data-testid="queue-doctor-table">
-							<thead class="bg-surface-muted text-xs uppercase text-slate-500">
-								<tr>
-									{#each doctorWorklistColumns as column (column)}
-										<th class="whitespace-nowrap px-3 py-2.5">{column}</th>
-									{/each}
-								</tr>
-							</thead>
-							<tbody>
-								{#each displayWaiting as ticket (ticket.id)}
-									<tr
-										class="cursor-pointer border-t border-border hover:bg-surface-muted/60"
-										class:bg-sky-50={selectedId === ticket.id}
-										data-testid="queue-doctor-row"
-										data-ticket-id={ticket.id}
-										onclick={() => selectTicket(ticket.id)}
+				<Table data-testid="queue-doctor-table">
+					<thead>
+						<tr>
+							{#each doctorWorklistColumns as column, i (column)}
+								<th class:mc-actions={i === doctorWorklistColumns.length - 1}>{column}</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody
+						>{#if loading}<TableState
+								state="loading"
+								colspan={doctorWorklistColumns.length}
+								title="Chargement de la file médecin…"
+							/>{:else if displayWaiting.length === 0 && stageFilter !== 'DOCTOR_IN_PROGRESS'}<TableState
+								state="empty"
+								colspan={doctorWorklistColumns.length}
+								title="Aucun patient prêt"
+								description="Les patients n’apparaissent ici qu’après validation complète du triage."
+							/>{:else if displayWaiting.length === 0}<TableState
+								state="empty"
+								colspan={doctorWorklistColumns.length}
+								title="Aucun résultat pour ces filtres"
+							/>{:else}
+							{#each displayWaiting as ticket (ticket.id)}
+								<tr
+									class="cursor-pointer"
+									data-selected={selectedId === ticket.id}
+									data-testid="queue-doctor-row"
+									data-ticket-id={ticket.id}
+									onclick={() => selectTicket(ticket.id)}
+								>
+									<td>
+										<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
+									</td>
+									<td>
+										<div class="font-semibold text-slate-900">{ticket.patientName}</div>
+										<div class="font-mono text-xs text-slate-500">{ticket.patientCode}</div>
+										<div class="font-mono text-2xs text-slate-500">{ticket.reference}</div>
+									</td>
+									<td>{ageSexLabel(ticket)}</td>
+									<td class="tabular-nums">{formatClock(ticket.arrivedAt)}</td>
+									<td class={`tabular-nums ${waitToneClass(ticket.waitMinutes, ticket.priority)}`}>
+										{formatWaitMinutes(ticket.waitMinutes)}
+									</td>
+									<td
+										class="max-w-[12rem]"
+										class:text-danger={vitalsHaveAbnormal(ticket.vitalSigns)}
+										class:font-semibold={vitalsHaveAbnormal(ticket.vitalSigns)}
 									>
-										<td class="px-3 py-2.5">
-											<StatusBadge
-												status={ticket.priority}
-												label={priorityLabels[ticket.priority]}
-											/>
-										</td>
-										<td class="px-3 py-2.5">
-											<div class="font-semibold text-slate-900">{ticket.patientName}</div>
-											<div class="font-mono text-xs text-slate-500">{ticket.patientCode}</div>
-											<div class="font-mono text-[10px] text-slate-400">{ticket.reference}</div>
-										</td>
-										<td class="px-3 py-2.5 text-slate-600">{ageSexLabel(ticket)}</td>
-										<td class="px-3 py-2.5 tabular-nums">{formatClock(ticket.arrivedAt)}</td>
-										<td
-											class={`px-3 py-2.5 tabular-nums ${waitToneClass(ticket.waitMinutes, ticket.priority)}`}
+										{formatVitalSummary(ticket.vitalSigns)}
+									</td>
+									<td class="max-w-[14rem] truncate">
+										{ticket.reason?.trim() || emptyCell}
+									</td>
+									<td>
+										<span class="text-xs font-medium text-slate-600">{careStateLabel(ticket)}</span>
+									</td>
+									<td class="mc-actions">
+										<Button
+											size="sm"
+											data-testid="queue-doctor-open"
+											onclick={(e) => {
+												e.stopPropagation();
+												void selectTicket(ticket.id);
+											}}>Ouvrir</Button
 										>
-											{formatWaitMinutes(ticket.waitMinutes)}
-										</td>
-										<td
-											class="max-w-[12rem] px-3 py-2.5 text-xs"
-											class:text-danger={vitalsHaveAbnormal(ticket.vitalSigns)}
-											class:font-semibold={vitalsHaveAbnormal(ticket.vitalSigns)}
-										>
-											{formatVitalSummary(ticket.vitalSigns)}
-										</td>
-										<td class="max-w-[14rem] truncate px-3 py-2.5 text-slate-600">
-											{ticket.reason?.trim() || emptyCell}
-										</td>
-										<td class="px-3 py-2.5">
-											<span class="text-xs font-medium text-slate-600"
-												>{careStateLabel(ticket)}</span
-											>
-										</td>
-										<td class="px-3 py-2.5">
-											<Button
-												size="sm"
-												data-testid="queue-doctor-open"
-												onclick={(e) => {
-													e.stopPropagation();
-													void selectTicket(ticket.id);
-												}}>Ouvrir</Button
-											>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-					<p class="border-t border-border px-4 py-2 text-xs text-slate-500">
+									</td>
+								</tr>
+							{/each}
+						{/if}</tbody
+					>
+				</Table>
+				{#if !loading && displayWaiting.length > 0}<p
+						class="border-t border-border px-4 py-2 text-xs text-slate-500"
+					>
 						Affichage {displayWaiting.length} patient{displayWaiting.length > 1 ? 's' : ''} prêts
-					</p>
-				{/if}
+					</p>{/if}
 			</section>
 
 			<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
 				<section
-					class="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card)]"
+					class="rounded-2xl border border-border bg-surface p-4 shadow-xs"
 					data-testid="queue-doctor-in-progress"
 				>
 					<h2 class="text-sm font-bold text-slate-800">
@@ -379,13 +377,18 @@
 										<Button size="sm" variant="secondary" onclick={() => selectTicket(ticket.id)}
 											>Voir</Button
 										>
-										<a href={resolve(`/patients/${ticket.patientId}`)}>
-											<Button size="sm" variant="ghost">Dossier</Button>
-										</a>
+										<LinkButton
+											size="sm"
+											variant="ghost"
+											href={resolve(`/patients/${ticket.patientId}`)}>Dossier</LinkButton
+										>
 										{#if ticket.consultationId}
-											<a href={resolve(`/consultations/${ticket.consultationId}`)}>
-												<Button size="sm" variant="ghost">Consultation</Button>
-											</a>
+											<LinkButton
+												size="sm"
+												variant="ghost"
+												href={resolve(`/consultations/${ticket.consultationId}`)}
+												>Consultation</LinkButton
+											>
 										{/if}
 										<Button
 											size="sm"
@@ -402,7 +405,7 @@
 				</section>
 
 				<section
-					class="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card)]"
+					class="rounded-2xl border border-border bg-surface p-4 shadow-xs"
 					data-testid="queue-doctor-day-stats"
 				>
 					<h2 class="text-sm font-bold text-slate-800">Statistiques du jour</h2>
@@ -429,7 +432,7 @@
 		</section>
 
 		<aside
-			class="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-card)] xl:sticky xl:top-4 xl:self-start"
+			class="rounded-2xl border border-border bg-surface p-4 shadow-xs xl:sticky xl:top-4 xl:self-start"
 			data-testid="queue-doctor-panel"
 		>
 			{#if !selected}
@@ -589,15 +592,14 @@
 							>
 						{:else if selected.stage === 'DOCTOR_IN_PROGRESS'}
 							{#if isOwnInProgress(selected) && selected.consultationId}
-								<a href={resolve(`/consultations/${selected.consultationId}`)} class="block">
-									<Button
-										fullWidth
-										data-testid="queue-doctor-continue"
-										loading={actingId === selected.id}
-									>
-										Continuer la consultation
-									</Button>
-								</a>
+								<LinkButton
+									href={resolve(`/consultations/${selected.consultationId}`)}
+									fullWidth
+									data-testid="queue-doctor-continue"
+									loading={actingId === selected.id}
+								>
+									Continuer la consultation
+								</LinkButton>
 							{/if}
 							<Button
 								fullWidth
@@ -607,11 +609,12 @@
 								onclick={() => complete(selected.id)}>Clôturer la prise en charge</Button
 							>
 						{/if}
-						<a href={resolve(`/patients/${selected.patientId}`)} class="block">
-							<Button fullWidth variant="secondary" data-testid="queue-doctor-open-dossier"
-								>Ouvrir le dossier patient</Button
-							>
-						</a>
+						<LinkButton
+							href={resolve(`/patients/${selected.patientId}`)}
+							fullWidth
+							variant="secondary"
+							data-testid="queue-doctor-open-dossier">Ouvrir le dossier patient</LinkButton
+						>
 						{#if selected.consultationId}
 							<a
 								href={resolve(`/consultations/${selected.consultationId}`)}

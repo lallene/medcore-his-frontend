@@ -23,10 +23,10 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-red-700">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-red-700">
 				Séjours hospitaliers réels
 			</p>
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Hospitalisations</h2>
+			<h2 class="mt-2 text-2xl font-bold text-slate-900">Hospitalisations</h2>
 			<p class="mt-1 text-sm text-slate-500">
 				Admissions et sorties enregistrées dans le module Hospitalization.
 			</p>
@@ -37,16 +37,16 @@
 	</div>
 	<div class="grid gap-4 sm:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-5">
-			<p class="text-xs font-black uppercase text-slate-400">Total</p>
-			<p class="mt-2 text-3xl font-black">{items.length}</p>
+			<p class="text-xs font-semibold uppercase text-slate-500">Total</p>
+			<p class="mt-2 text-3xl font-bold">{items.length}</p>
 		</div>
 		<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-			<p class="text-xs font-black uppercase text-blue-500">Admises</p>
-			<p class="mt-2 text-3xl font-black text-blue-900">{activeCount}</p>
+			<p class="text-xs font-semibold uppercase text-blue-500">Admises</p>
+			<p class="mt-2 text-3xl font-bold text-blue-900">{activeCount}</p>
 		</div>
 		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-			<p class="text-xs font-black uppercase text-emerald-500">Sorties</p>
-			<p class="mt-2 text-3xl font-black text-emerald-900">{dischargedCount}</p>
+			<p class="text-xs font-semibold uppercase text-emerald-500">Sorties</p>
+			<p class="mt-2 text-3xl font-bold text-emerald-900">{dischargedCount}</p>
 		</div>
 	</div>
 	<Card title="Historique hospitalier" subtitle={`${items.length} séjour(s)`}
@@ -54,7 +54,7 @@
 				class="flex min-h-64 flex-col items-center justify-center text-center"
 			>
 				<Hospital size={30} class="text-red-700" />
-				<h3 class="mt-4 text-xl font-black">Aucune hospitalisation réelle</h3>
+				<h3 class="mt-4 text-xl font-bold">Aucune hospitalisation réelle</h3>
 				<p class="mt-2 text-sm text-slate-500">
 					Une recommandation de consultation doit être transformée explicitement en admission.
 				</p>
@@ -65,7 +65,7 @@
 								<BedDouble class="text-red-700" />
 								<div>
 									<div class="flex flex-wrap gap-2">
-										<h3 class="font-black">{item.admissionNumber}</h3>
+										<h3 class="font-bold">{item.admissionNumber}</h3>
 										<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold"
 											>{hospitalizationStatusLabel(item.status)}</span
 										>
@@ -77,7 +77,7 @@
 									<p class="mt-2 text-sm font-semibold">
 										{item.admissionReason || 'Motif non renseigné'}
 									</p>
-									<p class="mt-2 text-xs text-slate-400">
+									<p class="mt-2 text-xs text-slate-500">
 										Consultation #{item.sourceConsultationId}
 									</p>
 									<BedAssignmentSummary hospitalizationId={item.id} showHistory={true} />
@@ -86,7 +86,7 @@
 							<button
 								aria-label="Ouvrir"
 								onclick={() => goto(resolve(`/hospitalizations/${item.id}`))}
-								class="text-[#0E4C92]"><Eye size={18} /></button
+								class="text-primary"><Eye size={18} /></button
 							>
 						</div>
 					</article>{/each}

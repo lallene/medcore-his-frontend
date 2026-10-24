@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { medcoreColors } from '$lib/design/theme';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -79,60 +80,59 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<section
-		class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-700 via-[#0E4C92] to-[#18B893] p-8 text-white shadow-xl"
-	>
-		<div
-			class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-		></div>
-		<div
-			class="pointer-events-none absolute bottom-4 right-10 text-[160px] font-black leading-none text-white/5"
-		>
-			PEC
-		</div>
-
-		<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+	<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+		<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Assurance Command Center
 				</p>
 
-				<h1 class="mt-3 text-4xl font-bold leading-tight">Pilotage des prises en charge</h1>
+				<h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+					Pilotage des prises en charge
+				</h1>
 
-				<p class="mt-3 max-w-2xl text-lg text-blue-50">
+				<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">
 					Suivi des compagnies, bons PEC, validations, rejets et délais de traitement.
 				</p>
 
-				<div class="mt-6 flex flex-wrap gap-3">
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🛡 {companies.length} Compagnies
+				<div class="mt-4 flex flex-wrap gap-2">
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{companies.length} Compagnies
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						📄 {pendingVouchers + validatedVouchers + rejectedVouchers} Bons PEC
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{pendingVouchers + validatedVouchers + rejectedVouchers} Bons PEC
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						✅ {validatedVouchers} Validés
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{validatedVouchers} Validés
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						💰 {totalAmount} FCFA
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{totalAmount} FCFA
 					</span>
 				</div>
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-3">
-				<div class="rounded-2xl bg-white/15 p-4 backdrop-blur">
-					<p class="text-xs text-blue-100">Délai moyen</p>
-					<p class="mt-1 text-2xl font-bold">48h</p>
+				<div class="rounded-lg border border-border bg-surface-muted px-4 py-3">
+					<p class="text-xs text-muted-foreground">Délai moyen</p>
+					<p class="mt-1 text-xl font-semibold tabular-nums text-foreground">48h</p>
 				</div>
 
-				<div class="rounded-2xl bg-white/15 p-4 backdrop-blur">
-					<p class="text-xs text-blue-100">Taux validation</p>
-					<p class="mt-1 text-2xl font-bold">78%</p>
+				<div class="rounded-lg border border-border bg-surface-muted px-4 py-3">
+					<p class="text-xs text-muted-foreground">Taux validation</p>
+					<p class="mt-1 text-xl font-semibold tabular-nums text-foreground">78%</p>
 				</div>
 
-				<div class="rounded-2xl bg-white/15 p-4 backdrop-blur">
-					<p class="text-xs text-blue-100">Alertes</p>
-					<p class="mt-1 text-2xl font-bold">12</p>
+				<div class="rounded-lg border border-border bg-surface-muted px-4 py-3">
+					<p class="text-xs text-muted-foreground">Alertes</p>
+					<p class="mt-1 text-xl font-semibold tabular-nums text-foreground">12</p>
 				</div>
 			</div>
 		</div>
@@ -146,7 +146,7 @@
 			detail="Partenaires actifs"
 			trend="+3%"
 			progress={68}
-			accent="#7C3AED"
+			accent={medcoreColors.primary}
 		/>
 
 		<MetricCard
@@ -156,7 +156,7 @@
 			detail="À contrôler"
 			trend="+4%"
 			progress={60}
-			accent="#F59E0B"
+			accent={medcoreColors.semantic.warning}
 		/>
 
 		<MetricCard
@@ -166,7 +166,7 @@
 			detail="PEC acceptées"
 			trend="+8%"
 			progress={78}
-			accent="#22C55E"
+			accent={medcoreColors.semantic.success}
 		/>
 
 		<MetricCard
@@ -176,19 +176,44 @@
 			detail="FCFA estimés"
 			trend="+15%"
 			progress={72}
-			accent="#EA580C"
+			accent={medcoreColors.semantic.warning}
 		/>
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-3">
-		<div class="space-y-6 xl:col-span-2">
+		<div class="min-w-0 space-y-6 xl:col-span-2">
 			<Card title="Workflow assurance" subtitle="Cycle de vie d’un bon de prise en charge">
 				<div class="grid gap-3 md:grid-cols-5">
-					<WorkflowStep icon={FileText} title="Créé" detail="Bon généré" color="#0E4C92" />
-					<WorkflowStep icon={Clock3} title="Soumis" detail="Envoyé assurance" color="#0EA5E9" />
-					<WorkflowStep icon={Shield} title="Contrôle" detail="Pièces vérifiées" color="#F59E0B" />
-					<WorkflowStep icon={CheckCircle2} title="Validé" detail="PEC acceptée" color="#22C55E" />
-					<WorkflowStep icon={XCircle} title="Rejeté" detail="Correction requise" color="#EF4444" />
+					<WorkflowStep
+						icon={FileText}
+						title="Créé"
+						detail="Bon généré"
+						color={medcoreColors.primary}
+					/>
+					<WorkflowStep
+						icon={Clock3}
+						title="Soumis"
+						detail="Envoyé assurance"
+						color={medcoreColors.semantic.info}
+					/>
+					<WorkflowStep
+						icon={Shield}
+						title="Contrôle"
+						detail="Pièces vérifiées"
+						color={medcoreColors.semantic.warning}
+					/>
+					<WorkflowStep
+						icon={CheckCircle2}
+						title="Validé"
+						detail="PEC acceptée"
+						color={medcoreColors.semantic.success}
+					/>
+					<WorkflowStep
+						icon={XCircle}
+						title="Rejeté"
+						detail="Correction requise"
+						color={medcoreColors.semantic.danger}
+					/>
 				</div>
 			</Card>
 
@@ -239,7 +264,7 @@
 					<Indicator label="En contrôle" value={pendingVouchers} color="text-amber-600" />
 					<Indicator label="Validés" value={validatedVouchers} color="text-green-600" />
 					<Indicator label="Rejetés" value={rejectedVouchers} color="text-red-600" />
-					<Indicator label="Délai moyen" value="48h" color="text-[#0E4C92]" />
+					<Indicator label="Délai moyen" value="48h" color="text-primary" />
 				</div>
 			</Card>
 
@@ -248,17 +273,17 @@
 					<TimelineItem
 						title="Bon PEC créé"
 						detail="Patient Workspace · Aujourd’hui"
-						color="#0E4C92"
+						color={medcoreColors.primary}
 					/>
 					<TimelineItem
 						title="Demande en contrôle"
 						detail="ATLANTIQUE · 48h estimées"
-						color="#F59E0B"
+						color={medcoreColors.semantic.warning}
 					/>
 					<TimelineItem
 						title="PEC validée"
 						detail="Workflow assurance · Validation"
-						color="#22C55E"
+						color={medcoreColors.semantic.success}
 					/>
 				</div>
 			</Card>

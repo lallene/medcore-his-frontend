@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { medcoreColors } from '$lib/design/theme';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -229,7 +230,7 @@
 				detail={insuranceDetail}
 				trend={coverageRate}
 				progress={insurance.coverageRate}
-				accent="#7C3AED"
+				accent={medcoreColors.primary}
 			/>
 		{/if}
 
@@ -243,7 +244,7 @@
 					? `${hospitalizationCount ?? 0} hospitalisation(s)`
 					: '—'}
 				progress={consultationProgress}
-				accent="#18B893"
+				accent={medcoreColors.semantic.success}
 			/>
 		{/if}
 
@@ -257,7 +258,7 @@
 					: '—'}
 				trend="Médicaments"
 				progress={prescriptionProgress}
-				accent="#EA580C"
+				accent={medcoreColors.semantic.warning}
 			/>
 		{/if}
 
@@ -269,7 +270,7 @@
 				detail="Laboratoire et imagerie"
 				trend="Parcours clinique"
 				progress={examProgress}
-				accent="#0E4C92"
+				accent={medcoreColors.primary}
 			/>
 		{:else if capabilities.canReadExams}
 			<MetricCard
@@ -279,7 +280,7 @@
 				detail="Voir l'onglet Examens"
 				trend="Parcours clinique"
 				progress={0}
-				accent="#0E4C92"
+				accent={medcoreColors.primary}
 			/>
 		{/if}
 
@@ -291,13 +292,13 @@
 				detail="Pièces médicales"
 				trend="Dossier patient"
 				progress={documentProgress}
-				accent="#F59E0B"
+				accent={medcoreColors.semantic.warning}
 			/>
 		{/if}
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-3">
-		<div class="space-y-6 xl:col-span-2">
+		<div class="min-w-0 space-y-6 xl:col-span-2">
 			<Card title="Informations patient" subtitle="Identité, dossier et coordonnées">
 				<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					<InfoBlock label="Nom" value={patient.nom || '—'} />
@@ -360,7 +361,7 @@
 						<div class="mt-5 space-y-3">
 							{#each summary.clinical_alerts as alert (`${alert.code}-${alert.title}`)}
 								<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-									<p class="font-black">
+									<p class="font-bold">
 										{alert.title}
 									</p>
 
@@ -384,7 +385,12 @@
 
 			<Card title="Parcours patient" subtitle="Vue synthétique du parcours dans la clinique">
 				<div class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-					<JourneyStep icon={User} title="Accueil" detail="Dossier créé" color="#0E4C92" />
+					<JourneyStep
+						icon={User}
+						title="Accueil"
+						detail="Dossier créé"
+						color={medcoreColors.primary}
+					/>
 
 					<JourneyStep
 						icon={HeartPulse}
@@ -392,7 +398,7 @@
 						detail={consultationCount === null
 							? 'Non autorisé'
 							: `${consultationCount} enregistrée(s)`}
-						color="#18B893"
+						color={medcoreColors.semantic.success}
 					/>
 
 					<JourneyStep
@@ -403,7 +409,7 @@
 								? `${insurance.coverageRate} % couvert`
 								: 'Non assuré'
 							: 'Non autorisé'}
-						color="#7C3AED"
+						color={medcoreColors.primary}
 					/>
 
 					<JourneyStep
@@ -412,7 +418,7 @@
 						detail={prescriptionCount === null
 							? 'Non autorisé'
 							: `${prescriptionCount} enregistrée(s)`}
-						color="#EA580C"
+						color={medcoreColors.semantic.warning}
 					/>
 
 					{#if capabilities.canReadConsultations}
@@ -420,14 +426,14 @@
 							icon={Activity}
 							title="Examens"
 							detail={`${examCount ?? 0} demandé(s)`}
-							color="#2563EB"
+							color={medcoreColors.semantic.info}
 						/>
 					{:else if capabilities.canReadExams}
 						<JourneyStep
 							icon={Activity}
 							title="Examens"
 							detail="Voir l'onglet Examens"
-							color="#2563EB"
+							color={medcoreColors.semantic.info}
 						/>
 					{/if}
 
@@ -435,7 +441,7 @@
 						icon={FileText}
 						title="Documents"
 						detail={documentCount === null ? 'Non autorisé' : `${documentCount} document(s)`}
-						color="#F59E0B"
+						color={medcoreColors.semantic.warning}
 					/>
 				</div>
 			</Card>
@@ -446,14 +452,14 @@
 						icon={User}
 						title="Dossier patient consulté"
 						detail="Aujourd’hui · MedCore HIS"
-						color="#0E4C92"
+						color={medcoreColors.primary}
 					/>
 
 					<TimelineItem
 						icon={Activity}
 						title="Patient actif dans le système"
 						detail="Statut administratif validé"
-						color="#22C55E"
+						color={medcoreColors.semantic.success}
 					/>
 
 					{#if summary?.last_consultation}
@@ -463,7 +469,7 @@
 							detail={`${summary.last_consultation.doctor_name || 'Médecin non renseigné'} · ${
 								summary.last_consultation.diagnosis || 'Diagnostic non renseigné'
 							}`}
-							color="#18B893"
+							color={medcoreColors.semantic.success}
 						/>
 					{/if}
 
@@ -472,7 +478,7 @@
 							icon={FileText}
 							title={`${documentCount} document(s) médical(aux)`}
 							detail="Documents disponibles dans le dossier patient"
-							color="#F59E0B"
+							color={medcoreColors.semantic.warning}
 						/>
 					{/if}
 				</div>
@@ -517,7 +523,7 @@
 			<Card title="Contact" subtitle="Coordonnées principales">
 				<div class="space-y-4">
 					<div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-						<div class="rounded-xl bg-white p-2 text-[#0E4C92] shadow-sm">
+						<div class="rounded-xl bg-white p-2 text-primary shadow-sm">
 							<Phone size={18} />
 						</div>
 
@@ -531,7 +537,7 @@
 					</div>
 
 					<div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-						<div class="rounded-xl bg-white p-2 text-[#0E4C92] shadow-sm">
+						<div class="rounded-xl bg-white p-2 text-primary shadow-sm">
 							<Mail size={18} />
 						</div>
 
@@ -564,7 +570,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Allergies </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{activeAllergyCount ?? '—'}
 						</span>
 					</div>
@@ -574,7 +580,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Maladies chroniques </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{chronicDiseaseCount ?? '—'}
 						</span>
 					</div>
@@ -584,7 +590,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Traitements actifs </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{activeTreatmentCount ?? '—'}
 						</span>
 					</div>
@@ -594,7 +600,7 @@
 					>
 						<span class="text-sm font-semibold text-slate-600"> Hospitalisations </span>
 
-						<span class="font-black text-slate-900">
+						<span class="font-bold text-slate-900">
 							{hospitalizationCount ?? '—'}
 						</span>
 					</div>

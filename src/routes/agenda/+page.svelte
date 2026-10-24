@@ -468,7 +468,7 @@
 					</Select>
 				{:else}
 					<input
-						class="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm"
+						class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
 						placeholder="ID praticien (filtre)"
 						bind:value={practitionerId}
 						data-testid="agenda-filter-practitioner"

@@ -12,7 +12,7 @@
 </script>
 
 <div class="space-y-2 text-sm text-slate-700" data-testid={`help-article-${entry.helpKey}`}>
-	<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+	<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 		{helpModuleLabel(entry.module)}
 	</p>
 	<svelte:element this={`h${headingLevel}`} id={titleId} class="text-base font-bold text-slate-900"

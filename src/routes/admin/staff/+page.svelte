@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { jwtDecode } from 'jwt-decode';
 	import {
@@ -127,8 +130,8 @@
 <div class="space-y-6 p-6">
 	<header class="flex flex-wrap justify-between gap-3">
 		<div>
-			<p class="text-xs font-black uppercase text-indigo-700">Administration</p>
-			<h1 class="text-3xl font-black">Personnel et fonctions</h1>
+			<p class="text-xs font-semibold uppercase text-indigo-700">Administration</p>
+			<h1 class="text-3xl font-bold">Personnel et fonctions</h1>
 			<p class="text-slate-500">
 				Utilisateur → fonctions → spécialités → capacités → permissions effectives
 			</p>
@@ -139,7 +142,8 @@
 				class="rounded-xl border px-4 py-3 font-bold">Matrice RBAC</button
 			>{#if can(permissions, 'staff.manage')}<button
 					onclick={openCreate}
-					class="rounded-xl bg-indigo-700 px-4 py-3 font-bold text-white">Nouveau profil</button
+					class="rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-primary-hover transition-colors"
+					>Nouveau profil</button
 				>{/if}
 		</div>
 	</header>
@@ -148,78 +152,87 @@
 		<input
 			bind:value={search}
 			placeholder="Nom, email, code agent"
-			class="rounded-xl border p-3"
-		/><select bind:value={functionFilter} class="rounded-xl border p-3"
+			class="min-h-control rounded-lg border px-3 py-2"
+		/><select bind:value={functionFilter} class="min-h-control rounded-lg border px-3 py-2"
 			><option value="">Toutes fonctions</option
 			>{#each Object.entries(catalog?.functions ?? {}) as [code, label] (code)}<option value={code}
 					>{label}</option
 				>{/each}</select
-		><select bind:value={specialtyFilter} class="rounded-xl border p-3"
+		><select bind:value={specialtyFilter} class="min-h-control rounded-lg border px-3 py-2"
 			><option value="">Toutes spécialités</option
 			>{#each Object.entries(catalog?.specialties ?? {}) as [code, label] (code)}<option
 					value={code}>{label}</option
 				>{/each}</select
-		><select bind:value={activeFilter} class="rounded-xl border p-3"
+		><select bind:value={activeFilter} class="min-h-control rounded-lg border px-3 py-2"
 			><option value="">Tous statuts</option><option value="true">Actifs</option><option
 				value="false">Inactifs</option
 			></select
 		><ServiceSelect bind:value={serviceFilter} placeholder="Tous les services" />
-		><button onclick={load} class="rounded-xl bg-slate-900 text-white">Filtrer</button>
+		><button
+			onclick={load}
+			class="rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+			>Filtrer</button
+		>
 	</section>
-	<section class="overflow-x-auto rounded-2xl border bg-white">
-		<table class="w-full min-w-[1100px] text-left text-sm">
+	<section>
+		<Table minWidth="1100px">
 			<thead
-				><tr class="bg-slate-50"
-					><th class="p-3">Personnel</th><th>Code</th><th>Fonctions</th><th>Spécialités</th><th
-						>Service</th
-					><th>Capacités</th><th>Statut</th><th></th></tr
+				><tr
+					><th>Personnel</th><th>Code</th><th>Fonctions</th><th>Spécialités</th><th>Service</th><th
+						>Capacités</th
+					><th>Statut</th><th class="mc-actions"></th></tr
 				></thead
 			><tbody
-				>{#each rows as x (x.id)}<tr class="border-t"
-						><td class="p-3"
-							><b>{x.name}</b><small class="block text-slate-500">{x.email}</small></td
-						><td>{x.employeeCode}</td><td
-							>{x.functions.map((c) => catalog?.functions[c] ?? c).join(', ') || '—'}</td
-						><td>{x.specialties.map((c) => catalog?.specialties[c] ?? c).join(', ') || '—'}</td><td
-							>{x.primaryDepartment || '—'}</td
-						><td>{x.capabilities.map((c) => catalog?.capabilities[c] ?? c).join(', ') || '—'}</td
-						><td>{x.active ? 'Actif' : 'Inactif'}</td><td
-							>{#if can(permissions, 'staff.manage')}<button
-									onclick={() => openEdit(x)}
-									class="font-bold text-indigo-700">Modifier</button
+				>{#each rows as x (x.id)}<tr
+						><td><b>{x.name}</b><small class="block text-slate-500">{x.email}</small></td><td
+							class="mc-id">{x.employeeCode}</td
+						><td>{x.functions.map((c) => catalog?.functions[c] ?? c).join(', ') || '—'}</td><td
+							>{x.specialties.map((c) => catalog?.specialties[c] ?? c).join(', ') || '—'}</td
+						><td>{x.primaryDepartment || '—'}</td><td
+							>{x.capabilities.map((c) => catalog?.capabilities[c] ?? c).join(', ') || '—'}</td
+						><td>{x.active ? 'Actif' : 'Inactif'}</td><td class="mc-actions"
+							>{#if can(permissions, 'staff.manage')}<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openEdit(x)}>Modifier</Button
 								>{/if}</td
 						></tr
-					>{:else}<tr><td colspan="8" class="p-10 text-center">Aucun profil personnel.</td></tr
-					>{/each}</tbody
+					>{:else}<TableState
+						state="empty"
+						colspan={8}
+						title="Aucun profil personnel."
+					/>{/each}</tbody
 			>
-		</table>
+		</Table>
 	</section>
-	{#if showMatrix && catalog}<section class="overflow-x-auto rounded-2xl border bg-white p-4">
-			<h2 class="mb-4 text-xl font-black">Matrice des permissions réellement attribuées</h2>
-			<table class="min-w-[1500px] text-xs">
+	{#if showMatrix && catalog}<section class="space-y-3">
+			<h2 class="text-base font-semibold text-foreground">
+				Matrice des permissions réellement attribuées
+			</h2>
+			<Table minWidth="1500px">
 				<thead
 					><tr
-						><th class="p-2 text-left">Fonction</th>{#each permissionAreas as area (area[0])}<th
-								class="p-2">{area[0]}</th
-							>{/each}</tr
+						><th>Fonction</th>{#each permissionAreas as area (area[0])}<th>{area[0]}</th>{/each}</tr
 					></thead
 				><tbody
-					>{#each catalog.matrix as row (row.code)}<tr class="border-t"
-							><th class="p-2 text-left">{row.label}</th
-							>{#each permissionAreas as area (area[0])}<td class="p-2 text-center"
+					>{#each catalog.matrix as row (row.code)}<tr
+							><th>{row.label}</th>{#each permissionAreas as area (area[0])}<td class="text-center"
 									>{anyPermission(row.permissions, [...area[1]]) ? '✓' : '—'}</td
 								>{/each}</tr
 						>{/each}</tbody
 				>
-			</table>
+			</Table>
 		</section>{/if}
 	{#if showForm && catalog}<section class="rounded-2xl border bg-white p-5">
 			<div class="flex justify-between">
-				<h2 class="text-xl font-black">{editing ? 'Modifier le profil' : 'Créer un profil'}</h2>
+				<h2 class="text-xl font-bold">{editing ? 'Modifier le profil' : 'Créer un profil'}</h2>
 				<button onclick={() => (showForm = false)}>Fermer</button>
 			</div>
 			<div class="mt-4 grid gap-3 md:grid-cols-3">
-				<select bind:value={form.userId} disabled={!!editing} class="rounded-xl border p-3"
+				<select
+					bind:value={form.userId}
+					disabled={!!editing}
+					class="min-h-control rounded-lg border px-3 py-2"
 					><option value={0}>Compte utilisateur</option
 					>{#each users.filter((u) => !u.hasProfile || u.id === form.userId) as u (u.id)}<option
 							value={u.id}>{u.name} — {u.email}</option
@@ -227,15 +240,15 @@
 				><input
 					bind:value={form.employeeCode}
 					placeholder="Code agent"
-					class="rounded-xl border p-3"
+					class="min-h-control rounded-lg border px-3 py-2"
 				/><input
 					bind:value={form.jobTitle}
 					placeholder="Intitulé"
-					class="rounded-xl border p-3"
+					class="min-h-control rounded-lg border px-3 py-2"
 				/><ServiceSelect bind:value={form.primaryServiceId} placeholder="Service principal" /><input
 					bind:value={form.professionalNumber}
 					placeholder="Numéro professionnel"
-					class="rounded-xl border p-3"
+					class="min-h-control rounded-lg border px-3 py-2"
 				/><label class="flex items-center gap-2"
 					><input type="checkbox" bind:checked={form.active} /> Personnel actif</label
 				>
@@ -260,7 +273,7 @@
 			{#each [['Fonctions', catalog.functions, 'functions'], ['Spécialités', catalog.specialties, 'specialties'], ['Capacités', catalog.capabilities, 'capabilities']] as group (group[0])}<div
 					class="mt-5"
 				>
-					<h3 class="font-black">{group[0]}</h3>
+					<h3 class="font-bold">{group[0]}</h3>
 					<div class="mt-2 flex flex-wrap gap-2">
 						{#each Object.entries(group[1] as Record<string, string>) as [code, label] (code)}<button
 								type="button"
@@ -288,11 +301,11 @@
 			<button
 				onclick={save}
 				disabled={!form.userId || !form.employeeCode}
-				class="mt-4 rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white disabled:opacity-40"
+				class="mt-4 rounded-lg bg-primary px-5 py-3 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 				>Enregistrer</button
 			>
 			{#if editing && can(permissions, 'staff.audit.read')}<div class="mt-6">
-					<h3 class="font-black">Historique des affectations</h3>
+					<h3 class="font-bold">Historique des affectations</h3>
 					{#each audit as a (a.id)}<p class="border-t py-2 text-sm">
 							{new Date(a.createdAt).toLocaleString('fr-FR')} · {a.action}
 							{a.dimension}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -650,7 +652,7 @@
 	{#if invoice}<header class="flex flex-wrap justify-between gap-4" data-testid="invoice-detail">
 			<div>
 				<p class="text-sm font-bold text-blue-700">FACTURE</p>
-				<h1 class="text-3xl font-black" data-testid="invoice-number">{invoice.number}</h1>
+				<h1 class="text-3xl font-bold" data-testid="invoice-number">{invoice.number}</h1>
 				<p>
 					{invoice.patientCode} — {invoice.patientName}
 					{#if showFinancialStatement}
@@ -681,7 +683,7 @@
 			</div>
 			<div class="flex gap-2 print:hidden">
 				{#if invoice.status === 'DRAFT' && can(permissions, 'billing.issue')}<button
-						class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+						class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 						data-testid="invoice-issue"
 						onclick={issue}
 						disabled={invoice.coveragePending}>Émettre</button
@@ -706,7 +708,7 @@
 				data-testid="invoice-credit-note-panel"
 			>
 				<p class="text-sm font-bold text-amber-900">AVOIR ÉMIS</p>
-				<p class="mt-1 font-black" data-testid="invoice-credit-note-number">
+				<p class="mt-1 font-bold" data-testid="invoice-credit-note-number">
 					{invoice.creditNote.number}
 				</p>
 				<p class="text-sm" data-testid="invoice-credit-note-amount">
@@ -744,33 +746,34 @@
 			>
 				PEC en attente : la répartition financière n’est pas définitive et l’émission est bloquée.
 			</p>{/if}
-		<div class="overflow-x-auto rounded-2xl border bg-white">
-			<table class="w-full text-left text-sm">
-				<thead class="bg-slate-50"
-					><tr
-						><th class="p-3">Acte</th><th>Qté</th><th>PU</th><th>Brut</th><th>PEC</th><th
-							>Assurance</th
-						><th>Patient</th></tr
-					></thead
-				><tbody
-					>{#each invoice.lines ?? [] as line (line.id)}<tr class="border-t"
-							><td class="p-3"
-								><strong>{line.description}</strong><small class="block text-slate-500"
-									>{formatBillingActType(line.actType)}</small
-								></td
-							><td>{line.quantity}</td><td data-testid={`invoice-line-unit-${line.id}`}
-								>{formatXOF(line.unitPrice)}</td
-							><td data-testid={`invoice-line-gross-${line.id}`}>{formatXOF(line.grossAmount)}</td
-							><td>{line.authorizationNumber || line.coverageResolution}</td><td
-								data-testid={`invoice-line-insurance-${line.id}`}
-								>{formatXOF(line.insuranceAmount)}</td
-							><td data-testid={`invoice-line-patient-${line.id}`}
-								>{formatXOF(line.patientAmount)}</td
-							></tr
-						>{/each}</tbody
-				>
-			</table>
-		</div>
+		<Table>
+			<thead
+				><tr
+					><th>Acte</th><th class="mc-num">Qté</th><th class="mc-num">PU</th><th class="mc-num"
+						>Brut</th
+					><th>PEC</th><th class="mc-num">Assurance</th><th class="mc-num">Patient</th></tr
+				></thead
+			><tbody
+				>{#each invoice.lines ?? [] as line (line.id)}<tr
+						><td
+							><strong>{line.description}</strong><small class="block text-slate-500"
+								>{formatBillingActType(line.actType)}</small
+							></td
+						><td class="mc-num">{line.quantity}</td><td
+							class="mc-amount"
+							data-testid={`invoice-line-unit-${line.id}`}>{formatXOF(line.unitPrice)}</td
+						><td class="mc-amount" data-testid={`invoice-line-gross-${line.id}`}
+							>{formatXOF(line.grossAmount)}</td
+						><td class="mc-id">{line.authorizationNumber || line.coverageResolution}</td><td
+							class="mc-amount"
+							data-testid={`invoice-line-insurance-${line.id}`}
+							>{formatXOF(line.insuranceAmount)}</td
+						><td class="mc-amount" data-testid={`invoice-line-patient-${line.id}`}
+							>{formatXOF(line.patientAmount)}</td
+						></tr
+					>{/each}</tbody
+			>
+		</Table>
 		<div
 			class="ml-auto grid max-w-lg grid-cols-2 gap-2 rounded-2xl border bg-white p-5"
 			data-testid="invoice-amounts"
@@ -795,7 +798,7 @@
 				class="space-y-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 print:hidden"
 				data-testid="invoice-credit-balances"
 			>
-				<h2 class="font-black text-indigo-950">{CREDIT_AVAILABLE_LABEL}</h2>
+				<h2 class="font-bold text-indigo-950">{CREDIT_AVAILABLE_LABEL}</h2>
 				<p class="text-sm text-slate-600">
 					Soldes autoritatifs du serveur (titulaire × patient). Ce n’est pas un encaissement.
 				</p>
@@ -827,7 +830,7 @@
 				data-testid="invoice-collection"
 				aria-labelledby="collection-title"
 			>
-				<h2 id="collection-title" class="font-black text-emerald-900">Encaissement patient</h2>
+				<h2 id="collection-title" class="font-bold text-emerald-900">Encaissement patient</h2>
 				<p class="text-sm text-slate-600">
 					Le reste affiché provient du serveur. Un paiement concurrent peut le rendre obsolète —
 					l’encaissement reste contrôlé côté API.
@@ -867,7 +870,7 @@
 				<div class="grid gap-3 md:grid-cols-4">
 					<label class="block text-sm"
 						><span class="font-bold">Montant</span><input
-							class="mt-1 w-full rounded-xl border p-2"
+							class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 							type="number"
 							min="1"
 							max={invoice.balanceAmount}
@@ -883,7 +886,7 @@
 							/></span
 						><select
 							id="invoice-pay-method-select"
-							class="mt-1 w-full rounded-xl border p-2"
+							class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 							bind:value={payment.paymentMethod}
 							data-testid="invoice-pay-method"
 							>{#each SESSIONLESS_PAYMENT_METHODS as m (m.value)}<option value={m.value}
@@ -893,7 +896,7 @@
 					</div>
 					<label class="block text-sm md:col-span-1"
 						><span class="font-bold">Référence</span><input
-							class="mt-1 w-full rounded-xl border p-2"
+							class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 							placeholder="Facultatif"
 							bind:value={payment.reference}
 							data-testid="invoice-pay-reference"
@@ -929,7 +932,7 @@
 						<div class="grid gap-2 md:grid-cols-4">
 							<label class="block text-sm"
 								><span class="font-bold">Type</span><select
-									class="mt-1 w-full rounded-xl border p-2"
+									class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 									bind:value={payerForm.mode}
 									data-testid="invoice-payer-mode"
 									><option value="INDIVIDUAL">Personne physique</option><option value="ORGANIZATION"
@@ -938,19 +941,19 @@
 								></label
 							><label class="block text-sm md:col-span-1"
 								><span class="font-bold">Nom</span><input
-									class="mt-1 w-full rounded-xl border p-2"
+									class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 									bind:value={payerForm.displayName}
 									data-testid="invoice-payer-name"
 								/></label
 							><label class="block text-sm"
 								><span class="font-bold">Téléphone</span><input
-									class="mt-1 w-full rounded-xl border p-2"
+									class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 									bind:value={payerForm.phone}
 									data-testid="invoice-payer-phone"
 								/></label
 							>{#if payerForm.mode === 'INDIVIDUAL'}<label class="block text-sm"
 									><span class="font-bold">Lien</span><input
-										class="mt-1 w-full rounded-xl border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										placeholder="Parent, conjoint…"
 										bind:value={payerForm.relationship}
 										data-testid="invoice-payer-relationship"
@@ -974,91 +977,103 @@
 			</p>
 		{/if}
 		<section class="rounded-2xl border bg-white p-5" data-testid="invoice-payments">
-			<h2 class="mb-3 font-black">Historique des paiements</h2>
-			{#if invoice.payments?.length}<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm">
-						<thead class="bg-slate-50 text-xs uppercase text-slate-500"
-							><tr
-								><th class="p-2">Date</th><th>Mode</th><th>Référence</th><th>Montant</th><th
-									>Payeur</th
-								><th>Reçu par</th><th>État</th><th>Reçu</th><th class="print:hidden">Action</th></tr
-							></thead
-						><tbody
-							>{#each invoice.payments as p (p.id)}<tr
-									class="border-t"
-									data-testid={`invoice-payment-${p.id}`}
-									><td class="p-2">{new Date(p.paidAt).toLocaleString('fr-FR')}</td><td
-										>{p.paymentMethod}</td
-									><td>{p.reference || '—'}</td><td class="font-bold">{formatXOF(p.amount)}</td><td
-										data-testid={`invoice-payment-payer-${p.id}`}>{formatPayerDisplay(p)}</td
-									><td>{p.receivedBy}</td><td
-										>{#if paymentIsReversed(p)}<span
-												class="font-semibold text-amber-800"
-												data-testid={`invoice-reversed-${p.id}`}>Contrepassé</span
-											>{#if paymentIsPostCloseCorrection(p)}<span
-													class="mt-1 block text-xs font-semibold text-amber-900"
-													data-testid={`invoice-post-close-${p.id}`}
-													>{POST_CLOSE_CORRECTION_LABEL}</span
-												><HelpHint
-													helpKey="cash.correction.post_close"
-												/>{/if}{#if p.cashCorrectionExecuted}<span
-													class="mt-1 block text-xs font-semibold text-emerald-900"
-													data-testid={`invoice-correction-executed-${p.id}`}
-													>{CORRECTION_EXECUTED_LABEL}</span
-												>{/if}{:else}<span class="text-slate-500">Effectif</span>{/if}</td
-									><td
-										>{#if canShowPaymentReceipt(p, permissions)}<a
-												class="font-semibold text-teal-800 underline"
-												href={resolve(`/cash/receipts/${p.receiptId}`)}
-												data-testid={`invoice-receipt-${p.id}`}>Voir le reçu</a
-											>{:else if p.receiptId}<span
-												class="text-slate-400"
-												data-testid={`invoice-receipt-denied-${p.id}`}>Reçu</span
-											>{:else}<span class="text-slate-400">—</span>{/if}</td
-									><td class="print:hidden space-y-1"
-										>{#if canShowReversePayment(p, permissions)}<button
-												type="button"
-												class="block text-sm font-semibold text-amber-900 underline"
-												data-testid={`invoice-reverse-${p.id}`}
-												onclick={() => openReverse(p)}>{REVERSAL_ACTION_LABEL}</button
-											>{/if}{#if paymentIsPostCloseCorrection(p) && can(permissions, 'cash.correction.execute') && !p.cashCorrectionExecuted}<button
-												type="button"
-												class="block text-sm font-semibold text-teal-900 underline"
-												data-testid={`invoice-execute-correction-${p.id}`}
-												onclick={() => openExecute(p)}>{CORRECTION_EXECUTE_LABEL}</button
-											>{:else if p.cashCorrectionExecuted}<span
-												class="text-xs text-emerald-800"
-												data-testid={`invoice-correction-done-${p.id}`}>Exécutée</span
-											>{:else if !canShowReversePayment(p, permissions)}<span class="text-slate-400"
-												>—</span
-											>{/if}</td
-									></tr
-								>{/each}</tbody
-						>
-					</table>
-				</div>{:else}<p class="text-sm text-slate-500" data-testid="invoice-payments-empty">
+			<h2 class="mb-3 font-bold">Historique des paiements</h2>
+			{#if invoice.payments?.length}<Table>
+					<thead
+						><tr
+							><th>Date</th><th>Mode</th><th>Référence</th><th class="mc-num">Montant</th><th
+								>Payeur</th
+							><th>Reçu par</th><th>État</th><th>Reçu</th><th class="print:hidden mc-actions"
+								>Action</th
+							></tr
+						></thead
+					><tbody
+						>{#each invoice.payments as p (p.id)}<tr data-testid={`invoice-payment-${p.id}`}
+								><td>{new Date(p.paidAt).toLocaleString('fr-FR')}</td><td>{p.paymentMethod}</td><td
+									>{p.reference || '—'}</td
+								><td class="mc-amount">{formatXOF(p.amount)}</td><td
+									data-testid={`invoice-payment-payer-${p.id}`}>{formatPayerDisplay(p)}</td
+								><td>{p.receivedBy}</td><td
+									>{#if paymentIsReversed(p)}<span
+											class="font-semibold text-amber-800"
+											data-testid={`invoice-reversed-${p.id}`}>Contrepassé</span
+										>{#if paymentIsPostCloseCorrection(p)}<span
+												class="mt-1 block text-xs font-semibold text-amber-900"
+												data-testid={`invoice-post-close-${p.id}`}
+												>{POST_CLOSE_CORRECTION_LABEL}</span
+											><HelpHint
+												helpKey="cash.correction.post_close"
+											/>{/if}{#if p.cashCorrectionExecuted}<span
+												class="mt-1 block text-xs font-semibold text-emerald-900"
+												data-testid={`invoice-correction-executed-${p.id}`}
+												>{CORRECTION_EXECUTED_LABEL}</span
+											>{/if}{:else}<span class="text-slate-500">Effectif</span>{/if}</td
+								><td
+									>{#if canShowPaymentReceipt(p, permissions)}<a
+											class="text-teal-800"
+											href={resolve(`/cash/receipts/${p.receiptId}`)}
+											data-testid={`invoice-receipt-${p.id}`}>Voir le reçu</a
+										>{:else if p.receiptId}<span
+											class="text-slate-500"
+											data-testid={`invoice-receipt-denied-${p.id}`}>Reçu</span
+										>{:else}<span class="text-slate-500">—</span>{/if}</td
+								><td class="print:hidden mc-actions"
+									>{#if canShowReversePayment(p, permissions)}<Button
+											size="sm"
+											variant="danger"
+											data-testid={`invoice-reverse-${p.id}`}
+											onclick={() => openReverse(p)}>{REVERSAL_ACTION_LABEL}</Button
+										>{/if}{#if paymentIsPostCloseCorrection(p) && can(permissions, 'cash.correction.execute') && !p.cashCorrectionExecuted}<Button
+											size="sm"
+											variant="secondary"
+											data-testid={`invoice-execute-correction-${p.id}`}
+											onclick={() => openExecute(p)}>{CORRECTION_EXECUTE_LABEL}</Button
+										>{:else if p.cashCorrectionExecuted}<span
+											class="text-xs text-emerald-800"
+											data-testid={`invoice-correction-done-${p.id}`}>Exécutée</span
+										>{:else if !canShowReversePayment(p, permissions)}<span class="text-slate-500"
+											>—</span
+										>{/if}</td
+								></tr
+							>{/each}</tbody
+					>
+				</Table>{:else}<p class="text-sm text-slate-500" data-testid="invoice-payments-empty">
 					Aucun paiement enregistré.
 				</p>{/if}
 		</section>
 		{#if invoice.insuranceAmount > 0}<section
 				class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"
 			>
-				<h2 class="font-black text-indigo-900">RECOUVREMENT ASSURANCE</h2>
+				<h2 class="font-bold text-indigo-900">RECOUVREMENT ASSURANCE</h2>
 				<p class="text-sm text-indigo-700">
 					Le statut payé du patient ne vaut pas règlement assureur.
 				</p>
-				{#each insuranceReceivables as debt (debt.invoiceLineId)}<div
-						class="mt-3 grid gap-2 border-t border-indigo-200 pt-3 md:grid-cols-6"
-					>
-						<span>{debt.companyName}</span><span>{debt.authorizationNumber}</span><span
-							>{debt.description}</span
-						><span>Part {formatXOF(debt.insuranceDue)}</span><span
-							>Réglé {formatXOF(debt.insurancePaid)}</span
-						><span
-							>Reste {formatXOF(debt.insuranceBalance)} · {debt.batchNumber ||
-								'sans bordereau'}</span
-						>
-					</div>{/each}
+				<Table class="mt-3" aria-label="Recouvrement assurance">
+					<thead>
+						<tr>
+							<th>Assureur</th>
+							<th>PEC</th>
+							<th>Acte</th>
+							<th class="mc-num">Part</th>
+							<th class="mc-num">Réglé</th>
+							<th class="mc-num">Reste</th>
+							<th>Bordereau</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each insuranceReceivables as debt (debt.invoiceLineId)}
+							<tr>
+								<td>{debt.companyName}</td>
+								<td class="mc-id">{debt.authorizationNumber}</td>
+								<td>{debt.description}</td>
+								<td class="mc-amount">{formatXOF(debt.insuranceDue)}</td>
+								<td class="mc-amount">{formatXOF(debt.insurancePaid)}</td>
+								<td class="mc-amount font-semibold">{formatXOF(debt.insuranceBalance)}</td>
+								<td>{debt.batchNumber || 'sans bordereau'}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</Table>
 			</section>{/if}{/if}
 	{#if reverseTarget}<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:hidden"
@@ -1068,7 +1083,7 @@
 		>
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
 				<div class="flex items-center gap-2">
-					<h2 class="text-lg font-black text-amber-950">{REVERSAL_ACTION_LABEL}</h2>
+					<h2 class="text-lg font-bold text-amber-950">{REVERSAL_ACTION_LABEL}</h2>
 					<HelpHint helpKey="billing.payment.reverse" />
 				</div>
 				<p class="text-sm text-slate-600">
@@ -1096,7 +1111,7 @@
 				<label class="block text-sm">
 					<span class="font-bold">Motif</span>
 					<textarea
-						class="mt-1 w-full rounded-xl border p-2"
+						class="mt-1 w-full rounded-lg border p-2"
 						rows="3"
 						bind:value={reverseReason}
 						data-testid="invoice-reverse-reason"></textarea>
@@ -1145,7 +1160,7 @@
 			aria-modal="true"
 		>
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
-				<h2 class="text-lg font-black text-teal-950">{CORRECTION_EXECUTE_LABEL}</h2>
+				<h2 class="text-lg font-bold text-teal-950">{CORRECTION_EXECUTE_LABEL}</h2>
 				<p class="text-sm text-slate-600" data-testid="invoice-execute-correction-explain">
 					{CORRECTION_EXPLAIN}
 				</p>
@@ -1175,7 +1190,7 @@
 				<label class="block text-sm">
 					<span class="font-bold">Note d’exécution (optionnelle)</span>
 					<textarea
-						class="mt-1 w-full rounded-xl border p-2"
+						class="mt-1 w-full rounded-lg border p-2"
 						rows="2"
 						bind:value={execNote}
 						data-testid="invoice-execute-correction-note"></textarea>
@@ -1221,7 +1236,7 @@
 			aria-modal="true"
 		>
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
-				<h2 class="text-lg font-black text-amber-950">{CREDIT_NOTE_ACTION_LABEL}</h2>
+				<h2 class="text-lg font-bold text-amber-950">{CREDIT_NOTE_ACTION_LABEL}</h2>
 				<p class="text-sm text-slate-600">
 					Document correctif comptable. Cela ne restitue pas de fonds au patient et n’annule pas un
 					encaissement.
@@ -1242,7 +1257,7 @@
 					>
 					<input
 						id="invoice-credit-note-amount"
-						class="mt-1 w-full rounded-xl border p-2"
+						class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 						type="number"
 						min="1"
 						max={creditNoteDefaultAmount(invoice)}
@@ -1253,7 +1268,7 @@
 				<label class="block text-sm">
 					<span class="font-bold">Motif</span>
 					<textarea
-						class="mt-1 w-full rounded-xl border p-2"
+						class="mt-1 w-full rounded-lg border p-2"
 						rows="3"
 						bind:value={creditReason}
 						data-testid="invoice-credit-note-reason-input"></textarea>
@@ -1300,7 +1315,7 @@
 			aria-modal="true"
 		>
 			<div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
-				<h2 class="text-lg font-black text-indigo-950">{CREDIT_APPLY_ACTION_LABEL}</h2>
+				<h2 class="text-lg font-bold text-indigo-950">{CREDIT_APPLY_ACTION_LABEL}</h2>
 				<p class="text-sm text-slate-600">
 					{CREDIT_SETTLEMENT_LABEL} — allocation du crédit déjà disponible. Aucun nouvel argent n’entre
 					en caisse.
@@ -1317,7 +1332,7 @@
 					<label class="block text-sm">
 						<span class="font-bold">Titulaire du crédit</span>
 						<select
-							class="mt-1 w-full rounded-xl border p-2"
+							class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 							bind:value={applyHolderId}
 							onchange={onApplyHolderChange}
 							data-testid="invoice-apply-credit-holder"
@@ -1342,7 +1357,7 @@
 					>
 					<input
 						id="invoice-credit-apply-amount"
-						class="mt-1 w-full rounded-xl border p-2"
+						class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 						type="number"
 						min="1"
 						max={selectedApplyHolder ? maxApplicableAmount(invoice, selectedApplyHolder) : 0}
@@ -1376,7 +1391,7 @@
 					>
 					<button
 						type="button"
-						class="rounded-xl bg-indigo-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+						class="rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 						onclick={submitApplyCredit}
 						disabled={isPaymentSubmitDisabled(applyCmd)}
 						data-testid="invoice-apply-credit-submit"

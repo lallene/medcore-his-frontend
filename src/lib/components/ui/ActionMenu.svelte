@@ -21,7 +21,7 @@
 	</IconButton>
 	{#if open}
 		<div
-			class="absolute right-0 z-20 mt-1 min-w-[10rem] rounded-xl border border-border bg-surface py-1 shadow-[var(--shadow-modal)]"
+			class="absolute right-0 z-(--z-dropdown) mt-1 min-w-40 rounded-lg border border-border bg-popover py-1 shadow-md"
 			role="menu"
 		>
 			{@render children()}

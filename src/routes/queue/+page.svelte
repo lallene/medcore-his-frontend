@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { getQueueKPIs, listQueueTickets } from '$lib/api/queue';
@@ -15,8 +17,6 @@
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import MetricCard from '$lib/components/ui/MetricCard.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let kpis = $state<QueueKPIs | null>(null);
 	let tickets = $state<QueueTicketRow[]>([]);
@@ -83,48 +83,46 @@
 		</section>
 	{/if}
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-4 py-3">
 			<h2 class="text-sm font-bold text-slate-700">Tickets récents</h2>
 		</div>
 
-		{#if loading}
-			<LoadingState />
-		{:else if tickets.length === 0}
-			<div class="p-4"><EmptyState title="Aucun ticket actif" /></div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table>
+			<thead>
+				<tr>
+					{#each dashboardQueueColumns as column (column)}
+						<th>{column}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={dashboardQueueColumns.length}
+					/>{:else if tickets.length === 0}<TableState
+						state="empty"
+						colspan={dashboardQueueColumns.length}
+						title="Aucun ticket actif"
+					/>{:else}
+					{#each tickets as ticket (ticket.id)}
 						<tr>
-							{#each dashboardQueueColumns as column, index (column)}
-								<th class={index === 0 ? 'p-3' : 'p-3'}>{column}</th>
-							{/each}
+							<td>
+								<a href={resolve(`/queue/${ticket.id}`)}>{ticket.reference}</a>
+							</td>
+							<td>{queuePatientLabel(ticket)}</td>
+							<td>{queueServiceLabel(ticket)}</td>
+							<td>
+								<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
+							</td>
+							<td>
+								<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
+							</td>
+							<td>{formatWaitMinutes(ticket.waitMinutes)}</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each tickets as ticket (ticket.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">
-									<a
-										class="font-bold text-primary hover:underline"
-										href={resolve(`/queue/${ticket.id}`)}>{ticket.reference}</a
-									>
-								</td>
-								<td class="p-3">{queuePatientLabel(ticket)}</td>
-								<td class="p-3">{queueServiceLabel(ticket)}</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
-								</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
-								</td>
-								<td class="p-3">{formatWaitMinutes(ticket.waitMinutes)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

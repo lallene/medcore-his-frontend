@@ -271,11 +271,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Naissance et période néonatale
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Conditions de naissance</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Conditions de naissance</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -288,7 +288,7 @@
 					id="birth-date"
 					type="date"
 					bind:value={form.birthDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -301,7 +301,7 @@
 					id="birth-place"
 					type="text"
 					bind:value={form.birthPlace}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -317,7 +317,7 @@
 					max="45"
 					bind:value={form.gestationalAgeWeeks}
 					placeholder="Semaines"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -329,7 +329,7 @@
 				<select
 					id="delivery-method"
 					bind:value={form.deliveryMethod}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 				>
 					<option value="">Sélectionner</option>
 					<option value="VAGINAL">Voie basse</option>
@@ -353,7 +353,7 @@
 					id="prematurity-level"
 					bind:value={form.prematurityLevel}
 					disabled={!form.premature}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92] disabled:bg-slate-100 disabled:text-slate-400"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-slate-100 disabled:text-slate-400"
 				>
 					<option value="">Sélectionner</option>
 					<option value="EXTREME">Extrême</option>
@@ -377,7 +377,7 @@
 					step="0.01"
 					bind:value={form.birthWeightKg}
 					placeholder="kg"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -393,7 +393,7 @@
 					step="0.1"
 					bind:value={form.birthHeightCm}
 					placeholder="cm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -409,7 +409,7 @@
 					step="0.1"
 					bind:value={form.birthHeadCircumferenceCm}
 					placeholder="cm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 		</div>
@@ -426,7 +426,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore1Minute}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -441,7 +441,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore5Minutes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -456,7 +456,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore10Minutes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -471,7 +471,7 @@
 					id="neonatal-complications"
 					bind:value={form.neonatalComplications}
 					rows="4"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 
 			<div>
@@ -483,7 +483,7 @@
 					id="neonatal-management"
 					bind:value={form.neonatalComplicationsManagement}
 					rows="4"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 
@@ -491,7 +491,7 @@
 			<label class="flex items-center gap-3">
 				<input type="checkbox" bind:checked={form.neonatalHospitalization} />
 
-				<span class="text-sm font-black text-slate-800"> Hospitalisation néonatale </span>
+				<span class="text-sm font-bold text-slate-800"> Hospitalisation néonatale </span>
 			</label>
 
 			<div class="mt-4 grid gap-4 md:grid-cols-3">
@@ -500,7 +500,7 @@
 					bind:value={form.neonatalHospitalizationService}
 					disabled={!form.neonatalHospitalization}
 					placeholder="Service"
-					class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 
 				<input
@@ -508,7 +508,7 @@
 					bind:value={form.neonatalHospitalizationDuration}
 					disabled={!form.neonatalHospitalization}
 					placeholder="Durée"
-					class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 
 				<input
@@ -516,7 +516,7 @@
 					bind:value={form.neonatalHospitalizationReason}
 					disabled={!form.neonatalHospitalization}
 					placeholder="Motif"
-					class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 		</div>
@@ -525,9 +525,9 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Croissance</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Croissance</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Mesures et courbes de croissance</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Mesures et courbes de croissance</h4>
 			</div>
 
 			<button
@@ -544,7 +544,7 @@
 			{#each growthHistory as item, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Mesure #{index + 1}
 						</p>
 
@@ -562,7 +562,7 @@
 						<input
 							type="date"
 							bind:value={item.date}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -570,7 +570,7 @@
 							step="0.01"
 							bind:value={item.weightKg}
 							placeholder="Poids (kg)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -578,7 +578,7 @@
 							step="0.1"
 							bind:value={item.heightCm}
 							placeholder="Taille (cm)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -586,7 +586,7 @@
 							step="0.1"
 							bind:value={item.bmi}
 							placeholder="IMC"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -594,7 +594,7 @@
 							step="0.1"
 							bind:value={item.headCircumferenceCm}
 							placeholder="PC (cm)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 					</div>
 
@@ -605,7 +605,7 @@
 							max="100"
 							bind:value={item.weightPercentile}
 							placeholder="Percentile poids"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -614,7 +614,7 @@
 							max="100"
 							bind:value={item.heightPercentile}
 							placeholder="Percentile taille"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -623,7 +623,7 @@
 							max="100"
 							bind:value={item.bmiPercentile}
 							placeholder="Percentile IMC"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -632,7 +632,7 @@
 							max="100"
 							bind:value={item.headCircumferencePercentile}
 							placeholder="Percentile PC"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 					</div>
 				</article>
@@ -642,9 +642,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Développement</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Développement</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Développement moteur, langage et scolarité
 			</h4>
 		</div>
@@ -655,7 +655,7 @@
 				min="0"
 				bind:value={form.headControlAgeMonths}
 				placeholder="Tenue de tête (mois)"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -663,7 +663,7 @@
 				min="0"
 				bind:value={form.sittingAgeMonths}
 				placeholder="Position assise (mois)"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -671,7 +671,7 @@
 				min="0"
 				bind:value={form.walkingAgeMonths}
 				placeholder="Marche (mois)"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -679,7 +679,7 @@
 				min="0"
 				bind:value={form.firstWordsAgeMonths}
 				placeholder="Premiers mots (mois)"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 
@@ -688,25 +688,25 @@
 				bind:value={form.motorDevelopmentNotes}
 				rows="4"
 				placeholder="Observations sur le développement moteur"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.languageDevelopment}
 				rows="4"
 				placeholder="Évolution du langage"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.psychomotorAssessment}
 				rows="4"
 				placeholder="Évaluation psychomotrice"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.psychomotorObservations}
 				rows="4"
 				placeholder="Observations psychomotrices"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
@@ -719,7 +719,7 @@
 					id="school-level"
 					type="text"
 					bind:value={form.schoolLevel}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -732,7 +732,7 @@
 					id="school-difficulties"
 					type="text"
 					bind:value={form.schoolDifficulties}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -740,9 +740,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Alimentation</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Alimentation</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Allaitement, diversification et allergies
 			</h4>
 		</div>
@@ -756,7 +756,7 @@
 				<select
 					id="feeding-type"
 					bind:value={form.feedingType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="BREASTFEEDING">Allaitement maternel</option>
@@ -774,7 +774,7 @@
 					id="breastfeeding-start"
 					type="date"
 					bind:value={form.breastfeedingStartDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -787,7 +787,7 @@
 					id="breastfeeding-end"
 					type="date"
 					bind:value={form.breastfeedingEndDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -800,7 +800,7 @@
 					id="diversification-date"
 					type="date"
 					bind:value={form.foodDiversificationDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -813,14 +813,14 @@
 					id="diversification-evolution"
 					bind:value={form.foodDiversificationEvolution}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Allergies alimentaires</p>
+					<p class="font-bold text-slate-900">Allergies alimentaires</p>
 
 					<p class="mt-1 text-sm text-slate-500">Aliment, réaction et niveau de gravité.</p>
 				</div>
@@ -844,20 +844,20 @@
 							type="text"
 							bind:value={item.food}
 							placeholder="Aliment"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.reaction}
 							placeholder="Réaction"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={item.severity}
 							aria-label={`Gravité de l’allergie ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Gravité</option>
 							<option value="LOW">Faible</option>
@@ -883,9 +883,9 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Vaccinations</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Vaccinations</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Carnet vaccinal</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Carnet vaccinal</h4>
 			</div>
 
 			<button
@@ -902,7 +902,7 @@
 			{#each vaccinations as item, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Vaccination #{index + 1}
 						</p>
 
@@ -921,48 +921,48 @@
 							type="text"
 							bind:value={item.vaccine}
 							placeholder="Vaccin"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.dose}
 							placeholder="Dose"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="date"
 							bind:value={item.scheduledDate}
 							aria-label={`Date prévue de la vaccination ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="date"
 							bind:value={item.administeredDate}
 							aria-label={`Date réalisée de la vaccination ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.batchNumber}
 							placeholder="Numéro de lot"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.center}
 							placeholder="Centre"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={item.status}
 							aria-label={`Statut de la vaccination ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Statut</option>
 							<option value="PLANNED">Prévue</option>
@@ -978,9 +978,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Responsable légal</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Responsable légal</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Parent ou tuteur</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Parent ou tuteur</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -992,7 +992,7 @@
 				<select
 					id="guardian-type"
 					bind:value={form.legalGuardianType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PARENT">Parent</option>
@@ -1010,7 +1010,7 @@
 					id="guardian-name"
 					type="text"
 					bind:value={form.legalGuardianName}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1023,7 +1023,7 @@
 					id="guardian-relationship"
 					type="text"
 					bind:value={form.legalGuardianRelationship}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1036,7 +1036,7 @@
 					id="guardian-phone"
 					type="tel"
 					bind:value={form.legalGuardianPhone}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1049,7 +1049,7 @@
 					id="guardian-email"
 					type="email"
 					bind:value={form.legalGuardianEmail}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1062,7 +1062,7 @@
 					id="guardian-address"
 					type="text"
 					bind:value={form.legalGuardianAddress}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>

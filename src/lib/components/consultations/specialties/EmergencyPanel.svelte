@@ -244,11 +244,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Accueil aux urgences
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Arrivée et motif principal</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Arrivée et motif principal</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -261,7 +261,7 @@
 					id="emergency-arrival"
 					type="datetime-local"
 					bind:value={form.arrivalDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -273,7 +273,7 @@
 				<select
 					id="arrival-mode"
 					bind:value={form.arrivalMode}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PERSONAL">Par ses propres moyens</option>
@@ -292,34 +292,34 @@
 					id="main-complaint"
 					type="text"
 					bind:value={form.mainComplaint}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-			<p class="font-black text-slate-900">Accompagnant</p>
+			<p class="font-bold text-slate-900">Accompagnant</p>
 
 			<div class="mt-4 grid gap-4 md:grid-cols-3">
 				<input
 					type="text"
 					bind:value={form.companionName}
 					placeholder="Nom et prénoms"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 
 				<input
 					type="tel"
 					bind:value={form.companionPhone}
 					placeholder="Téléphone"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 
 				<input
 					type="text"
 					bind:value={form.companionRelationship}
 					placeholder="Lien avec le patient"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -327,9 +327,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Triage</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Triage</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Priorité et évaluation initiale</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Priorité et évaluation initiale</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -341,7 +341,7 @@
 				<select
 					id="emergency-urgency"
 					bind:value={form.urgencyLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="LEVEL_1">Niveau 1 — Réanimation immédiate</option>
@@ -362,7 +362,7 @@
 					type="number"
 					min="0"
 					bind:value={form.triagePriorityScore}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -375,7 +375,7 @@
 					id="triage-date"
 					type="datetime-local"
 					bind:value={form.triageDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -388,7 +388,7 @@
 					id="triage-nurse"
 					type="text"
 					bind:value={form.triageNurse}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -396,11 +396,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Évaluation clinique initiale
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Conscience, douleur et constantes</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Conscience, douleur et constantes</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -412,7 +412,7 @@
 				<select
 					id="consciousness-status"
 					bind:value={form.consciousnessStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NORMAL">Normal</option>
@@ -432,7 +432,7 @@
 					min="3"
 					max="15"
 					bind:value={form.glasgowScore}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -448,7 +448,7 @@
 					max="10"
 					bind:value={form.painScore}
 					placeholder="/10"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -461,7 +461,7 @@
 					id="emergency-pain-location"
 					type="text"
 					bind:value={form.painLocation}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -470,7 +470,7 @@
 				bind:value={form.bloodPressureSystolic}
 				placeholder="TA systolique"
 				aria-label="Tension artérielle systolique"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -478,7 +478,7 @@
 				bind:value={form.bloodPressureDiastolic}
 				placeholder="TA diastolique"
 				aria-label="Tension artérielle diastolique"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -486,7 +486,7 @@
 				bind:value={form.heartRate}
 				placeholder="Pouls (bpm)"
 				aria-label="Pouls"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -495,7 +495,7 @@
 				bind:value={form.temperature}
 				placeholder="Température (°C)"
 				aria-label="Température"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -506,7 +506,7 @@
 				bind:value={form.oxygenSaturation}
 				placeholder="Saturation (%)"
 				aria-label="Saturation"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -514,7 +514,7 @@
 				bind:value={form.respiratoryRate}
 				placeholder="Fréquence respiratoire"
 				aria-label="Fréquence respiratoire"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -523,18 +523,18 @@
 				bind:value={form.bloodGlucose}
 				placeholder="Glycémie"
 				aria-label="Glycémie"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Prise en charge médicale
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Médecin responsable et diagnostic provisoire
 			</h4>
 		</div>
@@ -549,7 +549,7 @@
 					id="emergency-doctor"
 					type="text"
 					bind:value={form.responsibleDoctor}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -562,7 +562,7 @@
 					id="provisional-diagnosis"
 					type="text"
 					bind:value={form.provisionalDiagnosis}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -571,11 +571,9 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Actes réalisés</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Actes réalisés</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">
-					Soins et gestes réalisés aux urgences
-				</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Soins et gestes réalisés aux urgences</h4>
 			</div>
 
 			<button
@@ -597,28 +595,28 @@
 						type="text"
 						bind:value={item.name}
 						placeholder="Acte réalisé"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="datetime-local"
 						bind:value={item.dateTime}
 						aria-label={`Date de l’acte ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.performedBy}
 						placeholder="Professionnel"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.notes}
 						placeholder="Observations"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -637,11 +635,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Médicaments administrés
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Médicament, dose, heure et voie</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Médicament, dose, heure et voie</h4>
 			</div>
 
 			<button
@@ -663,27 +661,27 @@
 						type="text"
 						bind:value={item.medication}
 						placeholder="Médicament"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.dose}
 						placeholder="Dose"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="datetime-local"
 						bind:value={item.dateTime}
 						aria-label={`Heure du médicament ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<select
 						bind:value={item.route}
 						aria-label={`Voie du médicament ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="">Voie</option>
 						<option value="ORAL">Orale</option>
@@ -699,7 +697,7 @@
 						type="text"
 						bind:value={item.administeredBy}
 						placeholder="Administré par"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -718,11 +716,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Examens demandés
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">
+				<h4 class="mt-1 text-lg font-bold text-slate-900">
 					Laboratoire, imagerie et autres examens
 				</h4>
 			</div>
@@ -745,7 +743,7 @@
 					<select
 						bind:value={item.category}
 						aria-label={`Catégorie de l’examen ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="">Catégorie</option>
 						<option value="LABORATORY">Laboratoire</option>
@@ -758,13 +756,13 @@
 						type="text"
 						bind:value={item.name}
 						placeholder="Examen demandé"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<select
 						bind:value={item.urgencyLevel}
 						aria-label={`Urgence de l’examen ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="">Urgence</option>
 						<option value="NORMAL">Normal</option>
@@ -775,7 +773,7 @@
 					<select
 						bind:value={item.status}
 						aria-label={`Statut de l’examen ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="REQUESTED">Demandé</option>
 						<option value="IN_PROGRESS">En cours</option>
@@ -799,15 +797,15 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Surveillance</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Surveillance</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Constantes et évolution clinique</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Constantes et évolution clinique</h4>
 			</div>
 
 			<button
 				type="button"
 				onclick={addMonitoringRecord}
-				class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white"
+				class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 			>
 				<Plus size={16} />
 				Ajouter une surveillance
@@ -818,7 +816,7 @@
 			{#each monitoringHistory as item, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Surveillance #{index + 1}
 						</p>
 
@@ -837,28 +835,28 @@
 							type="datetime-local"
 							bind:value={item.dateTime}
 							aria-label={`Date de surveillance ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.bloodPressureSystolic}
 							placeholder="TA systolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.bloodPressureDiastolic}
 							placeholder="TA diastolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.heartRate}
 							placeholder="Pouls"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -866,7 +864,7 @@
 							step="0.1"
 							bind:value={item.temperature}
 							placeholder="Température"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -874,14 +872,14 @@
 							step="0.1"
 							bind:value={item.oxygenSaturation}
 							placeholder="Saturation"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.respiratoryRate}
 							placeholder="Fréquence respiratoire"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -889,7 +887,7 @@
 							step="0.01"
 							bind:value={item.bloodGlucose}
 							placeholder="Glycémie"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -898,13 +896,13 @@
 							max="10"
 							bind:value={item.painScore}
 							placeholder="Douleur /10"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={item.consciousnessStatus}
 							aria-label={`Conscience surveillance ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Conscience</option>
 							<option value="NORMAL">Normale</option>
@@ -918,7 +916,7 @@
 							max="15"
 							bind:value={item.glasgowScore}
 							placeholder="Glasgow"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 					</div>
 
@@ -926,7 +924,7 @@
 						bind:value={item.notes}
 						rows="3"
 						placeholder="Évolution clinique et observations"
-						class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					></textarea>
 				</article>
 			{/each}
@@ -935,11 +933,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Orientation finale
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Décision de sortie des urgences</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Décision de sortie des urgences</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -951,7 +949,7 @@
 				<select
 					id="final-disposition"
 					bind:value={form.finalDisposition}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="HOME">Domicile</option>
@@ -974,7 +972,7 @@
 					type="text"
 					bind:value={form.transferDestination}
 					disabled={form.finalDisposition !== 'TRANSFER'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -987,7 +985,7 @@
 					id="emergency-discharge"
 					type="datetime-local"
 					bind:value={form.dischargeDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1000,7 +998,7 @@
 					id="disposition-notes"
 					bind:value={form.dispositionNotes}
 					rows="4"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 	</section>

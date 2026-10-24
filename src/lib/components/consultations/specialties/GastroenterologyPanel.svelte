@@ -297,11 +297,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Symptômes digestifs
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Douleur, transit, reflux et alimentation
 			</h4>
 		</div>
@@ -364,7 +364,7 @@
 				bind:value={form.abdominalPainLocation}
 				disabled={!form.abdominalPain}
 				placeholder="Localisation de la douleur"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -374,7 +374,7 @@
 				bind:value={form.abdominalPainIntensity}
 				disabled={!form.abdominalPain}
 				placeholder="Intensité /10"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -382,7 +382,7 @@
 				bind:value={form.abdominalPainDuration}
 				disabled={!form.abdominalPain}
 				placeholder="Durée de la douleur"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -390,7 +390,7 @@
 				bind:value={form.nauseaFrequency}
 				disabled={!form.nausea}
 				placeholder="Fréquence des nausées"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -398,7 +398,7 @@
 				bind:value={form.vomitingFrequency}
 				disabled={!form.vomiting}
 				placeholder="Fréquence des vomissements"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -406,7 +406,7 @@
 				bind:value={form.vomitingAppearance}
 				disabled={!form.vomiting}
 				placeholder="Aspect des vomissements"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -414,7 +414,7 @@
 				bind:value={form.diarrheaDuration}
 				disabled={!form.diarrhea}
 				placeholder="Durée de la diarrhée"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -422,7 +422,7 @@
 				bind:value={form.diarrheaFrequency}
 				disabled={!form.diarrhea}
 				placeholder="Fréquence de la diarrhée"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -430,7 +430,7 @@
 				bind:value={form.constipationDuration}
 				disabled={!form.constipation}
 				placeholder="Durée de la constipation"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -438,7 +438,7 @@
 				bind:value={form.refluxFrequency}
 				disabled={!form.reflux}
 				placeholder="Fréquence du reflux"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -448,7 +448,7 @@
 				bind:value={form.refluxIntensity}
 				disabled={!form.reflux}
 				placeholder="Intensité du reflux /10"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -456,14 +456,14 @@
 				bind:value={form.bloatingFrequency}
 				disabled={!form.bloating}
 				placeholder="Fréquence des ballonnements"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<select
 				bind:value={form.bloodInStoolType}
 				disabled={!form.bloodInStool}
 				aria-label="Type de sang dans les selles"
-				class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 			>
 				<option value="">Type de sang</option>
 				<option value="MELENA">Méléna</option>
@@ -477,7 +477,7 @@
 				bind:value={form.bloodInStoolFrequency}
 				disabled={!form.bloodInStool}
 				placeholder="Fréquence du saignement"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -487,7 +487,7 @@
 				bind:value={form.weightLossKg}
 				disabled={!form.weightLoss}
 				placeholder="Perte de poids (kg)"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 
 			<input
@@ -495,7 +495,7 @@
 				bind:value={form.weightLossDuration}
 				disabled={!form.weightLoss}
 				placeholder="Durée de la perte de poids"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+				class="rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 			/>
 		</div>
 
@@ -509,7 +509,7 @@
 					id="stool-frequency"
 					type="text"
 					bind:value={form.stoolFrequency}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -522,7 +522,7 @@
 					id="stool-appearance"
 					type="text"
 					bind:value={form.stoolAppearance}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -534,7 +534,7 @@
 				<select
 					id="appetite-status"
 					bind:value={form.appetiteStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NORMAL">Normal</option>
@@ -552,7 +552,7 @@
 					id="diet-type"
 					type="text"
 					bind:value={form.dietType}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -565,18 +565,18 @@
 					id="dietary-habits"
 					bind:value={form.dietaryHabits}
 					rows="4"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Antécédents digestifs
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Pathologies digestives et inflammatoires
 			</h4>
 		</div>
@@ -623,23 +623,23 @@
 				bind:value={form.otherDigestiveHistory}
 				rows="4"
 				placeholder="Autres antécédents digestifs"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.otherInflammatoryDisease}
 				rows="4"
 				placeholder="Autres maladies inflammatoires"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Explorations digestives
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Endoscopie, imagerie, biopsie et bilan hépatique
 			</h4>
 		</div>
@@ -663,7 +663,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Biopsie</p>
+					<p class="font-bold text-slate-900">Biopsie</p>
 					<p class="mt-1 text-sm text-slate-500">Date et résultat anatomopathologique.</p>
 				</div>
 
@@ -685,22 +685,21 @@
 								type="date"
 								bind:value={item.date}
 								aria-label={`Date de biopsie ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.conclusion}
 								placeholder="Conclusion"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<textarea
 								bind:value={item.anatomopathologyResult}
 								rows="4"
 								placeholder="Résultat anatomopathologique"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
-							></textarea>
+								class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 						</div>
 
 						<div class="mt-3 flex justify-end">
@@ -739,7 +738,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Bilan hépatique</p>
+					<p class="font-bold text-slate-900">Bilan hépatique</p>
 					<p class="mt-1 text-sm text-slate-500">Résultats biologiques et observations.</p>
 				</div>
 
@@ -761,7 +760,7 @@
 								type="date"
 								bind:value={item.date}
 								aria-label={`Date du bilan hépatique ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -769,7 +768,7 @@
 								step="0.01"
 								bind:value={item.ast}
 								placeholder="ASAT"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -777,7 +776,7 @@
 								step="0.01"
 								bind:value={item.alt}
 								placeholder="ALAT"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -785,7 +784,7 @@
 								step="0.01"
 								bind:value={item.ggt}
 								placeholder="GGT"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -793,7 +792,7 @@
 								step="0.01"
 								bind:value={item.alp}
 								placeholder="PAL"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -801,7 +800,7 @@
 								step="0.01"
 								bind:value={item.totalBilirubin}
 								placeholder="Bilirubine totale"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -809,7 +808,7 @@
 								step="0.01"
 								bind:value={item.directBilirubin}
 								placeholder="Bilirubine directe"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -817,7 +816,7 @@
 								step="0.01"
 								bind:value={item.albumin}
 								placeholder="Albumine"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -825,7 +824,7 @@
 								step="0.01"
 								bind:value={item.prothrombinTime}
 								placeholder="Taux de prothrombine"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -833,14 +832,14 @@
 								step="0.01"
 								bind:value={item.inr}
 								placeholder="INR"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<textarea
 								bind:value={item.notes}
 								rows="3"
 								placeholder="Observations"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm sm:col-span-2 xl:col-span-5"
+								class="rounded-lg border border-input px-3 py-2 text-sm sm:col-span-2 xl:col-span-5"
 							></textarea>
 						</div>
 
@@ -871,7 +870,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="font-black text-slate-900">{title}</p>
+				<p class="font-bold text-slate-900">{title}</p>
 				<p class="mt-1 text-sm text-slate-500">{description}</p>
 			</div>
 
@@ -893,21 +892,21 @@
 							type="date"
 							bind:value={item.date}
 							aria-label={`Date ${title} ${index + 1}`}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.conclusion}
 							placeholder="Conclusion"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<textarea
 							bind:value={item.result}
 							rows="4"
 							placeholder="Résultat"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"></textarea>
+							class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 					</div>
 
 					<div class="mt-3 flex justify-end">

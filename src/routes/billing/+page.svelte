@@ -1,4 +1,7 @@
 <script lang="ts">
+	import LinkButton from '$lib/components/ui/LinkButton.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -222,13 +225,13 @@
 <div class="space-y-6 p-6" data-testid="billing-page">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div>
-			<p class="text-xs font-black uppercase tracking-widest text-blue-600">Finance</p>
-			<h1 class="text-3xl font-black text-slate-950">Facturation</h1>
+			<p class="text-xs font-semibold uppercase tracking-widest text-blue-600">Finance</p>
+			<h1 class="text-3xl font-bold text-slate-950">Facturation</h1>
 			<p class="text-sm text-slate-500">Tarifs, factures par acte et encaissements patient.</p>
 		</div>
 		<div class="flex gap-2">
 			{#if can(permissions, 'billing.create')}<button
-					class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+					class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 					data-testid="billing-new-invoice"
 					onclick={() => (tab = 'create')}>Nouvelle facture</button
 				>{/if}{#if can(permissions, 'billing.tariff.read')}<button
@@ -246,21 +249,21 @@
 				class="rounded-2xl border bg-white p-4 shadow-sm"
 			>
 				<p class="text-xs font-bold uppercase text-slate-500">{metric[0]}</p>
-				<p class="mt-2 text-2xl font-black">{metric[1]}</p>
+				<p class="mt-2 text-2xl font-bold">{metric[1]}</p>
 			</div>{/each}
 	</div>
 	<nav class="flex gap-2 border-b">
 		<button
-			class:font-black={tab === 'invoices'}
+			class:font-bold={tab === 'invoices'}
 			class="px-4 py-3"
 			onclick={() => (tab = 'invoices')}>Factures</button
 		>{#if can(permissions, 'billing.create')}<button
-				class:font-black={tab === 'create'}
+				class:font-bold={tab === 'create'}
 				class="px-4 py-3"
 				data-testid="billing-tab-create"
 				onclick={() => (tab = 'create')}>Nouvelle facture</button
 			>{/if}{#if can(permissions, 'billing.tariff.read')}<button
-				class:font-black={tab === 'tariffs'}
+				class:font-bold={tab === 'tariffs'}
 				class="px-4 py-3"
 				onclick={() => (tab = 'tariffs')}>Tarifs</button
 			>{/if}
@@ -272,7 +275,7 @@
 		>
 			<label class="min-w-[14rem] flex-1 text-sm"
 				><span class="font-bold">Recherche</span><input
-					class="mt-1 w-full rounded-xl border p-2"
+					class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 					placeholder="INV-*, code patient, nom…"
 					bind:value={searchInput}
 					data-testid="billing-invoice-search"
@@ -282,7 +285,7 @@
 				/></label
 			><label class="text-sm"
 				><span class="font-bold">Filtre</span><select
-					class="mt-1 rounded-xl border p-2"
+					class="min-h-control mt-1 rounded-lg border px-3 py-2"
 					bind:value={statusFilter}
 					data-testid="billing-invoice-status-filter"
 					onchange={() => void refresh()}
@@ -295,56 +298,54 @@
 				></label
 			><button
 				type="button"
-				class="rounded-xl bg-slate-900 px-4 py-2 font-bold text-white"
+				class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 				data-testid="billing-invoice-filter-apply"
 				onclick={() => void applyInvoiceFilters()}>Filtrer</button
 			>
 		</section>
-		<div class="overflow-x-auto rounded-2xl border bg-white" data-testid="billing-invoice-table">
-			<table class="w-full text-left text-sm">
-				<thead class="bg-slate-50 text-xs uppercase text-slate-500"
-					><tr
-						><th class="p-3">Numéro</th><th>Patient</th><th>Brut</th><th>Assurance</th><th
-							>Patient</th
-						><th>Payé</th><th>Reste</th><th>Statut</th><th class="p-3">Action</th></tr
-					></thead
-				><tbody
-					>{#each visibleInvoices as x (x.id)}<tr
-							class="border-t hover:bg-slate-50"
-							data-testid={`billing-invoice-row-${x.id}`}
-							><td class="p-3"
-								><a
-									class="font-black text-blue-700"
+		<Table containerTestId="billing-invoice-table">
+			<thead
+				><tr
+					><th>Numéro</th><th>Patient</th><th class="mc-num">Brut</th><th class="mc-num"
+						>Assurance</th
+					><th class="mc-num">Patient</th><th class="mc-num">Payé</th><th class="mc-num">Reste</th
+					><th>Statut</th><th class="mc-actions">Action</th></tr
+				></thead
+			><tbody
+				>{#each visibleInvoices as x (x.id)}<tr data-testid={`billing-invoice-row-${x.id}`}
+						><td
+							><a
+								class="mc-id"
+								href={resolve(`/billing/${x.id}`)}
+								data-testid={`billing-invoice-link-${x.id}`}>{x.number}</a
+							></td
+						><td>{x.patientCode} — {x.patientName}</td><td class="mc-amount"
+							>{formatXOF(x.grossAmount)}</td
+						><td class="mc-amount">{formatXOF(x.insuranceAmount)}</td><td class="mc-amount"
+							>{formatXOF(x.patientAmount)}</td
+						><td class="mc-amount">{formatXOF(x.paidAmount)}</td><td class="mc-amount font-semibold"
+							>{formatXOF(x.balanceAmount)}</td
+						><td
+							><span data-testid={`billing-invoice-status-${x.id}`}>{x.status}</span><small
+								class="block text-slate-500"
+								>{collectibleStatusLabel(invoiceCollectibleKind(x))}</small
+							></td
+						><td class="mc-actions"
+							>{#if canShowEncaisser(x, permissions)}<LinkButton
+									size="sm"
+									variant="secondary"
 									href={resolve(`/billing/${x.id}`)}
-									data-testid={`billing-invoice-link-${x.id}`}>{x.number}</a
-								></td
-							><td>{x.patientCode} — {x.patientName}</td><td>{formatXOF(x.grossAmount)}</td><td
-								>{formatXOF(x.insuranceAmount)}</td
-							><td>{formatXOF(x.patientAmount)}</td><td>{formatXOF(x.paidAmount)}</td><td
-								class="font-bold">{formatXOF(x.balanceAmount)}</td
-							><td
-								><span data-testid={`billing-invoice-status-${x.id}`}>{x.status}</span><small
-									class="block text-slate-500"
-									>{collectibleStatusLabel(invoiceCollectibleKind(x))}</small
-								></td
-							><td class="p-3"
-								>{#if canShowEncaisser(x, permissions)}<a
-										class="font-bold text-emerald-700"
-										href={resolve(`/billing/${x.id}`)}
-										data-testid={`billing-invoice-encaisser-${x.id}`}>Encaisser</a
-									>{:else}<span class="text-slate-400">—</span>{/if}</td
-							></tr
-						>{:else}<tr
-							><td class="p-8 text-center text-slate-500" colspan="9">Aucune facture</td></tr
-						>{/each}</tbody
-				>
-			</table>
-		</div>
+									data-testid={`billing-invoice-encaisser-${x.id}`}>Encaisser</LinkButton
+								>{:else}<span class="text-slate-500">—</span>{/if}</td
+						></tr
+					>{:else}<TableState state="empty" colspan={9} title="Aucune facture" />{/each}</tbody
+			>
+		</Table>
 	{:else if tab === 'create'}
 		<section class="space-y-4 rounded-2xl border bg-white p-5" data-testid="billing-create">
 			<label class="block font-bold"
 				>Patient<select
-					class="mt-2 w-full rounded-xl border p-3"
+					class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 					bind:value={selectedPatient}
 					data-testid="billing-patient-select"
 					onchange={() => void loadActs()}
@@ -358,7 +359,7 @@
 					{actsError}
 				</p>
 			{/if}
-			{#if selectedPatient}<h2 class="font-black">Actes non facturés</h2>
+			{#if selectedPatient}<h2 class="font-bold">Actes non facturés</h2>
 				{#if missingTariffActs.length > 0}
 					<p
 						class="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900"
@@ -394,7 +395,7 @@
 							class="ml-8 block text-sm"
 							data-testid={`billing-act-tariff-${act.billableKey}`}
 							><span class="font-semibold">Tarif applicable</span><select
-								class="ml-2 rounded-xl border p-1"
+								class="ml-2 rounded-lg border p-1"
 								value={resolveSelectedTariff(act, tariffChoice)?.id}
 								onchange={(e) =>
 									(tariffChoice = {
@@ -410,7 +411,7 @@
 					>
 						Aucun acte disponible.
 					</p>{/each}<button
-					class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-40"
+					class="rounded-lg bg-primary px-5 py-3 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 					disabled={!selectedLines.length}
 					data-testid="billing-create-draft"
 					onclick={saveInvoice}>Créer le brouillon</button
@@ -422,44 +423,57 @@
 					class="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-5"
 				>
 					<select
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						bind:value={tariffForm.actType}
 						data-testid="billing-tariff-act-type"
 						>{#each BILLING_ACT_TYPES as type (type)}<option value={type}
 								>{formatBillingActType(type)}</option
 							>{/each}</select
 					><input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						placeholder="Code"
 						bind:value={tariffForm.code}
 						data-testid="billing-tariff-code"
 					/><input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						placeholder="Libellé"
 						bind:value={tariffForm.label}
 						data-testid="billing-tariff-label"
 					/><input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						type="number"
 						min="1"
 						placeholder="Prix XOF"
 						bind:value={tariffForm.unitPrice}
 						data-testid="billing-tariff-unit-price"
 					/><button
-						class="rounded-xl bg-blue-700 font-bold text-white"
+						class="rounded-lg bg-primary font-semibold text-white hover:bg-primary-hover transition-colors"
 						data-testid="billing-tariff-save"
 						onclick={saveTariff}>Enregistrer</button
 					>
 				</div>{/if}
-			<div class="rounded-2xl border bg-white">
-				{#each tariffs as t (t.id)}<div
-						class="grid grid-cols-4 gap-3 border-b p-3"
-						data-testid={`billing-tariff-row-${t.id}`}
-					>
-						<strong>{t.code}</strong><span>{t.label}</span><span>{tariffReferenceLabel(t)}</span
-						><span class="text-right font-black">{formatXOF(t.unitPrice)}</span>
-					</div>{:else}<p class="p-6 text-center text-slate-500">Aucun tarif actif.</p>{/each}
-			</div>
+			<Table aria-label="Tarifs actifs">
+				<thead>
+					<tr>
+						<th>Code</th>
+						<th>Libellé</th>
+						<th>Référence</th>
+						<th class="mc-num">Prix unitaire</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each tariffs as t (t.id)}
+						<tr data-testid={`billing-tariff-row-${t.id}`}>
+							<td class="mc-id">{t.code}</td>
+							<td>{t.label}</td>
+							<td>{tariffReferenceLabel(t)}</td>
+							<td class="mc-amount">{formatXOF(t.unitPrice)}</td>
+						</tr>
+					{:else}
+						<TableState state="empty" colspan={4} title="Aucun tarif actif." />
+					{/each}
+				</tbody>
+			</Table>
 		</section>
 	{/if}
 </div>

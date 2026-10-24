@@ -32,13 +32,13 @@
 	<div class="flex items-center gap-1">
 		<label for={id || undefined} class={medcoreTypography.label}>
 			{label}
-			{#if required}<span class="text-danger" aria-hidden="true">*</span>{/if}
+			{#if required}<span class="ml-0.5 text-danger-strong" aria-hidden="true">*</span>{/if}
 		</label>
 		{#if helpKey}<HelpHint {helpKey} />{/if}
 	</div>
 	{@render children()}
 	{#if error}
-		<p class="mt-1.5 text-xs font-medium text-danger" role="alert">{error}</p>
+		<p class="mt-1.5 text-xs font-medium text-danger-strong" role="alert">{error}</p>
 	{:else if helper}
 		<p class={medcoreTypography.helper}>{helper}</p>
 	{/if}

@@ -3,52 +3,83 @@
 @import 'shadcn-svelte/tailwind.css';
 @import '@fontsource-variable/inter';
 
-@custom-variant dark (&:is(.dark *));
 @plugin '@tailwindcss/forms';
 
+/*
+ * MedCore Design System — tokens officiels.
+ * Miroir TypeScript : `src/lib/design/theme.ts`. Une couleur = une intention.
+ * Chaque ton sémantique expose : base (icônes, graphiques, bordures fortes),
+ * strong (texte et fonds pleins, contraste AA sur blanc), soft (fond teinté),
+ * border (contour teinté).
+ */
 :root {
-	/* —— MedCore Design Tokens (LOT 18) —— */
-	--background: #f8fafc;
+	/* —— Neutres —— */
+	--background: #f5f7fa;
 	--foreground: #0f172a;
+	--foreground-secondary: #334155;
+	--muted-foreground: #5b6b80;
+	--subtle-foreground: #64748b;
 
 	--surface: #ffffff;
-	--surface-muted: #eef4f8;
+	--surface-muted: #f2f5f8;
+	--surface-sunken: #eaeff4;
+	--row-hover: #f6f9fc;
 
 	--card: #ffffff;
 	--card-foreground: #0f172a;
-
 	--popover: #ffffff;
 	--popover-foreground: #0f172a;
 
+	--border: #dde3ea;
+	--border-strong: #c5cfda;
+	--input: #cfd8e2;
+
+	/* —— Bleu médical : couleur structurante —— */
 	--primary: #0e4c92;
 	--primary-hover: #0b3d75;
+	--primary-active: #093263;
 	--primary-foreground: #ffffff;
+	--primary-soft: #eef4fb;
+	--primary-border: #c9dbf0;
 
-	/* Secondary = action alternative neutre (pas teal) */
-	--secondary: #e2e8f0;
+	/* Secondary = action alternative neutre (jamais teal). */
+	--secondary: #f1f5f9;
 	--secondary-foreground: #0f172a;
 
-	--muted: #eef4f8;
-	--muted-foreground: #64748b;
-
-	--accent: #e7f3ff;
+	--muted: #f2f5f8;
+	--accent: #eef4fb;
 	--accent-foreground: #0e4c92;
 
+	/* Accent de marque Saint Raphaël (filet actif, validation positive). */
 	--brand-accent: #18b893;
 
+	/* —— Tons sémantiques —— */
 	--success: #18b893;
+	--success-strong: #047857;
+	--success-soft: #ecfdf5;
+	--success-border: #a7f3d0;
 	--success-foreground: #ffffff;
+
 	--warning: #f59e0b;
+	--warning-strong: #b45309;
+	--warning-soft: #fffbeb;
+	--warning-border: #fde68a;
 	--warning-foreground: #1c1917;
+
 	--danger: #ef4444;
+	--danger-strong: #b91c1c;
+	--danger-soft: #fef2f2;
+	--danger-border: #fecaca;
 	--danger-foreground: #ffffff;
+
 	--info: #0ea5e9;
+	--info-strong: #0369a1;
+	--info-soft: #f0f9ff;
+	--info-border: #bae6fd;
 	--info-foreground: #ffffff;
 
-	--destructive: #ef4444;
+	--destructive: #b91c1c;
 
-	--border: #dbe7ef;
-	--input: #dbe7ef;
 	--ring: #0e4c92;
 
 	--chart-1: #0e4c92;
@@ -57,71 +88,75 @@
 	--chart-4: #ef4444;
 	--chart-5: #64748b;
 
-	--radius: 0.875rem;
+	/* —— Forme —— */
+	--radius: 0.5rem;
 
-	--shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-	--shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04);
-	--shadow-card-hover: 0 6px 18px rgba(15, 23, 42, 0.06);
-	--shadow-modal: 0 20px 50px rgba(15, 23, 42, 0.18);
+	/* Alias historiques (LOT 18) — pointent vers l'échelle d'élévation. */
+	--shadow-card: var(--shadow-xs);
+	--shadow-card-hover: var(--shadow-sm);
+	--shadow-modal: var(--shadow-xl);
 
-	--sidebar: #081827;
-	--sidebar-foreground: #eaf3fb;
+	/* —— Couches —— */
+	--z-sticky: 10;
+	--z-dropdown: 20;
+	--z-topbar: 30;
+	--z-backdrop: 35;
+	--z-sidebar: 40;
+	--z-modal: 50;
+	--z-toast: 60;
+
+	/* —— Mouvement —— */
+	--ease-standard: cubic-bezier(0.2, 0, 0, 1);
+	--duration-fast: 120ms;
+	--duration-base: 180ms;
+
+	/* —— Shell —— */
+	--sidebar: #0a1a2b;
+	--sidebar-foreground: #e6eef6;
+	--sidebar-muted: #8ea3b9;
 	--sidebar-primary: #0e4c92;
 	--sidebar-primary-foreground: #ffffff;
-	--sidebar-accent: #102b45;
+	--sidebar-accent: #13283e;
 	--sidebar-accent-foreground: #ffffff;
-	--sidebar-border: #12314f;
+	--sidebar-border: #172f47;
 	--sidebar-ring: #18b893;
 }
 
-.dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--surface: oklch(0.205 0 0);
-	--surface-muted: oklch(0.269 0 0);
-	--card: oklch(0.205 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.205 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.922 0 0);
-	--primary-hover: oklch(0.85 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.269 0 0);
-	--accent-foreground: oklch(0.985 0 0);
-	--brand-accent: #18b893;
-	--success: #18b893;
-	--success-foreground: #ffffff;
-	--warning: #f59e0b;
-	--warning-foreground: #1c1917;
-	--danger: oklch(0.704 0.191 22.216);
-	--danger-foreground: #ffffff;
-	--info: #0ea5e9;
-	--info-foreground: #ffffff;
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.556 0 0);
-	--chart-1: oklch(0.87 0 0);
-	--chart-2: oklch(0.556 0 0);
-	--chart-3: oklch(0.439 0 0);
-	--chart-4: oklch(0.371 0 0);
-	--chart-5: oklch(0.269 0 0);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.556 0 0);
+@theme {
+	/* Échelle typographique — compléments aux tailles Tailwind (voir theme.ts). */
+	--text-2xs: 0.6875rem;
+	--text-2xs--line-height: 1rem;
+	--text-small: 0.8125rem;
+	--text-small--line-height: 1.25rem;
+
+	--tracking-eyebrow: 0.08em;
+
+	/* Élévation discrète : réservée aux éléments réellement surélevés. */
+	--shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+	--shadow-sm: 0 1px 3px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
+	--shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+	--shadow-lg: 0 10px 24px -6px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.05);
+	--shadow-xl: 0 20px 40px -12px rgb(15 23 42 / 0.2);
+	--shadow-2xl: 0 24px 56px -16px rgb(15 23 42 / 0.26);
+
+	/* Hauteurs de contrôle et gabarits du shell. */
+	--spacing-control-sm: 2rem;
+	--spacing-control: 2.5rem;
+	--spacing-control-lg: 2.75rem;
+	--spacing-sidebar: 17rem;
+	--spacing-topbar: 3.75rem;
+
+	--container-content: 100rem;
+	--container-prose: 42rem;
+
+	--default-transition-duration: 150ms;
+	--default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @theme inline {
-	--font-sans: 'Inter Variable', sans-serif;
+	--font-sans:
+		'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -129,6 +164,7 @@
 	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
 	--color-sidebar-primary: var(--sidebar-primary);
 	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-muted: var(--sidebar-muted);
 	--color-sidebar: var(--sidebar);
 	--color-chart-5: var(--chart-5);
 	--color-chart-4: var(--chart-4);
@@ -138,31 +174,51 @@
 	--color-ring: var(--ring);
 	--color-input: var(--input);
 	--color-border: var(--border);
+	--color-border-strong: var(--border-strong);
 	--color-destructive: var(--destructive);
 	--color-danger: var(--danger);
+	--color-danger-strong: var(--danger-strong);
+	--color-danger-soft: var(--danger-soft);
+	--color-danger-border: var(--danger-border);
 	--color-danger-foreground: var(--danger-foreground);
 	--color-success: var(--success);
+	--color-success-strong: var(--success-strong);
+	--color-success-soft: var(--success-soft);
+	--color-success-border: var(--success-border);
 	--color-success-foreground: var(--success-foreground);
 	--color-warning: var(--warning);
+	--color-warning-strong: var(--warning-strong);
+	--color-warning-soft: var(--warning-soft);
+	--color-warning-border: var(--warning-border);
 	--color-warning-foreground: var(--warning-foreground);
 	--color-info: var(--info);
+	--color-info-strong: var(--info-strong);
+	--color-info-soft: var(--info-soft);
+	--color-info-border: var(--info-border);
 	--color-info-foreground: var(--info-foreground);
 	--color-surface: var(--surface);
 	--color-surface-muted: var(--surface-muted);
+	--color-surface-sunken: var(--surface-sunken);
 	--color-brand-accent: var(--brand-accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-accent: var(--accent);
 	--color-muted-foreground: var(--muted-foreground);
+	--color-subtle-foreground: var(--subtle-foreground);
 	--color-muted: var(--muted);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-secondary: var(--secondary);
 	--color-primary-foreground: var(--primary-foreground);
+	--color-primary-hover: var(--primary-hover);
+	--color-primary-active: var(--primary-active);
+	--color-primary-soft: var(--primary-soft);
+	--color-primary-border: var(--primary-border);
 	--color-primary: var(--primary);
 	--color-popover-foreground: var(--popover-foreground);
 	--color-popover: var(--popover);
 	--color-card-foreground: var(--card-foreground);
 	--color-card: var(--card);
 	--color-foreground: var(--foreground);
+	--color-foreground-secondary: var(--foreground-secondary);
 	--color-background: var(--background);
 	--radius-sm: calc(var(--radius) * 0.6);
 	--radius-md: calc(var(--radius) * 0.8);
@@ -177,17 +233,236 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
-	body {
-		@apply bg-background text-foreground;
-		background:
-			radial-gradient(circle at top right, rgba(24, 184, 147, 0.08), transparent 28rem),
-			radial-gradient(circle at top left, rgba(14, 76, 146, 0.08), transparent 28rem),
-			var(--background);
-	}
 	html {
 		@apply font-sans;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+	::selection {
+		background: var(--primary-soft);
+		color: var(--primary-active);
 	}
 	:focus-visible {
 		@apply outline-2 outline-offset-2 outline-ring;
+	}
+	button:not(:disabled),
+	[role='button']:not([aria-disabled='true']),
+	summary,
+	label[for] {
+		cursor: pointer;
+	}
+	button:disabled,
+	[aria-disabled='true'] {
+		cursor: not-allowed;
+	}
+
+	/*
+	 * Contrôles de formulaire bruts (@tailwindcss/forms) : couleurs de marque
+	 * au lieu du bleu par défaut du plugin. Les utilitaires restent prioritaires.
+	 */
+	html input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+	html select,
+	html textarea {
+		border-color: var(--input);
+		color: var(--foreground);
+	}
+	html
+		input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus,
+	html select:focus,
+	html textarea:focus {
+		border-color: var(--primary);
+		--tw-ring-color: rgb(14 76 146 / 0.15);
+		--tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 3px var(--tw-ring-color);
+	}
+	input::placeholder,
+	textarea::placeholder {
+		color: var(--subtle-foreground);
+	}
+	input[type='checkbox'],
+	input[type='radio'] {
+		color: var(--primary);
+		border-color: var(--border-strong);
+	}
+	input[type='checkbox']:focus,
+	input[type='radio']:focus {
+		--tw-ring-color: rgb(14 76 146 / 0.3);
+	}
+	html :is(input, select, textarea):disabled {
+		background-color: var(--surface-muted);
+		color: var(--muted-foreground);
+	}
+
+	table {
+		border-collapse: collapse;
+		font-variant-numeric: tabular-nums;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+}
+
+/*
+ * Tableaux MedCore — une seule fondation pour tous les tableaux de l'application.
+ * Conteneur : `ui/Table.svelte` ; états : `ui/TableState.svelte` ; pagination :
+ * `ui/Pagination.svelte`. Modificateurs de cellule : mc-num, mc-amount, mc-id,
+ * mc-actions, mc-muted ; lignes : aria-selected, mc-row-total.
+ */
+@layer components {
+	.mc-table-container {
+		overflow-x: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xl);
+		background: var(--surface);
+		-webkit-overflow-scrolling: touch;
+	}
+	.mc-table-container[data-variant='plain'] {
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+	}
+	.mc-table {
+		width: 100%;
+		text-align: left;
+		font-size: var(--text-sm);
+		line-height: 1.25rem;
+		color: var(--foreground-secondary);
+	}
+	.mc-table caption {
+		caption-side: top;
+		padding: 0.75rem 1rem;
+		text-align: left;
+		font-weight: 600;
+		color: var(--foreground);
+	}
+	.mc-table thead th {
+		height: 2.5rem;
+		padding: 0 0.75rem;
+		background: var(--surface-muted);
+		border-bottom: 1px solid var(--border);
+		font-size: var(--text-xs);
+		line-height: 1rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--muted-foreground);
+		white-space: nowrap;
+		vertical-align: middle;
+	}
+	.mc-table tbody td,
+	.mc-table tbody th,
+	.mc-table tfoot td,
+	.mc-table tfoot th {
+		padding: 0.625rem 0.75rem;
+		vertical-align: middle;
+	}
+	.mc-table tbody th {
+		font-weight: 600;
+		color: var(--foreground);
+		text-align: left;
+	}
+	.mc-table :is(thead, tbody, tfoot) tr > :first-child {
+		padding-left: 1rem;
+	}
+	.mc-table :is(thead, tbody, tfoot) tr > :last-child {
+		padding-right: 1rem;
+	}
+	.mc-table tbody tr + tr > * {
+		border-top: 1px solid var(--border);
+	}
+	.mc-table tbody tr {
+		transition: background-color var(--duration-fast) var(--ease-standard);
+	}
+	.mc-table tbody tr:hover {
+		background-color: var(--row-hover);
+	}
+	.mc-table tbody tr:focus-within {
+		background-color: var(--row-hover);
+	}
+	.mc-table tbody tr[aria-selected='true'],
+	.mc-table tbody tr[data-selected='true'] {
+		background-color: var(--primary-soft);
+		box-shadow: inset 3px 0 0 var(--primary);
+	}
+	.mc-table tbody tr[aria-disabled='true'] {
+		color: var(--muted-foreground);
+	}
+	.mc-table tfoot tr > *,
+	.mc-table tr.mc-row-total > * {
+		border-top: 1px solid var(--border-strong);
+		background: var(--surface-muted);
+		font-weight: 600;
+		color: var(--foreground);
+	}
+	.mc-table tbody tr.mc-row-state:hover {
+		background: transparent;
+	}
+
+	/* Cellules typées */
+	.mc-table .mc-num,
+	.mc-table .mc-amount {
+		text-align: right;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+	}
+	.mc-table .mc-amount {
+		font-weight: 500;
+		color: var(--foreground);
+	}
+	.mc-table .mc-id {
+		white-space: nowrap;
+		font-weight: 600;
+		color: var(--foreground);
+		font-variant-numeric: tabular-nums;
+	}
+	.mc-table .mc-muted {
+		color: var(--muted-foreground);
+	}
+	.mc-table .mc-actions {
+		width: 1%;
+		text-align: right;
+		white-space: nowrap;
+	}
+	.mc-table td.mc-actions > * + * {
+		margin-left: 0.375rem;
+	}
+	.mc-table td.mc-actions > :is(div, span) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.375rem;
+	}
+	.mc-table a:not([class*='bg-']):not([class*='border']) {
+		color: var(--primary);
+		font-weight: 500;
+		text-underline-offset: 3px;
+	}
+	.mc-table a:not([class*='bg-']):not([class*='border']):hover {
+		text-decoration: underline;
+	}
+
+	@media print {
+		.mc-table-container {
+			overflow: visible;
+			border-color: #cbd5e1;
+		}
+		.mc-table thead th {
+			background: transparent;
+			color: #0f172a;
+		}
+		.mc-table tbody tr:hover {
+			background: transparent;
+		}
 	}
 }

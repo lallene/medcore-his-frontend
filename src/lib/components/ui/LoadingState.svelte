@@ -12,12 +12,12 @@
 
 <div
 	class={cn(
-		'flex flex-col items-center justify-center gap-3 py-12 text-sm text-slate-500',
+		'flex flex-col items-center justify-center gap-3 py-12 text-sm text-muted-foreground',
 		className
 	)}
 	role="status"
 	aria-live="polite"
 >
-	<Spinner size={28} />
+	<Spinner size={24} />
 	<p>{label}</p>
 </div>

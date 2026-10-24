@@ -10,7 +10,7 @@
 </script>
 
 <div
-	class={cn('animate-spin rounded-full border-4 border-slate-200 border-t-primary', className)}
+	class={cn('animate-spin rounded-full border-[3px] border-primary/15 border-t-primary', className)}
 	style={`width:${size}px;height:${size}px`}
 	role="status"
 	aria-label="Chargement"

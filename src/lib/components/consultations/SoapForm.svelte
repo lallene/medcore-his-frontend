@@ -117,10 +117,10 @@
 	<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Note clinique structurée
 				</p>
-				<h2 class="mt-1 text-xl font-black text-slate-900">Format SOAP</h2>
+				<h2 class="mt-1 text-xl font-bold text-slate-900">Format SOAP</h2>
 				<p class="mt-1 text-sm text-slate-500">Subjectif, Objectif, Évaluation et Plan de soins.</p>
 			</div>
 
@@ -128,7 +128,7 @@
 				type="button"
 				onclick={submit}
 				disabled={saving || loading}
-				class="rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0b3d75] disabled:cursor-wait disabled:opacity-60"
+				class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60 transition-colors"
 			>
 				{saving ? 'Enregistrement...' : 'Enregistrer le SOAP'}
 			</button>
@@ -158,24 +158,24 @@
 				onclick={() => (activeSection = section.id)}
 				class={`rounded-2xl border p-4 text-left transition ${
 					activeSection === section.id
-						? 'border-[#0E4C92] bg-[#0E4C92] text-white shadow-sm'
+						? 'border-primary bg-primary text-white shadow-sm'
 						: 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
 				}`}
 			>
 				<div class="flex items-center gap-3">
 					<div
-						class={`flex h-10 w-10 items-center justify-center rounded-xl text-lg font-black ${
-							activeSection === section.id ? 'bg-white/15 text-white' : 'bg-blue-50 text-[#0E4C92]'
+						class={`flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold ${
+							activeSection === section.id ? 'bg-white/15 text-white' : 'bg-blue-50 text-primary'
 						}`}
 					>
 						{section.letter}
 					</div>
 
 					<div>
-						<p class="font-black">{section.title}</p>
+						<p class="font-bold">{section.title}</p>
 						<p
 							class={`mt-0.5 text-xs ${
-								activeSection === section.id ? 'text-blue-100' : 'text-slate-400'
+								activeSection === section.id ? 'text-blue-100' : 'text-slate-500'
 							}`}
 						>
 							{section.description}
@@ -202,7 +202,7 @@
 							id="chiefComplaint"
 							bind:value={form.chiefComplaint}
 							rows="3"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							placeholder="Ex. Fièvre persistante depuis 48 heures"></textarea>
 					</div>
 
@@ -214,7 +214,7 @@
 							id="history"
 							bind:value={form.historyOfPresentIllness}
 							rows="5"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 
@@ -227,7 +227,7 @@
 								id="symptoms"
 								bind:value={form.associatedSymptoms}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 
@@ -239,7 +239,7 @@
 								id="patientNotes"
 								bind:value={form.patientReportedNotes}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 					</div>
@@ -256,7 +256,7 @@
 							id="appearance"
 							bind:value={form.generalAppearance}
 							rows="4"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 
@@ -268,7 +268,7 @@
 							id="consciousness"
 							bind:value={form.consciousness}
 							rows="4"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 
@@ -280,7 +280,7 @@
 							id="hydration"
 							bind:value={form.hydrationStatus}
 							rows="4"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 
@@ -292,7 +292,7 @@
 							id="physicalExam"
 							bind:value={form.physicalExamSummary}
 							rows="4"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 				</div>
@@ -308,7 +308,7 @@
 							id="primaryDiagnosis"
 							bind:value={form.primaryDiagnosis}
 							rows="3"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 						></textarea>
 					</div>
 
@@ -321,7 +321,7 @@
 								id="associatedDiagnoses"
 								bind:value={form.associatedDiagnoses}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 
@@ -333,7 +333,7 @@
 								id="clinicalImpression"
 								bind:value={form.clinicalImpression}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 					</div>
@@ -351,7 +351,7 @@
 								id="treatmentPlan"
 								bind:value={form.treatmentPlan}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 
@@ -363,7 +363,7 @@
 								id="investigationPlan"
 								bind:value={form.investigationPlan}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 
@@ -375,7 +375,7 @@
 								id="followUpPlan"
 								bind:value={form.followUpPlan}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 
@@ -387,7 +387,7 @@
 								id="patientAdvice"
 								bind:value={form.patientAdvice}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+								class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 							></textarea>
 						</div>
 					</div>
@@ -400,7 +400,7 @@
 						<select
 							id="disposition"
 							bind:value={form.disposition}
-							class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 						>
 							<option value="">Sélectionner une décision</option>
 							<option value="home">Retour à domicile</option>

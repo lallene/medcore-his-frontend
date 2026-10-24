@@ -83,9 +83,7 @@
 
 		<div class="grid gap-6 xl:grid-cols-3">
 			<section class="space-y-4 xl:col-span-2">
-				<article
-					class="rounded-2xl border border-border bg-surface p-6 shadow-[var(--shadow-card)]"
-				>
+				<article class="rounded-2xl border border-border bg-surface p-6 shadow-xs">
 					<h2 class="text-sm font-bold text-slate-700">Informations</h2>
 					<dl class="mt-4 grid gap-3 text-sm md:grid-cols-2">
 						<div>
@@ -127,9 +125,7 @@
 					</dl>
 				</article>
 
-				<article
-					class="rounded-2xl border border-border bg-surface p-6 shadow-[var(--shadow-card)]"
-				>
+				<article class="rounded-2xl border border-border bg-surface p-6 shadow-xs">
 					<h2 class="text-sm font-bold text-slate-700">Historique</h2>
 					{#if history.length === 0}
 						<p class="mt-4 text-sm text-slate-500">Aucun événement enregistré.</p>
@@ -149,7 +145,7 @@
 				</article>
 			</section>
 
-			<aside class="rounded-2xl border border-border bg-surface p-6 shadow-[var(--shadow-card)]">
+			<aside class="rounded-2xl border border-border bg-surface p-6 shadow-xs">
 				<h2 class="text-sm font-bold text-slate-700">Parcours</h2>
 				<ul class="mt-4 space-y-2 text-sm">
 					<li>

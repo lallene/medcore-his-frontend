@@ -1,4 +1,7 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
@@ -53,8 +56,8 @@
 
 {#if settlement}<div class="space-y-6 p-6">
 		<header>
-			<p class="text-xs font-black uppercase text-indigo-700">Règlement assureur</p>
-			<h1 class="text-3xl font-black">{settlement.settlementNumber}</h1>
+			<p class="text-xs font-semibold uppercase text-indigo-700">Règlement assureur</p>
+			<h1 class="text-3xl font-bold">{settlement.settlementNumber}</h1>
 			<p>{settlement.companyName} · {settlement.externalReference} · {settlement.status}</p>
 		</header>
 		{#if error}<p class="bg-red-50 p-3 text-red-700">{error}</p>{/if}
@@ -63,39 +66,76 @@
 					class="rounded-2xl border bg-white p-4"
 				>
 					<small>{x[0]}</small>
-					<p class="text-xl font-black">{formatXOF(Number(x[1]))}</p>
+					<p class="text-xl font-bold">{formatXOF(Number(x[1]))}</p>
 				</div>{/each}
 		</section>
 		{#if settlement.status === 'DRAFT' && insuranceReceivableCan(permissions, 'insurance_settlements.allocate')}<section
 				class="rounded-2xl border bg-white p-4"
 			>
-				<h2 class="font-black">Allocation assistée</h2>
+				<h2 class="font-bold">Allocation assistée</h2>
 				<p class="text-sm text-slate-500">
 					Sélection explicite des créances ouvertes de cet assureur.
 				</p>
-				{#each debts as d (d.invoiceLineId)}<div
-						class="mt-2 grid grid-cols-6 items-center gap-2 border-t pt-2"
-					>
-						<span>{d.invoiceNumber}</span><span>{d.patientName}</span><span>{d.description}</span
-						><span>Reste {formatXOF(d.insuranceBalance)}</span><input
-							type="number"
-							bind:value={amounts[d.invoiceLineId]}
-							max={d.insuranceBalance}
-							class="rounded-lg border p-2"
-						/><button
-							onclick={() => allocate(d.invoiceLineId)}
-							class="rounded-lg bg-indigo-700 p-2 text-white">Allouer</button
-						>
-					</div>{/each}<button
-					onclick={post}
-					class="mt-4 rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white"
-					>Comptabiliser le règlement</button
+				<Table class="mt-3" aria-label="Créances ouvertes de l’assureur">
+					<thead>
+						<tr>
+							<th>Facture</th>
+							<th>Patient</th>
+							<th>Acte</th>
+							<th class="mc-num">Reste</th>
+							<th class="mc-num">Montant à allouer</th>
+							<th class="mc-actions">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each debts as d (d.invoiceLineId)}
+							<tr>
+								<td class="mc-id">{d.invoiceNumber}</td>
+								<td>{d.patientName}</td>
+								<td>{d.description}</td>
+								<td class="mc-amount">{formatXOF(d.insuranceBalance)}</td>
+								<td class="mc-num"
+									><input
+										type="number"
+										bind:value={amounts[d.invoiceLineId]}
+										max={d.insuranceBalance}
+										aria-label={`Montant à allouer pour ${d.invoiceNumber}`}
+										class="min-h-control-sm w-32 rounded-md border border-input px-2 text-right text-sm tabular-nums"
+									/></td
+								>
+								<td class="mc-actions"
+									><Button size="sm" variant="secondary" onclick={() => allocate(d.invoiceLineId)}
+										>Allouer</Button
+									></td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</Table><Button class="mt-4" variant="success" onclick={post}
+					>Comptabiliser le règlement</Button
 				>
 			</section>{/if}
-		<section class="rounded-2xl border bg-white p-4">
-			<h2 class="font-black">Allocations</h2>
-			{#each settlement.allocations as a (a.id)}<p class="border-t py-2">
-					Facture #{a.invoiceId} · ligne #{a.invoiceLineId} · {formatXOF(a.amount)}
-				</p>{:else}<p>Aucune allocation.</p>{/each}
+		<section class="space-y-2">
+			<h2 class="text-base font-semibold text-foreground">Allocations</h2>
+			<Table aria-label="Allocations">
+				<thead>
+					<tr>
+						<th>Facture</th>
+						<th>Ligne</th>
+						<th class="mc-num">Montant</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each settlement.allocations as a (a.id)}
+						<tr>
+							<td class="mc-id">Facture #{a.invoiceId}</td>
+							<td>ligne #{a.invoiceLineId}</td>
+							<td class="mc-amount">{formatXOF(a.amount)}</td>
+						</tr>
+					{:else}
+						<TableState state="empty" colspan={3} title="Aucune allocation." />
+					{/each}
+				</tbody>
+			</Table>
 		</section>
 	</div>{/if}

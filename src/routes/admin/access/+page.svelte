@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -18,8 +20,6 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let kpis = $state<AccessKPIs | null>(null);
 	let rows = $state<AccessUserSummary[]>([]);
@@ -160,72 +160,75 @@
 			<Button onclick={() => void load()}>Filtrer</Button>
 		</FilterBar>
 
-		{#if loading}
-			<LoadingState label="Chargement des accès…" />
-		{:else if rows.length === 0}
-			<EmptyState title="Aucun utilisateur" description="Aucun profil ne correspond aux filtres." />
-		{:else}
-			<div class="overflow-x-auto rounded-xl border border-border" data-testid="access-users-table">
-				<table class="min-w-full text-left text-sm">
-					<thead class="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-						<tr>
-							<th class="px-3 py-2">Utilisateur</th>
-							<th class="px-3 py-2">Fonction(s)</th>
-							<th class="px-3 py-2">Services</th>
-							<th class="px-3 py-2">Statut</th>
-							<th class="px-3 py-2">Niveau</th>
-							<th class="px-3 py-2">Exceptions</th>
-							<th class="px-3 py-2">Modifié</th>
-							<th class="px-3 py-2"></th>
+		<Table containerTestId="access-users-table">
+			<thead>
+				<tr>
+					<th>Utilisateur</th>
+					<th>Fonction(s)</th>
+					<th>Services</th>
+					<th>Statut</th>
+					<th>Niveau</th>
+					<th class="mc-num">Exceptions</th>
+					<th>Modifié</th>
+					<th class="mc-actions"></th>
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={8}
+						title="Chargement des accès…"
+					/>{:else if rows.length === 0}<TableState
+						state="empty"
+						colspan={8}
+						title="Aucun utilisateur"
+						description="Aucun profil ne correspond aux filtres."
+					/>{:else}
+					{#each rows as row (row.profileId)}
+						<tr data-testid="access-user-row">
+							<td>
+								<div class="font-medium">{row.name}</div>
+								<div class="text-xs text-muted-foreground">{row.email}</div>
+								<div class="text-xs text-muted-foreground">{row.employeeCode}</div>
+							</td>
+							<td>{row.functions.join(', ') || '—'}</td>
+							<td>
+								{#each row.services as s (s.id)}
+									<div class="text-xs">
+										{s.name}{#if s.isPrimary}
+											<span class="text-muted-foreground"> (principal)</span>{/if}
+									</div>
+								{:else}
+									—
+								{/each}
+							</td>
+							<td>
+								<StatusBadge
+									status={row.active ? 'ACTIVE' : 'INACTIVE'}
+									label={row.active ? 'Actif' : 'Inactif'}
+								/>
+							</td>
+							<td>
+								{#if row.privileged}
+									<StatusBadge status="HIGH" label={accessLevelLabel(row.accessLevel)} />
+								{:else}
+									{accessLevelLabel(row.accessLevel)}
+								{/if}
+							</td>
+							<td class="mc-num">{row.overrideCount}</td>
+							<td>{row.updatedAt}</td>
+							<td class="mc-actions">
+								<Button
+									size="sm"
+									variant="secondary"
+									onclick={() => goto(resolve(`/admin/access/users/${row.profileId}`))}
+									>Gérer</Button
+								>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each rows as row (row.profileId)}
-							<tr class="border-t border-border" data-testid="access-user-row">
-								<td class="px-3 py-2">
-									<div class="font-medium">{row.name}</div>
-									<div class="text-xs text-muted-foreground">{row.email}</div>
-									<div class="text-xs text-muted-foreground">{row.employeeCode}</div>
-								</td>
-								<td class="px-3 py-2">{row.functions.join(', ') || '—'}</td>
-								<td class="px-3 py-2">
-									{#each row.services as s (s.id)}
-										<div class="text-xs">
-											{s.name}{#if s.isPrimary}
-												<span class="text-muted-foreground"> (principal)</span>{/if}
-										</div>
-									{:else}
-										—
-									{/each}
-								</td>
-								<td class="px-3 py-2">
-									<StatusBadge
-										status={row.active ? 'ACTIVE' : 'INACTIVE'}
-										label={row.active ? 'Actif' : 'Inactif'}
-									/>
-								</td>
-								<td class="px-3 py-2">
-									{#if row.privileged}
-										<StatusBadge status="HIGH" label={accessLevelLabel(row.accessLevel)} />
-									{:else}
-										{accessLevelLabel(row.accessLevel)}
-									{/if}
-								</td>
-								<td class="px-3 py-2">{row.overrideCount}</td>
-								<td class="px-3 py-2 text-xs text-muted-foreground">{row.updatedAt}</td>
-								<td class="px-3 py-2">
-									<Button
-										size="sm"
-										variant="secondary"
-										onclick={() => goto(resolve(`/admin/access/users/${row.profileId}`))}
-										>Gérer</Button
-									>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	{/if}
 </div>

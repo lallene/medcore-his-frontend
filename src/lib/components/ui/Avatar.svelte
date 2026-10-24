@@ -16,7 +16,7 @@
 </script>
 
 <div
-	class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 font-semibold text-white"
+	class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary"
 >
 	{initials}
 </div>

@@ -14,7 +14,7 @@
 
 {#if orders.length}
 	<section class="rounded-2xl border border-violet-200 bg-violet-50/40 p-5">
-		<h3 class="font-black text-slate-900">Suivi laboratoire</h3>
+		<h3 class="font-bold text-slate-900">Suivi laboratoire</h3>
 		<div class="mt-3 space-y-2">
 			{#each orders as order (order.id)}
 				<button

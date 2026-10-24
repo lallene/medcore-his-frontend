@@ -123,11 +123,11 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-violet-700">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-violet-700">
 				Couverture financière
 			</p>
 
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Assurance et prise en charge</h2>
+			<h2 class="mt-2 text-2xl font-bold text-slate-900">Assurance et prise en charge</h2>
 
 			<p class="mt-1 text-sm leading-6 text-slate-500">
 				Situation d’assurance, taux de couverture, matricule et gestion des bons de prise en charge.
@@ -167,9 +167,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-slate-500">Statut</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</p>
 
-					<p class="text-xl font-black text-slate-900">
+					<p class="text-xl font-bold text-slate-900">
 						{insuranceStatus}
 					</p>
 				</div>
@@ -185,9 +185,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-violet-500">Couverture</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-violet-500">Couverture</p>
 
-					<p class="text-2xl font-black text-violet-900">
+					<p class="text-2xl font-bold text-violet-900">
 						{coverageLabel}
 					</p>
 				</div>
@@ -203,9 +203,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-orange-500">Part patient</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-orange-500">Part patient</p>
 
-					<p class="text-2xl font-black text-orange-900">
+					<p class="text-2xl font-bold text-orange-900">
 						{patientShareLabel}
 					</p>
 				</div>
@@ -221,9 +221,9 @@
 				</div>
 
 				<div class="min-w-0">
-					<p class="text-xs font-black uppercase tracking-wide text-slate-400">Matricule</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Matricule</p>
 
-					<p class="truncate text-lg font-black text-slate-900">
+					<p class="truncate text-lg font-bold text-slate-900">
 						{insurance.memberNumber}
 					</p>
 				</div>
@@ -232,7 +232,7 @@
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-3">
-		<div class="space-y-6 xl:col-span-2">
+		<div class="min-w-0 space-y-6 xl:col-span-2">
 			<Card title="Situation d’assurance" subtitle="Informations principales de couverture">
 				{#if !canReadCoverage}
 					<p class="text-sm text-slate-500" data-testid="patient-360-coverage-denied">
@@ -328,7 +328,7 @@
 							<FilePlus2 size={24} />
 						</div>
 
-						<h3 class="mt-4 text-lg font-black text-slate-900">Aucune décision PEC</h3>
+						<h3 class="mt-4 text-lg font-bold text-slate-900">Aucune décision PEC</h3>
 
 						<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
 							Les demandes et décisions seront affichées ici acte par acte, sans modifier la
@@ -365,7 +365,7 @@
 										>
 									</div>
 									<span
-										class="rounded-full bg-violet-50 px-3 py-1 text-xs font-black text-violet-800"
+										class="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-800"
 										>{authorizationStatusLabel[authorization.status]}</span
 									>
 								</div>
@@ -427,7 +427,7 @@
 					<div class="flex items-center justify-between rounded-xl bg-violet-50 px-4 py-3">
 						<span class="text-sm font-semibold text-violet-700"> Part assurance </span>
 
-						<span class="font-black text-violet-900">
+						<span class="font-bold text-violet-900">
 							{coverageLabel}
 						</span>
 					</div>
@@ -435,7 +435,7 @@
 					<div class="flex items-center justify-between rounded-xl bg-orange-50 px-4 py-3">
 						<span class="text-sm font-semibold text-orange-700"> Part patient </span>
 
-						<span class="font-black text-orange-900">
+						<span class="font-bold text-orange-900">
 							{patientShareLabel}
 						</span>
 					</div>

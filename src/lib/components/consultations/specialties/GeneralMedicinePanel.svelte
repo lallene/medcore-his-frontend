@@ -49,7 +49,7 @@
 			id="general-condition"
 			bind:value={form.generalCondition}
 			rows="4"
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		></textarea>
 	</div>
 
@@ -62,7 +62,7 @@
 			id="main-symptoms"
 			bind:value={form.mainSymptoms}
 			rows="4"
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		></textarea>
 	</div>
 
@@ -75,7 +75,7 @@
 			id="clinical-summary"
 			bind:value={form.clinicalSummary}
 			rows="5"
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		></textarea>
 	</div>
 </div>

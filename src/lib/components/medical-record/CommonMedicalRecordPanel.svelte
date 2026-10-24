@@ -453,9 +453,9 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">Dossier médical</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Dossier médical</p>
 
-			<h2 class="mt-1 text-2xl font-black text-slate-900">Dossier médical commun</h2>
+			<h2 class="mt-1 text-2xl font-bold text-slate-900">Dossier médical commun</h2>
 
 			<p class="mt-2 text-sm text-slate-500">
 				Informations médicales longitudinales accessibles à tous les départements autorisés.
@@ -466,7 +466,7 @@
 			type="button"
 			onclick={save}
 			disabled={saving || loading || !record}
-			class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+			class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60 hover:bg-primary-hover transition-colors"
 		>
 			<Save size={18} />
 			{saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -509,19 +509,19 @@
 						onclick={() => (activeSection = section.id)}
 						class={`min-w-[210px] flex-none rounded-xl border p-4 text-left transition ${
 							activeSection === section.id
-								? 'border-[#0E4C92] bg-[#0E4C92] text-white'
+								? 'border-primary bg-primary text-white'
 								: 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50'
 						}`}
 					>
 						<section.icon size={18} />
 
-						<p class="mt-3 text-sm font-black">
+						<p class="mt-3 text-sm font-bold">
 							{section.label}
 						</p>
 
 						<p
 							class={`mt-1 text-xs ${
-								activeSection === section.id ? 'text-blue-100' : 'text-slate-400'
+								activeSection === section.id ? 'text-blue-100' : 'text-slate-500'
 							}`}
 						>
 							{section.description}
@@ -533,11 +533,11 @@
 			{#if activeSection === 'identity'}
 				<section class="space-y-6">
 					<div>
-						<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+						<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 							Identification
 						</p>
 
-						<h3 class="mt-1 text-lg font-black text-slate-900">Dossier et identité du patient</h3>
+						<h3 class="mt-1 text-lg font-bold text-slate-900">Dossier et identité du patient</h3>
 					</div>
 
 					<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -545,7 +545,7 @@
 							type="text"
 							bind:value={record.recordNumber}
 							placeholder="Numéro du dossier"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -553,13 +553,13 @@
 							bind:value={record.facilityName}
 							disabled
 							placeholder="Établissement"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={record.status}
 							aria-label="Statut du dossier"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="ACTIVE">Actif</option>
 							<option value="ARCHIVED">Archivé</option>
@@ -571,28 +571,28 @@
 							value={formatDisplayDate(record.createdAt)}
 							readonly
 							aria-label="Date de création du dossier"
-							class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.lastName}
 							placeholder="Nom"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.firstNames}
 							placeholder="Prénoms"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="date"
 							bind:value={record.birthDate}
 							aria-label="Date de naissance"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -600,13 +600,13 @@
 							value={record.age ?? ''}
 							readonly
 							placeholder="Âge"
-							class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={record.sex}
 							aria-label="Sexe"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Sexe</option>
 							<option value="M">Masculin</option>
@@ -618,42 +618,42 @@
 							type="text"
 							bind:value={record.photoReference}
 							placeholder="Référence de la photo"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="tel"
 							bind:value={record.phone}
 							placeholder="Téléphone"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="email"
 							bind:value={record.email}
 							placeholder="Email"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.maritalStatus}
 							placeholder="Situation matrimoniale"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.profession}
 							placeholder="Profession"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<textarea
 							bind:value={record.address}
 							rows="3"
 							placeholder="Adresse"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"></textarea>
+							class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 					</div>
 				</section>
 			{/if}
@@ -661,11 +661,11 @@
 			{#if activeSection === 'coverage'}
 				<section class="space-y-6">
 					<div>
-						<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+						<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 							Couverture médicale
 						</p>
 
-						<h3 class="mt-1 text-lg font-black text-slate-900">
+						<h3 class="mt-1 text-lg font-bold text-slate-900">
 							Assurance, contacts et informations sanguines
 						</h3>
 					</div>
@@ -680,28 +680,28 @@
 							type="text"
 							bind:value={record.medicalCoverage.insuranceName}
 							placeholder="Assurance"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.medicalCoverage.mutualName}
 							placeholder="Mutuelle"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.medicalCoverage.insuredNumber}
 							placeholder="Numéro d’assuré"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={record.medicalCoverage.coverageOrganization}
 							placeholder="Organisme de prise en charge"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
+							class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"
 						/>
 
 						<input
@@ -711,13 +711,13 @@
 							step="0.01"
 							bind:value={record.medicalCoverage.coverageRate}
 							placeholder="Taux de couverture (%)"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={record.bloodGroup}
 							aria-label="Groupe sanguin"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Groupe sanguin</option>
 							<option value="A">A</option>
@@ -729,7 +729,7 @@
 						<select
 							bind:value={record.rhesus}
 							aria-label="Rhésus"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Rhésus</option>
 							<option value="+">Positif</option>
@@ -739,35 +739,35 @@
 
 					<div class="grid gap-6 xl:grid-cols-2">
 						<section class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-							<h4 class="font-black text-slate-900">Contact d’urgence</h4>
+							<h4 class="font-bold text-slate-900">Contact d’urgence</h4>
 
 							<div class="mt-4 grid gap-4 md:grid-cols-2">
 								<input
 									type="text"
 									bind:value={record.emergencyContact.lastName}
 									placeholder="Nom"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={record.emergencyContact.firstNames}
 									placeholder="Prénoms"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={record.emergencyContact.relationship}
 									placeholder="Lien avec le patient"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="tel"
 									bind:value={record.emergencyContact.phone}
 									placeholder="Téléphone"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -775,7 +775,7 @@
 									bind:value={record.emergencyContact.email}
 									disabled
 									placeholder="Email"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2"
 								/>
 
 								<textarea
@@ -783,41 +783,41 @@
 									disabled
 									rows="2"
 									placeholder="Adresse"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2"
 								></textarea>
 							</div>
 						</section>
 
 						<section class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-							<h4 class="font-black text-slate-900">Responsable légal</h4>
+							<h4 class="font-bold text-slate-900">Responsable légal</h4>
 
 							<div class="mt-4 grid gap-4 md:grid-cols-2">
 								<input
 									type="text"
 									bind:value={record.legalGuardian.lastName}
 									placeholder="Nom"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={record.legalGuardian.firstNames}
 									placeholder="Prénoms"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={record.legalGuardian.relationship}
 									placeholder="Lien avec le patient"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="tel"
 									bind:value={record.legalGuardian.phone}
 									placeholder="Téléphone"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -825,14 +825,14 @@
 									bind:value={record.legalGuardian.email}
 									disabled
 									placeholder="Email"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2"
 								/>
 
 								<textarea
 									bind:value={record.legalGuardian.address}
 									rows="2"
 									placeholder="Adresse"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2"
 								></textarea>
 							</div>
 						</section>
@@ -845,11 +845,11 @@
 					<section class="space-y-4">
 						<div class="flex items-center justify-between gap-4">
 							<div>
-								<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+								<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 									Traitements habituels
 								</p>
 
-								<h3 class="mt-1 text-lg font-black text-slate-900">
+								<h3 class="mt-1 text-lg font-bold text-slate-900">
 									Médicaments pris régulièrement
 								</h3>
 							</div>
@@ -857,7 +857,7 @@
 							<button
 								type="button"
 								onclick={addUsualTreatment}
-								class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white"
+								class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 							>
 								<Plus size={16} />
 								Ajouter
@@ -873,41 +873,41 @@
 										type="text"
 										bind:value={treatment.medicationName}
 										placeholder="Médicament"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={treatment.dosage}
 										placeholder="Dosage"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={treatment.frequency}
 										placeholder="Fréquence"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="date"
 										bind:value={treatment.startDate}
 										aria-label={`Date de début du traitement ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={treatment.prescriber}
 										placeholder="Prescripteur"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<select
 										bind:value={treatment.status}
 										aria-label={`Statut du traitement ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									>
 										<option value="ONGOING">En cours</option>
 										<option value="STOPPED">Arrêté</option>
@@ -927,7 +927,7 @@
 										disabled
 										rows="2"
 										placeholder="Notes"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-7"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-7"
 									></textarea>
 								</div>
 							{/each}
@@ -937,11 +937,11 @@
 					<section class="space-y-4 border-t border-slate-200 pt-6">
 						<div class="flex items-center justify-between gap-4">
 							<div>
-								<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+								<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 									Vaccinations
 								</p>
 
-								<h3 class="mt-1 text-lg font-black text-slate-900">Historique vaccinal</h3>
+								<h3 class="mt-1 text-lg font-bold text-slate-900">Historique vaccinal</h3>
 							</div>
 
 							<button
@@ -963,34 +963,34 @@
 										type="text"
 										bind:value={vaccination.vaccineName}
 										placeholder="Vaccin"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={vaccination.dose}
 										placeholder="Dose"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="date"
 										bind:value={vaccination.administeredDate}
 										aria-label={`Date de vaccination ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="date"
 										bind:value={vaccination.nextReminderDate}
 										aria-label={`Date de rappel ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<select
 										bind:value={vaccination.status}
 										aria-label={`Statut vaccinal ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									>
 										<option value="PLANNED">Planifié</option>
 										<option value="COMPLETED">Réalisé</option>
@@ -1003,7 +1003,7 @@
 										bind:value={vaccination.batchNumber}
 										disabled
 										placeholder="Numéro de lot"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<button
@@ -1020,7 +1020,7 @@
 										bind:value={vaccination.center}
 										disabled
 										placeholder="Centre de vaccination"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-7"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-7"
 									/>
 								</div>
 							{/each}
@@ -1033,11 +1033,11 @@
 				<section class="space-y-8">
 					<section class="space-y-4">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Habitudes de vie
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">
+							<h3 class="mt-1 text-lg font-bold text-slate-900">
 								Tabac, alcool, activité et alimentation
 							</h3>
 						</div>
@@ -1047,7 +1047,7 @@
 								type="text"
 								bind:value={record.lifestyle.smokingStatus}
 								placeholder="Statut tabagique"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -1056,48 +1056,46 @@
 								bind:value={record.lifestyle.cigarettesPerDay}
 								disabled
 								placeholder="Cigarettes par jour"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={record.lifestyle.alcoholStatus}
 								placeholder="Consommation d’alcool"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={record.lifestyle.physicalActivityLevel}
 								placeholder="Activité physique"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<textarea
 								bind:value={record.lifestyle.dietDescription}
 								rows="3"
 								placeholder="Habitudes alimentaires"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
-							></textarea>
+								class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 
 							<textarea
 								bind:value={record.lifestyle.notes}
 								disabled
 								rows="3"
 								placeholder="Observations"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
-							></textarea>
+								class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 						</div>
 					</section>
 
 					<section class="space-y-4 border-t border-slate-200 pt-6">
 						<div class="flex items-center justify-between gap-4">
 							<div>
-								<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+								<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 									Handicaps
 								</p>
 
-								<h3 class="mt-1 text-lg font-black text-slate-900">Besoins particuliers</h3>
+								<h3 class="mt-1 text-lg font-bold text-slate-900">Besoins particuliers</h3>
 							</div>
 
 							<button
@@ -1119,21 +1117,21 @@
 										type="text"
 										bind:value={disability.type}
 										placeholder="Type de handicap"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={disability.level}
 										placeholder="Niveau"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={disability.specialNeeds}
 										placeholder="Besoins particuliers"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1141,7 +1139,7 @@
 										bind:value={disability.notes}
 										disabled
 										placeholder="Notes"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<button
@@ -1160,11 +1158,11 @@
 					<section class="space-y-4 border-t border-slate-200 pt-6">
 						<div class="flex items-center justify-between gap-4">
 							<div>
-								<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+								<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 									Dispositifs médicaux
 								</p>
 
-								<h3 class="mt-1 text-lg font-black text-slate-900">
+								<h3 class="mt-1 text-lg font-bold text-slate-900">
 									Implants, prothèses et autres dispositifs
 								</h3>
 							</div>
@@ -1187,7 +1185,7 @@
 									<select
 										bind:value={device.type}
 										aria-label={`Type de dispositif ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									>
 										<option value="PACEMAKER">Pacemaker</option>
 										<option value="PROSTHESIS">Prothèse</option>
@@ -1200,21 +1198,21 @@
 										type="text"
 										bind:value={device.name}
 										placeholder="Nom du dispositif"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={device.reference}
 										placeholder="Référence"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="date"
 										bind:value={device.implantationDate}
 										aria-label={`Date d’implantation ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1222,7 +1220,7 @@
 										bind:value={device.manufacturer}
 										disabled
 										placeholder="Fabricant"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<button
@@ -1238,7 +1236,7 @@
 										bind:value={device.notes}
 										rows="2"
 										placeholder="Notes"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-6"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-6"
 									></textarea>
 								</div>
 							{/each}
@@ -1251,11 +1249,11 @@
 				<section class="space-y-6">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Documents médicaux
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">
+							<h3 class="mt-1 text-lg font-bold text-slate-900">
 								Ordonnances, certificats, comptes rendus et pièces jointes
 							</h3>
 						</div>
@@ -1263,7 +1261,7 @@
 						<button
 							type="button"
 							onclick={addDocument}
-							class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white"
+							class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 						>
 							<Plus size={16} />
 							Ajouter
@@ -1278,7 +1276,7 @@
 								<select
 									bind:value={document.type}
 									aria-label={`Type de document ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="PRESCRIPTION">Ordonnance</option>
 									<option value="CERTIFICATE">Certificat</option>
@@ -1292,14 +1290,14 @@
 									type="text"
 									bind:value={document.title}
 									placeholder="Titre"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="date"
 									bind:value={document.documentDate}
 									aria-label={`Date du document ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -1307,7 +1305,7 @@
 									bind:value={document.fileReference}
 									placeholder="URL HTTPS du document externe"
 									aria-label={`Référence URL du document ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -1315,7 +1313,7 @@
 									bind:value={document.uploadedBy}
 									disabled
 									placeholder="Ajouté par"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -1336,7 +1334,7 @@
 										target="_blank"
 										rel="noopener noreferrer"
 										data-testid={`medical-document-external-link-${index}`}
-										class="text-sm font-bold text-[#0E4C92] underline md:col-span-2 xl:col-span-6"
+										class="text-sm font-bold text-primary underline md:col-span-2 xl:col-span-6"
 									>
 										Ouvrir la référence externe
 									</a>
@@ -1354,7 +1352,7 @@
 									bind:value={document.description}
 									rows="2"
 									placeholder="Description"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-6"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-6"
 								></textarea>
 							</div>
 						{/each}
@@ -1366,9 +1364,9 @@
 				<section class="space-y-6">
 					<div class="flex items-center justify-between">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Allergies</p>
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Allergies</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">Allergies connues</h3>
+							<h3 class="mt-1 text-lg font-bold text-slate-900">Allergies connues</h3>
 						</div>
 
 						<button
@@ -1389,7 +1387,7 @@
 								<select
 									bind:value={allergy.category}
 									aria-label={`Catégorie de l’allergie ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="MEDICATION">Médicament</option>
 									<option value="FOOD">Aliment</option>
@@ -1402,20 +1400,20 @@
 									type="text"
 									bind:value={allergy.name}
 									placeholder="Allergène"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={allergy.reaction}
 									placeholder="Réaction"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<select
 									bind:value={allergy.severity}
 									aria-label={`Gravité de l’allergie ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="LOW">Faible</option>
 									<option value="MODERATE">Modérée</option>
@@ -1438,11 +1436,11 @@
 				<section class="space-y-4 border-t border-slate-200 pt-6">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Antécédents médicaux
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">Maladies passées et chroniques</h3>
+							<h3 class="mt-1 text-lg font-bold text-slate-900">Maladies passées et chroniques</h3>
 						</div>
 
 						<button
@@ -1464,13 +1462,13 @@
 									type="text"
 									bind:value={history.disease}
 									placeholder="Maladie"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<select
 									bind:value={history.historyType}
 									aria-label={`Type d’antécédent ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="PAST">Passé</option>
 									<option value="CHRONIC">Chronique</option>
@@ -1480,20 +1478,20 @@
 									type="date"
 									bind:value={history.diagnosedAt}
 									aria-label={`Date du diagnostic ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="date"
 									bind:value={history.resolvedAt}
 									aria-label={`Date de résolution ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<select
 									bind:value={history.status}
 									aria-label={`Statut de l’antécédent ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="UNKNOWN">Inconnu</option>
 									<option value="ACTIVE">Actif</option>
@@ -1513,7 +1511,7 @@
 									bind:value={history.notes}
 									rows="2"
 									placeholder="Observations"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-6"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-6"
 								></textarea>
 							</div>
 						{/each}
@@ -1522,11 +1520,11 @@
 				<section class="space-y-4 border-t border-slate-200 pt-6">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Antécédents chirurgicaux
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">Interventions antérieures</h3>
+							<h3 class="mt-1 text-lg font-bold text-slate-900">Interventions antérieures</h3>
 						</div>
 
 						<button
@@ -1548,21 +1546,21 @@
 									type="text"
 									bind:value={surgery.procedureName}
 									placeholder="Intervention"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="date"
 									bind:value={surgery.procedureDate}
 									aria-label={`Date de l’intervention ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={surgery.facility}
 									placeholder="Établissement"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -1570,7 +1568,7 @@
 									bind:value={surgery.indication}
 									disabled
 									placeholder="Indication"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -1586,14 +1584,14 @@
 									bind:value={surgery.complications}
 									rows="2"
 									placeholder="Complications"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-2"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-2"
 								></textarea>
 
 								<textarea
 									bind:value={surgery.notes}
 									rows="2"
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2 xl:col-span-3"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2 xl:col-span-3"
 								></textarea>
 							</div>
 						{/each}
@@ -1602,11 +1600,11 @@
 				<section class="space-y-4 border-t border-slate-200 pt-6">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Antécédents familiaux
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">
+							<h3 class="mt-1 text-lg font-bold text-slate-900">
 								Maladies familiales et héréditaires
 							</h3>
 						</div>
@@ -1630,14 +1628,14 @@
 									type="text"
 									bind:value={history.relationship}
 									placeholder="Lien familial"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={history.disease}
 									placeholder="Maladie"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
@@ -1646,14 +1644,14 @@
 									bind:value={history.ageAtDiagnosis}
 									disabled
 									placeholder="Âge au diagnostic"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={history.notes}
 									placeholder="Observations"
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -1673,17 +1671,17 @@
 				<section class="space-y-6">
 					<div class="flex items-center justify-between">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Constantes
 							</p>
 
-							<h3 class="mt-1 text-lg font-black text-slate-900">Historique des mesures</h3>
+							<h3 class="mt-1 text-lg font-bold text-slate-900">Historique des mesures</h3>
 						</div>
 
 						<button
 							type="button"
 							onclick={addVitalRecord}
-							class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white"
+							class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 						>
 							<Plus size={16} />
 							Ajouter une mesure
@@ -1698,7 +1696,7 @@
 										type="datetime-local"
 										bind:value={vital.measuredAt}
 										aria-label={`Date de mesure ${index + 1}`}
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1724,7 +1722,7 @@
 										value={vital.bmi ?? ''}
 										readonly
 										placeholder="IMC"
-										class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1732,35 +1730,35 @@
 										step="0.1"
 										bind:value={vital.temperature}
 										placeholder="Température"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="number"
 										bind:value={vital.bloodPressureSystolic}
 										placeholder="TA systolique"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="number"
 										bind:value={vital.bloodPressureDiastolic}
 										placeholder="TA diastolique"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="number"
 										bind:value={vital.heartRate}
 										placeholder="Fréquence cardiaque"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="number"
 										bind:value={vital.respiratoryRate}
 										placeholder="Fréquence respiratoire"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1768,7 +1766,7 @@
 										step="0.1"
 										bind:value={vital.oxygenSaturation}
 										placeholder="Saturation"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1776,7 +1774,7 @@
 										step="0.01"
 										bind:value={vital.bloodGlucose}
 										placeholder="Glycémie"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1784,7 +1782,7 @@
 										step="0.1"
 										bind:value={vital.waistCircumferenceCm}
 										placeholder="Tour de taille"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1793,14 +1791,14 @@
 										max="10"
 										bind:value={vital.painScore}
 										placeholder="Douleur /10"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={vital.painDuration}
 										placeholder="Durée de la douleur"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<button
@@ -1816,14 +1814,14 @@
 										type="text"
 										bind:value={vital.painLocation}
 										placeholder="Localisation douleur"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
 										type="text"
 										bind:value={vital.painType}
 										placeholder="Type de douleur"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 
 									<input
@@ -1831,7 +1829,7 @@
 										bind:value={vital.measuredBy}
 										disabled
 										placeholder="Mesuré par"
-										class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+										class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									/>
 								</div>
 							</article>

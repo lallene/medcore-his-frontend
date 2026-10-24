@@ -22,10 +22,10 @@
 	}: Props = $props();
 
 	const styles: Record<Tone, string> = {
-		info: 'border-sky-200 bg-sky-50 text-sky-900',
-		success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-		warning: 'border-amber-200 bg-amber-50 text-amber-950',
-		danger: 'border-red-200 bg-red-50 text-red-900'
+		info: 'border-info-border bg-info-soft text-sky-900 [&>svg]:text-info-strong',
+		success: 'border-success-border bg-success-soft text-emerald-900 [&>svg]:text-success-strong',
+		warning: 'border-warning-border bg-warning-soft text-amber-950 [&>svg]:text-warning-strong',
+		danger: 'border-danger-border bg-danger-soft text-red-900 [&>svg]:text-danger-strong'
 	};
 
 	const Icon = $derived(
@@ -39,7 +39,7 @@
 	);
 </script>
 
-<div {role} class={cn('flex gap-3 rounded-2xl border p-4 text-sm', styles[tone], className)}>
+<div {role} class={cn('flex gap-3 rounded-lg border px-4 py-3 text-sm', styles[tone], className)}>
 	<Icon class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
 	<div class="min-w-0">
 		{#if title}<p class="font-semibold">{title}</p>{/if}

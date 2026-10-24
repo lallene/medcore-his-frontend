@@ -1,9 +1,13 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { jwtDecode } from 'jwt-decode';
-	import { Plus, Search, ShieldCheck, X } from 'lucide-svelte';
+	import { Plus, Search, X } from 'lucide-svelte';
 	import { getPatients, getPatient } from '$lib/api/patients';
 	import { listBillableActs } from '$lib/api/billing';
 	import {
@@ -401,15 +405,15 @@
 <div class="space-y-6">
 	<header class="flex flex-wrap items-center justify-between gap-4">
 		<div>
-			<p class="text-xs font-black uppercase tracking-widest text-violet-700">Assurance</p>
-			<h1 class="text-3xl font-black">Autorisations PEC par acte</h1>
+			<p class="text-xs font-semibold uppercase tracking-widest text-violet-700">Assurance</p>
+			<h1 class="text-3xl font-bold">Autorisations PEC par acte</h1>
 			<p class="text-sm text-slate-500">
 				Décisions externes consignées dans MedCore — distinctes des couvertures contractuelles.
 			</p>
 		</div>
 		{#if canCreate}<button
 				onclick={openCreate}
-				class="rounded-xl bg-violet-700 px-4 py-3 font-bold text-white"
+				class="rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-primary-hover transition-colors"
 				><Plus class="inline" size={18} /> Nouvelle PEC</button
 			>{/if}
 	</header>
@@ -418,8 +422,8 @@
 		{#each [['En attente', metrics.pending], ['Accordées', metrics.approved], ['Partielles', metrics.partial], ['Refusées', metrics.rejected], ['Aujourd’hui', metrics.today]] as metric (metric[0])}<div
 				class="rounded-2xl border bg-white p-4"
 			>
-				<p class="text-xs font-bold uppercase text-slate-400">{metric[0]}</p>
-				<p class="text-2xl font-black">{metric[1]}</p>
+				<p class="text-xs font-bold uppercase text-slate-500">{metric[0]}</p>
+				<p class="text-2xl font-bold">{metric[1]}</p>
 			</div>{/each}
 	</section>
 	<section class="rounded-2xl border bg-white">
@@ -454,53 +458,52 @@
 				class="rounded-lg border font-bold">Filtrer</button
 			>
 		</div>
-		{#if loading}<p class="p-8 text-center text-sm text-slate-500">Chargement des PEC…</p>{/if}
-		<div class="overflow-x-auto">
-			<table class="w-full min-w-[1000px] text-left text-sm">
-				<thead class="bg-slate-50 text-xs uppercase text-slate-400"
-					><tr
-						><th class="p-3">PEC</th><th>Patient</th><th>Acte</th><th>Assureur</th><th>Demandé</th
-						><th>Décision</th><th>Assurance</th><th>Patient</th><th>Action</th></tr
-					></thead
-				><tbody
-					>{#each items as item (item.id)}<tr class="border-t"
-							><td class="p-3 font-black text-violet-800">{item.authorizationNumber}</td><td
-								><b>{item.patientName}</b><small class="block">{item.patientCode}</small></td
-							><td>{item.referenceLabel}<small class="block">{item.service || '—'}</small></td><td
-								>{item.companyName}<small class="block">Contrat {item.contractRate}%</small></td
-							><td>{money(item.requestedAmount)}</td><td>{authorizationStatusLabel[item.status]}</td
-							><td>{money(item.insuranceAmount)}</td><td>{money(item.patientAmount)}</td><td
-								><button onclick={() => (selected = item)} class="font-bold text-violet-700"
-									>Ouvrir</button
-								></td
-							></tr
-						>{:else}<tr
-							><td colspan="9" class="p-12 text-center"
-								><ShieldCheck class="mx-auto text-slate-300" /><b class="mt-2 block">Aucune PEC</b
-								></td
-							></tr
-						>{/each}</tbody
-				>
-			</table>
-		</div>
-		<footer class="flex justify-between border-t p-3 text-sm">
-			<span>{total} résultat(s)</span>
-			<div class="space-x-2">
-				<button
-					disabled={currentPage <= 1}
-					onclick={() => {
-						currentPage--;
-						void load();
-					}}>Précédent</button
-				><span>Page {currentPage}</span><button
-					disabled={items.length < 20}
-					onclick={() => {
-						currentPage++;
-						void load();
-					}}>Suivant</button
-				>
-			</div>
-		</footer>
+		{#if loading && items.length > 0}<p class="mb-2 text-xs text-muted-foreground" role="status">
+				Chargement des PEC…
+			</p>{/if}
+		<Table minWidth="1000px">
+			<thead
+				><tr
+					><th>PEC</th><th>Patient</th><th>Acte</th><th>Assureur</th><th class="mc-num">Demandé</th
+					><th>Décision</th><th class="mc-num">Assurance</th><th class="mc-num">Patient</th><th
+						class="mc-actions">Action</th
+					></tr
+				></thead
+			><tbody
+				>{#each items as item (item.id)}<tr
+						><td class="mc-id">{item.authorizationNumber}</td><td
+							><b>{item.patientName}</b><small class="block">{item.patientCode}</small></td
+						><td>{item.referenceLabel}<small class="block">{item.service || '—'}</small></td><td
+							>{item.companyName}<small class="block">Contrat {item.contractRate}%</small></td
+						><td class="mc-amount">{money(item.requestedAmount)}</td><td
+							>{authorizationStatusLabel[item.status]}</td
+						><td class="mc-amount">{money(item.insuranceAmount)}</td><td class="mc-amount"
+							>{money(item.patientAmount)}</td
+						><td class="mc-actions"
+							><Button size="sm" variant="ghost" onclick={() => (selected = item)}>Ouvrir</Button
+							></td
+						></tr
+					>{:else}{#if loading}<TableState
+							state="loading"
+							colspan={9}
+							title="Chargement des PEC…"
+						/>{:else}<TableState state="empty" colspan={9} title="Aucune PEC" />{/if}{/each}</tbody
+			>
+		</Table>
+		<Pagination
+			class="mt-3"
+			page={currentPage}
+			totalPages={0}
+			{total}
+			pageSize={20}
+			showPages={false}
+			hasNext={items.length >= 20}
+			disabled={loading}
+			onpage={(next) => {
+				currentPage = next;
+				void load();
+			}}
+		/>
 	</section>
 </div>
 
@@ -515,7 +518,7 @@
 		>
 			<header class="flex justify-between">
 				<div>
-					<h2 class="text-xl font-black">Nouvelle demande PEC</h2>
+					<h2 class="text-xl font-bold">Nouvelle demande PEC</h2>
 					<p class="text-sm text-slate-500">
 						Le taux contractuel reste informatif et ne préremplit aucune décision.
 					</p>
@@ -612,7 +615,7 @@
 					</div>{/if}
 			</div>
 			<section class="rounded-xl border p-3">
-				<h3 class="font-black">Actes concernés</h3>
+				<h3 class="font-bold">Actes concernés</h3>
 				{#if deepLinkError}
 					<p class="py-4 text-sm font-bold text-rose-700" data-testid="auth-deeplink-error">
 						{deepLinkError}
@@ -701,8 +704,8 @@
 		<aside class="h-full w-full max-w-2xl overflow-y-auto bg-white p-6">
 			<header class="flex justify-between">
 				<div>
-					<p class="font-black text-violet-700">{selected.authorizationNumber}</p>
-					<h2 class="text-2xl font-black">{authorizationStatusLabel[selected.status]}</h2>
+					<p class="font-bold text-violet-700">{selected.authorizationNumber}</p>
+					<h2 class="text-2xl font-bold">{authorizationStatusLabel[selected.status]}</h2>
 				</div>
 				<button onclick={() => (selected = null)}><X /></button>
 			</header>
@@ -737,7 +740,7 @@
 				</p>
 			</section>
 			<section class="mt-5 rounded-xl border p-4">
-				<h3 class="font-black">Actes couverts par cette PEC</h3>
+				<h3 class="font-bold">Actes couverts par cette PEC</h3>
 				<p class="mt-1 text-sm text-slate-500">Acte principal : {selected.referenceLabel}</p>
 				{#if selected.coveredActs?.length}
 					<ul class="mt-3 space-y-2 text-sm">
@@ -761,7 +764,7 @@
 				{/if}
 			</section>
 			{#if actions.submittable && canSubmit}<section class="mt-5 rounded-xl border p-4">
-					<h3 class="font-black">Envoi au portail assureur</h3>
+					<h3 class="font-bold">Envoi au portail assureur</h3>
 					<input
 						bind:value={externalReference}
 						placeholder="Référence externe si disponible"
@@ -769,7 +772,7 @@
 					/><button
 						disabled={busy}
 						onclick={submit}
-						class="mt-3 rounded-lg bg-blue-700 px-4 py-2 font-bold text-white"
+						class="mt-3 rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 						>Marquer comme envoyée</button
 					>
 				</section>{/if}
@@ -782,7 +785,7 @@
 			{/if}
 			{#if actions.decidable && canDecide}<section class="mt-5 space-y-3 rounded-xl border p-4">
 					<div class="flex items-center gap-2">
-						<h3 class="font-black">Décision saisie depuis le portail assureur</h3>
+						<h3 class="font-bold">Décision saisie depuis le portail assureur</h3>
 						<HelpHint helpKey="insurance.authorization.decision" />
 					</div>
 					<div class="grid gap-3 sm:grid-cols-2">
@@ -841,7 +844,7 @@
 					<button
 						disabled={busy}
 						onclick={decide}
-						class="rounded-lg bg-violet-700 px-4 py-2 font-bold text-white"
+						class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 						>Enregistrer la décision</button
 					>
 				</section>{/if}{#if actions.cancellable && canCancel}<button

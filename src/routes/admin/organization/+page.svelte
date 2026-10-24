@@ -118,8 +118,8 @@
 <div class="space-y-6 p-6">
 	<header class="flex justify-between">
 		<div>
-			<p class="text-xs font-black uppercase text-indigo-700">Administration</p>
-			<h1 class="text-3xl font-black">Départements et services</h1>
+			<p class="text-xs font-semibold uppercase text-indigo-700">Administration</p>
+			<h1 class="text-3xl font-bold">Départements et services</h1>
 			<p class="text-slate-500">Référentiel organisationnel transversal</p>
 		</div>
 		<button
@@ -135,16 +135,21 @@
 			}}
 			class="grid gap-3 rounded-2xl border bg-white p-5 md:grid-cols-5"
 		>
-			<input bind:value={department.code} placeholder="Code" class="rounded-xl border p-3" /><input
+			<input
+				bind:value={department.code}
+				placeholder="Code"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><input
 				bind:value={department.name}
 				placeholder="Nom"
-				class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
 			/><input
 				bind:value={department.description}
 				placeholder="Description"
-				class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
 			/><label><input type="checkbox" bind:checked={department.active} /> Actif</label><button
-				class="rounded-xl bg-indigo-700 text-white">Enregistrer</button
+				class="rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+				>Enregistrer</button
 			>
 		</form>{/if}
 	{#if showService}<form
@@ -154,15 +159,19 @@
 			}}
 			class="grid gap-3 rounded-2xl border bg-white p-5 md:grid-cols-4"
 		>
-			<select bind:value={service.departmentId} class="rounded-xl border p-3"
+			<select bind:value={service.departmentId} class="min-h-control rounded-lg border px-3 py-2"
 				><option value={0}>Département</option>{#each catalog.departments as d (d.id)}<option
 						value={d.id}>{d.name}</option
 					>{/each}</select
-			><input bind:value={service.code} placeholder="Code" class="rounded-xl border p-3" /><input
+			><input
+				bind:value={service.code}
+				placeholder="Code"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><input
 				bind:value={service.name}
 				placeholder="Nom"
-				class="rounded-xl border p-3"
-			/><select bind:value={service.serviceType} class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><select bind:value={service.serviceType} class="min-h-control rounded-lg border px-3 py-2"
 				>{#each types as t (t)}<option value={t}>{t}</option>{/each}</select
 			><label><input type="checkbox" bind:checked={service.active} /> Actif</label><label
 				><input type="checkbox" bind:checked={service.clinical} /> Clinique</label
@@ -171,14 +180,16 @@
 			><label
 				><input type="checkbox" bind:checked={service.supportsHospitalization} /> Hospitalisations</label
 			><label><input type="checkbox" bind:checked={service.supportsBeds} /> Chambres/lits</label
-			><button class="rounded-xl bg-indigo-700 p-3 text-white">Enregistrer</button>
+			><button class="rounded-lg bg-primary p-3 text-white hover:bg-primary-hover transition-colors"
+				>Enregistrer</button
+			>
 		</form>{/if}
 	<div class="space-y-4">
 		{#each catalog.departments as d (d.id)}<section class="rounded-2xl border bg-white p-5">
 				<div class="flex justify-between">
 					<div>
-						<h2 class="text-xl font-black">
-							{d.name} <small class="text-slate-400">{d.code}</small>
+						<h2 class="text-xl font-bold">
+							{d.name} <small class="text-slate-500">{d.code}</small>
 						</h2>
 						<span class="text-xs">{d.active ? 'Actif' : 'Inactif'}</span>
 					</div>
@@ -197,7 +208,7 @@
 							onclick={() => editService(s)}
 							class="flex justify-between rounded-xl border p-4 text-left"
 							><span
-								><b>{s.name}</b><small class="ml-2 text-slate-400">{s.code}</small><br /><small
+								><b>{s.name}</b><small class="ml-2 text-slate-500">{s.code}</small><br /><small
 									>{s.serviceType}</small
 								></span
 							><span>{s.active ? 'Actif' : 'Inactif'}</span></button

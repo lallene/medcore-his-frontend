@@ -21,11 +21,11 @@
 		class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between"
 	>
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Consultation médicale
 			</p>
 
-			<h1 class="mt-1 text-2xl font-black text-slate-900">
+			<h1 class="mt-1 text-2xl font-bold text-slate-900">
 				Consultation #{consultationId}
 			</h1>
 

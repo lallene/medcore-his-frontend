@@ -16,11 +16,11 @@
 
 <div class="mx-auto max-w-2xl p-8">
 	{#if receipt}<header class="text-center">
-			<h1 class="text-2xl font-black">MEDCORE HIS</h1>
+			<h1 class="text-2xl font-bold">MEDCORE HIS</h1>
 			<h2>REÇU DE PAIEMENT</h2>
-			{#if duplicate}<p class="font-black text-red-700">DUPLICATA</p>{/if}
+			{#if duplicate}<p class="font-bold text-red-700">DUPLICATA</p>{/if}
 			{#if receipt.paymentReversed}<p
-					class="mt-2 font-black text-amber-800"
+					class="mt-2 font-bold text-amber-800"
 					data-testid="receipt-payment-reversed"
 				>
 					Encaissement contrepassé

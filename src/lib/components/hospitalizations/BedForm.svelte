@@ -80,26 +80,33 @@
 			>Code généré<input
 				value={code || 'Sélectionnez une chambre'}
 				readonly
-				class="mt-1 w-full rounded-xl border bg-slate-50 p-3 text-slate-600"
+				class="min-h-control mt-1 w-full rounded-lg border bg-slate-50 text-slate-600 px-3 py-2"
 			/></label
 		><label class="text-sm font-bold"
-			>Libellé<input bind:value={label} class="mt-1 w-full rounded-xl border p-3" /></label
+			>Libellé<input
+				bind:value={label}
+				class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
+			/></label
 		><label class="text-sm font-bold"
 			>Chambre<select
 				bind:value={roomId}
 				disabled={locked}
-				class="mt-1 w-full rounded-xl border p-3"
+				class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 				><option value="">Choisir</option
 				>{#each rooms.filter((room) => room.isActive || room.id === bed?.roomId) as room (room.id)}<option
 						value={room.id}>{room.department} · {room.code} · {room.name}</option
 					>{/each}</select
 			></label
 		><label class="text-sm font-bold"
-			>Type<select bind:value={bedType} class="mt-1 w-full rounded-xl border bg-white p-3"
+			>Type<select
+				bind:value={bedType}
+				class="min-h-control mt-1 w-full rounded-lg border bg-white px-3 py-2"
 				>{#each bedTypeOptions as type (type)}<option value={type}>{type}</option>{/each}</select
 			></label
 		>{#if !locked}<label class="text-sm font-bold"
-				>Statut opérationnel<select bind:value={status} class="mt-1 w-full rounded-xl border p-3"
+				>Statut opérationnel<select
+					bind:value={status}
+					class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 					>{#each administrativeBedStatuses as option (option)}<option value={option}
 							>{bedStatusLabel(option)}</option
 						>{/each}</select
@@ -117,7 +124,7 @@
 		<button type="button" onclick={oncancel} class="rounded-xl border px-4 py-2">Annuler</button
 		><button
 			disabled={loading}
-			class="rounded-xl bg-[#0E4C92] px-4 py-2 font-bold text-white disabled:opacity-50"
+			class="rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-50 hover:bg-primary-hover transition-colors"
 			>{loading ? 'Enregistrement...' : 'Enregistrer'}</button
 		>
 	</div>

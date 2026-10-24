@@ -1,4 +1,8 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+	import LinkButton from '$lib/components/ui/LinkButton.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -53,8 +57,8 @@
 
 <div class="space-y-6 p-6">
 	<header>
-		<p class="text-xs font-black uppercase text-rose-700">Recouvrement patient</p>
-		<h1 class="text-3xl font-black">Créances patients</h1>
+		<p class="text-xs font-semibold uppercase text-rose-700">Recouvrement patient</p>
+		<h1 class="text-3xl font-bold">Créances patients</h1>
 		<p class="text-sm text-slate-500">
 			Restes dus par les patients uniquement — hors créances assurances.
 		</p>
@@ -65,7 +69,7 @@
 					class="rounded-2xl border bg-white p-4"
 				>
 					<small class="font-bold uppercase text-slate-500">{x[0]}</small>
-					<p class="mt-2 text-xl font-black">{x[1]}</p>
+					<p class="mt-2 text-xl font-bold">{x[1]}</p>
 				</div>{/each}
 		</section>{/if}
 	<section class="rounded-2xl border bg-white">
@@ -73,59 +77,64 @@
 			<input
 				bind:value={search}
 				placeholder="Patient, code ou facture"
-				class="rounded-xl border p-3"
-			/><select bind:value={status} class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><select bind:value={status} class="min-h-control rounded-lg border px-3 py-2"
 				><option value="">Tous statuts</option><option value="DUE">À payer</option><option
 					value="PARTIALLY_PAID">Partiellement payé</option
 				><option value="OVERDUE">Échu</option></select
-			><select bind:value={due} class="rounded-xl border p-3"
+			><select bind:value={due} class="min-h-control rounded-lg border px-3 py-2"
 				><option value="">Toutes échéances</option><option value="OVERDUE">Échues</option><option
 					value="FUTURE">À venir</option
 				><option value="NONE">Sans échéance</option></select
-			><button onclick={load} class="rounded-xl bg-slate-900 font-bold text-white">Filtrer</button>
+			><button
+				onclick={load}
+				class="rounded-lg bg-primary font-semibold text-white hover:bg-primary-hover transition-colors"
+				>Filtrer</button
+			>
 		</div>
-		{#if loading}<p class="p-8 text-center">Chargement…</p>{:else}<div class="overflow-x-auto">
-				<table class="w-full min-w-[1250px] text-left text-sm">
-					<thead class="bg-slate-50 text-xs uppercase text-slate-500"
-						><tr
-							><th class="p-3">Patient</th><th>Facture</th><th>Actes</th><th>Brut</th><th
-								>Assurance</th
-							><th>Part patient</th><th>Payé</th><th>Reste patient</th><th>Échéance</th><th
-								>Statut</th
-							><th>Actions</th></tr
-						></thead
-					><tbody
-						>{#each rows as r (r.invoiceId)}<tr class="border-t"
-								><td class="p-3"
-									><b>{r.patientName}</b><small class="block">{r.patientCode}</small></td
-								><td
-									><a class="font-black text-blue-700" href={resolve(`/receivables/${r.invoiceId}`)}
-										>{r.invoiceNumber}</a
-									><small class="block">{new Date(r.invoiceDate).toLocaleDateString('fr-FR')}</small
-									></td
-								><td class="max-w-48 truncate">{r.descriptions}</td><td
-									>{formatXOF(r.grossAmount)}</td
-								><td>{formatXOF(r.insuranceAmount)}</td><td>{formatXOF(r.patientDue)}</td><td
-									>{formatXOF(r.patientPaid)}</td
-								><td class="font-black text-rose-700">{formatXOF(r.patientBalance)}</td><td
-									>{r.dueDate ? new Date(r.dueDate).toLocaleDateString('fr-FR') : '—'}</td
-								><td>{statusLabel[r.status]}</td><td class="space-x-2"
-									><a href={resolve(`/receivables/${r.invoiceId}`)} class="font-bold text-blue-700"
-										>Détail</a
-									>{#if permissions.includes('*') || permissions.includes('billing.payment.create') || permissions.includes('cash.payment.create')}<button
-											type="button"
-											onclick={() => openCollection(r.invoiceId)}
-											class="font-bold text-emerald-700"
-											data-testid={`receivable-encaisser-${r.invoiceId}`}>Encaisser</button
-										>{/if}</td
-								></tr
-							>{:else}<tr
-								><td colspan="11" class="p-10 text-center text-slate-500"
-									>Aucune créance patient active.</td
-								></tr
-							>{/each}</tbody
-					>
-				</table>
-			</div>{/if}
+		<Table minWidth="1250px">
+			<thead
+				><tr
+					><th>Patient</th><th>Facture</th><th>Actes</th><th class="mc-num">Brut</th><th
+						class="mc-num">Assurance</th
+					><th class="mc-num">Part patient</th><th class="mc-num">Payé</th><th class="mc-num"
+						>Reste patient</th
+					><th>Échéance</th><th>Statut</th><th class="mc-actions">Actions</th></tr
+				></thead
+			><tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={11}
+						title="Chargement…"
+					/>{:else}{#each rows as r (r.invoiceId)}<tr
+							><td><b>{r.patientName}</b><small class="block">{r.patientCode}</small></td><td
+								><a href={resolve(`/receivables/${r.invoiceId}`)}>{r.invoiceNumber}</a><small
+									class="block">{new Date(r.invoiceDate).toLocaleDateString('fr-FR')}</small
+								></td
+							><td class="max-w-48 truncate">{r.descriptions}</td><td class="mc-amount"
+								>{formatXOF(r.grossAmount)}</td
+							><td class="mc-amount">{formatXOF(r.insuranceAmount)}</td><td class="mc-amount"
+								>{formatXOF(r.patientDue)}</td
+							><td class="mc-amount">{formatXOF(r.patientPaid)}</td><td
+								class="text-rose-700 mc-amount font-semibold">{formatXOF(r.patientBalance)}</td
+							><td>{r.dueDate ? new Date(r.dueDate).toLocaleDateString('fr-FR') : '—'}</td><td
+								>{statusLabel[r.status]}</td
+							><td class="mc-actions"
+								><LinkButton size="sm" variant="ghost" href={resolve(`/receivables/${r.invoiceId}`)}
+									>Détail</LinkButton
+								>{#if permissions.includes('*') || permissions.includes('billing.payment.create') || permissions.includes('cash.payment.create')}<Button
+										size="sm"
+										variant="secondary"
+										onclick={() => openCollection(r.invoiceId)}
+										data-testid={`receivable-encaisser-${r.invoiceId}`}>Encaisser</Button
+									>{/if}</td
+							></tr
+						>{:else}<TableState
+							state="empty"
+							colspan={11}
+							title="Aucune créance patient active."
+						/>{/each}{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

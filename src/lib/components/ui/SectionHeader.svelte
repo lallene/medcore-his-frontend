@@ -16,7 +16,7 @@
 <div class={cn('mb-4 flex flex-wrap items-end justify-between gap-3', className)}>
 	<div>
 		<h2 class={medcoreTypography.sectionTitle}>{title}</h2>
-		{#if description}<p class="mt-1 text-sm text-slate-500">{description}</p>{/if}
+		{#if description}<p class="mt-1 text-sm text-muted-foreground">{description}</p>{/if}
 	</div>
 	{#if actions}<div class="flex gap-2">{@render actions()}</div>{/if}
 </div>

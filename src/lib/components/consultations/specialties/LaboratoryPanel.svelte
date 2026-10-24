@@ -254,11 +254,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Demande de laboratoire
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Prescripteur et contexte clinique</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Prescripteur et contexte clinique</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -271,7 +271,7 @@
 					id="lab-prescriber"
 					type="text"
 					bind:value={form.prescribingDoctor}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -284,7 +284,7 @@
 					id="lab-department"
 					type="text"
 					bind:value={form.requestingDepartment}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -297,7 +297,7 @@
 					id="lab-consultation-reference"
 					type="text"
 					bind:value={form.originConsultationReference}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -310,7 +310,7 @@
 					id="lab-indication"
 					bind:value={form.clinicalIndication}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 
 			<div>
@@ -321,7 +321,7 @@
 				<select
 					id="lab-urgency"
 					bind:value={form.urgencyLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NORMAL">Normal</option>
@@ -335,11 +335,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Examens demandés
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Sélection des analyses à réaliser</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Sélection des analyses à réaliser</h4>
 			</div>
 
 			<button
@@ -361,14 +361,14 @@
 						type="text"
 						bind:value={item.code}
 						placeholder="Code"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.name}
 						placeholder="Nom de l’examen"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -386,9 +386,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Prélèvement</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Prélèvement</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Échantillon et conditions de collecte</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Échantillon et conditions de collecte</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -400,7 +400,7 @@
 				<select
 					id="sample-type"
 					bind:value={form.sampleType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="BLOOD">Sang</option>
@@ -421,7 +421,7 @@
 					type="text"
 					bind:value={form.otherSampleType}
 					disabled={form.sampleType !== 'OTHER'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -434,7 +434,7 @@
 					id="collection-date"
 					type="date"
 					bind:value={form.collectionDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -447,7 +447,7 @@
 					id="collection-time"
 					type="time"
 					bind:value={form.collectionTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -460,7 +460,7 @@
 					id="collector"
 					type="text"
 					bind:value={form.collector}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -473,7 +473,7 @@
 					id="sample-number"
 					type="text"
 					bind:value={form.sampleNumber}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -492,7 +492,7 @@
 					id="collection-conditions"
 					type="text"
 					bind:value={form.collectionConditions}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -501,17 +501,17 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Résultats analytiques
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Valeurs et intervalles de référence</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Valeurs et intervalles de référence</h4>
 			</div>
 
 			<button
 				type="button"
 				onclick={addResult}
-				class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-2 text-sm font-bold text-white"
+				class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 			>
 				<Plus size={16} />
 				Ajouter un résultat
@@ -523,12 +523,12 @@
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="font-black text-slate-900">
+							<p class="font-bold text-slate-900">
 								Analyse #{index + 1}
 							</p>
 
 							<span
-								class={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-black ${statusClasses(item.status)}`}
+								class={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClasses(item.status)}`}
 							>
 								{statusLabel(item.status)}
 							</span>
@@ -557,7 +557,7 @@
 								id={`analysis-name-${index}`}
 								type="text"
 								bind:value={item.analysisName}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -591,7 +591,7 @@
 								id={`analysis-unit-${index}`}
 								type="text"
 								bind:value={item.unit}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -680,7 +680,7 @@
 								type="text"
 								bind:value={item.textValue}
 								placeholder="Positif, négatif, aspect, culture..."
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -696,7 +696,7 @@
 								id={`technician-${index}`}
 								type="text"
 								bind:value={item.technician}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -712,7 +712,7 @@
 								id={`result-notes-${index}`}
 								type="text"
 								bind:value={item.notes}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 					</div>
@@ -723,11 +723,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Validation biologique
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Interprétation et validation finale</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Interprétation et validation finale</h4>
 		</div>
 
 		<div>
@@ -739,7 +739,7 @@
 				id="biologist-comment"
 				bind:value={form.biologistComment}
 				rows="5"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
@@ -752,7 +752,7 @@
 					id="validating-biologist"
 					type="text"
 					bind:value={form.validatingBiologist}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -765,7 +765,7 @@
 					id="validation-date"
 					type="datetime-local"
 					bind:value={form.validationDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -780,7 +780,7 @@
 				type="text"
 				bind:value={form.resultPdfReference}
 				placeholder="URL ou référence du compte rendu"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 	</section>

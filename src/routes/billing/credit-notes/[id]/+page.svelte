@@ -23,9 +23,9 @@
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
 	{#if note}
 		<header class="text-center">
-			<h1 class="text-2xl font-black">MEDCORE HIS</h1>
-			<h2 class="text-xl font-black tracking-wide" data-testid="credit-note-doc-type">AVOIR</h2>
-			<p class="mt-2 text-xl font-black" data-testid="credit-note-doc-number">{note.number}</p>
+			<h1 class="text-2xl font-bold">MEDCORE HIS</h1>
+			<h2 class="text-xl font-bold tracking-wide" data-testid="credit-note-doc-type">AVOIR</h2>
+			<p class="mt-2 text-xl font-bold" data-testid="credit-note-doc-number">{note.number}</p>
 			<p class="mt-2 text-sm text-slate-600">
 				Document correctif de facture — ne constitue pas une restitution de fonds.
 			</p>

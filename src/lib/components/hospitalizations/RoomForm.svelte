@@ -76,8 +76,8 @@
 >
 	<div class="mb-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<Building2 size={20} class="text-[#0E4C92]" />
-			<h2 class="text-base font-black">{room ? 'Modifier la chambre' : 'Nouvelle chambre'}</h2>
+			<Building2 size={20} class="text-primary" />
+			<h2 class="text-base font-bold">{room ? 'Modifier la chambre' : 'Nouvelle chambre'}</h2>
 		</div>
 		<button type="button" onclick={oncancel} class="text-sm font-semibold text-slate-500"
 			>Fermer</button
@@ -88,14 +88,14 @@
 			>Code (généré automatiquement)<input
 				value={code || 'Sélectionnez les critères'}
 				readonly
-				class="mt-2 w-full rounded-xl border bg-slate-50 p-3 text-sm font-semibold text-slate-600"
+				class="min-h-control mt-2 w-full rounded-lg border bg-slate-50 text-sm font-semibold text-slate-600 px-3 py-2"
 			/></label
 		>
 		<label class="text-xs font-bold text-slate-700"
 			>Nom / libellé <span class="text-red-500">*</span><input
 				bind:value={name}
 				placeholder="Saisir le nom ou le libellé"
-				class="mt-2 w-full rounded-xl border p-3 text-sm"
+				class="min-h-control mt-2 w-full rounded-lg border text-sm px-3 py-2"
 			/></label
 		>
 		<label class="text-xs font-bold text-slate-700"
@@ -105,7 +105,7 @@
 		<label class="text-xs font-bold text-slate-700"
 			>Étage <span class="text-red-500">*</span><select
 				bind:value={floor}
-				class="mt-2 w-full rounded-xl border bg-white p-3 text-sm"
+				class="min-h-control mt-2 w-full rounded-lg border bg-white text-sm px-3 py-2"
 				><option value="">Sélectionner un étage</option
 				>{#each roomFloorOptions as option (option.value)}<option value={option.value}
 						>{option.label}</option
@@ -115,7 +115,7 @@
 		<label class="text-xs font-bold text-slate-700"
 			>Type de chambre <span class="text-red-500">*</span><select
 				bind:value={roomType}
-				class="mt-2 w-full rounded-xl border bg-white p-3 text-sm"
+				class="min-h-control mt-2 w-full rounded-lg border bg-white text-sm px-3 py-2"
 				><option value="">Sélectionner un type</option
 				>{#each roomTypeOptions as option (option.value)}<option value={option.value}
 						>{option.label}</option
@@ -126,12 +126,12 @@
 			>Chambre active<input
 				type="checkbox"
 				bind:checked={isActive}
-				class="h-5 w-10 accent-[#0E4C92]"
+				class="h-5 w-10 accent-primary"
 			/></label
 		>
 		<button
 			disabled={loading || !code}
-			class="rounded-xl bg-[#0E4C92] px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+			class="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 			>{loading ? 'Enregistrement...' : 'Enregistrer'}</button
 		>
 	</div>

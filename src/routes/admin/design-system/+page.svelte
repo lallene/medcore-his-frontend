@@ -95,12 +95,37 @@
 						</div>
 					{/each}
 				</div>
+				<h2 class={medcoreTypography.sectionTitle}>Tons sémantiques</h2>
+				<p class={medcoreTypography.caption}>
+					Base : icônes et graphiques · Strong : texte et fonds pleins (AA) · Soft : surfaces
+					teintées.
+				</p>
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+					{#each [['Success', medcoreColors.semantic.success, medcoreColors.semantic.successStrong, medcoreColors.semantic.successSoft], ['Warning', medcoreColors.semantic.warning, medcoreColors.semantic.warningStrong, medcoreColors.semantic.warningSoft], ['Danger', medcoreColors.semantic.danger, medcoreColors.semantic.dangerStrong, medcoreColors.semantic.dangerSoft], ['Info', medcoreColors.semantic.info, medcoreColors.semantic.infoStrong, medcoreColors.semantic.infoSoft]] as [label, base, strong, soft] (label)}
+						<div class="rounded-xl border border-border bg-surface p-4">
+							<p class="text-sm font-semibold">{label}</p>
+							<div class="mt-3 flex overflow-hidden rounded-lg border border-border">
+								<div class="h-10 flex-1" style={`background:${base}`} title={`base ${base}`}></div>
+								<div
+									class="h-10 flex-1"
+									style={`background:${strong}`}
+									title={`strong ${strong}`}
+								></div>
+								<div class="h-10 flex-1" style={`background:${soft}`} title={`soft ${soft}`}></div>
+							</div>
+							<p class="mt-2 font-mono text-xs text-muted-foreground">{base} · {strong} · {soft}</p>
+						</div>
+					{/each}
+				</div>
 				<h2 class={medcoreTypography.sectionTitle}>Typographie</h2>
 				<div class="space-y-2 rounded-2xl border border-border bg-surface p-6">
 					<p class={medcoreTypography.eyebrow}>Eyebrow</p>
 					<p class={medcoreTypography.pageTitle}>Titre de page</p>
 					<p class={medcoreTypography.sectionTitle}>Titre de section</p>
+					<p class={medcoreTypography.cardTitle}>Titre de carte</p>
 					<p class={medcoreTypography.body}>Corps de texte MedCore.</p>
+					<p class={medcoreTypography.small}>Texte secondaire (small)</p>
+					<p class={medcoreTypography.label}>Label de champ</p>
 					<p class={medcoreTypography.caption}>Légende / helper</p>
 					<p class={medcoreTypography.kpi}>1 248</p>
 				</div>
@@ -190,7 +215,7 @@
 			</section>
 		{/if}
 
-		<p class="text-xs text-slate-400">
+		<p class="text-xs text-slate-500">
 			Documentation : docs/DESIGN_SYSTEM.md — aucune exécution QA depuis cette page.
 		</p>
 	</div>

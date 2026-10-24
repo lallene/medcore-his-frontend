@@ -12,7 +12,7 @@
 
 <div class="rounded-2xl bg-slate-50 p-4 transition hover:bg-blue-50">
 	<div
-		class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#0E4C92] shadow-sm"
+		class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary shadow-sm"
 	>
 		<Icon size={20} />
 	</div>

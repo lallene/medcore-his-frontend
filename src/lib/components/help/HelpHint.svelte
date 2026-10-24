@@ -79,7 +79,7 @@
 		<button
 			bind:this={button}
 			type="button"
-			class="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition hover:text-[#0E4C92] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E4C92]/40"
+			class="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-500 transition hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
 			aria-label={`Aide : ${entry.elementLabel}`}
 			aria-describedby={`${uid}-tip`}
 			aria-expanded={detailed ? panelOpen : undefined}
@@ -117,7 +117,7 @@
 					<HelpArticle {entry} titleId={`${uid}-title`} />
 					<button
 						type="button"
-						class="rounded-md p-1 text-slate-400 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E4C92]/40"
+						class="rounded-md p-1 text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
 						aria-label="Fermer l’aide"
 						data-testid={`help-panel-close-${helpKey}`}
 						onclick={() => close(true)}
@@ -127,7 +127,7 @@
 				</div>
 				<a
 					href={resolve(`/help?key=${encodeURIComponent(helpKey)}`)}
-					class="mt-3 inline-block text-xs font-semibold text-[#0E4C92] hover:underline"
+					class="mt-3 inline-block text-xs font-semibold text-primary hover:underline"
 					>Ouvrir dans le centre d’aide</a
 				>
 			</div>

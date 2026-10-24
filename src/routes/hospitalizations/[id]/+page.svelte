@@ -61,17 +61,23 @@
 	<div class="space-y-6">
 		<button
 			onclick={() => goto(resolve('/hospitalizations'))}
-			class="text-sm font-bold text-[#0E4C92]">← Retour</button
+			class="text-sm font-bold text-primary">← Retour</button
 		>
-		<header class="rounded-3xl bg-slate-900 p-8 text-white">
-			<p class="text-xs uppercase tracking-widest text-slate-300">{item.admissionNumber}</p>
-			<div class="mt-2 flex flex-wrap items-center gap-3">
-				<h1 class="text-3xl font-black">{item.patient.nom} {item.patient.prenoms}</h1>
-				<span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black"
+		<header class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary tabular-nums">
+				{item.admissionNumber}
+			</p>
+			<div class="mt-1.5 flex flex-wrap items-center gap-3">
+				<h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+					{item.patient.nom}
+					{item.patient.prenoms}
+				</h1>
+				<span
+					class="rounded-md border border-primary-border bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary"
 					>{hospitalizationStatusLabel(item.status)}</span
 				>
 			</div>
-			<p class="mt-2 text-slate-300">
+			<p class="mt-1.5 text-sm text-muted-foreground">
 				{item.department || 'Service non renseigné'} · Consultation #{item.sourceConsultationId}
 			</p>
 		</header>
@@ -85,23 +91,23 @@
 		{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{/if}
 		<section class="grid gap-4 rounded-2xl border bg-white p-6 md:grid-cols-2">
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Motif</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Motif</p>
 				<p class="mt-1">{item.admissionReason || '—'}</p>
 			</div>
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Diagnostic admission</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Diagnostic admission</p>
 				<p class="mt-1">{item.admissionDiagnosis || '—'}</p>
 			</div>
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Type</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Type</p>
 				<p>{item.hospitalizationType || '—'}</p>
 			</div>
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Admission</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Admission</p>
 				<p>{item.admittedAt ? new Date(item.admittedAt).toLocaleString('fr-FR') : 'Planifiée'}</p>
 			</div>
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Sortie prévue</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Sortie prévue</p>
 				<p>
 					{item.expectedDischargeAt
 						? new Date(item.expectedDischargeAt).toLocaleString('fr-FR')
@@ -109,7 +115,7 @@
 				</p>
 			</div>
 			<div>
-				<p class="text-xs font-black uppercase text-slate-400">Sortie</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Sortie</p>
 				<p>{item.dischargedAt ? new Date(item.dischargedAt).toLocaleString('fr-FR') : '—'}</p>
 			</div>
 		</section>
@@ -117,34 +123,34 @@
 		{#if actions.includes('admit') || actions.includes('cancel')}<div class="flex gap-3">
 				{#if actions.includes('admit')}<button
 						onclick={() => run('admit')}
-						class="rounded-xl bg-emerald-600 px-5 py-3 font-black text-white">Admettre</button
+						class="rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white">Admettre</button
 					>{/if}{#if actions.includes('cancel')}<button
 						onclick={() => run('cancel')}
-						class="rounded-xl bg-red-600 px-5 py-3 font-black text-white">Annuler</button
+						class="rounded-xl bg-red-600 px-5 py-3 font-bold text-white">Annuler</button
 					>{/if}
 			</div>{/if}
 		{#if actions.includes('discharge')}<section class="space-y-3 rounded-2xl border bg-white p-6">
-				<h2 class="text-xl font-black">Enregistrer la sortie</h2>
+				<h2 class="text-xl font-bold">Enregistrer la sortie</h2>
 				<div class="flex items-center gap-1">
 					<input
 						bind:value={diagnosis}
 						placeholder="Diagnostic de sortie"
 						aria-label="Diagnostic de sortie"
-						class="w-full rounded-xl border p-3"
+						class="min-h-control w-full rounded-lg border px-3 py-2"
 					/><HelpHint helpKey="hospitalization.discharge.diagnosis" />
 				</div>
 				<textarea
 					bind:value={summary}
 					placeholder="Résumé de sortie"
-					class="w-full rounded-xl border p-3"></textarea><button
+					class="w-full rounded-lg border p-3"></textarea><button
 					disabled={!diagnosis.trim() || !summary.trim()}
 					onclick={() => run('discharge')}
-					class="rounded-xl bg-[#0E4C92] px-5 py-3 font-black text-white disabled:opacity-40"
+					class="rounded-xl bg-primary px-5 py-3 font-bold text-white disabled:opacity-40"
 					>Enregistrer la sortie</button
 				>
 			</section>{/if}
 		{#if item.status === 'DISCHARGED'}<section class="rounded-2xl border bg-white p-6">
-				<h2 class="font-black">Informations de sortie</h2>
+				<h2 class="font-bold">Informations de sortie</h2>
 				<p class="mt-3"><strong>Diagnostic :</strong> {item.dischargeDiagnosis}</p>
 				<p class="mt-2"><strong>Résumé :</strong> {item.dischargeSummary}</p>
 			</section>{/if}

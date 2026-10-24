@@ -50,10 +50,10 @@
 </script>
 
 <section class="space-y-4 rounded-2xl border bg-white p-6">
-	<h2 class="text-xl font-black">Chambre et lit</h2>
+	<h2 class="text-xl font-bold">Chambre et lit</h2>
 	{#if error}<p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>{/if}
 	{#if current}<div class="rounded-xl bg-blue-50 p-4">
-			<p class="font-black">{current.bed.room.name} · {current.bed.label}</p>
+			<p class="font-bold">{current.bed.room.name} · {current.bed.label}</p>
 			<p class="text-sm text-slate-600">
 				{current.bed.room.department} · {current.assignmentType === 'RESERVED'
 					? 'Réservé'
@@ -63,7 +63,7 @@
 			Admission sans lit : autorisée. Aucun lit n’est actuellement affecté.
 		</p>{/if}
 	{#if actions.assign || actions.transfer}<div class="flex flex-wrap gap-3">
-			<select bind:value={selected} class="min-w-64 rounded-xl border p-3"
+			<select bind:value={selected} class="min-h-control min-w-64 rounded-lg border px-3 py-2"
 				><option value="">Choisir un lit disponible</option
 				>{#each choices as entry (entry.bed.id)}<option value={entry.bed.id}
 						>{entry.bed.room.department} · {entry.bed.room.name} · {entry.bed.label}</option
@@ -71,7 +71,7 @@
 			><button
 				disabled={!selected || busy}
 				onclick={() => run(actions.transfer ? 'transfer' : 'assign')}
-				class="rounded-xl bg-[#0E4C92] px-4 py-3 font-bold text-white disabled:opacity-40"
+				class="rounded-xl bg-primary px-4 py-3 font-bold text-white disabled:opacity-40"
 				>{actions.transfer ? 'Transférer' : 'Affecter / réserver'}</button
 			>
 		</div>{/if}
@@ -82,7 +82,7 @@
 			>Libérer le lit</button
 		>{/if}
 	{#if assignments.length}<div>
-			<h3 class="font-black">Historique</h3>
+			<h3 class="font-bold">Historique</h3>
 			<ul class="mt-2 space-y-2 text-sm">
 				{#each assignments as assignment (assignment.id)}<li>
 						{assignment.bed.room.name} · {assignment.bed.label} — {new Date(

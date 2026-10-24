@@ -22,7 +22,12 @@
 	}: Props = $props();
 </script>
 
-<label class={cn('inline-flex items-center gap-2 text-sm text-slate-700', className)}>
+<label
+	class={cn(
+		'inline-flex items-center gap-2 text-sm text-foreground-secondary has-[:disabled]:opacity-60',
+		className
+	)}
+>
 	<input
 		{id}
 		{name}
@@ -30,7 +35,7 @@
 		{value}
 		bind:group
 		{disabled}
-		class="h-4 w-4 border-border text-primary focus:ring-primary/30"
+		class="size-4 border-border-strong text-primary focus:ring-primary/30 disabled:cursor-not-allowed"
 	/>
 	{#if label}<span>{label}</span>{/if}
 </label>

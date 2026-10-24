@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import {
@@ -23,7 +25,6 @@
 	import AccessDenied from '$lib/components/rbac/AccessDenied.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Breadcrumb from '$lib/components/ui/Breadcrumb.svelte';
 
@@ -180,7 +181,7 @@
 		/>
 		<header class="flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-black text-slate-900">Référentiel des actes</h1>
+				<h1 class="text-2xl font-bold text-slate-900">Référentiel des actes</h1>
 				<p class="mt-1 text-sm text-slate-500">
 					Catalogue clinique des actes — distinct des tarifs de facturation.
 				</p>
@@ -198,7 +199,7 @@
 			<label class="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm font-medium text-slate-700">
 				Recherche
 				<input
-					class="rounded-xl border border-slate-200 px-3 py-2"
+					class="rounded-lg border border-input px-3 py-2"
 					bind:value={search}
 					data-testid="act-catalog-search"
 					placeholder="Code ou libellé"
@@ -206,7 +207,7 @@
 			</label>
 			<label class="flex min-w-[10rem] flex-col gap-1 text-sm font-medium text-slate-700">
 				Catégorie
-				<select class="rounded-xl border border-slate-200 px-3 py-2" bind:value={categoryFilter}>
+				<select class="rounded-lg border border-input px-3 py-2" bind:value={categoryFilter}>
 					<option value="">Toutes</option>
 					{#each ACT_CATEGORIES as category (category)}
 						<option value={category}>{actCategoryLabel[category]}</option>
@@ -220,59 +221,57 @@
 			</div>
 		</div>
 
-		{#if loading}
-			<LoadingState label="Chargement du référentiel…" />
-		{:else if entries.length === 0}
-			<div
-				class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500"
-				data-testid="act-catalog-empty"
-			>
-				Aucun acte catalogue.
-			</div>
-		{:else}
-			<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-				<table class="min-w-full text-left text-sm" data-testid="act-catalog-table">
-					<thead class="bg-slate-50 text-xs font-bold tracking-wide text-slate-500 uppercase">
-						<tr>
-							<th class="px-4 py-3">Code</th>
-							<th class="px-4 py-3">Libellé</th>
-							<th class="px-4 py-3">Catégorie</th>
-							<th class="px-4 py-3">{BASE_PRICE_LABEL}</th>
-							<th class="px-4 py-3">Facturable</th>
-							<th class="px-4 py-3">Éligible PEC</th>
-							<th class="px-4 py-3">Actif</th>
-							{#if canManage}<th class="px-4 py-3"></th>{/if}
-						</tr>
-					</thead>
-					<tbody>
-						{#each entries as entry (entry.id)}
-							<tr class="border-t border-slate-100" data-testid={`act-catalog-row-${entry.id}`}>
-								<td class="px-4 py-3 font-mono font-semibold text-violet-800">{entry.code}</td>
-								<td class="px-4 py-3 font-medium text-slate-900">{entry.label}</td>
-								<td class="px-4 py-3">{actCategoryLabel[entry.category] ?? entry.category}</td>
-								<td class="px-4 py-3" data-testid="act-catalog-base-price">
-									{formatCatalogPrice(entry.basePrice, entry.currency)}
+		<Table data-testid="act-catalog-table">
+			<thead>
+				<tr>
+					<th>Code</th>
+					<th>Libellé</th>
+					<th>Catégorie</th>
+					<th class="mc-num">{BASE_PRICE_LABEL}</th>
+					<th>Facturable</th>
+					<th>Éligible PEC</th>
+					<th>Actif</th>
+					{#if canManage}<th class="mc-actions"></th>{/if}
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={canManage ? 8 : 7}
+						title="Chargement du référentiel…"
+					/>{:else if entries.length === 0}<TableState
+						state="empty"
+						colspan={canManage ? 8 : 7}
+						title="Aucun acte catalogue."
+						data-testid="act-catalog-empty"
+					/>{:else}
+					{#each entries as entry (entry.id)}
+						<tr data-testid={`act-catalog-row-${entry.id}`}>
+							<td class="font-mono mc-id">{entry.code}</td>
+							<td>{entry.label}</td>
+							<td>{actCategoryLabel[entry.category] ?? entry.category}</td>
+							<td class="mc-amount" data-testid="act-catalog-base-price">
+								{formatCatalogPrice(entry.basePrice, entry.currency)}
+							</td>
+							<td>{entry.billable ? 'Oui' : 'Non'}</td>
+							<td>{entry.insuranceEligible ? 'Oui' : 'Non'}</td>
+							<td>{entry.isActive ? 'Oui' : 'Non'}</td>
+							{#if canManage}
+								<td class="text-right mc-actions">
+									<Button
+										size="sm"
+										variant="ghost"
+										data-testid={`act-catalog-edit-${entry.id}`}
+										onclick={() => openEdit(entry)}>Modifier</Button
+									>
 								</td>
-								<td class="px-4 py-3">{entry.billable ? 'Oui' : 'Non'}</td>
-								<td class="px-4 py-3">{entry.insuranceEligible ? 'Oui' : 'Non'}</td>
-								<td class="px-4 py-3">{entry.isActive ? 'Oui' : 'Non'}</td>
-								{#if canManage}
-									<td class="px-4 py-3 text-right">
-										<Button
-											size="sm"
-											variant="ghost"
-											data-testid={`act-catalog-edit-${entry.id}`}
-											onclick={() => openEdit(entry)}>Modifier</Button
-										>
-									</td>
-								{/if}
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			<p class="text-xs text-slate-500">{BASE_PRICE_HINT}</p>
-		{/if}
+							{/if}
+						</tr>
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
+		{#if !loading && entries.length > 0}<p class="text-xs text-slate-500">{BASE_PRICE_HINT}</p>{/if}
 	</div>
 {/if}
 
@@ -289,7 +288,7 @@
 			<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 				Code
 				<input
-					class="rounded-xl border border-slate-200 px-3 py-2"
+					class="rounded-lg border border-input px-3 py-2"
 					bind:value={form.code}
 					required
 					data-testid="act-catalog-form-code"
@@ -303,7 +302,7 @@
 		<label class="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
 			Libellé
 			<input
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={form.label}
 				required
 				data-testid="act-catalog-form-label"
@@ -312,13 +311,13 @@
 		<label class="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
 			Description
 			<textarea
-				class="min-h-[4rem] rounded-xl border border-slate-200 px-3 py-2"
+				class="min-h-[4rem] rounded-lg border border-input px-3 py-2"
 				bind:value={form.description}></textarea>
 		</label>
 		<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 			Catégorie
 			<select
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={form.category}
 				data-testid="act-catalog-form-category"
 			>
@@ -333,7 +332,7 @@
 				type="number"
 				min="0"
 				step="1"
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={form.basePrice}
 				data-testid="act-catalog-form-base-price"
 			/>

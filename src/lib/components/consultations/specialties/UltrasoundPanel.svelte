@@ -148,11 +148,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Demande d’échographie
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Prescription et contexte clinique</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Prescription et contexte clinique</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -165,7 +165,7 @@
 					id="ultrasound-prescriber"
 					type="text"
 					bind:value={form.prescribingDoctor}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -178,7 +178,7 @@
 					id="ultrasound-department"
 					type="text"
 					bind:value={form.requestingDepartment}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -195,7 +195,7 @@
 					type="text"
 					bind:value={form.originConsultationReference}
 					placeholder="Référence de consultation"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -208,7 +208,7 @@
 					id="ultrasound-reason"
 					type="text"
 					bind:value={form.reason}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -221,7 +221,7 @@
 					id="ultrasound-indication"
 					bind:value={form.clinicalIndication}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 
 			<div>
@@ -232,7 +232,7 @@
 				<select
 					id="ultrasound-urgency"
 					bind:value={form.urgencyLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NORMAL">Normal</option>
@@ -249,7 +249,7 @@
 				<select
 					id="ultrasound-type"
 					bind:value={form.ultrasoundType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="ABDOMINAL">Abdominale</option>
@@ -273,7 +273,7 @@
 					type="text"
 					bind:value={form.otherUltrasoundType}
 					disabled={form.ultrasoundType !== 'OTHER'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 		</div>
@@ -281,11 +281,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Réalisation de l’examen
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Date, professionnel et observations</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Date, professionnel et observations</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
@@ -298,7 +298,7 @@
 					id="ultrasound-date"
 					type="datetime-local"
 					bind:value={form.examDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -311,7 +311,7 @@
 					id="sonographer"
 					type="text"
 					bind:value={form.sonographer}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -325,16 +325,16 @@
 				id="ultrasound-observations"
 				bind:value={form.observations}
 				rows="6"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Mesures</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Mesures</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Valeurs mesurées pendant l’examen</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Valeurs mesurées pendant l’examen</h4>
 			</div>
 
 			<button
@@ -356,7 +356,7 @@
 						type="text"
 						bind:value={item.label}
 						placeholder="Mesure"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
@@ -364,21 +364,21 @@
 						step="0.01"
 						bind:value={item.value}
 						placeholder="Valeur"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.unit}
 						placeholder="Unité"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.notes}
 						placeholder="Observations"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -396,9 +396,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Résultats</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Résultats</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Anomalies, conclusion et recommandations
 			</h4>
 		</div>
@@ -408,30 +408,30 @@
 				bind:value={form.abnormalities}
 				rows="5"
 				placeholder="Anomalies détectées"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.conclusion}
 				rows="5"
 				placeholder="Conclusion médicale"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.recommendations}
 				rows="4"
 				placeholder="Recommandations et examens complémentaires"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Images échographiques
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Images et documents associés</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Images et documents associés</h4>
 			</div>
 
 			<button
@@ -453,21 +453,21 @@
 						type="datetime-local"
 						bind:value={image.dateTime}
 						aria-label={`Date de l’image ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={image.imageReference}
 						placeholder="URL ou référence de l’image"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={image.description}
 						placeholder="Description"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -492,7 +492,7 @@
 				type="text"
 				bind:value={form.reportPdfReference}
 				placeholder="URL ou référence du document PDF"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 	</section>

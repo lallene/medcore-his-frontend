@@ -189,8 +189,8 @@
 <div class="space-y-6">
 	<header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-widest text-[#0E4C92]">Bed Management</p>
-			<h1 class="text-3xl font-black">Chambres et lits</h1>
+			<p class="text-xs font-semibold uppercase tracking-widest text-primary">Bed Management</p>
+			<h1 class="text-3xl font-bold">Chambres et lits</h1>
 			<p class="mt-1 text-sm text-slate-500">
 				Administration opérationnelle par service et chambre.
 			</p>
@@ -198,13 +198,13 @@
 		{#if canManageRoomsUI || canManageBedsUI}<div class="flex gap-3">
 				{#if canManageRoomsUI}<button
 						onclick={() => openRoom()}
-						class="inline-flex items-center gap-2 rounded-xl border border-[#0E4C92] px-4 py-3 font-bold text-[#0E4C92]"
+						class="inline-flex items-center gap-2 rounded-xl border border-primary px-4 py-3 font-bold text-primary"
 						><Plus size={17} />Nouvelle chambre</button
 					>{/if}
 				{#if canManageBedsUI}<button
 						onclick={() => openBed()}
 						disabled={!rooms.some((room) => room.isActive)}
-						class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-3 font-bold text-white disabled:opacity-40"
+						class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold text-white disabled:opacity-40"
 						><Plus size={17} />Ajouter un lit</button
 					>{/if}
 			</div>{/if}
@@ -228,31 +228,37 @@
 		{#each [{ label: 'Chambres actives', value: indicators.activeRooms }, { label: 'Lits totaux', value: indicators.total }, { label: 'Disponibles', value: indicators.available }, { label: 'Occupés', value: indicators.occupied }, { label: 'Réservés', value: indicators.reserved }, { label: 'Hors service', value: indicators.outOfService }] as metric (metric.label)}<div
 				class="rounded-2xl border bg-white p-4"
 			>
-				<p class="text-xs font-black uppercase text-slate-400">{metric.label}</p>
-				<p class="mt-2 text-2xl font-black">{metric.value}</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">{metric.label}</p>
+				<p class="mt-2 text-2xl font-bold">{metric.value}</p>
 			</div>{/each}
 	</div>
 	<div class="rounded-2xl border bg-white p-4">
-		<p class="mb-3 text-sm font-black">Filtres</p>
+		<p class="mb-3 text-sm font-bold">Filtres</p>
 		<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
-			<select bind:value={serviceId} class="rounded-xl border bg-white p-3 text-sm"
+			<select
+				bind:value={serviceId}
+				class="min-h-control rounded-lg border bg-white text-sm px-3 py-2"
 				><option value={null}>Tous les services</option
 				>{#each serviceFilters as service (service.id)}<option value={service.id}
 						>{service.name}</option
 					>{/each}</select
 			>
-			<select bind:value={floorFilter} class="rounded-xl border bg-white p-3 text-sm"
+			<select
+				bind:value={floorFilter}
+				class="min-h-control rounded-lg border bg-white text-sm px-3 py-2"
 				><option value="">Tous les étages</option>{#each floorFilters as floor (floor)}<option
 						value={floor}>{floor}</option
 					>{/each}</select
 			>
-			<select bind:value={status} class="rounded-xl border bg-white p-3 text-sm"
+			<select bind:value={status} class="min-h-control rounded-lg border bg-white text-sm px-3 py-2"
 				><option value="">Tous les statuts</option><option value="AVAILABLE">Disponible</option
 				><option value="RESERVED">Réservé</option><option value="OCCUPIED">Occupé</option><option
 					value="OUT_OF_SERVICE">Hors service</option
 				></select
 			>
-			<select bind:value={roomTypeFilter} class="rounded-xl border bg-white p-3 text-sm"
+			<select
+				bind:value={roomTypeFilter}
+				class="min-h-control rounded-lg border bg-white text-sm px-3 py-2"
 				><option value="">Tous les types</option>{#each roomTypeFilters as type (type)}<option
 						value={type}>{type}</option
 					>{/each}</select
@@ -272,17 +278,17 @@
 	{#if loading}<p>Chargement...</p>{:else if Object.keys(grouped).length === 0}<div
 			class="rounded-2xl border bg-white p-12 text-center"
 		>
-			<Building2 size={34} class="mx-auto text-slate-400" />
+			<Building2 size={34} class="mx-auto text-slate-500" />
 			<p class="mt-3 font-bold">Aucune chambre ne correspond aux filtres.</p>
 			{#if canManageRoomsUI}<button
 					onclick={() => openRoom()}
-					class="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-3 text-sm font-bold text-white"
+					class="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white"
 					><Plus size={16} />Nouvelle chambre</button
 				>{/if}
 		</div>{:else}{#each Object.entries(grouped) as [service, groups] (service)}<section
 				class="space-y-4"
 			>
-				<h2 class="text-xl font-black text-slate-800">{service}</h2>
+				<h2 class="text-xl font-bold text-slate-800">{service}</h2>
 				{#each groups as group (group.room.id)}{@const addBedAction = roomAddBedAction(
 						canManageBedsUI,
 						group.room
@@ -291,7 +297,7 @@
 						<header class="flex flex-wrap items-start justify-between gap-4 bg-slate-50 p-5">
 							<div>
 								<div class="flex items-center gap-2">
-									<h3 class="text-lg font-black">{group.room.code} — {group.room.name}</h3>
+									<h3 class="text-lg font-bold">{group.room.code} — {group.room.name}</h3>
 									{#if !group.room.isActive}<span
 											class="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold">Inactive</span
 										>{/if}
@@ -329,7 +335,7 @@
 						</header>
 						<div class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
 							{#if group.beds.length === 0}<p
-									class="col-span-full py-6 text-center text-sm text-slate-400"
+									class="col-span-full py-6 text-center text-sm text-slate-500"
 								>
 									Aucun lit dans cette chambre.
 								</p>{:else}{#each group.beds as entry (entry.bed.id)}{@const actions =
@@ -338,8 +344,8 @@
 										<div class="flex items-start justify-between gap-3">
 											<div>
 												<div class="flex items-center gap-2">
-													<BedDouble size={18} class="text-[#0E4C92]" />
-													<h4 class="font-black">{entry.bed.code} — {entry.bed.label}</h4>
+													<BedDouble size={18} class="text-primary" />
+													<h4 class="font-bold">{entry.bed.code} — {entry.bed.label}</h4>
 												</div>
 												<p class="mt-1 text-xs text-slate-500">{entry.bed.bedType}</p>
 											</div>
@@ -399,7 +405,7 @@
 
 {#if bedModal}<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
 		<div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
-			<h2 class="mb-5 text-xl font-black">{editingBed ? 'Modifier le lit' : 'Ajouter un lit'}</h2>
+			<h2 class="mb-5 text-xl font-bold">{editingBed ? 'Modifier le lit' : 'Ajouter un lit'}</h2>
 			<BedForm
 				bed={editingBed}
 				{rooms}

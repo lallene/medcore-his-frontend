@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { getTicketKPIs, listTickets } from '$lib/api/ticketing';
@@ -19,8 +21,6 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 
 	let tickets = $state<Ticket[]>([]);
@@ -72,7 +72,7 @@
 		</section>
 	{/if}
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<FilterBar class="rounded-none border-0 border-b border-border shadow-none">
 			<SearchInput bind:value={search} class="min-w-[12rem] flex-1" />
 			<Select aria-label="Statut" bind:value={status} class="min-w-[10rem]">
@@ -91,43 +91,41 @@
 			<Button variant="secondary" onclick={load}>Filtrer</Button>
 		</FilterBar>
 
-		{#if loading}
-			<LoadingState />
-		{:else if tickets.length === 0}
-			<div class="p-4"><EmptyState title="Aucun ticket dans le périmètre" /></div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm" data-testid="support-queue-table">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table data-testid="support-queue-table">
+			<thead>
+				<tr>
+					{#each supportQueueColumns as column (column)}
+						<th>{column}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={supportQueueColumns.length}
+					/>{:else if tickets.length === 0}<TableState
+						state="empty"
+						colspan={supportQueueColumns.length}
+						title="Aucun ticket dans le périmètre"
+					/>{:else}
+					{#each tickets as ticket (ticket.id)}
 						<tr>
-							{#each supportQueueColumns as column, index (column)}
-								<th class={index === 0 ? 'p-3' : ''}>{column}</th>
-							{/each}
+							<td>
+								<a href={resolve(`/tickets/${ticket.id}`)}>{ticket.reference}</a>
+							</td>
+							<td>{ticket.title || '—'}</td>
+							<td>{supportRequesterLabel(ticket)}</td>
+							<td>{supportServiceLabel(ticket)}</td>
+							<td><StatusBadge status={ticket.priority} /></td>
+							<td><StatusBadge status={ticket.status} label={statusLabels[ticket.status]} /></td>
+							<td>{supportAssigneeLabel(ticket)}</td>
+							<td class:text-danger={ticket.responseSlaBreached || ticket.resolutionSlaBreached}>
+								{supportSlaLabel(ticket)}
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each tickets as ticket (ticket.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">
-									<a
-										class="font-bold text-primary hover:underline"
-										href={resolve(`/tickets/${ticket.id}`)}>{ticket.reference}</a
-									>
-								</td>
-								<td>{ticket.title || '—'}</td>
-								<td>{supportRequesterLabel(ticket)}</td>
-								<td>{supportServiceLabel(ticket)}</td>
-								<td><StatusBadge status={ticket.priority} /></td>
-								<td><StatusBadge status={ticket.status} label={statusLabels[ticket.status]} /></td>
-								<td>{supportAssigneeLabel(ticket)}</td>
-								<td class:text-danger={ticket.responseSlaBreached || ticket.resolutionSlaBreached}>
-									{supportSlaLabel(ticket)}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

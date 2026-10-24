@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -180,7 +183,7 @@
 		<header class="flex flex-wrap items-end justify-between gap-4 print:block">
 			<div>
 				<p class="text-sm font-bold text-blue-700">RELEVÉ FINANCIER</p>
-				<h1 class="text-3xl font-black" data-testid="financial-statement-title">
+				<h1 class="text-3xl font-bold" data-testid="financial-statement-title">
 					{STATEMENT_PAGE_TITLE}
 				</h1>
 				<p class="text-lg font-bold" data-testid="financial-statement-patient">
@@ -200,14 +203,14 @@
 
 		<section class="rounded-2xl border bg-white p-5" data-testid="financial-statement-summary">
 			<div class="flex items-center gap-2">
-				<h2 class="text-lg font-black">{STATEMENT_SUMMARY_SECTION}</h2>
+				<h2 class="text-lg font-bold">{STATEMENT_SUMMARY_SECTION}</h2>
 				<HelpHint helpKey="billing.statement.balances" />
 			</div>
 			<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 				{#each summaryFieldOrder as key (key)}
 					<div class="rounded-xl bg-slate-50 p-3">
 						<p class="text-xs font-bold uppercase text-slate-500">{summaryFieldLabels[key]}</p>
-						<p class="mt-1 text-xl font-black" data-testid={`financial-statement-summary-${key}`}>
+						<p class="mt-1 text-xl font-bold" data-testid={`financial-statement-summary-${key}`}>
 							{formatXOF(statement.summary[key])}
 						</p>
 					</div>
@@ -223,29 +226,28 @@
 			class="overflow-x-auto rounded-2xl border bg-white p-5"
 			data-testid="financial-statement-invoices"
 		>
-			<h2 class="text-lg font-black">{STATEMENT_INVOICES_SECTION}</h2>
-			<table class="mt-4 w-full min-w-[960px] text-left text-sm">
-				<thead class="bg-slate-50 text-xs uppercase text-slate-500">
+			<h2 class="text-lg font-bold">{STATEMENT_INVOICES_SECTION}</h2>
+			<Table minWidth="960px">
+				<thead>
 					<tr>
-						<th class="p-2">Facture</th>
+						<th>Facture</th>
 						<th>Date</th>
 						<th>Statut</th>
-						<th>{invoiceLineFieldLabels.grossPatientObligation}</th>
-						<th>{invoiceLineFieldLabels.creditNoteReduction}</th>
-						<th>{invoiceLineFieldLabels.correctedObligation}</th>
-						<th>{invoiceLineFieldLabels.effectiveMoneyPaid}</th>
-						<th>{invoiceLineFieldLabels.creditApplied}</th>
-						<th>{invoiceLineFieldLabels.totalSettled}</th>
-						<th>{invoiceLineFieldLabels.remainingReceivable}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.grossPatientObligation}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.creditNoteReduction}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.correctedObligation}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.effectiveMoneyPaid}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.creditApplied}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.totalSettled}</th>
+						<th class="mc-num">{invoiceLineFieldLabels.remainingReceivable}</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each statement.invoices as inv (inv.invoiceId)}
-						<tr class="border-t" data-testid={`financial-statement-invoice-${inv.invoiceId}`}>
-							<td class="p-2 font-bold">
-								<a
-									class="text-blue-700 print:text-black"
-									href={resolve(`/billing/${inv.invoiceId}`)}>{inv.number}</a
+						<tr data-testid={`financial-statement-invoice-${inv.invoiceId}`}>
+							<td>
+								<a class="print:text-black" href={resolve(`/billing/${inv.invoiceId}`)}
+									>{inv.number}</a
 								>
 								{#if inv.creditNoteNumber}
 									<span class="block text-xs text-amber-800">Avoir {inv.creditNoteNumber}</span>
@@ -253,33 +255,32 @@
 							</td>
 							<td>{invoiceDate(inv)}</td>
 							<td>{invoiceStatusLabel(inv.status)}</td>
-							<td data-testid={`financial-statement-inv-gross-${inv.invoiceId}`}
+							<td class="mc-amount" data-testid={`financial-statement-inv-gross-${inv.invoiceId}`}
 								>{formatXOF(inv.grossPatientObligation)}</td
 							>
-							<td>{formatXOF(inv.creditNoteReduction)}</td>
-							<td>{formatXOF(inv.correctedObligation)}</td>
-							<td>{formatXOF(inv.effectiveMoneyPaid)}</td>
-							<td>{formatXOF(inv.creditApplied)}</td>
-							<td>{formatXOF(inv.totalSettled)}</td>
-							<td data-testid={`financial-statement-inv-receivable-${inv.invoiceId}`}
+							<td class="mc-amount">{formatXOF(inv.creditNoteReduction)}</td>
+							<td class="mc-amount">{formatXOF(inv.correctedObligation)}</td>
+							<td class="mc-amount">{formatXOF(inv.effectiveMoneyPaid)}</td>
+							<td class="mc-amount">{formatXOF(inv.creditApplied)}</td>
+							<td class="mc-amount">{formatXOF(inv.totalSettled)}</td>
+							<td
+								class="mc-amount"
+								data-testid={`financial-statement-inv-receivable-${inv.invoiceId}`}
 								>{formatXOF(inv.remainingReceivable)}</td
 							>
 						</tr>
 					{:else}
-						<tr
-							><td colspan="10" class="p-8 text-center text-slate-500">Aucune facture émise.</td
-							></tr
-						>
+						<TableState state="empty" colspan={10} title="Aucune facture émise." />
 					{/each}
 				</tbody>
-			</table>
+			</Table>
 		</section>
 
 		<section
 			class="rounded-2xl border bg-indigo-50/60 p-5"
 			data-testid="financial-statement-holders"
 		>
-			<h2 class="text-lg font-black text-indigo-950">{STATEMENT_CREDITS_SECTION}</h2>
+			<h2 class="text-lg font-bold text-indigo-950">{STATEMENT_CREDITS_SECTION}</h2>
 			{#if statement.holders.length === 0}
 				<p class="mt-3 text-sm text-slate-600">Aucun titulaire de crédit.</p>
 			{:else}
@@ -289,7 +290,7 @@
 							class="rounded-xl border border-indigo-100 bg-white p-4"
 							data-testid={`financial-statement-holder-${h.holderPartyId}`}
 						>
-							<p class="font-black">{h.displayName}</p>
+							<p class="font-bold">{h.displayName}</p>
 							<p class="text-xs text-slate-500">
 								{holderKindLabel(h.kind)} · #{h.holderPartyId}
 								{#if h.phone}
@@ -371,7 +372,7 @@
 			class="rounded-2xl border bg-white p-5 print:break-before-page"
 			data-testid="financial-statement-history"
 		>
-			<h2 class="text-lg font-black">{STATEMENT_HISTORY_SECTION}</h2>
+			<h2 class="text-lg font-bold">{STATEMENT_HISTORY_SECTION}</h2>
 			<form
 				class="mt-4 grid gap-3 print:hidden md:grid-cols-6"
 				data-testid="financial-statement-history-filters"
@@ -383,7 +384,7 @@
 				<label class="text-xs font-bold uppercase text-slate-500 md:col-span-2">
 					Type
 					<select
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="financial-statement-filter-event-type"
 						bind:value={filterEventType}
 					>
@@ -396,7 +397,7 @@
 					Du
 					<input
 						type="date"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="financial-statement-filter-date-from"
 						bind:value={filterDateFrom}
 					/>
@@ -405,7 +406,7 @@
 					Au
 					<input
 						type="date"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="financial-statement-filter-date-to"
 						bind:value={filterDateTo}
 					/>
@@ -415,7 +416,7 @@
 					<input
 						type="number"
 						min="0"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="financial-statement-filter-invoice-id"
 						bind:value={filterInvoiceId}
 					/>
@@ -425,7 +426,7 @@
 					<input
 						type="number"
 						min="0"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="financial-statement-filter-holder-id"
 						bind:value={filterHolderPartyId}
 					/>
@@ -433,30 +434,27 @@
 				<div class="flex items-end md:col-span-6">
 					<button
 						type="submit"
-						class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+						class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 						data-testid="financial-statement-filter-submit">Filtrer</button
 					>
 				</div>
 			</form>
 
-			{#if loadingHistory && history.length === 0}
-				<p class="mt-4 text-sm text-slate-500">Chargement de l'historique…</p>
-			{/if}
-			<table class="mt-4 w-full text-left text-sm">
-				<thead class="bg-slate-50 text-xs uppercase text-slate-500">
+			<Table>
+				<thead>
 					<tr>
-						<th class="p-2">Date</th>
+						<th>Date</th>
 						<th>Événement</th>
 						<th>Libellé</th>
 						<th>Document</th>
 						<th>Facture</th>
-						<th>Montant</th>
+						<th class="mc-num">Montant</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each history as ev, i (ev.sortKey || `${ev.sourceType}-${ev.sourceId}-${i}`)}
-						<tr class="border-t" data-testid={`financial-statement-history-row-${i}`}>
-							<td class="p-2">{new Date(ev.occurredAt).toLocaleString('fr-FR')}</td>
+						<tr data-testid={`financial-statement-history-row-${i}`}>
+							<td>{new Date(ev.occurredAt).toLocaleString('fr-FR')}</td>
 							<td>{financialEventTypeLabel(ev.eventType)}</td>
 							<td data-testid={`financial-statement-history-label-${i}`}>{ev.label}</td>
 							<td data-testid={`financial-statement-history-doc-${i}`}>
@@ -465,7 +463,7 @@
 									{#if ev.eventType === 'REFUND_EXECUTED' && showRefundLink && ev.sourceId}
 										·
 										<a
-											class="text-blue-700 print:hidden"
+											class="print:hidden"
 											href={resolve(`/billing/refunds/${ev.sourceId}/voucher`)}
 											data-testid={`financial-statement-history-voucher-${i}`}>Bon</a
 										>
@@ -474,37 +472,34 @@
 							</td>
 							<td>
 								{#if ev.invoiceId}
-									<a class="text-blue-700" href={resolve(`/billing/${ev.invoiceId}`)}
+									<a href={resolve(`/billing/${ev.invoiceId}`)}
 										>{ev.invoiceNumber ?? ev.invoiceId}</a
 									>
 								{:else}—{/if}
 							</td>
-							<td>{formatXOF(ev.amount)}</td>
+							<td class="mc-amount">{formatXOF(ev.amount)}</td>
 						</tr>
 					{:else}
-						<tr><td colspan="6" class="p-8 text-center text-slate-500">Aucun événement.</td></tr>
+						{#if loadingHistory}
+							<TableState state="loading" colspan={6} title="Chargement de l'historique…" />
+						{:else}
+							<TableState state="empty" colspan={6} title="Aucun événement." />
+						{/if}
 					{/each}
 				</tbody>
-			</table>
-			<div class="mt-4 flex flex-wrap items-center gap-3 print:hidden">
-				<p class="text-sm text-slate-600" data-testid="financial-statement-history-meta">
-					Page {historyPage} / {historyTotalPages} · {historyTotal} événement(s)
-				</p>
-				<button
-					type="button"
-					class="rounded-lg border px-3 py-1 text-sm font-bold disabled:opacity-40"
-					data-testid="financial-statement-history-prev"
-					disabled={historyPage <= 1 || loadingHistory}
-					onclick={() => loadHistory(historyPage - 1)}>Précédent</button
-				>
-				<button
-					type="button"
-					class="rounded-lg border px-3 py-1 text-sm font-bold disabled:opacity-40"
-					data-testid="financial-statement-history-next"
-					disabled={historyPage >= historyTotalPages || loadingHistory}
-					onclick={() => loadHistory(historyPage + 1)}>Suivant</button
-				>
-			</div>
+			</Table>
+			<Pagination
+				class="mt-3 print:hidden"
+				page={historyPage}
+				totalPages={historyTotalPages}
+				disabled={loadingHistory}
+				summaryTestId="financial-statement-history-meta"
+				prevTestId="financial-statement-history-prev"
+				nextTestId="financial-statement-history-next"
+				onpage={(next) => loadHistory(next)}
+			>
+				{#snippet summary()}Page {historyPage} / {historyTotalPages} · {historyTotal} événement(s){/snippet}
+			</Pagination>
 		</section>
 	{/if}
 </div>

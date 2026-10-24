@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -101,13 +103,13 @@
 		{#if showReport && closed}
 			<div class="rounded-2xl border bg-white p-5" data-testid="cash-closing-report">
 				<header class="mb-4 border-b pb-3">
-					<p class="text-xs font-black uppercase tracking-wide text-emerald-700">MedCore HIS</p>
-					<h1 class="text-2xl font-black">Rapport de clôture — session #{session.session.id}</h1>
+					<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">MedCore HIS</p>
+					<h1 class="text-2xl font-bold">Rapport de clôture — session #{session.session.id}</h1>
 					<p class="text-sm text-slate-600">État {session.session.status}</p>
 				</header>
 
 				<section class="mb-4" data-testid="cash-recon-register">
-					<h2 class="font-black">Caisse</h2>
+					<h2 class="font-bold">Caisse</h2>
 					<p>
 						{session.session.register.code} — {session.session.register.name}
 						{#if session.session.register.location}
@@ -116,7 +118,7 @@
 				</section>
 
 				<section class="mb-4 grid gap-2 md:grid-cols-2" data-testid="cash-recon-opening">
-					<h2 class="font-black md:col-span-2">Ouverture</h2>
+					<h2 class="font-bold md:col-span-2">Ouverture</h2>
 					<p>Ouvreur <b data-testid="cash-recon-opened-by">#{closed.openedBy}</b></p>
 					<p>
 						Ouverte le <b data-testid="cash-recon-opened-at"
@@ -132,7 +134,7 @@
 				</section>
 
 				<section class="mb-4" data-testid="cash-recon-collections">
-					<h2 class="font-black">Encaissements</h2>
+					<h2 class="font-bold">Encaissements</h2>
 					<p class="text-sm text-slate-600">
 						Le total encaissé n’inclut pas le fond de caisse ni les mouvements de caisse. Les
 						espèces attendues = fond + espèces encaissées + entrées − sorties (serveur).
@@ -155,7 +157,7 @@
 				</section>
 
 				<section class="mb-4" data-testid="cash-recon-movements">
-					<h2 class="font-black">Mouvements de caisse</h2>
+					<h2 class="font-bold">Mouvements de caisse</h2>
 					<div class="mt-2 grid gap-2 md:grid-cols-3">
 						<p data-testid="cash-recon-movement-in">
 							Entrées de caisse <b>{formatXOF(kpis.movementIn)}</b>
@@ -189,7 +191,7 @@
 					class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4"
 					data-testid="cash-recon-closing"
 				>
-					<h2 class="font-black">Rapprochement / Clôture</h2>
+					<h2 class="font-bold">Rapprochement / Clôture</h2>
 					<div class="mt-2 grid gap-2 md:grid-cols-3">
 						<p data-testid="cash-recon-expected">
 							Espèces attendues en caisse <b>{formatXOF(closed.expected ?? 0)}</b>
@@ -226,7 +228,7 @@
 						class="mb-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4"
 						data-testid="cash-recon-post-close"
 					>
-						<h2 class="font-black">Corrections postérieures à la clôture</h2>
+						<h2 class="font-bold">Corrections postérieures à la clôture</h2>
 						<p class="text-sm text-slate-600">
 							Informations documentaires — les totaux de clôture ci-dessus restent inchangés.
 						</p>
@@ -241,37 +243,74 @@
 				{/if}
 			</div>
 			<button
-				class="rounded-xl bg-slate-900 px-4 py-2 font-bold text-white print:hidden"
+				class="rounded-lg bg-primary px-4 py-2 font-semibold text-white print:hidden hover:bg-primary-hover transition-colors"
 				data-testid="cash-recon-print"
 				onclick={() => print()}>Imprimer le rapport</button
 			>
 		{/if}
 
-		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-journal">
-			<h2 class="border-b p-3 font-black">Journal des encaissements (documentaire)</h2>
-			{#each rows as r (r.id)}<a
-					class="grid gap-2 border-b p-3 md:grid-cols-5"
-					href={resolve(`/cash/receipts/${r.id}`)}
-					><b>{r.receiptNumber}</b><span>{r.invoiceNumber}</span><span>{r.paymentMethod}</span><b
-						>{formatXOF(r.amount)}</b
-					>{#if r.postCloseCorrection}<span
-							class="text-xs font-semibold text-amber-900"
-							data-testid={`cash-journal-post-close-${r.id}`}>Correction postérieure</span
-						>{:else if r.paymentReversed}<span class="text-xs text-amber-800">Contrepassé</span
-						>{:else}<span></span>{/if}</a
-				>{:else}<p class="p-3 text-slate-500">Aucune opération.</p>{/each}
+		<section class="space-y-2 print:hidden" data-testid="cash-session-journal">
+			<h2 class="text-base font-semibold text-foreground">
+				Journal des encaissements (documentaire)
+			</h2>
+			<Table aria-label="Journal des encaissements">
+				<thead>
+					<tr>
+						<th>Reçu</th>
+						<th>Facture</th>
+						<th>Mode</th>
+						<th class="mc-num">Montant</th>
+						<th>Mention</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each rows as r (r.id)}
+						<tr>
+							<td class="mc-id"
+								><a href={resolve(`/cash/receipts/${r.id}`)}>{r.receiptNumber}</a></td
+							>
+							<td>{r.invoiceNumber}</td>
+							<td>{r.paymentMethod}</td>
+							<td class="mc-amount">{formatXOF(r.amount)}</td>
+							<td
+								>{#if r.postCloseCorrection}<span
+										class="text-xs font-semibold text-amber-900"
+										data-testid={`cash-journal-post-close-${r.id}`}>Correction postérieure</span
+									>{:else if r.paymentReversed}<span class="text-xs text-amber-800"
+										>Contrepassé</span
+									>{/if}</td
+							>
+						</tr>
+					{:else}
+						<TableState state="empty" colspan={5} title="Aucune opération." />
+					{/each}
+				</tbody>
+			</Table>
 		</section>
-		<section class="rounded-2xl border bg-white print:hidden" data-testid="cash-session-movements">
-			<h2 class="border-b p-3 font-black">Journal des mouvements de caisse</h2>
-			{#each movements as m (m.id)}<div
-					class="grid gap-2 border-b p-3 md:grid-cols-4"
-					data-testid="cash-session-movement-row"
-				>
-					<span>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</span>
-					<span>{new Date(m.occurredAt).toLocaleString('fr-FR')}</span>
-					<span class="truncate">{m.reason}</span>
-					<b>{formatXOF(m.amount)}</b>
-				</div>{:else}<p class="p-3 text-slate-500">Aucun mouvement de caisse.</p>{/each}
+		<section class="space-y-2 print:hidden" data-testid="cash-session-movements">
+			<h2 class="text-base font-semibold text-foreground">Journal des mouvements de caisse</h2>
+			<Table aria-label="Journal des mouvements de caisse">
+				<thead>
+					<tr>
+						<th>Sens</th>
+						<th>Date</th>
+						<th>Motif</th>
+						<th class="mc-num">Montant</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each movements as m (m.id)}
+						<tr data-testid="cash-session-movement-row">
+							<td>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</td>
+							<td class="whitespace-nowrap">{new Date(m.occurredAt).toLocaleString('fr-FR')}</td>
+							<td class="max-w-md truncate">{m.reason}</td>
+							<td class="mc-amount">{formatXOF(m.amount)}</td>
+						</tr>
+					{:else}
+						<TableState state="empty" colspan={4} title="Aucun mouvement de caisse." />
+					{/each}
+				</tbody>
+			</Table>
 		</section>
 	{/if}
 </div>

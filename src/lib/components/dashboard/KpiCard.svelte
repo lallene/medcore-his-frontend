@@ -20,7 +20,7 @@
 			<p class="mt-2 text-3xl font-bold text-slate-900">{value}</p>
 
 			{#if description}
-				<p class="mt-1 text-xs text-slate-400">{description}</p>
+				<p class="mt-1 text-xs text-slate-500">{description}</p>
 			{/if}
 		</div>
 

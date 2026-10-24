@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { listAccessPermissions } from '$lib/api/access';
@@ -6,7 +8,6 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
 
 	let rows = $state<AccessPermission[]>([]);
@@ -54,48 +55,56 @@
 	{/if}
 	<div class="flex flex-wrap gap-3">
 		<SearchInput bind:value={search} placeholder="Rechercher…" />
-		<select class="rounded-lg border border-border px-3 py-2 text-sm" bind:value={domain}>
+		<select
+			class="min-h-control rounded-lg border border-input bg-surface px-3 py-2 text-sm"
+			aria-label="Domaine"
+			bind:value={domain}
+		>
 			<option value="">Tous domaines</option>
 			{#each domains as d (d)}
 				<option value={d}>{d}</option>
 			{/each}
 		</select>
 	</div>
-	{#if loading}
-		<LoadingState label="Chargement…" />
-	{:else}
-		<div class="overflow-x-auto rounded-xl border border-border">
-			<table class="min-w-full text-left text-sm">
-				<thead class="bg-muted/40 text-xs uppercase text-muted-foreground">
+	<Table>
+		<thead>
+			<tr>
+				<th>Permission</th>
+				<th>Domaine</th>
+				<th>Scope</th>
+				<th>Sensibilité</th>
+				<th>Fonctions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#if loading}<TableState
+					state="loading"
+					colspan={5}
+					title="Chargement…"
+				/>{:else if filtered.length === 0}<TableState
+					state="empty"
+					colspan={5}
+					title="Aucune permission trouvée"
+					description="Modifiez votre recherche ou le domaine."
+				/>{:else}
+				{#each filtered as r (r.key)}
 					<tr>
-						<th class="px-3 py-2">Permission</th>
-						<th class="px-3 py-2">Domaine</th>
-						<th class="px-3 py-2">Scope</th>
-						<th class="px-3 py-2">Sensibilité</th>
-						<th class="px-3 py-2">Fonctions</th>
+						<td>
+							<div class="font-medium">{r.label}</div>
+							<div class="font-mono text-xs text-muted-foreground">{r.key}</div>
+						</td>
+						<td>{r.domain}</td>
+						<td>{r.scopeHint}</td>
+						<td>
+							{#if r.sensitive}
+								<StatusBadge status="HIGH" label="Accès sensible" />
+							{:else}
+								Standard
+							{/if}
+						</td>
+						<td>{r.functions.join(', ') || '—'}</td>
 					</tr>
-				</thead>
-				<tbody>
-					{#each filtered as r (r.key)}
-						<tr class="border-t border-border">
-							<td class="px-3 py-2">
-								<div class="font-medium">{r.label}</div>
-								<div class="font-mono text-xs text-muted-foreground">{r.key}</div>
-							</td>
-							<td class="px-3 py-2">{r.domain}</td>
-							<td class="px-3 py-2">{r.scopeHint}</td>
-							<td class="px-3 py-2">
-								{#if r.sensitive}
-									<StatusBadge status="HIGH" label="Accès sensible" />
-								{:else}
-									Standard
-								{/if}
-							</td>
-							<td class="px-3 py-2 text-xs">{r.functions.join(', ') || '—'}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	{/if}
+				{/each}{/if}
+		</tbody>
+	</Table>
 </div>

@@ -245,9 +245,9 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Cycle menstruel</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Cycle menstruel</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Règles et ménopause</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Règles et ménopause</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -262,7 +262,7 @@
 					min="5"
 					max="30"
 					bind:value={form.menarcheAge}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -275,7 +275,7 @@
 					id="lmp"
 					type="date"
 					bind:value={form.lastMenstrualPeriod}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -287,7 +287,7 @@
 				<select
 					id="cycle-regularity"
 					bind:value={form.menstrualCycleRegularity}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 				>
 					<option value="">Sélectionner</option>
 					<option value="REGULAR">Régulier</option>
@@ -306,7 +306,7 @@
 					type="number"
 					min="1"
 					bind:value={form.averageCycleLengthDays}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 					placeholder="Nombre de jours"
 				/>
 			</div>
@@ -321,7 +321,7 @@
 					type="number"
 					min="1"
 					bind:value={form.menstruationDurationDays}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 					placeholder="Nombre de jours"
 				/>
 			</div>
@@ -334,7 +334,7 @@
 				<select
 					id="period-abundance"
 					bind:value={form.menstruationAbundance}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 				>
 					<option value="">Sélectionner</option>
 					<option value="LOW">Faible</option>
@@ -358,7 +358,7 @@
 				<select
 					id="menopause-status"
 					bind:value={form.menopauseStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NO">Non ménopausée</option>
@@ -376,7 +376,7 @@
 					id="menopause-date"
 					type="date"
 					bind:value={form.menopauseDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -389,7 +389,7 @@
 					id="menopause-symptoms"
 					type="text"
 					bind:value={form.menopauseSymptoms}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 		</div>
@@ -397,11 +397,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Contraception et fertilité
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Projet de grossesse et infections</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Projet de grossesse et infections</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -414,7 +414,7 @@
 					id="current-contraception"
 					type="text"
 					bind:value={form.currentContraceptionType}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -430,7 +430,7 @@
 					id="current-contraception-start"
 					type="date"
 					bind:value={form.currentContraceptionStartDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -455,7 +455,7 @@
 					id="infertility-duration"
 					type="text"
 					bind:value={form.infertilityDuration}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -468,7 +468,7 @@
 					id="fertility-exams"
 					type="text"
 					bind:value={form.fertilityExams}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				/>
 			</div>
 
@@ -481,7 +481,7 @@
 					id="sti-history"
 					bind:value={form.stiHistory}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 				></textarea>
 			</div>
 		</div>
@@ -489,7 +489,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Contraceptions antérieures</p>
+					<p class="font-bold text-slate-900">Contraceptions antérieures</p>
 					<p class="mt-1 text-sm text-slate-500">Types et périodes d’utilisation.</p>
 				</div>
 
@@ -512,19 +512,19 @@
 							type="text"
 							bind:value={item.type}
 							placeholder="Type"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="date"
 							bind:value={item.startDate}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="date"
 							bind:value={item.endDate}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<button
@@ -543,11 +543,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Dépistage et interventions
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Col, seins, infections et chirurgies</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Col, seins, infections et chirurgies</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -560,7 +560,7 @@
 					id="cervical-date"
 					type="date"
 					bind:value={form.cervicalScreeningDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -573,7 +573,7 @@
 					id="cervical-result"
 					type="text"
 					bind:value={form.cervicalScreeningResult}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -586,7 +586,7 @@
 					id="mammography-date"
 					type="date"
 					bind:value={form.mammographyDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -599,7 +599,7 @@
 					id="breast-ultrasound-date"
 					type="date"
 					bind:value={form.breastUltrasoundDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -612,7 +612,7 @@
 					id="breast-pathologies"
 					bind:value={form.breastPathologies}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 
@@ -620,7 +620,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Infections gynécologiques</p>
+						<p class="font-bold text-slate-900">Infections gynécologiques</p>
 						<p class="mt-1 text-sm text-slate-500">Type, date et traitement.</p>
 					</div>
 
@@ -641,13 +641,13 @@
 								type="text"
 								bind:value={item.type}
 								placeholder="Type d’infection"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -655,7 +655,7 @@
 									type="text"
 									bind:value={item.treatment}
 									placeholder="Traitement"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -675,7 +675,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Chirurgies gynécologiques</p>
+						<p class="font-bold text-slate-900">Chirurgies gynécologiques</p>
 						<p class="mt-1 text-sm text-slate-500">Intervention, date et complications.</p>
 					</div>
 
@@ -696,13 +696,13 @@
 								type="text"
 								bind:value={item.procedure}
 								placeholder="Intervention"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -710,7 +710,7 @@
 									type="text"
 									bind:value={item.complications}
 									placeholder="Complications"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -731,11 +731,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Antécédents obstétricaux
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Grossesses et accouchements</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Grossesses et accouchements</h4>
 		</div>
 
 		<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
@@ -744,7 +744,7 @@
 				min="0"
 				bind:value={form.gravidity}
 				placeholder="Gestité"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -752,7 +752,7 @@
 				min="0"
 				bind:value={form.parity}
 				placeholder="Parité"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -760,7 +760,7 @@
 				min="0"
 				bind:value={form.livingChildren}
 				placeholder="Enfants vivants"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -768,7 +768,7 @@
 				min="0"
 				bind:value={form.miscarriagesCount}
 				placeholder="Fausses couches"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -776,7 +776,7 @@
 				min="0"
 				bind:value={form.abortionsCount}
 				placeholder="IVG"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -784,7 +784,7 @@
 				min="0"
 				bind:value={form.ectopicPregnanciesCount}
 				placeholder="GEU"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -792,7 +792,7 @@
 				min="0"
 				bind:value={form.cesareansCount}
 				placeholder="Césariennes"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 
@@ -801,31 +801,31 @@
 				bind:value={form.miscarriagesDetails}
 				rows="3"
 				placeholder="Détails des fausses couches"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.abortionsDetails}
 				rows="3"
 				placeholder="Détails des IVG"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.ectopicPregnanciesDetails}
 				rows="3"
 				placeholder="Détails des grossesses extra-utérines"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.cesareanIndications}
 				rows="3"
 				placeholder="Indications des césariennes"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Historique des grossesses</p>
+					<p class="font-bold text-slate-900">Historique des grossesses</p>
 					<p class="mt-1 text-sm text-slate-500">
 						Année, terme, accouchement, nouveau-né et issue.
 					</p>
@@ -845,7 +845,7 @@
 				{#each pregnancyHistories as item, index (index)}
 					<article class="rounded-2xl border border-slate-200 bg-white p-5">
 						<div class="flex items-center justify-between gap-4">
-							<p class="font-black text-slate-900">
+							<p class="font-bold text-slate-900">
 								Grossesse #{index + 1}
 							</p>
 
@@ -866,21 +866,21 @@
 								max="2100"
 								bind:value={item.year}
 								placeholder="Année"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.term}
 								placeholder="Terme"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.deliveryType}
 								placeholder="Type d’accouchement"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
@@ -889,13 +889,13 @@
 								step="0.01"
 								bind:value={item.babyWeightKg}
 								placeholder="Poids du bébé (kg)"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<select
 								bind:value={item.babySex}
 								aria-label={`Sexe du bébé de la grossesse ${index + 1}`}
-								class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							>
 								<option value="">Sexe du bébé</option>
 								<option value="F">Féminin</option>
@@ -907,22 +907,20 @@
 								type="text"
 								bind:value={item.outcome}
 								placeholder="Issue"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<textarea
 								bind:value={item.maternalComplications}
 								rows="2"
 								placeholder="Complications maternelles"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm xl:col-span-2"
-							></textarea>
+								class="rounded-lg border border-input px-3 py-2 text-sm xl:col-span-2"></textarea>
 
 							<textarea
 								bind:value={item.neonatalComplications}
 								rows="2"
 								placeholder="Complications néonatales"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm xl:col-span-2"
-							></textarea>
+								class="rounded-lg border border-input px-3 py-2 text-sm xl:col-span-2"></textarea>
 						</div>
 					</article>
 				{/each}

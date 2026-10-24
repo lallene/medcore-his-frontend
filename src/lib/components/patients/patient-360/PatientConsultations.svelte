@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Table from '$lib/components/ui/Table.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -153,9 +154,9 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-[#0E4C92]">Parcours clinique</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Parcours clinique</p>
 
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Consultations du patient</h2>
+			<h2 class="mt-2 text-2xl font-bold text-slate-900">Consultations du patient</h2>
 
 			<p class="mt-1 text-sm text-slate-500">
 				Historique des consultations, diagnostics, constantes, examens et prescriptions.
@@ -171,16 +172,14 @@
 	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 		<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 			<div class="flex items-center gap-3">
-				<div
-					class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#0E4C92]"
-				>
+				<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-primary">
 					<Stethoscope size={20} />
 				</div>
 
 				<div>
-					<p class="text-xs font-bold uppercase text-slate-400">Consultations</p>
+					<p class="text-xs font-bold uppercase text-slate-500">Consultations</p>
 
-					<p class="text-2xl font-black text-slate-900">
+					<p class="text-2xl font-bold text-slate-900">
 						{consultations.length}
 					</p>
 				</div>
@@ -196,9 +195,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-bold uppercase text-slate-400">Terminées</p>
+					<p class="text-xs font-bold uppercase text-slate-500">Terminées</p>
 
-					<p class="text-2xl font-black text-slate-900">
+					<p class="text-2xl font-bold text-slate-900">
 						{completedCount}
 					</p>
 				</div>
@@ -214,9 +213,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-bold uppercase text-slate-400">Prescriptions</p>
+					<p class="text-xs font-bold uppercase text-slate-500">Prescriptions</p>
 
-					<p class="text-2xl font-black text-slate-900">
+					<p class="text-2xl font-bold text-slate-900">
 						{prescriptionCount}
 					</p>
 				</div>
@@ -232,9 +231,9 @@
 				</div>
 
 				<div>
-					<p class="text-xs font-bold uppercase text-slate-400">Examens</p>
+					<p class="text-xs font-bold uppercase text-slate-500">Examens</p>
 
-					<p class="text-2xl font-black text-slate-900">
+					<p class="text-2xl font-bold text-slate-900">
 						{examCount}
 					</p>
 				</div>
@@ -258,13 +257,11 @@
 			<div
 				class="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center"
 			>
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
-				>
+				<div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-primary">
 					<Stethoscope size={28} />
 				</div>
 
-				<h3 class="mt-5 text-xl font-black text-slate-900">Aucune consultation enregistrée</h3>
+				<h3 class="mt-5 text-xl font-bold text-slate-900">Aucune consultation enregistrée</h3>
 
 				<p class="mt-2 max-w-md text-sm leading-6 text-slate-500">
 					Créez une première consultation afin d’alimenter le dossier médical longitudinal du
@@ -290,19 +287,19 @@
 					>
 						<div class="flex min-w-0 items-start gap-4">
 							<div
-								class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
+								class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-primary"
 							>
 								<Stethoscope size={21} />
 							</div>
 
 							<div class="min-w-0">
 								<div class="flex flex-wrap items-center gap-2">
-									<h3 class="text-lg font-black text-slate-900">
+									<h3 class="text-lg font-bold text-slate-900">
 										{consultation.service || 'Service non renseigné'}
 									</h3>
 
 									<span
-										class={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${statusClass(
+										class={`rounded-full border px-2.5 py-1 text-2xs font-semibold uppercase tracking-wide ${statusClass(
 											consultation.status
 										)}`}
 									>
@@ -327,7 +324,7 @@
 						<button
 							type="button"
 							onclick={() => openConsultation(consultation.id)}
-							class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:border-[#0E4C92] hover:text-[#0E4C92]"
+							class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary"
 						>
 							<Eye size={16} />
 							Voir la consultation
@@ -337,7 +334,7 @@
 					<div class="space-y-5 p-5">
 						<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 							<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-								<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">
+								<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 									Diagnostic
 								</p>
 
@@ -347,7 +344,7 @@
 							</div>
 
 							<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-								<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Motifs</p>
+								<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">Motifs</p>
 
 								<p class="mt-2 text-sm font-bold leading-6 text-slate-800">
 									{consultation.reasons?.map((reason) => reason.name).join(', ') || '—'}
@@ -355,21 +352,21 @@
 							</div>
 
 							<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-								<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">
+								<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 									Examens demandés
 								</p>
 
-								<p class="mt-2 text-2xl font-black text-slate-900">
+								<p class="mt-2 text-2xl font-bold text-slate-900">
 									{consultation.exams?.length ?? 0}
 								</p>
 							</div>
 
 							<div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-								<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">
+								<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 									Prescriptions
 								</p>
 
-								<p class="mt-2 text-2xl font-black text-slate-900">
+								<p class="mt-2 text-2xl font-bold text-slate-900">
 									{consultation.prescriptions?.length ?? 0}
 								</p>
 							</div>
@@ -377,72 +374,72 @@
 
 						<div>
 							<div class="mb-3 flex items-center gap-2">
-								<HeartPulse size={17} class="text-[#0E4C92]" />
+								<HeartPulse size={17} class="text-primary" />
 
-								<h4 class="font-black text-slate-900">Constantes vitales</h4>
+								<h4 class="font-bold text-slate-900">Constantes vitales</h4>
 							</div>
 
 							<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">TA</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">TA</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{bloodPressure(consultation)}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">Temp.</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">Temp.</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.temperature, ' °C')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">Pouls</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">Pouls</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.heartRate, ' bpm')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">SpO₂</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">SpO₂</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.oxygenSaturation, ' %')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">FR</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">FR</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.respiratoryRate, '/min')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">Poids</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">Poids</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.weight, ' kg')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">Glycémie</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">Glycémie</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.bloodGlucose, ' g/L')}
 									</p>
 								</div>
 
 								<div class="rounded-xl border border-slate-200 p-3">
-									<p class="text-[10px] font-black uppercase text-slate-400">Douleur</p>
+									<p class="text-2xs font-semibold uppercase text-slate-500">Douleur</p>
 
-									<p class="mt-1 font-black text-slate-800">
+									<p class="mt-1 font-bold text-slate-800">
 										{valueOrDash(consultation.vitals?.painScore, '/10')}
 									</p>
 								</div>
@@ -452,7 +449,7 @@
 						{#if consultation.observations || consultation.treatment}
 							<div class="grid gap-4 md:grid-cols-2">
 								<div class="rounded-2xl border border-slate-200 p-4">
-									<p class="text-xs font-black uppercase tracking-wide text-slate-400">
+									<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 										Observations
 									</p>
 
@@ -462,7 +459,7 @@
 								</div>
 
 								<div class="rounded-2xl border border-slate-200 p-4">
-									<p class="text-xs font-black uppercase tracking-wide text-slate-400">
+									<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 										Traitement
 									</p>
 
@@ -478,50 +475,33 @@
 								<div class="mb-3 flex items-center gap-2">
 									<Pill size={17} class="text-orange-600" />
 
-									<h4 class="font-black text-slate-900">Prescriptions</h4>
+									<h4 class="font-bold text-slate-900">Prescriptions</h4>
 								</div>
 
-								<div class="overflow-hidden rounded-2xl border border-slate-200">
-									{#each consultation.prescriptions as prescription (prescription.id)}
-										<div
-											class="grid gap-3 border-b border-slate-100 p-4 last:border-b-0 md:grid-cols-4"
-										>
-											<div>
-												<p class="text-[10px] font-black uppercase text-slate-400">Médicament</p>
-
-												<p class="mt-1 text-sm font-bold text-slate-800">
-													{prescription.medicationName}
-												</p>
-											</div>
-
-											<div>
-												<p class="text-[10px] font-black uppercase text-slate-400">Présentation</p>
-
-												<p class="mt-1 text-sm font-bold text-slate-800">
-													{[prescription.dosage, prescription.form, prescription.route]
+								<Table aria-label="Prescriptions de la consultation">
+									<thead>
+										<tr>
+											<th>Médicament</th>
+											<th>Présentation</th>
+											<th>Fréquence</th>
+											<th>Durée</th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each consultation.prescriptions as prescription (prescription.id)}
+											<tr>
+												<td class="font-medium text-foreground">{prescription.medicationName}</td>
+												<td
+													>{[prescription.dosage, prescription.form, prescription.route]
 														.filter(Boolean)
-														.join(' · ') || '—'}
-												</p>
-											</div>
-
-											<div>
-												<p class="text-[10px] font-black uppercase text-slate-400">Fréquence</p>
-
-												<p class="mt-1 text-sm font-bold text-slate-800">
-													{prescription.frequency || '—'}
-												</p>
-											</div>
-
-											<div>
-												<p class="text-[10px] font-black uppercase text-slate-400">Durée</p>
-
-												<p class="mt-1 text-sm font-bold text-slate-800">
-													{prescription.duration || '—'}
-												</p>
-											</div>
-										</div>
-									{/each}
-								</div>
+														.join(' · ') || '—'}</td
+												>
+												<td>{prescription.frequency || '—'}</td>
+												<td>{prescription.duration || '—'}</td>
+											</tr>
+										{/each}
+									</tbody>
+								</Table>
 							</div>
 						{/if}
 
@@ -530,7 +510,7 @@
 								<div class="mb-3 flex items-center gap-2">
 									<FlaskConical size={17} class="text-violet-700" />
 
-									<h4 class="font-black text-slate-900">Examens demandés</h4>
+									<h4 class="font-bold text-slate-900">Examens demandés</h4>
 								</div>
 
 								<div class="flex flex-wrap gap-2">
@@ -588,7 +568,7 @@
 	{/if}
 
 	<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-		<Activity size={16} class="mr-2 inline text-[#0E4C92]" />
+		<Activity size={16} class="mr-2 inline text-primary" />
 		Les consultations terminées alimentent automatiquement le dossier médical et la timeline du patient.
 	</div>
 </div>

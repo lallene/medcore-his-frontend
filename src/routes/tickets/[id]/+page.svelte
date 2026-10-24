@@ -97,8 +97,8 @@
 		>
 			{error || 'Ticket introuvable'}
 		</p>{:else}<header>
-			<p class="font-black text-blue-700">{ticket.reference}</p>
-			<h1 class="text-3xl font-black">{ticket.title}</h1>
+			<p class="font-bold text-blue-700">{ticket.reference}</p>
+			<h1 class="text-3xl font-bold">{ticket.title}</h1>
 			<div class="mt-2 flex flex-wrap gap-2 text-sm">
 				<span class="rounded-full bg-slate-100 px-3 py-1">{statusLabels[ticket.status]}</span><span
 					class="rounded-full bg-slate-100 px-3 py-1">{ticket.priority}</span
@@ -109,11 +109,11 @@
 		<div class="grid gap-6 xl:grid-cols-3">
 			<section class="space-y-5 xl:col-span-2">
 				<article class="rounded-2xl border bg-white p-6">
-					<h2 class="font-black">Description</h2>
+					<h2 class="font-bold">Description</h2>
 					<p class="mt-3 whitespace-pre-wrap text-slate-700">{ticket.description}</p>
 				</article>
 				<article class="rounded-2xl border bg-white p-6">
-					<h2 class="font-black">Pièces jointes</h2>
+					<h2 class="font-bold">Pièces jointes</h2>
 					<ul class="mt-3 space-y-2 text-sm">
 						{#each ticket.attachments as attachment (attachment.id)}
 							<li>{attachment.originalName} · {Math.ceil(attachment.size / 1024)} Ko</li>
@@ -131,7 +131,7 @@
 					/>
 				</article>
 				<article class="rounded-2xl border bg-white p-6">
-					<h2 class="font-black">Commentaires</h2>
+					<h2 class="font-bold">Commentaires</h2>
 					<div class="mt-4 space-y-3">
 						{#each ticket.comments as c (c.id)}<div
 								class="rounded-xl border p-4"
@@ -149,24 +149,24 @@
 							id="ticket-comment"
 							bind:value={comment}
 							rows="4"
-							class="w-full rounded-xl border p-3"
+							class="w-full rounded-lg border p-3"
 						></textarea>{#if has('ticket.comment.internal')}<select
 								aria-label="Visibilité"
 								bind:value={visibility}
-								class="rounded-xl border p-3"
+								class="min-h-control rounded-lg border px-3 py-2"
 								><option value="PUBLIC">Public</option><option value="INTERNAL"
 									>Interne support</option
 								></select
 							>{/if}<button
 							onclick={add}
 							disabled={!comment.trim()}
-							class="ml-3 rounded-xl bg-blue-700 px-4 py-3 font-bold text-white disabled:opacity-50"
+							class="ml-3 rounded-lg bg-primary px-4 py-3 font-semibold text-white disabled:opacity-50 hover:bg-primary-hover transition-colors"
 							>Publier</button
 						>
 					</div>
 				</article>
 				{#if ticket.history.length}<article class="rounded-2xl border bg-white p-6">
-						<h2 class="font-black">Historique auditable</h2>
+						<h2 class="font-bold">Historique auditable</h2>
 						<ol class="mt-4 space-y-2">
 							{#each ticket.history as h (h.id)}<li class="border-l-2 pl-4 text-sm">
 									<b>{h.eventType}</b> · {new Date(h.createdAt).toLocaleString('fr-FR')}
@@ -176,7 +176,7 @@
 			</section>
 			<aside class="space-y-5">
 				<section class="rounded-2xl border bg-white p-5">
-					<h2 class="font-black">Contexte</h2>
+					<h2 class="font-bold">Contexte</h2>
 					<dl class="mt-3 grid gap-2 text-sm">
 						<div>
 							<dt class="text-slate-500">Demandeur</dt>
@@ -197,28 +197,32 @@
 					</dl>
 				</section>
 				{#if has('ticket.assign')}<section class="rounded-2xl border bg-white p-5">
-						<h2 class="font-black">Affectation</h2>
+						<h2 class="font-bold">Affectation</h2>
 						<label class="mt-3 block text-sm font-bold"
-							>Agent<select bind:value={assignedUserId} class="mt-1 w-full rounded-xl border p-2"
+							>Agent<select
+								bind:value={assignedUserId}
+								class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 								><option value="">Non assigné</option>{#each agents as agent (agent.userId)}<option
 										value={agent.userId}
 										>{agent.name} {agent.serviceName ? `— ${agent.serviceName}` : ''}</option
 									>{/each}</select
 							></label
 						><label class="mt-3 block text-sm font-bold"
-							>File<select bind:value={queue} class="mt-1 w-full rounded-xl border p-2"
+							>File<select
+								bind:value={queue}
+								class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 								>{#each ['SUPPORT_APPLICATION', 'SUPPORT_INFRA', 'SUPPORT_NETWORK', 'SECURITY', 'ACCESS_MANAGEMENT'] as value (value)}<option
 										{value}>{value}</option
 									>{/each}</select
 							></label
 						><button
 							onclick={assign}
-							class="mt-3 w-full rounded-xl bg-slate-900 px-3 py-2 font-bold text-white"
+							class="mt-3 w-full rounded-lg bg-primary px-3 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 							>Affecter</button
 						>
 					</section>{/if}
 				<section class="rounded-2xl border bg-white p-5">
-					<h2 class="font-black">SLA</h2>
+					<h2 class="font-bold">SLA</h2>
 					<p class:text-red-700={ticket.responseSlaBreached}>
 						Réponse : {new Date(ticket.responseDueAt).toLocaleString('fr-FR')}
 					</p>
@@ -229,13 +233,13 @@
 				{#if has('ticket.update') || has('ticket.resolve') || has('ticket.close') || has('ticket.reopen')}<section
 						class="rounded-2xl border bg-white p-5"
 					>
-						<h2 class="font-black">Workflow support</h2>
+						<h2 class="font-bold">Workflow support</h2>
 						{#if allowedNext(ticket.status).includes('RESOLVED')}<label
 								class="mt-3 block text-sm font-bold"
 								>Résumé de résolution<textarea
 									bind:value={resolution}
 									rows="3"
-									class="mt-1 w-full rounded-xl border p-2"></textarea></label
+									class="mt-1 w-full rounded-lg border p-2"></textarea></label
 							>{/if}
 						<div class="mt-3 grid gap-2">
 							{#each allowedNext(ticket.status) as next (next)}<button

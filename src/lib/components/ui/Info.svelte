@@ -7,7 +7,7 @@
 	let { label, value }: Props = $props();
 </script>
 
-<div class="rounded-2xl bg-slate-50 p-4">
-	<p class="text-sm text-slate-500">{label}</p>
-	<p class="mt-1 font-semibold text-slate-900">{value}</p>
+<div class="rounded-lg bg-surface-muted p-4">
+	<p class="text-small text-muted-foreground">{label}</p>
+	<p class="mt-1 font-semibold text-foreground">{value}</p>
 </div>

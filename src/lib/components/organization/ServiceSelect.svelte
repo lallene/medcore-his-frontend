@@ -34,7 +34,7 @@
 	bind:value
 	{disabled}
 	{onchange}
-	class="w-full rounded-xl border bg-white p-3 text-sm"
+	class="min-h-control w-full rounded-lg border bg-white text-sm px-3 py-2"
 	aria-label="Service"
 >
 	<option value={null}>{error || placeholder}</option>

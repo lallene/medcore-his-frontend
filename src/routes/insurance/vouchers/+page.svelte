@@ -1,16 +1,13 @@
 <script lang="ts">
+	import SearchInput from '$lib/components/ui/SearchInput.svelte';
+	import FilterChip from '$lib/components/ui/FilterChip.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
+	import { medcoreColors } from '$lib/design/theme';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		BadgeCheck,
-		Clock3,
-		FileText,
-		Search,
-		Shield,
-		WalletCards,
-		XCircle
-	} from 'lucide-svelte';
+	import { BadgeCheck, Clock3, FileText, Shield, WalletCards, XCircle } from 'lucide-svelte';
 
 	import { getVouchers } from '$lib/api/vouchers';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -93,42 +90,41 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<section
-		class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-700 via-[#0E4C92] to-[#18B893] p-8 text-white shadow-xl"
-	>
-		<div
-			class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-		></div>
-		<div
-			class="pointer-events-none absolute bottom-4 right-10 text-[150px] font-black leading-none text-white/5"
-		>
-			PEC
-		</div>
-
-		<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+	<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+		<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Insurance Operations Center
 				</p>
 
-				<h1 class="mt-3 text-4xl font-bold leading-tight">Bons de prise en charge</h1>
+				<h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+					Bons de prise en charge
+				</h1>
 
-				<p class="mt-3 max-w-2xl text-lg text-blue-50">
+				<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">
 					Suivi opérationnel des demandes, compagnies, montants, statuts et délais de validation.
 				</p>
 
-				<div class="mt-6 flex flex-wrap gap-3">
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						📄 {vouchers.length} Bons PEC
+				<div class="mt-4 flex flex-wrap gap-2">
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{vouchers.length} Bons PEC
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						✅ {vouchers.filter((item) => item.status === 'validated').length} Validés
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{vouchers.filter((item) => item.status === 'validated').length} Validés
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🟡 {vouchers.filter((item) => item.status === 'submitted').length} En attente
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{vouchers.filter((item) => item.status === 'submitted').length} En attente
 					</span>
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						💰 {totalAmount.toLocaleString('fr-FR')} FCFA
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{totalAmount.toLocaleString('fr-FR')} FCFA
 					</span>
 				</div>
 			</div>
@@ -147,7 +143,7 @@
 			detail="Demandes enregistrées"
 			trend="+18%"
 			progress={82}
-			accent="#7C3AED"
+			accent={medcoreColors.primary}
 		/>
 
 		<MetricCard
@@ -157,7 +153,7 @@
 			detail="À contrôler"
 			trend="+4%"
 			progress={60}
-			accent="#F59E0B"
+			accent={medcoreColors.semantic.warning}
 		/>
 
 		<MetricCard
@@ -167,7 +163,7 @@
 			detail="PEC acceptées"
 			trend="+9%"
 			progress={78}
-			accent="#22C55E"
+			accent={medcoreColors.semantic.success}
 		/>
 
 		<MetricCard
@@ -177,12 +173,12 @@
 			detail="FCFA estimés"
 			trend="+15%"
 			progress={72}
-			accent="#EA580C"
+			accent={medcoreColors.semantic.warning}
 		/>
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-3">
-		<div class="space-y-6 xl:col-span-2">
+		<div class="min-w-0 space-y-6 xl:col-span-2">
 			<Card title="Workflow assurance" subtitle="Répartition opérationnelle des bons">
 				<div class="grid gap-3 md:grid-cols-5">
 					<WorkflowPill
@@ -215,95 +211,89 @@
 			</Card>
 
 			<Card title="Tous les bons PEC" subtitle="Recherche, filtrage et suivi détaillé">
-				<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-					<div class="relative w-full max-w-md">
-						<Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+				<div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+					<SearchInput
+						id="voucher-search"
+						class="w-full max-w-md"
+						bind:value={search}
+						placeholder="Rechercher un bon, patient, compagnie..."
+						label="Rechercher un bon PEC"
+					/>
 
-						<input
-							bind:value={search}
-							placeholder="Rechercher un bon, patient, compagnie..."
-							class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"
-						/>
-					</div>
-
-					<div class="flex flex-wrap gap-2">
+					<div class="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
 						{#each ['all', 'draft', 'submitted', 'controlled', 'validated', 'cancelled'] as status (status)}
-							<button
+							<FilterChip
+								selected={statusFilter === status}
 								onclick={() => (statusFilter = status)}
-								class={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-									statusFilter === status
-										? 'bg-[#0E4C92] text-white'
-										: 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-								}`}
 							>
-								{status === 'all' ? 'Tous' : statusLabel(status)}
-							</button>
+								\1
+							</FilterChip>
 						{/each}
 					</div>
 				</div>
 
-				{#if loading}
-					<p class="text-sm text-slate-500">Chargement des bons PEC...</p>
-				{:else if error}
-					<div class="rounded-2xl bg-red-50 p-4 text-red-700">{error}</div>
-				{:else if filteredVouchers.length === 0}
-					<div class="rounded-2xl border border-dashed border-slate-300 p-10 text-center">
-						<p class="text-4xl">📄</p>
-						<h3 class="mt-4 text-lg font-bold text-slate-900">Aucun bon trouvé</h3>
-						<p class="mt-2 text-sm text-slate-500">
-							Essayez un autre filtre ou une autre recherche.
-						</p>
-					</div>
-				{:else}
-					<div class="overflow-hidden rounded-2xl border border-slate-200">
-						{#each filteredVouchers as voucher (voucher.id)}
-							<div
-								class="flex flex-col gap-4 border-b border-slate-100 bg-white p-5 transition hover:bg-slate-50 lg:flex-row lg:items-center lg:justify-between"
-							>
-								<div class="flex items-center gap-4">
-									<div
-										class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600"
-									>
-										<FileText size={22} />
-									</div>
-
-									<div>
-										<p class="font-bold text-slate-900">{voucher.voucherNumber}</p>
-										<p class="text-sm text-slate-500">
-											{voucher.patientName ?? `Patient #${voucher.patientId}`} ·
+				<Table minWidth="760px" aria-label="Bons de prise en charge">
+					<thead>
+						<tr>
+							<th>Bon</th>
+							<th>Patient / compagnie</th>
+							<th>Motif</th>
+							<th class="mc-num">Montant</th>
+							<th>Statut</th>
+							<th class="mc-actions">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#if loading}
+							<TableState state="loading" colspan={6} title="Chargement des bons PEC..." />
+						{:else if error}
+							<TableState
+								state="error"
+								colspan={6}
+								title="Impossible de charger les bons PEC"
+								description={error}
+							/>
+						{:else if filteredVouchers.length === 0}
+							<TableState
+								state="empty"
+								colspan={6}
+								title="Aucun bon trouvé"
+								description="Essayez un autre filtre ou une autre recherche."
+							/>
+						{:else}
+							{#each filteredVouchers as voucher (voucher.id)}
+								<tr>
+									<td class="mc-id">{voucher.voucherNumber}</td>
+									<td>
+										<p class="text-foreground">
+											{voucher.patientName ?? `Patient #${voucher.patientId}`}
+										</p>
+										<p class="text-xs text-muted-foreground">
 											{voucher.companyName ?? `Compagnie #${voucher.companyId}`}
 										</p>
-									</div>
-								</div>
-
-								<div class="grid gap-4 text-sm md:grid-cols-3 lg:w-[560px]">
-									<div>
-										<p class="text-xs text-slate-400">Motif</p>
-										<p class="font-semibold text-slate-700">{voucher.reason || '—'}</p>
-									</div>
-
-									<div>
-										<p class="text-xs text-slate-400">Montant</p>
-										<p class="font-semibold text-slate-700">
-											{Number(voucherAmount(voucher)).toLocaleString('fr-FR')} FCFA
-										</p>
-									</div>
-
-									<div>
-										<p class="text-xs text-slate-400">Statut</p>
-										<Badge variant={statusVariant(voucher.status)}>
-											{statusLabel(voucher.status)}
-										</Badge>
-									</div>
-								</div>
-
-								<Button onclick={() => goto(resolve(`/insurance/vouchers/${voucher.id}`))}>
-									Ouvrir
-								</Button>
-							</div>
-						{/each}
-					</div>
-				{/if}
+									</td>
+									<td>{voucher.reason || '—'}</td>
+									<td class="mc-amount"
+										>{Number(voucherAmount(voucher)).toLocaleString('fr-FR')} FCFA</td
+									>
+									<td>
+										<Badge variant={statusVariant(voucher.status)}
+											>{statusLabel(voucher.status)}</Badge
+										>
+									</td>
+									<td class="mc-actions">
+										<Button
+											size="sm"
+											variant="ghost"
+											onclick={() => goto(resolve(`/insurance/vouchers/${voucher.id}`))}
+											>Ouvrir</Button
+										>
+									</td>
+								</tr>
+							{/each}
+						{/if}
+					</tbody>
+				</Table>
 			</Card>
 		</div>
 
@@ -313,7 +303,7 @@
 					{#each vouchers.slice(0, 5) as voucher (voucher.id)}
 						<div class="relative border-l-2 border-slate-200 pl-6">
 							<div
-								class="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-[#0E4C92] ring-4 ring-white"
+								class="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-white"
 							></div>
 							<p class="text-sm font-semibold text-slate-800">
 								{voucher.voucherNumber} · {statusLabel(voucher.status)}

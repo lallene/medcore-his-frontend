@@ -82,6 +82,21 @@
 		return items.map((item) => ({ ...item, icon: iconByHref[item.href] }));
 	}
 
+	interface Props {
+		/** Ouverture du tiroir sous le breakpoint `lg` (toujours visible au-delà). */
+		open?: boolean;
+		onnavigate?: () => void;
+	}
+
+	let { open = false, onnavigate }: Props = $props();
+
+	let navElement = $state<HTMLElement | null>(null);
+
+	// Tiroir mobile : place le focus sur le premier lien à l'ouverture.
+	$effect(() => {
+		if (open) navElement?.querySelector<HTMLElement>('a[href]')?.focus();
+	});
+
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');
 	let staffRole = $state('MedCore HIS');
@@ -117,178 +132,116 @@
 
 		return pathname === href || pathname.startsWith(`${href}/`);
 	}
+
+	const initials = $derived(
+		staffName
+			.split(/\s+/)
+			.filter(Boolean)
+			.map((part) => part[0])
+			.join('')
+			.slice(0, 2)
+			.toUpperCase() || 'MC'
+	);
+
+	const sections = $derived(
+		[
+			{ id: 'workspace', label: 'Workspace', items: withIcons(visibleWorkspace) },
+			{ id: 'services', label: 'Services', items: withIcons(visibleServices) },
+			{ id: 'admin', label: 'Administration', items: withIcons(visibleAdmin) }
+		].filter((section) => section.items.length > 0)
+	);
 </script>
 
 <aside
-	class="fixed left-0 top-0 z-40 flex h-screen w-80 flex-col border-r border-slate-800 bg-[#020817] text-white"
+	id="medcore-sidebar"
+	aria-label="Navigation principale"
+	class={`fixed inset-y-0 left-0 z-(--z-sidebar) flex w-sidebar flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:translate-x-0 ${
+		open ? 'translate-x-0' : 'max-lg:invisible max-lg:-translate-x-full'
+	}`}
 >
-	<div class="border-b border-slate-800 p-1">
-		<div class="rounded-3xl border border-slate-800 bg-slate-900/70 p-2">
-			<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-				Établissement
-			</p>
-
-			<div class="mt-4 w-full rounded-3xl bg-white p-4 shadow-xl">
-				<img
-					src="/branding/saint-raphael-logo.jpeg"
-					alt={clinicBranding.name}
-					class="h-auto w-full object-contain"
-				/>
-			</div>
+	<div class="border-b border-sidebar-border p-4">
+		<div class="rounded-lg bg-white px-3 py-2.5">
+			<img
+				src="/branding/saint-raphael-logo.jpeg"
+				alt={clinicBranding.name}
+				class="mx-auto h-auto max-h-20 w-full object-contain"
+			/>
 		</div>
 	</div>
-	<nav class="flex-1 overflow-y-auto px-5 py-7">
-		{#if visibleWorkspace.length > 0}
-			<div class="mb-8">
-				<div class="mb-3 flex items-center gap-3 px-3">
-					<div class="h-px flex-1 bg-slate-800"></div>
-					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-						Workspace
-					</p>
-					<div class="h-px flex-1 bg-slate-800"></div>
-				</div>
 
-				<div class="space-y-1">
-					{#each withIcons(visibleWorkspace) as item (item.href)}
+	<nav
+		bind:this={navElement}
+		class="flex-1 space-y-6 overflow-y-auto px-3 py-5"
+		aria-label="Modules"
+	>
+		{#each sections as section (section.id)}
+			<div>
+				<p
+					class="mb-1.5 px-3 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-muted"
+					id={`nav-${section.id}`}
+				>
+					{section.label}
+				</p>
+
+				<ul class="space-y-0.5" aria-labelledby={`nav-${section.id}`}>
+					{#each section.items as item (item.href)}
 						{@const Icon = item.icon}
 						{@const active = isActive(item.href)}
 
-						<a
-							href={resolve(item.href as '/dashboard')}
-							class={`group relative flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm transition-all duration-200 ${
-								active
-									? 'bg-[#0E4C92] text-white shadow-lg'
-									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-							}`}
-						>
-							{#if active}
-								<span
-									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-								></span>
-							{/if}
+						<li>
+							<a
+								href={resolve(item.href as '/dashboard')}
+								aria-current={active ? 'page' : undefined}
+								onclick={() => onnavigate?.()}
+								class={`relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-small font-medium transition-colors focus-visible:outline-sidebar-ring ${
+									active
+										? 'bg-sidebar-primary text-sidebar-primary-foreground'
+										: 'text-slate-300 hover:bg-sidebar-accent hover:text-white'
+								}`}
+							>
+								{#if active}
+									<span
+										class="absolute inset-y-1.5 left-0 w-0.5 rounded-r-sm bg-brand-accent"
+										aria-hidden="true"
+									></span>
+								{/if}
 
-							<span class="flex items-center gap-3">
-								<Icon size={20} />
-								<span class="font-medium">{item.title}</span>
-							</span>
+								<Icon size={18} aria-hidden="true" class="shrink-0 opacity-90" />
+								<span class="min-w-0 flex-1 truncate">{item.title}</span>
 
-							{#if item.soon}
-								<span
-									class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
-								>
-									v2
-								</span>
-							{/if}
-						</a>
+								{#if item.soon}
+									<span
+										class="rounded-sm border border-white/15 px-1.5 text-2xs font-medium text-slate-300"
+									>
+										v2
+									</span>
+								{/if}
+							</a>
+						</li>
 					{/each}
-				</div>
+				</ul>
 			</div>
-		{/if}
-
-		{#if visibleServices.length > 0}
-			<div class="mb-8">
-				<div class="mb-3 flex items-center gap-3 px-3">
-					<div class="h-px flex-1 bg-slate-800"></div>
-					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-						Services
-					</p>
-					<div class="h-px flex-1 bg-slate-800"></div>
-				</div>
-
-				<div class="space-y-1">
-					{#each withIcons(visibleServices) as item (item.href)}
-						{@const Icon = item.icon}
-						{@const active = isActive(item.href)}
-
-						<a
-							href={resolve(item.href as '/dashboard')}
-							class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
-								active
-									? 'bg-[#0E4C92] text-white shadow-lg'
-									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-							}`}
-						>
-							{#if active}
-								<span
-									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-								></span>
-							{/if}
-
-							<span class="flex items-center gap-3">
-								<Icon size={20} />
-								<span class="font-medium">{item.title}</span>
-							</span>
-
-							{#if item.soon}
-								<span
-									class="rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
-								>
-									v2
-								</span>
-							{/if}
-						</a>
-					{/each}
-				</div>
-			</div>
-		{/if}
-
-		{#if visibleAdmin.length > 0}
-			<div class="mb-8">
-				<div class="mb-3 flex items-center gap-3 px-3">
-					<div class="h-px flex-1 bg-slate-800"></div>
-					<p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-						Administration
-					</p>
-					<div class="h-px flex-1 bg-slate-800"></div>
-				</div>
-
-				<div class="space-y-1">
-					{#each withIcons(visibleAdmin) as item (item.href)}
-						{@const Icon = item.icon}
-						{@const active = isActive(item.href)}
-
-						<a
-							href={resolve(item.href as '/dashboard')}
-							class={`group relative flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${
-								active
-									? 'bg-[#0E4C92] text-white shadow-lg'
-									: 'text-slate-300 hover:translate-x-1 hover:bg-slate-900 hover:text-white'
-							}`}
-						>
-							{#if active}
-								<span
-									class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#18B893]"
-								></span>
-							{/if}
-
-							<span class="flex items-center gap-3">
-								<Icon size={20} />
-								<span class="font-medium">{item.title}</span>
-							</span>
-						</a>
-					{/each}
-				</div>
-			</div>
-		{/if}
+		{/each}
 	</nav>
 
-	<div class="border-t border-slate-800 p-4">
-		<div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-5">
-			<div class="flex items-center gap-3">
-				<div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0E4C92] font-bold">
-					DA
-				</div>
-
-				<div>
-					<p class="font-bold text-white">{staffName}</p>
-					<p class="text-sm text-slate-400">{staffRole}</p>
-				</div>
+	<div class="border-t border-sidebar-border p-3">
+		<div class="flex items-center gap-3 rounded-md px-2 py-2">
+			<div
+				class="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-semibold text-white"
+				aria-hidden="true"
+			>
+				{initials}
 			</div>
 
-			<div class="mt-4 flex items-center justify-between text-xs text-slate-500">
-				<span>Dernière connexion</span>
-				<span>Aujourd’hui</span>
+			<div class="min-w-0">
+				<p class="truncate text-small font-semibold text-white">{staffName}</p>
+				<p class="truncate text-xs text-sidebar-muted">{staffRole}</p>
 			</div>
+		</div>
+
+		<div class="mt-1 flex items-center justify-between px-2 text-2xs text-sidebar-muted">
+			<span>Dernière connexion</span>
+			<span>Aujourd’hui</span>
 		</div>
 	</div>
 </aside>

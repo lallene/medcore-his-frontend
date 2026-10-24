@@ -211,7 +211,7 @@
 			case 'low':
 				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 			default:
-				return 'border-blue-200 bg-blue-50 text-[#0E4C92]';
+				return 'border-blue-200 bg-blue-50 text-primary';
 		}
 	}
 
@@ -226,7 +226,7 @@
 			case 'document':
 				return 'border-slate-300 bg-slate-100 text-slate-700';
 			default:
-				return 'border-blue-200 bg-blue-100 text-[#0E4C92]';
+				return 'border-blue-200 bg-blue-100 text-primary';
 		}
 	}
 
@@ -273,9 +273,9 @@
 <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<header class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">Parcours patient</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Parcours patient</p>
 
-			<h2 class="mt-1 text-xl font-black text-slate-900">Timeline clinique</h2>
+			<h2 class="mt-1 text-xl font-bold text-slate-900">Timeline clinique</h2>
 
 			<p class="mt-2 text-sm text-slate-500">
 				Vue chronologique unifiée des consultations, prescriptions, examens, hospitalisations et
@@ -297,7 +297,7 @@
 
 	<div class="mt-6 flex items-center gap-3 overflow-x-auto pb-2">
 		<div
-			class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#0E4C92]"
+			class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-primary"
 		>
 			<Filter size={17} />
 		</div>
@@ -308,7 +308,7 @@
 				onclick={() => selectFilter(filter.id)}
 				class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
 					activeFilter === filter.id
-						? 'border-[#0E4C92] bg-[#0E4C92] text-white'
+						? 'border-primary bg-primary text-white'
 						: 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50'
 				}`}
 			>
@@ -339,12 +339,12 @@
 		>
 			<div class="max-w-md text-center">
 				<div
-					class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
+					class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-primary"
 				>
 					<CalendarDays size={23} />
 				</div>
 
-				<h3 class="mt-4 font-black text-slate-900">Aucun événement pour ce filtre</h3>
+				<h3 class="mt-4 font-bold text-slate-900">Aucun événement pour ce filtre</h3>
 
 				<p class="mt-2 text-sm leading-6 text-slate-500">
 					La chronologie est alimentée automatiquement par les activités cliniques du patient.
@@ -357,17 +357,17 @@
 				<section>
 					<div class="mb-5 flex items-center gap-3">
 						<div
-							class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#0E4C92]"
+							class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-primary"
 						>
 							<CalendarDays size={18} />
 						</div>
 
 						<div>
-							<h3 class="text-sm font-black capitalize text-slate-900">
+							<h3 class="text-sm font-bold capitalize text-slate-900">
 								{group.label}
 							</h3>
 
-							<p class="text-xs text-slate-400">
+							<p class="text-xs text-slate-500">
 								{group.events.length}
 								{group.events.length > 1 ? ' événements' : ' événement'}
 							</p>
@@ -408,12 +408,12 @@
 										<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 											<div class="min-w-0">
 												<div class="flex flex-wrap items-center gap-2">
-													<h4 class="font-black text-slate-900">
+													<h4 class="font-bold text-slate-900">
 														{eventLabel(event)}
 													</h4>
 
 													<span
-														class={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${eventBadgeClasses(event)}`}
+														class={`rounded-full border px-2.5 py-1 text-2xs font-semibold uppercase tracking-wide ${eventBadgeClasses(event)}`}
 													>
 														{severityLabel(event.severity)}
 													</span>
@@ -475,7 +475,7 @@
 				<button
 					type="button"
 					onclick={() => (expanded = !expanded)}
-					class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-[#0E4C92] hover:bg-blue-50"
+					class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-primary hover:bg-blue-50"
 				>
 					{expanded ? 'Réduire la chronologie' : `Afficher les ${filteredEvents.length} événements`}
 				</button>

@@ -97,7 +97,7 @@
 			<div class="flex flex-wrap justify-between gap-3">
 				<div>
 					<p class="text-sm font-bold text-violet-700">{order.requestNumber}</p>
-					<h1 class="text-2xl font-black">{order.examName || 'Demande de laboratoire'}</h1>
+					<h1 class="text-2xl font-bold">{order.examName || 'Demande de laboratoire'}</h1>
 					<p class="text-slate-500">
 						{order.patientName} ({order.patientCode}) · {order.service || '—'} · {order.prescriber ||
 							'—'} · Consultation #{order.consultationId}
@@ -119,7 +119,7 @@
 		{#if error}<p class="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>{/if}
 		{#if order.sample}
 			<section class="rounded-2xl border bg-white p-6">
-				<h2 class="text-lg font-black">Prélèvement</h2>
+				<h2 class="text-lg font-bold">Prélèvement</h2>
 				<div class="mt-3 grid gap-3 text-sm md:grid-cols-4">
 					<p><b>Identifiant</b><br />{order.sample.sampleIdentifier}</p>
 					<p><b>Type</b><br />{order.sample.sampleType}</p>
@@ -144,14 +144,14 @@
 		{#if canCollect && order.status === 'SAMPLE_PENDING'}<section
 				class="rounded-2xl border bg-white p-6"
 			>
-				<h2 class="text-lg font-black">Prélèvement</h2>
+				<h2 class="text-lg font-bold">Prélèvement</h2>
 				<div class="mt-4 grid gap-3 md:grid-cols-2">
-					<select bind:value={sampleType} class="rounded-xl border p-3">
+					<select bind:value={sampleType} class="min-h-control rounded-lg border px-3 py-2">
 						{#each laboratorySampleTypes as type (type)}<option value={type}>{type}</option>{/each}
 					</select><input
 						bind:value={sampleComment}
 						placeholder="Commentaire (facultatif)"
-						class="rounded-xl border p-3"
+						class="min-h-control rounded-lg border px-3 py-2"
 					/>
 				</div>
 				<button
@@ -170,34 +170,34 @@
 		{#if canWrite && (order.status === 'IN_PROGRESS' || order.status === 'RESULT_ENTERED')}<section
 				class="rounded-2xl border bg-white p-6"
 			>
-				<h2 class="text-lg font-black">Résultats structurés</h2>
+				<h2 class="text-lg font-bold">Résultats structurés</h2>
 				{#each results as result, i (i)}<div class="mt-4 grid gap-2 md:grid-cols-7">
 						<input
 							bind:value={result.parameter}
 							placeholder="Paramètre"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><input
 							bind:value={result.value}
 							placeholder="Valeur"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><input
 							bind:value={result.unit}
 							placeholder="Unité"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><input
 							type="number"
 							bind:value={result.referenceMin}
 							placeholder="Min"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><input
 							type="number"
 							bind:value={result.referenceMax}
 							placeholder="Max"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><input
 							bind:value={result.referenceText}
 							placeholder="Référence texte"
-							class="rounded-lg border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 						/><span class="rounded-lg bg-slate-50 p-2 text-center font-bold"
 							>{computeLaboratoryFlag(result)}</span
 						>
@@ -235,7 +235,7 @@
 		{#if order.status === 'VALIDATED'}<section
 				class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
 			>
-				<h2 class="font-black text-emerald-900">Résultat validé — lecture seule</h2>
+				<h2 class="font-bold text-emerald-900">Résultat validé — lecture seule</h2>
 				<p class="mt-2 text-sm text-emerald-800">
 					Validé le {order.validatedAt
 						? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(

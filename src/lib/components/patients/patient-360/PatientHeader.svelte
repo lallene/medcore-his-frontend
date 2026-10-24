@@ -97,31 +97,19 @@
 	}
 </script>
 
-<section
-	class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-[#0E4C92] via-[#155DA8] to-[#18B893] p-8 text-white shadow-xl"
->
-	<div
-		class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-	></div>
-
-	<div
-		class="pointer-events-none absolute bottom-4 right-10 text-[140px] font-black leading-none text-white/5"
-	>
-		PAT
-	</div>
-
-	<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+	<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 		<div class="flex flex-col gap-5 sm:flex-row sm:items-center">
-			<div class="w-fit rounded-3xl bg-white/15 p-3 backdrop-blur">
+			<div class="w-fit">
 				<Avatar name={fullName} />
 			</div>
 
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">Patient 360°</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Patient 360°</p>
 
-				<div class="mt-3 flex flex-wrap items-center gap-3">
+				<div class="mt-1.5 flex flex-wrap items-center gap-3">
 					<h1
-						class="text-3xl font-bold leading-tight sm:text-4xl"
+						class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl"
 						data-testid="patient-360-header-name"
 					>
 						{fullName}
@@ -131,7 +119,7 @@
 
 					{#if insurance.insured}
 						<span
-							class="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-black uppercase tracking-wide backdrop-blur"
+							class="rounded-md border border-primary-border bg-primary-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-primary"
 							title={insuranceBadge.detail}
 						>
 							{insuranceBadge.label}
@@ -141,37 +129,43 @@
 						</span>
 					{:else}
 						<span
-							class="rounded-full border border-amber-200/30 bg-amber-400/20 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-50 backdrop-blur"
+							class="rounded-md border border-warning-border bg-warning-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-warning-strong"
 						>
 							{insuranceBadge.label}
 						</span>
 					{/if}
 				</div>
 
-				<p class="mt-3 text-lg text-blue-50">
+				<p class="mt-1.5 text-sm text-muted-foreground">
 					Dossier {patient.numeroDossier || `#${patient.id}`}
 					·
 					{patient.telephone || 'Téléphone non renseigné'}
 				</p>
 
-				<div class="mt-6 flex flex-wrap gap-3">
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						👤 {formatSex(patient.sexe)}
-					</span>
-
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🎂 {formatAge()}
+				<div class="mt-4 flex flex-wrap gap-2">
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{formatSex(patient.sexe)}
 					</span>
 
 					<span
-						class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur"
-						data-testid="patient-360-header-code"
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
 					>
-						📁 {patientCode()}
+						{formatAge()}
 					</span>
 
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🩺 Parcours médical
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						data-testid="patient-360-header-code"
+					>
+						{patientCode()}
+					</span>
+
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						Parcours médical
 					</span>
 				</div>
 			</div>

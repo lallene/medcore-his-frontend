@@ -306,11 +306,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Symptômes bucco-dentaires
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Douleur, sensibilité et mastication</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Douleur, sensibilité et mastication</h4>
 		</div>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -365,7 +365,7 @@
 					id="pain-tooth-number"
 					bind:value={form.painToothNumber}
 					disabled={!form.dentalPain}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				>
 					<option value={null}>Sélectionner</option>
 
@@ -390,7 +390,7 @@
 					bind:value={form.painIntensity}
 					disabled={!form.dentalPain}
 					placeholder="/10"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -403,7 +403,7 @@
 					id="gum-notes"
 					type="text"
 					bind:value={form.gumNotes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -416,16 +416,16 @@
 					id="chewing-notes"
 					bind:value={form.chewingNotes}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Odontogramme</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Odontogramme</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">État détaillé de chaque dent</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">État détaillé de chaque dent</h4>
 
 			<p class="mt-2 text-sm text-slate-500">Numérotation dentaire adulte selon le système FDI.</p>
 		</div>
@@ -433,14 +433,14 @@
 		<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8">
 			{#each odontogram as tooth (tooth.toothNumber)}
 				<article class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-					<p class="text-center text-sm font-black text-slate-900">
+					<p class="text-center text-sm font-bold text-slate-900">
 						{tooth.toothNumber}
 					</p>
 
 					<select
 						bind:value={tooth.status}
 						aria-label={`État de la dent ${tooth.toothNumber}`}
-						class="mt-3 w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs"
+						class="mt-3 w-full rounded-lg border border-input bg-white px-2 py-2 text-xs"
 					>
 						{#each toothStatusOptions as option (option.value)}
 							<option value={option.value}>
@@ -454,7 +454,7 @@
 						rows="2"
 						placeholder="Notes"
 						aria-label={`Notes de la dent ${tooth.toothNumber}`}
-						class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs"
+						class="mt-2 w-full rounded-lg border border-input bg-white px-2 py-2 text-xs"
 					></textarea>
 				</article>
 			{/each}
@@ -463,9 +463,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Soins dentaires</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Soins dentaires</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Extractions, soins canalaires et restaurations
 			</h4>
 		</div>
@@ -498,7 +498,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Couronnes</p>
+						<p class="font-bold text-slate-900">Couronnes</p>
 
 						<p class="mt-1 text-sm text-slate-500">Dent concernée et type de couronne.</p>
 					</div>
@@ -520,7 +520,7 @@
 								<select
 									bind:value={item.toothNumber}
 									aria-label={`Dent de la couronne ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value={null}>Dent</option>
 
@@ -535,21 +535,21 @@
 									type="text"
 									bind:value={item.type}
 									placeholder="Type de couronne"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="date"
 									bind:value={item.date}
 									aria-label={`Date de la couronne ${index + 1}`}
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={item.notes}
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 							</div>
 
@@ -571,7 +571,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Implants</p>
+						<p class="font-bold text-slate-900">Implants</p>
 
 						<p class="mt-1 text-sm text-slate-500">Dent, référence et numéro de lot.</p>
 					</div>
@@ -593,7 +593,7 @@
 								<select
 									bind:value={item.toothNumber}
 									aria-label={`Dent de l’implant ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value={null}>Dent</option>
 
@@ -608,21 +608,21 @@
 									type="text"
 									bind:value={item.reference}
 									placeholder="Référence"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="text"
 									bind:value={item.batchNumber}
 									placeholder="Numéro de lot"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<input
 									type="date"
 									bind:value={item.date}
 									aria-label={`Date de l’implant ${index + 1}`}
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 							</div>
 
@@ -652,7 +652,7 @@
 					id="scaling-date"
 					type="date"
 					bind:value={form.scalingDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -665,7 +665,7 @@
 					id="prosthesis-type"
 					type="text"
 					bind:value={form.prosthesisType}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -678,7 +678,7 @@
 					id="prosthesis-notes"
 					type="text"
 					bind:value={form.prosthesisNotes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -691,7 +691,7 @@
 					id="orthodontic-treatment"
 					bind:value={form.orthodonticTreatment}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 
 			<div>
@@ -703,16 +703,16 @@
 					id="orthodontic-follow-up"
 					bind:value={form.orthodonticFollowUp}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Imagerie dentaire</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Imagerie dentaire</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Radiographies et scanner dentaire</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Radiographies et scanner dentaire</h4>
 		</div>
 
 		{@render ImagingBlock(
@@ -751,7 +751,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="font-black text-slate-900">{title}</p>
+				<p class="font-bold text-slate-900">{title}</p>
 				<p class="mt-1 text-sm text-slate-500">{description}</p>
 			</div>
 
@@ -773,7 +773,7 @@
 					<select
 						bind:value={item.toothNumber}
 						aria-label={`Dent ${title} ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value={null}>Dent</option>
 
@@ -787,7 +787,7 @@
 					<select
 						bind:value={item.status}
 						aria-label={`Statut ${title} ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="PLANNED">Prévue</option>
 						<option value="IN_PROGRESS">En cours</option>
@@ -799,14 +799,14 @@
 						type="date"
 						bind:value={item.date}
 						aria-label={`Date ${title} ${index + 1}`}
-						class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+						class="rounded-lg border border-input px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.details}
 						placeholder="Détails"
-						class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+						class="rounded-lg border border-input px-3 py-2 text-sm"
 					/>
 
 					<button
@@ -833,7 +833,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="font-black text-slate-900">{title}</p>
+				<p class="font-bold text-slate-900">{title}</p>
 				<p class="mt-1 text-sm text-slate-500">{description}</p>
 			</div>
 
@@ -855,27 +855,27 @@
 							type="date"
 							bind:value={item.date}
 							aria-label={`Date ${title} ${index + 1}`}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.imageReference}
 							placeholder="Référence ou URL de l’image"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<textarea
 							bind:value={item.result}
 							rows="3"
 							placeholder="Résultat"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+							class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 						<textarea
 							bind:value={item.conclusion}
 							rows="3"
 							placeholder="Conclusion"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+							class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 					</div>
 
 					<div class="mt-3 flex justify-end">

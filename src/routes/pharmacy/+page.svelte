@@ -1,10 +1,13 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { jwtDecode } from 'jwt-decode';
 	import {
 		Search,
-		PackageCheck,
 		SlidersHorizontal,
 		ChevronRight,
 		Boxes,
@@ -249,18 +252,18 @@
 <svelte:head><title>Pharmacie · MedCore HIS</title></svelte:head>
 <div class="space-y-4">
 	<header>
-		<p class="text-xs font-black uppercase tracking-[.16em] text-emerald-700">
+		<p class="text-xs font-semibold uppercase tracking-eyebrow text-emerald-700">
 			Circuit du médicament
 		</p>
-		<h1 class="text-3xl font-black text-slate-950">Pharmacie</h1>
+		<h1 class="text-3xl font-bold text-slate-950">Pharmacie</h1>
 		<p class="text-sm text-slate-500">Circuit du médicament et gestion opérationnelle du stock</p>
 	</header>
 	<section class="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
 		{#each [[stats.pending, 'À dispenser', 'text-blue-700'], [stats.available, 'Disponibles', 'text-emerald-700'], [stats.low, 'Stock faible', 'text-amber-700'], [stats.out, 'Ruptures', 'text-red-700'], [stats.expiring, 'Bientôt périmés', 'text-orange-700'], [stats.expired, 'Lots expirés', 'text-rose-700']] as metric (metric[1])}<div
 				class="rounded-xl border bg-white px-4 py-3"
 			>
-				<p class="text-[10px] font-black uppercase tracking-wide text-slate-500">{metric[1]}</p>
-				<p class={`mt-1 text-2xl font-black ${metric[2]}`}>{metric[0]}</p>
+				<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">{metric[1]}</p>
+				<p class={`mt-1 text-2xl font-bold ${metric[2]}`}>{metric[0]}</p>
 			</div>{/each}
 	</section>
 	<nav class="flex gap-1 overflow-x-auto rounded-xl border bg-white p-1">
@@ -282,9 +285,9 @@
 		</section>{:else}
 		<section class="rounded-xl border bg-white">
 			<header class="flex flex-wrap items-center gap-2 border-b bg-slate-50/70 p-3">
-				<SlidersHorizontal size={16} class="text-slate-400" /><label
+				<SlidersHorizontal size={16} class="text-slate-500" /><label
 					class="relative min-w-0 basis-full flex-1 sm:min-w-56 sm:basis-auto"
-					><Search size={16} class="absolute left-3 top-2.5 text-slate-400" /><input
+					><Search size={16} class="absolute left-3 top-2.5 text-slate-500" /><input
 						bind:value={query}
 						class="h-9 w-full rounded-lg border bg-white pl-9 pr-3 text-sm"
 						placeholder={tab === 'queue'
@@ -364,91 +367,99 @@
 			</header>
 
 			{#if tab === 'queue'}
-				<div
-					class="hidden grid-cols-[.8fr_1.2fr_.8fr_1fr_1fr_.7fr_.55fr_.8fr] gap-3 border-b px-4 py-2 text-[10px] font-black uppercase text-slate-400 lg:grid"
-				>
-					<span>Bon</span><span>Patient</span><span>Consultation</span><span>Service</span><span
-						>Prescripteur</span
-					><span>Date</span><span>Lignes</span><span>Statut / Action</span>
-				</div>
-				<div class="divide-y">
-					{#each filteredVouchers as voucher (voucher.id)}
-						<article
-							class="grid gap-2 p-4 lg:grid-cols-[.8fr_1.2fr_.8fr_1fr_1fr_.7fr_.55fr_.8fr] lg:items-center"
-						>
-							<b class="text-emerald-800">{voucher.number}</b>
-							<div>
-								<b>{voucher.patientName}</b><small class="block text-slate-500"
-									>{voucher.patientCode}</small
-								>
-							</div>
-							<span>#{voucher.consultationId}</span><span>{voucher.service}</span><span
-								>{voucher.prescriber}</span
-							><span>{date(voucher.createdAt)}</span>
-							<span>{voucher.lineCount} médicament(s)</span>
-							<div>
-								<span class="block text-xs font-black">{voucher.status}</span><button
-									onclick={() => openVoucher(voucher.id)}
-									class="mt-1 text-xs font-bold text-emerald-700"
-									>Ouvrir <ChevronRight class="inline" size={13} /></button
-								>
-							</div>
-						</article>
-					{:else}<div class="p-12 text-center">
-							<PackageCheck class="mx-auto text-emerald-200" size={34} />
-							<h3 class="mt-3 font-black">Aucun bon à traiter</h3>
-							<p class="text-sm text-slate-500">Aucun bon pharmacie ne correspond aux filtres.</p>
-						</div>{/each}
-				</div>
+				<Table minWidth="1000px" aria-label="Bons pharmacie à traiter">
+					<thead>
+						<tr>
+							<th>Bon</th>
+							<th>Patient</th>
+							<th>Consultation</th>
+							<th>Service</th>
+							<th>Prescripteur</th>
+							<th>Date</th>
+							<th class="mc-num">Lignes</th>
+							<th>Statut</th>
+							<th class="mc-actions">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each filteredVouchers as voucher (voucher.id)}
+							<tr>
+								<td class="mc-id">{voucher.number}</td>
+								<td>
+									<p class="font-medium text-foreground">{voucher.patientName}</p>
+									<p class="text-xs text-muted-foreground">{voucher.patientCode}</p>
+								</td>
+								<td>#{voucher.consultationId}</td>
+								<td>{voucher.service}</td>
+								<td>{voucher.prescriber}</td>
+								<td class="whitespace-nowrap">{date(voucher.createdAt)}</td>
+								<td class="mc-num">{voucher.lineCount} médicament(s)</td>
+								<td><StatusBadge status={voucher.status} /></td>
+								<td class="mc-actions">
+									<Button size="sm" variant="ghost" onclick={() => openVoucher(voucher.id)}
+										>Ouvrir <ChevronRight size={14} aria-hidden="true" /></Button
+									>
+								</td>
+							</tr>
+						{:else}
+							<TableState
+								state="empty"
+								colspan={9}
+								title="Aucun bon à traiter"
+								description="Aucun bon pharmacie ne correspond aux filtres."
+							/>
+						{/each}
+					</tbody>
+				</Table>
 			{:else if tab === 'stock'}
-				<div class="overflow-x-auto">
-					<table class="w-full min-w-[900px] text-left text-sm">
-						<thead class="bg-slate-50 text-[10px] uppercase text-slate-400"
-							><tr
-								><th class="p-3">Nom commercial / DCI</th><th>Famille</th><th>Forme / dosage</th><th
-									>Stock</th
-								><th>Seuil</th><th>Statut</th><th>Prochaine expiration</th><th>Action</th></tr
-							></thead
-						><tbody
-							>{#each filteredStock as item (item.id)}{@const a = availability.find(
-									(p) => p.presentationId === item.presentationId
-								)}<tr class="border-t"
-									><td class="p-3"
-										><b class="text-slate-950">{item.presentation.medication.name}</b
-										>{#if item.presentation.medication.genericName}<small
-												class="block text-slate-500"
-												>DCI : {item.presentation.medication.genericName}</small
-											>{/if}</td
-									><td>{a?.family || '—'}</td><td
-										>{item.presentation.form}<small class="block"
-											>{item.presentation.dosage} · {item.presentation.route}</small
-										></td
-									><td class="font-black">{item.quantityAvailable} {item.presentation.unit}</td><td
-										>{item.alertThreshold}</td
-									><td
-										><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold"
-											>{status(a?.stockStatus ?? 'OUT_OF_STOCK')}</span
-										></td
-									><td>{date(nextExpiration(item.presentationId))}</td><td
-										><button
-											onclick={() => {
-												setTab('batches');
-												query = item.presentation.medication.name;
-											}}
-											class="text-xs font-bold text-emerald-700"
-											>Voir lots <ChevronRight class="inline" size={13} /></button
-										></td
-									></tr
-								>{:else}<tr
-									><td colspan="8" class="p-12 text-center"
-										><b>Aucun médicament en stock</b><small class="block text-slate-500"
-											>Aucune ligne ne correspond aux filtres.</small
-										></td
-									></tr
-								>{/each}</tbody
-						>
-					</table>
-				</div>
+				<Table minWidth="900px">
+					<thead
+						><tr
+							><th>Nom commercial / DCI</th><th>Famille</th><th>Forme / dosage</th><th
+								class="mc-num">Stock</th
+							><th class="mc-num">Seuil</th><th>Statut</th><th>Prochaine expiration</th><th
+								class="mc-actions">Action</th
+							></tr
+						></thead
+					><tbody
+						>{#each filteredStock as item (item.id)}{@const a = availability.find(
+								(p) => p.presentationId === item.presentationId
+							)}<tr
+								><td
+									><b class="text-slate-950">{item.presentation.medication.name}</b
+									>{#if item.presentation.medication.genericName}<small class="block text-slate-500"
+											>DCI : {item.presentation.medication.genericName}</small
+										>{/if}</td
+								><td>{a?.family || '—'}</td><td
+									>{item.presentation.form}<small class="block"
+										>{item.presentation.dosage} · {item.presentation.route}</small
+									></td
+								><td class="mc-num">{item.quantityAvailable} {item.presentation.unit}</td><td
+									class="mc-num">{item.alertThreshold}</td
+								><td
+									><StatusBadge
+										status={a?.stockStatus ?? 'OUT_OF_STOCK'}
+										label={status(a?.stockStatus ?? 'OUT_OF_STOCK')}
+									/></td
+								><td>{date(nextExpiration(item.presentationId))}</td><td class="mc-actions"
+									><Button
+										size="sm"
+										variant="ghost"
+										onclick={() => {
+											setTab('batches');
+											query = item.presentation.medication.name;
+										}}>Voir lots <ChevronRight size={14} aria-hidden="true" /></Button
+									></td
+								></tr
+							>{:else}<tr
+								><td colspan="8" class="text-center"
+									><b>Aucun médicament en stock</b><small class="block text-slate-500"
+										>Aucune ligne ne correspond aux filtres.</small
+									></td
+								></tr
+							>{/each}</tbody
+					>
+				</Table>
 			{:else if tab === 'medications'}
 				<div class="divide-y">
 					{#each families.filter((f) => !familyFilter || f.name === familyFilter) as family (family.id)}{@const familyItems =
@@ -457,7 +468,7 @@
 							)}{#if familyItems.length}<details open class="group p-3">
 								<summary
 									class="flex cursor-pointer list-none items-center justify-between rounded-lg bg-slate-50 px-3 py-2"
-									><span class="font-black uppercase text-slate-800">{family.name}</span><span
+									><span class="font-semibold uppercase text-slate-800">{family.name}</span><span
 										class="text-xs text-slate-500">{familyItems.length} présentation(s)</span
 									></summary
 								>
@@ -466,33 +477,46 @@
 											open
 											class="py-2"
 										>
-											<summary class="cursor-pointer text-sm font-black text-slate-600"
+											<summary class="cursor-pointer text-sm font-bold text-slate-600"
 												>{form}
 												<span class="font-normal"
 													>· {familyItems.filter((i) => i.form === form).length}</span
 												></summary
 											>
-											<div class="mt-1 divide-y rounded-lg border">
-												{#each familyItems.filter((i) => i.form === form) as item (item.presentationId)}<div
-														class="grid gap-2 px-3 py-2 sm:grid-cols-[1.2fr_1fr_auto] sm:items-center"
-													>
-														<div>
-															<b>{item.commercialName}</b>{#if item.genericName}<small
-																	class="block text-slate-500">DCI : {item.genericName}</small
-																>{/if}
-														</div>
-														<span class="text-sm"
-															>{item.dosage} · {item.route} · {item.packaging || '—'}</span
-														><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold"
-															>{status(item.stockStatus)} · {item.availableQuantity}</span
-														>
-													</div>{/each}
-											</div>
+											<Table class="mt-1" aria-label={`Présentations ${form}`}>
+												<thead>
+													<tr>
+														<th>Nom commercial / DCI</th>
+														<th>Dosage · voie · conditionnement</th>
+														<th>Stock</th>
+													</tr>
+												</thead>
+												<tbody>
+													{#each familyItems.filter((i) => i.form === form) as item (item.presentationId)}
+														<tr>
+															<td
+																><span class="font-medium text-foreground"
+																	>{item.commercialName}</span
+																>{#if item.genericName}<small class="block text-muted-foreground"
+																		>DCI : {item.genericName}</small
+																	>{/if}</td
+															>
+															<td>{item.dosage} · {item.route} · {item.packaging || '—'}</td>
+															<td
+																><StatusBadge
+																	status={item.stockStatus}
+																	label={`${status(item.stockStatus)} · ${item.availableQuantity}`}
+																/></td
+															>
+														</tr>
+													{/each}
+												</tbody>
+											</Table>
 										</details>{/each}
 								</div>
 							</details>{/if}{:else}<div class="p-12 text-center">
 							<Pill class="mx-auto text-slate-300" />
-							<h3 class="mt-3 font-black">Aucun médicament trouvé</h3>
+							<h3 class="mt-3 font-bold">Aucun médicament trouvé</h3>
 							<p class="text-sm text-slate-500">Modifiez les filtres du catalogue.</p>
 						</div>{/each}
 				</div>
@@ -503,7 +527,7 @@
 							class="rounded-xl border p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/30"
 							><div class="flex items-start justify-between">
 								<div>
-									<h3 class="font-black uppercase">{item.family.name}</h3>
+									<h3 class="font-semibold uppercase">{item.family.name}</h3>
 									<p class="text-xs text-slate-500">{item.family.code}</p>
 								</div>
 								<Layers3 size={20} class="text-emerald-600" />
@@ -511,7 +535,7 @@
 							<p class="mt-3 text-sm">
 								<b>{item.medications}</b> médicament(s) · <b>{item.presentations}</b> présentation(s)
 							</p>
-							<div class="mt-3 grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
+							<div class="mt-3 grid grid-cols-3 gap-1 text-center text-2xs font-bold">
 								<span class="rounded bg-emerald-50 p-2 text-emerald-700"
 									>Disponible<br />{item.available}</span
 								><span class="rounded bg-amber-50 p-2 text-amber-700">Faible<br />{item.low}</span
@@ -521,101 +545,95 @@
 								>Voir les médicaments <ChevronRight size={13} /></span
 							></button
 						>{:else}<div class="col-span-full p-12 text-center">
-							<h3 class="font-black">Aucune famille</h3>
+							<h3 class="font-bold">Aucune famille</h3>
 						</div>{/each}
 				</div>
 			{:else if tab === 'batches'}
-				<div class="overflow-x-auto">
-					<table class="w-full min-w-[850px] text-left text-sm">
-						<thead class="bg-slate-50 text-[10px] uppercase text-slate-400"
-							><tr
-								><th class="p-3">Lot</th><th>Médicament / DCI</th><th>Présentation</th><th
-									>Quantité</th
-								><th>Expiration</th><th>État</th><th
-									><span class="inline-flex items-center gap-1"
-										>Priorité FEFO <HelpHint helpKey="pharmacy.batch.fefo" /></span
-									></th
+				<Table minWidth="850px">
+					<thead
+						><tr
+							><th>Lot</th><th>Médicament / DCI</th><th>Présentation</th><th class="mc-num"
+								>Quantité</th
+							><th>Expiration</th><th>État</th><th
+								><span class="inline-flex items-center gap-1"
+									>Priorité FEFO <HelpHint helpKey="pharmacy.batch.fefo" /></span
+								></th
+							></tr
+						></thead
+					><tbody
+						>{#each filteredBatches as b (b.id)}{@const rank =
+								batches
+									.filter(
+										(x) =>
+											x.presentationId === b.presentationId &&
+											x.isActive &&
+											x.quantityRemaining > 0 &&
+											batchState(x) !== 'EXPIRED'
+									)
+									.sort(
+										(a, c) =>
+											(a.expirationDate ? new Date(a.expirationDate).getTime() : Infinity) -
+											(c.expirationDate ? new Date(c.expirationDate).getTime() : Infinity)
+									)
+									.findIndex((x) => x.id === b.id) + 1}<tr
+								><td class="mc-id">{b.batchNumber}</td><td
+									><b>{b.presentation.medication.name}</b
+									>{#if b.presentation.medication.genericName}<small class="block"
+											>DCI : {b.presentation.medication.genericName}</small
+										>{/if}</td
+								><td>{b.presentation.dosage} · {b.presentation.form}</td><td class="mc-num"
+									>{b.quantityRemaining}</td
+								><td>{date(b.expirationDate)}</td><td><StatusBadge status={batchState(b)} /></td><td
+									>{rank > 0 ? `FEFO #${rank}` : '—'}</td
 								></tr
-							></thead
-						><tbody
-							>{#each filteredBatches as b (b.id)}{@const rank =
-									batches
-										.filter(
-											(x) =>
-												x.presentationId === b.presentationId &&
-												x.isActive &&
-												x.quantityRemaining > 0 &&
-												batchState(x) !== 'EXPIRED'
-										)
-										.sort(
-											(a, c) =>
-												(a.expirationDate ? new Date(a.expirationDate).getTime() : Infinity) -
-												(c.expirationDate ? new Date(c.expirationDate).getTime() : Infinity)
-										)
-										.findIndex((x) => x.id === b.id) + 1}<tr class="border-t"
-									><td class="p-3 font-black">{b.batchNumber}</td><td
-										><b>{b.presentation.medication.name}</b
-										>{#if b.presentation.medication.genericName}<small class="block"
-												>DCI : {b.presentation.medication.genericName}</small
-											>{/if}</td
-									><td>{b.presentation.dosage} · {b.presentation.form}</td><td class="font-black"
-										>{b.quantityRemaining}</td
-									><td>{date(b.expirationDate)}</td><td
-										><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold"
-											>{batchState(b)}</span
-										></td
-									><td>{rank > 0 ? `FEFO #${rank}` : '—'}</td></tr
-								>{:else}<tr
-									><td colspan="7" class="p-12 text-center"
-										><Boxes class="mx-auto text-slate-300" /><b class="mt-3 block"
-											>Aucun lot enregistré</b
-										><small class="text-slate-500">Aucun lot ne correspond aux filtres.</small></td
-									></tr
-								>{/each}</tbody
-						>
-					</table>
-				</div>
+							>{:else}<tr
+								><td colspan="7" class="text-center"
+									><Boxes class="mx-auto text-slate-300" /><b class="mt-3 block"
+										>Aucun lot enregistré</b
+									><small class="text-slate-500">Aucun lot ne correspond aux filtres.</small></td
+								></tr
+							>{/each}</tbody
+					>
+				</Table>
 			{:else}
-				<div class="overflow-x-auto">
-					<table class="w-full min-w-[1000px] text-left text-sm">
-						<thead class="bg-slate-50 text-[10px] uppercase text-slate-400"
-							><tr
-								><th class="p-3">Date</th><th>Médicament / DCI</th><th>Présentation</th><th>Lot</th
-								><th>Type</th><th>Quantité</th><th>Avant</th><th>Après</th><th>Référence</th><th
-									>Utilisateur</th
+				<Table minWidth="1000px">
+					<thead
+						><tr
+							><th>Date</th><th>Médicament / DCI</th><th>Présentation</th><th>Lot</th><th>Type</th
+							><th class="mc-num">Quantité</th><th class="mc-num">Avant</th><th class="mc-num"
+								>Après</th
+							><th>Référence</th><th>Utilisateur</th></tr
+						></thead
+					><tbody
+						>{#each filteredMovements as m (m.id)}{@const incoming = [
+								'BATCH_ENTRY',
+								'ADJUSTMENT_IN',
+								'RETURN'
+							].includes(m.type)}<tr
+								><td>{date(m.createdAt)}</td><td
+									><b>{m.presentation.medication.name}</b
+									>{#if m.presentation.medication.genericName}<small class="block"
+											>DCI : {m.presentation.medication.genericName}</small
+										>{/if}</td
+								><td>{m.presentation.dosage} · {m.presentation.form}</td><td class="mc-id"
+									>{m.batch?.batchNumber || '—'}</td
+								><td>{movementLabel(m.type)}</td><td
+									class="mc-num"
+									class:!text-emerald-700={incoming}
+									class:!text-red-700={!incoming}>{incoming ? '+' : '−'}{m.quantity}</td
+								><td class="mc-num">{m.stockBefore}</td><td class="mc-num">{m.stockAfter}</td><td
+									>{m.referenceType || '—'}{m.referenceId ? ` #${m.referenceId}` : ''}</td
+								><td>{m.performedByName || 'Système'}</td></tr
+							>{:else}<tr
+								><td colspan="10" class="text-center"
+									><History class="mx-auto text-slate-300" /><b class="mt-3 block"
+										>Aucun mouvement</b
+									><small class="text-slate-500">Aucun événement ne correspond aux filtres.</small
+									></td
 								></tr
-							></thead
-						><tbody
-							>{#each filteredMovements as m (m.id)}{@const incoming = [
-									'BATCH_ENTRY',
-									'ADJUSTMENT_IN',
-									'RETURN'
-								].includes(m.type)}<tr class="border-t"
-									><td class="p-3">{date(m.createdAt)}</td><td
-										><b>{m.presentation.medication.name}</b
-										>{#if m.presentation.medication.genericName}<small class="block"
-												>DCI : {m.presentation.medication.genericName}</small
-											>{/if}</td
-									><td>{m.presentation.dosage} · {m.presentation.form}</td><td
-										>{m.batch?.batchNumber || '—'}</td
-									><td>{movementLabel(m.type)}</td><td
-										class:!text-emerald-700={incoming}
-										class:!text-red-700={!incoming}
-										class="font-black">{incoming ? '+' : '−'}{m.quantity}</td
-									><td>{m.stockBefore}</td><td>{m.stockAfter}</td><td
-										>{m.referenceType || '—'}{m.referenceId ? ` #${m.referenceId}` : ''}</td
-									><td>{m.performedByName || 'Système'}</td></tr
-								>{:else}<tr
-									><td colspan="10" class="p-12 text-center"
-										><History class="mx-auto text-slate-300" /><b class="mt-3 block"
-											>Aucun mouvement</b
-										><small class="text-slate-500">Aucun événement ne correspond aux filtres.</small
-										></td
-									></tr
-								>{/each}</tbody
-						>
-					</table>
-				</div>
+							>{/each}</tbody
+					>
+				</Table>
 			{/if}
 		</section>
 	{/if}
@@ -630,8 +648,10 @@
 			>
 				<header class="flex items-start justify-between border-b pb-4">
 					<div>
-						<p class="text-xs font-black uppercase text-emerald-700">MedCore HIS · Bon pharmacie</p>
-						<h2 class="text-2xl font-black">{selectedVoucher.number}</h2>
+						<p class="text-xs font-semibold uppercase text-emerald-700">
+							MedCore HIS · Bon pharmacie
+						</p>
+						<h2 class="text-2xl font-bold">{selectedVoucher.number}</h2>
 						<p class="text-sm text-slate-500">{selectedVoucher.status}</p>
 					</div>
 					<div class="flex gap-2 print:hidden">
@@ -663,7 +683,7 @@
 				<div class="divide-y">
 					{#each selectedVoucher.lines ?? [] as line (line.id)}
 						<article class="py-5">
-							<h3 class="text-lg font-black">{line.commercialName}</h3>
+							<h3 class="text-lg font-bold">{line.commercialName}</h3>
 							{#if line.genericName}<p class="text-sm text-slate-500">{line.genericName}</p>{/if}
 							<p class="font-semibold">{line.dosage} · {line.form} · {line.route}</p>
 							<div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">

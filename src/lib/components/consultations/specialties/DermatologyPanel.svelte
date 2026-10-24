@@ -191,11 +191,11 @@
 	<section class="space-y-5">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Lésions cutanées
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Description et évolution des lésions</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Description et évolution des lésions</h4>
 			</div>
 
 			<button
@@ -212,7 +212,7 @@
 			{#each lesions as lesion, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Lésion #{index + 1}
 						</p>
 
@@ -239,7 +239,7 @@
 								id={`lesion-onset-${index}`}
 								type="date"
 								bind:value={lesion.onsetDate}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -256,7 +256,7 @@
 								type="text"
 								bind:value={lesion.location}
 								placeholder="Zone du corps"
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -271,7 +271,7 @@
 							<select
 								id={`lesion-type-${index}`}
 								bind:value={lesion.lesionType}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							>
 								<option value="">Sélectionner</option>
 								<option value="PLAQUE">Plaque</option>
@@ -297,7 +297,7 @@
 								type="text"
 								bind:value={lesion.otherLesionType}
 								disabled={lesion.lesionType !== 'OTHER'}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 							/>
 						</div>
 
@@ -316,7 +316,7 @@
 								step="0.1"
 								bind:value={lesion.lengthCm}
 								placeholder="cm"
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -335,7 +335,7 @@
 								step="0.1"
 								bind:value={lesion.widthCm}
 								placeholder="cm"
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -351,7 +351,7 @@
 								id={`lesion-color-${index}`}
 								type="text"
 								bind:value={lesion.color}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -367,7 +367,7 @@
 								id={`lesion-shape-${index}`}
 								type="text"
 								bind:value={lesion.shape}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -382,7 +382,7 @@
 							<select
 								id={`lesion-multiplicity-${index}`}
 								bind:value={lesion.multiplicity}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							>
 								<option value="">Sélectionner</option>
 								<option value="SINGLE">Unique</option>
@@ -404,7 +404,7 @@
 								min="1"
 								bind:value={lesion.count}
 								disabled={lesion.multiplicity !== 'MULTIPLE'}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 							/>
 						</div>
 
@@ -422,7 +422,7 @@
 								min="0"
 								max="10"
 								bind:value={lesion.painIntensity}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -440,7 +440,7 @@
 								min="0"
 								max="10"
 								bind:value={lesion.itchIntensity}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							/>
 						</div>
 
@@ -455,7 +455,7 @@
 							<select
 								id={`lesion-evolution-${index}`}
 								bind:value={lesion.evolution}
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 							>
 								<option value="">Sélectionner</option>
 								<option value="STABLE">Stable</option>
@@ -477,8 +477,7 @@
 								id={`lesion-description-${index}`}
 								bind:value={lesion.description}
 								rows="4"
-								class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
-							></textarea>
+								class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 						</div>
 					</div>
 				</article>
@@ -488,11 +487,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Antécédents dermatologiques
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Allergies, eczéma, psoriasis, acné et cancer cutané
 			</h4>
 		</div>
@@ -507,14 +506,14 @@
 				bind:value={form.skinAllergies}
 				rows="3"
 				placeholder="Type d’allergie, réaction, produit suspecté"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<label class="flex items-center gap-3">
 					<input type="checkbox" bind:checked={form.eczemaHistory} />
-					<span class="text-sm font-black text-slate-800"> Antécédent d’eczéma </span>
+					<span class="text-sm font-bold text-slate-800"> Antécédent d’eczéma </span>
 				</label>
 
 				<textarea
@@ -522,14 +521,14 @@
 					disabled={!form.eczemaHistory}
 					rows="3"
 					placeholder="Suivi, localisation et traitements"
-					class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				></textarea>
 			</div>
 
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<label class="flex items-center gap-3">
 					<input type="checkbox" bind:checked={form.psoriasisHistory} />
-					<span class="text-sm font-black text-slate-800"> Antécédent de psoriasis </span>
+					<span class="text-sm font-bold text-slate-800"> Antécédent de psoriasis </span>
 				</label>
 
 				<textarea
@@ -537,7 +536,7 @@
 					disabled={!form.psoriasisHistory}
 					rows="3"
 					placeholder="Suivi et traitements"
-					class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				></textarea>
 			</div>
 		</div>
@@ -551,7 +550,7 @@
 				<select
 					id="acne-severity"
 					bind:value={form.acneSeverity}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NONE">Absente</option>
@@ -570,7 +569,7 @@
 					id="acne-treatment"
 					type="text"
 					bind:value={form.acneTreatment}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -578,7 +577,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<label class="flex items-center gap-3">
 				<input type="checkbox" bind:checked={form.skinCancerHistory} />
-				<span class="text-sm font-black text-slate-800"> Antécédent de cancer cutané </span>
+				<span class="text-sm font-bold text-slate-800"> Antécédent de cancer cutané </span>
 			</label>
 
 			<textarea
@@ -586,7 +585,7 @@
 				disabled={!form.skinCancerHistory}
 				rows="3"
 				placeholder="Type, localisation, date et prise en charge"
-				class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+				class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 			></textarea>
 		</div>
 	</section>
@@ -594,11 +593,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Infections cutanées
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Type, traitement et évolution</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Type, traitement et évolution</h4>
 			</div>
 
 			<button
@@ -620,27 +619,27 @@
 						type="text"
 						bind:value={item.type}
 						placeholder="Type d’infection"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="date"
 						bind:value={item.onsetDate}
 						aria-label={`Date de l’infection ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<input
 						type="text"
 						bind:value={item.treatment}
 						placeholder="Traitement"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					/>
 
 					<select
 						bind:value={item.status}
 						aria-label={`Statut de l’infection ${index + 1}`}
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					>
 						<option value="">Statut</option>
 						<option value="ACTIVE">Active</option>
@@ -664,11 +663,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Suivi photographique
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Photos initiales et images de suivi</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Photos initiales et images de suivi</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -680,7 +679,7 @@
 				<select
 					id="photo-consent-status"
 					bind:value={form.photoConsentStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PENDING">En attente</option>
@@ -699,7 +698,7 @@
 					id="photo-consent-date"
 					type="date"
 					bind:value={form.photoConsentDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -718,7 +717,7 @@
 					type="button"
 					onclick={() => addPhoto(false)}
 					disabled={form.photoConsentStatus !== 'GRANTED'}
-					class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					<Plus size={16} />
 					Photo de suivi
@@ -731,7 +730,7 @@
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
 						<div>
-							<p class="font-black text-slate-900">
+							<p class="font-bold text-slate-900">
 								{photo.isInitial ? 'Photo initiale' : `Photo de suivi #${index + 1}`}
 							</p>
 						</div>
@@ -751,21 +750,21 @@
 							type="date"
 							bind:value={photo.date}
 							aria-label={`Date de la photo ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={photo.imageReference}
 							placeholder="Référence ou URL de l’image"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<textarea
 							bind:value={photo.description}
 							rows="3"
 							placeholder="Description"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm md:col-span-2"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm md:col-span-2"
 						></textarea>
 					</div>
 				</article>
@@ -781,7 +780,7 @@
 				id="visual-comparison"
 				bind:value={form.visualComparison}
 				rows="4"
-				class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 </div>

@@ -30,17 +30,12 @@
 	);
 </script>
 
-<section
-	class={cn(
-		'rounded-2xl border border-border bg-surface p-6 shadow-[var(--shadow-card)]',
-		className
-	)}
->
+<section class={cn('rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6', className)}>
 	<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
 		<div>
 			<h2 class={medcoreTypography.sectionTitle}>{title}</h2>
 			{#if description}
-				<p class="mt-1 text-sm text-slate-500">{description}</p>
+				<p class="mt-1 text-sm text-muted-foreground">{description}</p>
 			{/if}
 		</div>
 		{#if actions}{@render actions()}{/if}

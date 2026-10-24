@@ -26,7 +26,7 @@
 
 <span
 	class={cn(
-		'inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold',
+		'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
 		toneBadgeClass(map[variant] ?? 'neutral'),
 		className
 	)}

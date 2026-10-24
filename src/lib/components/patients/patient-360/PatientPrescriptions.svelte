@@ -181,11 +181,11 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-orange-600">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-orange-600">
 				Traitements prescrits
 			</p>
 
-			<h2 class="mt-2 text-2xl font-black text-slate-900">Prescriptions</h2>
+			<h2 class="mt-2 text-2xl font-bold text-slate-900">Prescriptions</h2>
 
 			<p class="mt-1 text-sm leading-6 text-slate-500">
 				Historique des médicaments, posologies et ordonnances du patient.
@@ -200,25 +200,25 @@
 
 	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 		<div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
-			<p class="text-xs font-black uppercase text-orange-500">Prescriptions</p>
+			<p class="text-xs font-semibold uppercase text-orange-500">Prescriptions</p>
 
-			<p class="mt-2 text-3xl font-black text-orange-900">
+			<p class="mt-2 text-3xl font-bold text-orange-900">
 				{prescriptions.length}
 			</p>
 		</div>
 
 		<div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-			<p class="text-xs font-black uppercase text-amber-600">Médicaments distincts</p>
+			<p class="text-xs font-semibold uppercase text-amber-600">Médicaments distincts</p>
 
-			<p class="mt-2 text-3xl font-black text-amber-900">
+			<p class="mt-2 text-3xl font-bold text-amber-900">
 				{medicationCount}
 			</p>
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-white p-5">
-			<p class="text-xs font-black uppercase text-slate-400">Consultations prescriptrices</p>
+			<p class="text-xs font-semibold uppercase text-slate-500">Consultations prescriptrices</p>
 
-			<p class="mt-2 text-3xl font-black text-slate-900">
+			<p class="mt-2 text-3xl font-bold text-slate-900">
 				{prescribingConsultationsCount}
 			</p>
 		</div>
@@ -229,12 +229,12 @@
 		subtitle={`${filteredPrescriptions.length} prescription(s) affichée(s)`}
 	>
 		<div class="relative mb-6 w-full max-w-xl">
-			<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+			<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
 
 			<input
 				bind:value={search}
 				placeholder="Rechercher un médicament, médecin, diagnostic..."
-				class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-orange-500 focus:bg-white"
+				class="w-full rounded-lg border border-input bg-slate-50 py-2 pl-10 pr-4 text-sm outline-none transition focus:border-orange-500 focus:bg-white"
 			/>
 		</div>
 
@@ -248,7 +248,7 @@
 					<Pill size={28} />
 				</div>
 
-				<h3 class="mt-5 text-xl font-black text-slate-900">Aucune prescription trouvée</h3>
+				<h3 class="mt-5 text-xl font-bold text-slate-900">Aucune prescription trouvée</h3>
 
 				<p class="mt-2 text-sm text-slate-500">
 					Les médicaments prescrits pendant les consultations apparaîtront ici.
@@ -269,7 +269,7 @@
 								</div>
 
 								<div class="min-w-0 flex-1">
-									<h3 class="text-lg font-black text-slate-900">
+									<h3 class="text-lg font-bold text-slate-900">
 										{prescription.medicationName}
 									</h3>
 									{#if prescription.genericName}<p class="text-sm text-slate-500">
@@ -280,7 +280,7 @@
 										{presentation(prescription)}
 									</p>
 									{#if prescription.voucherNumber}<p
-											class="mt-1 text-xs font-black text-emerald-700"
+											class="mt-1 text-xs font-bold text-emerald-700"
 										>
 											Bon : {prescription.voucherNumber}
 										</p>{/if}
@@ -302,7 +302,7 @@
 
 									<div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Fréquence
 											</p>
 
@@ -312,7 +312,7 @@
 										</div>
 
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Durée
 											</p>
 
@@ -322,7 +322,7 @@
 										</div>
 
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Quantité
 											</p>
 
@@ -332,7 +332,7 @@
 										</div>
 
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Date
 											</p>
 
@@ -345,7 +345,7 @@
 
 									<div class="mt-4 grid gap-4 rounded-2xl bg-slate-50 p-4 md:grid-cols-2">
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Médecin / service
 											</p>
 
@@ -357,7 +357,7 @@
 										</div>
 
 										<div>
-											<p class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-slate-500">
 												Diagnostic
 											</p>
 
@@ -369,7 +369,7 @@
 
 									{#if prescription.instructions}
 										<div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-											<p class="text-[10px] font-black uppercase tracking-wide text-amber-600">
+											<p class="text-2xs font-semibold uppercase tracking-wide text-amber-600">
 												Instructions
 											</p>
 

@@ -27,32 +27,27 @@
 	}: Props = $props();
 
 	const accentClasses: Record<CardAccent, string> = {
-		default: 'bg-slate-100 text-slate-500',
-		medical: 'bg-accent text-primary',
-		success: 'bg-emerald-50 text-success',
-		info: 'bg-sky-50 text-info',
-		purple: 'bg-violet-50 text-violet-600',
-		danger: 'bg-red-50 text-danger'
+		default: 'bg-surface-muted text-muted-foreground',
+		medical: 'bg-primary-soft text-primary',
+		success: 'bg-success-soft text-success-strong',
+		info: 'bg-info-soft text-info-strong',
+		purple: 'bg-violet-50 text-violet-700',
+		danger: 'bg-danger-soft text-danger-strong'
 	};
 </script>
 
-<div
-	class={cn(
-		'overflow-visible rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]',
-		className
-	)}
->
+<div class={cn('overflow-visible rounded-xl border border-border bg-surface shadow-xs', className)}>
 	{#if title}
 		<div
 			class={size === 'compact'
 				? 'border-b border-border px-4 py-3'
-				: 'border-b border-border px-6 py-4'}
+				: 'border-b border-border px-5 py-4'}
 		>
 			<div class="flex items-center gap-3">
 				{#if icon}
 					{@const Icon = icon}
 					<div
-						class={`flex h-8 w-8 items-center justify-center rounded-xl ${accentClasses[accent]}`}
+						class={`flex size-8 shrink-0 items-center justify-center rounded-lg ${accentClasses[accent]}`}
 					>
 						<Icon size={16} />
 					</div>
@@ -60,16 +55,16 @@
 				<div>
 					<h2
 						class={size === 'compact'
-							? 'text-sm font-semibold text-slate-900'
-							: 'text-lg font-semibold text-slate-900'}
+							? 'text-sm font-semibold text-foreground'
+							: 'text-base font-semibold text-foreground'}
 					>
 						{title}
 					</h2>
 					{#if subtitle}
 						<p
 							class={size === 'compact'
-								? 'mt-0.5 text-xs text-slate-500'
-								: 'mt-1 text-sm text-slate-500'}
+								? 'mt-0.5 text-xs text-muted-foreground'
+								: 'mt-0.5 text-small text-muted-foreground'}
 						>
 							{subtitle}
 						</p>
@@ -78,7 +73,7 @@
 			</div>
 		</div>
 	{/if}
-	<div class={padding ? (size === 'compact' ? 'p-4' : 'p-6') : ''}>
+	<div class={padding ? (size === 'compact' ? 'p-4' : 'p-5') : ''}>
 		{@render children?.()}
 	</div>
 </div>

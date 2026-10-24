@@ -197,9 +197,9 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Symptômes ORL</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Symptômes ORL</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Oreilles, nez, gorge et sommeil</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Oreilles, nez, gorge et sommeil</h4>
 		</div>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -305,7 +305,7 @@
 			<select
 				id="smell-status"
 				bind:value={form.smellStatus}
-				class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+				class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 			>
 				<option value="">Sélectionner</option>
 				<option value="NORMAL">Normal</option>
@@ -317,49 +317,49 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Examen clinique ORL
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Otoscopie, fosses nasales, gorge et larynx
 			</h4>
 		</div>
 
 		<div class="grid gap-5 xl:grid-cols-2">
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-				<p class="font-black text-slate-900">Oreille droite</p>
+				<p class="font-bold text-slate-900">Oreille droite</p>
 
 				<div class="mt-4 space-y-4">
 					<textarea
 						bind:value={form.rightEarCanal}
 						rows="3"
 						placeholder="Conduit auditif"
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"></textarea>
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 
 					<textarea
 						bind:value={form.rightTympanum}
 						rows="3"
 						placeholder="Tympan"
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"></textarea>
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 				</div>
 			</div>
 
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-				<p class="font-black text-slate-900">Oreille gauche</p>
+				<p class="font-bold text-slate-900">Oreille gauche</p>
 
 				<div class="mt-4 space-y-4">
 					<textarea
 						bind:value={form.leftEarCanal}
 						rows="3"
 						placeholder="Conduit auditif"
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"></textarea>
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 
 					<textarea
 						bind:value={form.leftTympanum}
 						rows="3"
 						placeholder="Tympan"
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"></textarea>
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 				</div>
 			</div>
 		</div>
@@ -369,47 +369,47 @@
 				bind:value={form.nasalCavitiesExam}
 				rows="4"
 				placeholder="Examen des fosses nasales"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.sinusExam}
 				rows="4"
 				placeholder="Examen des sinus"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.oropharynxExam}
 				rows="4"
 				placeholder="Examen bucco-pharyngé"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.tonsilsExam}
 				rows="4"
 				placeholder="Examen des amygdales"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.larynxExam}
 				rows="4"
 				placeholder="Examen laryngé"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.cervicalLymphNodes}
 				rows="4"
 				placeholder="Ganglions cervicaux"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Examens complémentaires ORL
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Audiométrie, endoscopie et tests vestibulaires
 			</h4>
 		</div>
@@ -418,7 +418,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Audiométrie</p>
+						<p class="font-bold text-slate-900">Audiométrie</p>
 						<p class="mt-1 text-sm text-slate-500">Date, résultat et conclusion.</p>
 					</div>
 
@@ -440,21 +440,21 @@
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.result}
 								placeholder="Résultat"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.conclusion}
 								placeholder="Conclusion"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<button
@@ -473,7 +473,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Tympanométrie</p>
+						<p class="font-bold text-slate-900">Tympanométrie</p>
 						<p class="mt-1 text-sm text-slate-500">Date et résultat.</p>
 					</div>
 
@@ -495,14 +495,14 @@
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.result}
 								placeholder="Résultat"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<button
@@ -521,7 +521,7 @@
 			<div class="grid gap-5 xl:grid-cols-2">
 				<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">Endoscopie nasale</p>
+						<p class="font-bold text-slate-900">Endoscopie nasale</p>
 
 						<button
 							type="button"
@@ -540,14 +540,14 @@
 									<input
 										type="date"
 										bind:value={item.date}
-										class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+										class="rounded-lg border border-input px-3 py-2 text-sm"
 									/>
 
 									<textarea
 										bind:value={item.result}
 										rows="3"
 										placeholder="Résultat"
-										class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+										class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 									<button
 										type="button"
@@ -565,7 +565,7 @@
 
 				<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">Fibroscopie</p>
+						<p class="font-bold text-slate-900">Fibroscopie</p>
 
 						<button
 							type="button"
@@ -584,14 +584,14 @@
 									<input
 										type="date"
 										bind:value={item.date}
-										class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+										class="rounded-lg border border-input px-3 py-2 text-sm"
 									/>
 
 									<textarea
 										bind:value={item.result}
 										rows="3"
 										placeholder="Résultat"
-										class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+										class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 									<button
 										type="button"
@@ -611,7 +611,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Tests vestibulaires</p>
+						<p class="font-bold text-slate-900">Tests vestibulaires</p>
 
 						<p class="mt-1 text-sm text-slate-500">Résultat et conclusion.</p>
 					</div>
@@ -634,21 +634,21 @@
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.result}
 								placeholder="Résultat"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.conclusion}
 								placeholder="Conclusion"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<button

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import LinkButton from '$lib/components/ui/LinkButton.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { jwtDecode } from 'jwt-decode';
 	import { getRefundReport } from '$lib/api/billing';
@@ -72,7 +75,7 @@
 	<div class="mx-auto max-w-6xl space-y-6 p-6" data-testid="refund-report-page">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<h1 class="text-3xl font-black">{REFUND_REPORT_LINK_LABEL}</h1>
+				<h1 class="text-3xl font-bold">{REFUND_REPORT_LINK_LABEL}</h1>
 				<p class="text-sm text-slate-600">Remboursements exécutés uniquement (autorité serveur).</p>
 			</div>
 			<button
@@ -92,15 +95,23 @@
 		>
 			<label class="text-xs font-bold uppercase text-slate-500"
 				>Du
-				<input class="mt-1 w-full rounded-lg border p-2" type="date" bind:value={dateFrom} />
+				<input
+					class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
+					type="date"
+					bind:value={dateFrom}
+				/>
 			</label>
 			<label class="text-xs font-bold uppercase text-slate-500"
 				>Au
-				<input class="mt-1 w-full rounded-lg border p-2" type="date" bind:value={dateTo} />
+				<input
+					class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
+					type="date"
+					bind:value={dateTo}
+				/>
 			</label>
 			<label class="text-xs font-bold uppercase text-slate-500"
 				>Mode
-				<select class="mt-1 w-full rounded-lg border p-2" bind:value={method}>
+				<select class="min-h-control mt-1 w-full rounded-lg border px-3 py-2" bind:value={method}>
 					<option value="">Tous</option>
 					<option value="CASH">Espèces</option>
 					<option value="CARD">Carte</option>
@@ -108,7 +119,9 @@
 					<option value="TRANSFER">Virement</option>
 				</select>
 			</label>
-			<button type="submit" class="rounded-xl bg-indigo-800 px-4 py-2 font-bold text-white"
+			<button
+				type="submit"
+				class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 				>Actualiser</button
 			>
 		</form>
@@ -144,40 +157,38 @@
 				</p>
 			</section>
 
-			<table
-				class="w-full overflow-hidden rounded-2xl border bg-white text-sm"
-				data-testid="refund-report-table"
-			>
-				<thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
+			<Table data-testid="refund-report-table">
+				<thead>
 					<tr>
-						<th class="p-3">N°</th>
-						<th class="p-3">Montant</th>
-						<th class="p-3">Mode</th>
-						<th class="p-3">Exécuté</th>
-						<th class="p-3">Bénéficiaire</th>
-						<th class="p-3 print:hidden">Bon</th>
+						<th>N°</th>
+						<th class="mc-num">Montant</th>
+						<th>Mode</th>
+						<th>Exécuté</th>
+						<th>Bénéficiaire</th>
+						<th class="print:hidden mc-actions">Bon</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each report.data as row (row.refundId)}
-						<tr class="border-t" data-testid={`refund-report-row-${row.refundId}`}>
-							<td class="p-3 font-bold">{row.refundNumber}</td>
-							<td class="p-3">{formatXOF(row.amount)}</td>
-							<td class="p-3">{refundMethodLabel(row.method)}</td>
-							<td class="p-3">{new Date(row.executedAt).toLocaleString('fr-FR')}</td>
-							<td class="p-3">{row.beneficiaryDisplayName}</td>
-							<td class="p-3 print:hidden">
-								<a
-									class="font-bold text-sky-800 underline"
-									href={resolve(`/billing/refunds/${row.refundId}/voucher`)}>Bon</a
+						<tr data-testid={`refund-report-row-${row.refundId}`}>
+							<td class="mc-id">{row.refundNumber}</td>
+							<td class="mc-amount">{formatXOF(row.amount)}</td>
+							<td>{refundMethodLabel(row.method)}</td>
+							<td>{new Date(row.executedAt).toLocaleString('fr-FR')}</td>
+							<td>{row.beneficiaryDisplayName}</td>
+							<td class="print:hidden mc-actions">
+								<LinkButton
+									size="sm"
+									variant="ghost"
+									href={resolve(`/billing/refunds/${row.refundId}/voucher`)}>Bon</LinkButton
 								>
 							</td>
 						</tr>
 					{:else}
-						<tr><td class="p-4 text-slate-500" colspan="6">Aucun remboursement exécuté.</td></tr>
+						<TableState state="empty" colspan={6} title="Aucun remboursement exécuté." />
 					{/each}
 				</tbody>
-			</table>
+			</Table>
 		{/if}
 	</div>
 {/if}

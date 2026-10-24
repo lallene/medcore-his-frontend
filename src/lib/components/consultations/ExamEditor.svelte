@@ -119,9 +119,9 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">Investigations</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Investigations</p>
 
-			<h3 class="mt-1 text-xl font-black text-slate-900">Examens complémentaires</h3>
+			<h3 class="mt-1 text-xl font-bold text-slate-900">Examens complémentaires</h3>
 
 			<p class="mt-2 text-sm text-slate-500">
 				Sélectionnez les examens de laboratoire, d’imagerie ou fonctionnels.
@@ -132,7 +132,7 @@
 			type="button"
 			onclick={saveExams}
 			disabled={saving || loading}
-			class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#0b3d75] disabled:cursor-not-allowed disabled:opacity-60"
+			class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
 		>
 			<Save size={18} />
 			{saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -188,7 +188,7 @@
 				<div class="flex flex-col gap-3 md:flex-row">
 					<select
 						id="exam-selector"
-						class="h-12 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 flex-1 rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 						onchange={(event) => {
 							const target = event.currentTarget;
 							const examId = Number(target.value);
@@ -208,7 +208,7 @@
 					</select>
 
 					<div
-						class="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-[#0E4C92]"
+						class="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-primary"
 					>
 						<Plus size={17} />
 						{availableExams.length} disponible(s)
@@ -219,12 +219,12 @@
 			{#if selectedExams.length === 0}
 				<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
 					<div
-						class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
+						class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-primary"
 					>
 						<FlaskConical size={22} />
 					</div>
 
-					<p class="mt-4 text-sm font-black text-slate-800">Aucun examen sélectionné</p>
+					<p class="mt-4 text-sm font-bold text-slate-800">Aucun examen sélectionné</p>
 
 					<p class="mt-1 text-sm text-slate-500">
 						Ajoutez les examens nécessaires à la prise en charge.
@@ -235,9 +235,9 @@
 					<div
 						class="hidden grid-cols-[1.3fr_1fr_140px] gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4 md:grid"
 					>
-						<p class="text-sm font-black text-slate-700">Examen</p>
-						<p class="text-sm font-black text-slate-700">Catégorie</p>
-						<p class="text-center text-sm font-black text-slate-700">Action</p>
+						<p class="text-sm font-bold text-slate-700">Examen</p>
+						<p class="text-sm font-bold text-slate-700">Catégorie</p>
+						<p class="text-center text-sm font-bold text-slate-700">Action</p>
 					</div>
 
 					{#each selectedExams as exam (exam.id)}
@@ -245,7 +245,7 @@
 							class="grid gap-3 border-b border-slate-100 px-5 py-4 last:border-b-0 md:grid-cols-[1.3fr_1fr_140px] md:items-center"
 						>
 							<div>
-								<p class="font-black text-slate-900">
+								<p class="font-bold text-slate-900">
 									{exam.name}
 								</p>
 
@@ -258,7 +258,7 @@
 
 							<div>
 								<span
-									class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#0E4C92]"
+									class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-primary"
 								>
 									{exam.category || 'Non catégorisé'}
 								</span>

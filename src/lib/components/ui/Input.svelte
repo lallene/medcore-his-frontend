@@ -51,8 +51,8 @@
 	aria-invalid={invalid || undefined}
 	data-testid={testId}
 	class={cn(
-		'w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70',
-		invalid && 'border-danger focus:border-danger focus:ring-danger/15',
+		'min-h-control w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-xs outline-none transition-colors placeholder:text-subtle-foreground hover:border-border-strong focus:border-primary focus:ring-3 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground read-only:bg-surface-muted',
+		invalid && 'border-danger hover:border-danger focus:border-danger focus:ring-danger/15',
 		className
 	)}
 />

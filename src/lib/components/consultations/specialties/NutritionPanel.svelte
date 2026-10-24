@@ -53,7 +53,7 @@
 			type="number"
 			step="0.1"
 			bind:value={form.bmi}
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		/>
 	</div>
 
@@ -64,7 +64,7 @@
 			type="number"
 			step="0.1"
 			bind:value={form.waistCircumferenceCm}
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		/>
 	</div>
 
@@ -76,7 +76,7 @@
 			id="dietary-habits"
 			bind:value={form.dietaryHabits}
 			rows="4"
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		></textarea>
 	</div>
 
@@ -88,7 +88,7 @@
 			id="nutrition-goal"
 			type="text"
 			bind:value={form.nutritionGoal}
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		/>
 	</div>
 
@@ -100,7 +100,7 @@
 			id="diet-plan"
 			type="text"
 			bind:value={form.dietPlan}
-			class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#0E4C92]"
+			class="w-full rounded-lg border border-input px-3 py-2 text-sm outline-none focus:border-primary"
 		/>
 	</div>
 </div>

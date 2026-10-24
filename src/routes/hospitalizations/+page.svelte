@@ -1,4 +1,9 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -39,17 +44,27 @@
 <svelte:head><title>Hospitalisations | MedCore HIS</title></svelte:head>
 <div class="space-y-6">
 	<header
-		class="flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-red-800 to-[#0E4C92] p-8 text-white md:flex-row md:items-center md:justify-between"
+		class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6 md:flex-row md:items-center md:justify-between"
 	>
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.2em] text-red-100">Séjours hospitaliers</p>
-			<h1 class="mt-2 text-3xl font-black">Hospitalisations</h1>
-			<p class="mt-2 text-sm text-red-50">Admissions planifiées, séjours actifs et sorties.</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
+				Séjours hospitaliers
+			</p>
+			<h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+				Hospitalisations
+			</h1>
+			<p class="mt-1.5 text-sm text-muted-foreground">
+				Admissions planifiées, séjours actifs et sorties.
+			</p>
 		</div>
-		<Hospital size={42} />
+		<div
+			class="hidden size-12 items-center justify-center rounded-lg bg-primary-soft text-primary md:flex"
+		>
+			<Hospital size="24" aria-hidden="true" />
+		</div>
 	</header>
-	<div class="flex gap-3">
-		<div class="min-w-64">
+	<div class="flex flex-wrap gap-3">
+		<div class="w-full sm:w-auto sm:min-w-64">
 			<ServiceSelect
 				bind:value={serviceId}
 				capability="hospitalization"
@@ -60,72 +75,64 @@
 		<select
 			bind:value={status}
 			onchange={load}
-			class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold"
+			class="rounded-lg border border-input bg-white px-3 py-2 text-sm font-bold"
 			><option value="">Tous les statuts</option><option value="PLANNED">Planifiées</option><option
 				value="ADMITTED">Admises</option
 			><option value="DISCHARGED">Sorties</option><option value="CANCELLED">Annulées</option
 			></select
 		>
 	</div>
-	{#if error}<p class="rounded-xl bg-red-50 p-4 font-bold text-red-700">{error}</p>{/if}
-	<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-		{#if loading}<p class="p-8 text-slate-500">Chargement...</p>{:else if items.length === 0}<p
-				class="p-8 text-center text-slate-500"
+	{#if error}<Alert tone="danger">{error}</Alert>{/if}
+	<div>
+		<Table>
+			<thead
+				><tr
+					><th>Admission</th><th>Patient</th><th>Service</th><th>Type</th><th>Date</th><th
+						>Sortie prévue</th
+					><th>Statut</th><th class="mc-actions"></th></tr
+				></thead
+			><tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={8}
+						title="Chargement…"
+					/>{:else if error && items.length === 0}<TableState
+						state="error"
+						colspan={8}
+					/>{:else if items.length === 0}<TableState
+						state="empty"
+						colspan={8}
+						title="Aucune hospitalisation."
+					/>{:else}{#each items as item (item.id)}<tr
+							><td class="mc-id">{item.admissionNumber}</td><td
+								>{item.patient.nom} {item.patient.prenoms}</td
+							><td>{item.department || '—'}</td><td>{item.hospitalizationType || '—'}</td><td
+								>{item.admittedAt
+									? new Date(item.admittedAt).toLocaleDateString('fr-FR')
+									: 'Non admis'}</td
+							><td
+								>{item.expectedDischargeAt
+									? new Date(item.expectedDischargeAt).toLocaleDateString('fr-FR')
+									: '—'}</td
+							><td>{hospitalizationStatusLabel(item.status)}</td><td class="mc-actions"
+								><IconButton
+									size="sm"
+									label="Ouvrir"
+									onclick={() => goto(resolve(`/hospitalizations/${item.id}`))}
+									><Eye size={16} aria-hidden="true" /></IconButton
+								></td
+							></tr
+						>{/each}{/if}</tbody
 			>
-				Aucune hospitalisation.
-			</p>{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-slate-50 text-xs uppercase text-slate-500"
-						><tr
-							><th class="p-4">Admission</th><th class="p-4">Patient</th><th class="p-4">Service</th
-							><th class="p-4">Type</th><th class="p-4">Date</th><th class="p-4">Sortie prévue</th
-							><th class="p-4">Statut</th><th class="p-4"></th></tr
-						></thead
-					><tbody
-						>{#each items as item (item.id)}<tr class="border-t border-slate-100"
-								><td class="p-4 font-black">{item.admissionNumber}</td><td class="p-4"
-									>{item.patient.nom} {item.patient.prenoms}</td
-								><td class="p-4">{item.department || '—'}</td><td class="p-4"
-									>{item.hospitalizationType || '—'}</td
-								><td class="p-4"
-									>{item.admittedAt
-										? new Date(item.admittedAt).toLocaleDateString('fr-FR')
-										: 'Non admis'}</td
-								><td class="p-4"
-									>{item.expectedDischargeAt
-										? new Date(item.expectedDischargeAt).toLocaleDateString('fr-FR')
-										: '—'}</td
-								><td class="p-4 font-bold">{hospitalizationStatusLabel(item.status)}</td><td
-									class="p-4"
-									><button
-										type="button"
-										aria-label="Ouvrir"
-										onclick={() => goto(resolve(`/hospitalizations/${item.id}`))}
-										class="text-[#0E4C92]"><Eye size={18} /></button
-									></td
-								></tr
-							>{/each}</tbody
-					>
-				</table>
-			</div>
-		{/if}
+		</Table>
 	</div>
-	<div class="flex justify-end gap-2">
-		<button
-			disabled={page <= 1}
-			onclick={() => {
-				page--;
-				void load();
-			}}
-			class="rounded-lg border px-3 py-2 disabled:opacity-40">Précédent</button
-		><span class="px-3 py-2 text-sm">{page}/{Math.max(totalPages, 1)}</span><button
-			disabled={page >= totalPages}
-			onclick={() => {
-				page++;
-				void load();
-			}}
-			class="rounded-lg border px-3 py-2 disabled:opacity-40">Suivant</button
-		>
-	</div>
+	<Pagination
+		{page}
+		totalPages={Math.max(totalPages, 1)}
+		disabled={loading}
+		onpage={(next) => {
+			page = next;
+			void load();
+		}}
+	/>
 </div>

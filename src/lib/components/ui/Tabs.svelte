@@ -36,10 +36,10 @@
 				onchange?.(tab.id);
 			}}
 			class={cn(
-				'-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition',
+				'-mb-px border-b-2 px-3.5 py-2.5 text-sm font-medium transition-colors',
 				value === tab.id
-					? 'border-primary text-primary'
-					: 'border-transparent text-slate-500 hover:text-slate-800'
+					? 'border-primary font-semibold text-primary'
+					: 'border-transparent text-muted-foreground hover:border-border-strong hover:text-foreground'
 			)}
 		>
 			{tab.label}

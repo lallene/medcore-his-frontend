@@ -107,7 +107,7 @@
 			{#if canLink}<button
 					disabled={busy}
 					onclick={link}
-					class="mt-3 rounded-lg bg-violet-700 px-3 py-2 font-bold text-white"
+					class="mt-3 rounded-lg bg-primary px-3 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 					>Confirmer le rattachement</button
 				>{/if}
 		</div>{/if}

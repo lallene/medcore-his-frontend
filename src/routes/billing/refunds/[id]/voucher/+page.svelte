@@ -50,7 +50,7 @@
 			<a class="rounded-xl border px-4 py-2 font-bold" href={resolve(`/billing/refunds`)}>Retour</a>
 			<button
 				type="button"
-				class="rounded-xl bg-slate-900 px-4 py-2 font-bold text-white"
+				class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 				data-testid="refund-voucher-print"
 				onclick={reprint}>{REFUND_VOUCHER_PRINT_LABEL}</button
 			>
@@ -64,19 +64,19 @@
 			>
 				<header class="text-center">
 					<p class="text-xs font-bold uppercase tracking-wide text-slate-600">{copyLabel}</p>
-					<h1 class="mt-1 text-2xl font-black" data-testid="refund-voucher-clinic">
+					<h1 class="mt-1 text-2xl font-bold" data-testid="refund-voucher-clinic">
 						{voucher.clinicHeader}
 					</h1>
-					<h2 class="text-lg font-black">BON DE REMBOURSEMENT</h2>
-					{#if duplicate}<p class="font-black text-red-700">DUPLICATA</p>{/if}
-					<p class="mt-2 text-xl font-black" data-testid="refund-voucher-number">
+					<h2 class="text-lg font-bold">BON DE REMBOURSEMENT</h2>
+					{#if duplicate}<p class="font-bold text-red-700">DUPLICATA</p>{/if}
+					<p class="mt-2 text-xl font-bold" data-testid="refund-voucher-number">
 						N° {voucher.refundNumber}
 					</p>
 				</header>
 
 				<dl class="mt-6 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
 					<dt class="text-slate-500">Montant</dt>
-					<dd class="font-black" data-testid="refund-voucher-amount">
+					<dd class="font-bold" data-testid="refund-voucher-amount">
 						{formatXOF(voucher.amount)}
 					</dd>
 					<dt class="text-slate-500">Mode</dt>

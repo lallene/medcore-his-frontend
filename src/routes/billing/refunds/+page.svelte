@@ -1,4 +1,10 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import Alert from '$lib/components/ui/Alert.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -533,7 +539,7 @@
 		<header class="flex flex-wrap items-end justify-between gap-3">
 			<div>
 				<p class="text-sm font-bold text-indigo-700">FACTURATION</p>
-				<h1 class="text-3xl font-black" data-testid="refunds-title">{REFUND_PAGE_TITLE}</h1>
+				<h1 class="text-3xl font-bold" data-testid="refunds-title">{REFUND_PAGE_TITLE}</h1>
 				<p class="mt-1 text-sm text-slate-600" data-testid="refunds-notice">
 					{REFUND_NO_PAYOUT_NOTICE}
 				</p>
@@ -559,7 +565,7 @@
 
 		{#if showRequest}
 			<section class="space-y-4 rounded-2xl border bg-white p-5" data-testid="refund-request-form">
-				<h2 class="text-lg font-black">{REFUND_REQUEST_SECTION}</h2>
+				<h2 class="text-lg font-bold">{REFUND_REQUEST_SECTION}</h2>
 
 				{#if canReadCredit}
 					<div
@@ -585,38 +591,49 @@
 								Aucun crédit pour ce patient.
 							</p>
 						{/if}
-						{#each balances as bal (bal.holderPartyId)}
-							<div
-								class="grid gap-2 rounded-lg bg-white p-3 text-sm sm:grid-cols-5"
-								data-testid={`refund-balance-${bal.holderPartyId}`}
-							>
-								<p class="font-black">Titulaire #{bal.holderPartyId}</p>
-								<p>
-									<span class="block text-xs text-slate-500">{REFUND_LEDGER_LABEL}</span>
-									<b data-testid={`refund-balance-${bal.holderPartyId}-ledger`}
-										>{formatXOF(bal.ledgerAvailable)}</b
-									>
-								</p>
-								<p>
-									<span class="block text-xs text-slate-500">{REFUND_RESERVED_LABEL}</span>
-									<b data-testid={`refund-balance-${bal.holderPartyId}-reserved`}
-										>{formatXOF(bal.reservedForRefund)}</b
-									>
-								</p>
-								<p>
-									<span class="block text-xs text-slate-500">{REFUND_SPENDABLE_LABEL}</span>
-									<b data-testid={`refund-balance-${bal.holderPartyId}-spendable`}
-										>{formatXOF(bal.spendableCredit)}</b
-									>
-								</p>
-								<button
-									type="button"
-									class="rounded-lg border px-2 py-1 font-bold"
-									data-testid={`refund-balance-${bal.holderPartyId}-pick`}
-									onclick={() => pickHolder(bal.holderPartyId)}>Choisir</button
-								>
-							</div>
-						{/each}
+						{#if balances.length > 0}
+							<Table aria-label="Soldes de crédit du patient">
+								<thead>
+									<tr>
+										<th>Titulaire</th>
+										<th class="mc-num">{REFUND_LEDGER_LABEL}</th>
+										<th class="mc-num">{REFUND_RESERVED_LABEL}</th>
+										<th class="mc-num">{REFUND_SPENDABLE_LABEL}</th>
+										<th class="mc-actions">Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each balances as bal (bal.holderPartyId)}
+										<tr data-testid={`refund-balance-${bal.holderPartyId}`}>
+											<td class="mc-id">Titulaire #{bal.holderPartyId}</td>
+											<td
+												class="mc-amount"
+												data-testid={`refund-balance-${bal.holderPartyId}-ledger`}
+												>{formatXOF(bal.ledgerAvailable)}</td
+											>
+											<td
+												class="mc-amount"
+												data-testid={`refund-balance-${bal.holderPartyId}-reserved`}
+												>{formatXOF(bal.reservedForRefund)}</td
+											>
+											<td
+												class="mc-amount"
+												data-testid={`refund-balance-${bal.holderPartyId}-spendable`}
+												>{formatXOF(bal.spendableCredit)}</td
+											>
+											<td class="mc-actions">
+												<Button
+													size="sm"
+													variant="secondary"
+													data-testid={`refund-balance-${bal.holderPartyId}-pick`}
+													onclick={() => pickHolder(bal.holderPartyId)}>Choisir</Button
+												>
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</Table>
+						{/if}
 					</div>
 				{:else}
 					<p class="text-sm text-slate-600" data-testid="refund-balances-hidden">
@@ -637,7 +654,7 @@
 						<input
 							type="number"
 							min="1"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-patient-id"
 							bind:value={form.patientId}
 						/>
@@ -647,7 +664,7 @@
 						<input
 							type="number"
 							min="1"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-holder-id"
 							bind:value={form.holderPartyId}
 						/>
@@ -658,7 +675,7 @@
 							type="number"
 							min="1"
 							step="1"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-amount"
 							bind:value={form.amount}
 						/>
@@ -670,7 +687,7 @@
 							/></span
 						><select
 							id="refund-reason-code-select"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-reason-code"
 							bind:value={form.reasonCode}
 						>
@@ -697,7 +714,7 @@
 							><input
 								id="refund-attestation-ref-input"
 								type="text"
-								class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+								class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 								maxlength="200"
 								data-testid="refund-attestation-ref"
 								bind:value={form.clinicalAttestationRef}
@@ -711,7 +728,7 @@
 							/></span
 						><select
 							id="refund-beneficiary-mode-select"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-beneficiary-mode"
 							bind:value={form.beneficiaryMode}
 						>
@@ -723,7 +740,7 @@
 					<label class="text-xs font-bold uppercase text-slate-500">
 						Mode prévu
 						<select
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							data-testid="refund-intended-method"
 							bind:value={form.intendedMethod}
 						>
@@ -736,7 +753,7 @@
 						Justification du mode (facultatif)
 						<input
 							type="text"
-							class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+							class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 							maxlength="500"
 							data-testid="refund-method-override"
 							bind:value={form.methodOverrideReason}
@@ -747,7 +764,7 @@
 							Identité du bénéficiaire
 							<input
 								type="text"
-								class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+								class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 								maxlength="200"
 								data-testid="refund-beneficiary-name"
 								bind:value={form.beneficiaryDisplayName}
@@ -757,7 +774,7 @@
 							Lien avec le titulaire
 							<input
 								type="text"
-								class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+								class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 								maxlength="80"
 								data-testid="refund-beneficiary-relationship"
 								bind:value={form.beneficiaryRelationship}
@@ -767,7 +784,7 @@
 							Réf. du consentement écrit du titulaire
 							<input
 								type="text"
-								class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+								class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 								maxlength="200"
 								data-testid="refund-consent-ref"
 								bind:value={form.holderConsentRef}
@@ -777,7 +794,7 @@
 					<div class="flex flex-wrap items-center gap-3 md:col-span-3">
 						<button
 							type="submit"
-							class="rounded-xl bg-indigo-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+							class="rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 							data-testid="refund-submit"
 							disabled={isPaymentSubmitDisabled(requestCmd)}
 							>{isPaymentSubmitDisabled(requestCmd)
@@ -821,17 +838,16 @@
 				{#if selected}
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div>
-							<h2 class="text-lg font-black" data-testid="refund-detail-title">
+							<h2 class="text-lg font-bold" data-testid="refund-detail-title">
 								Demande de remboursement n° {selected.id}
 							</h2>
 							<span
-								class={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-black ${refundStatusTone(selected.status)}`}
+								class={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-bold ${refundStatusTone(selected.status)}`}
 								data-testid="refund-detail-status">{refundStatusLabel(selected.status)}</span
 							>
 							{#if selected.refundNumber}
-								<span
-									class="ml-2 text-sm font-black text-sky-900"
-									data-testid="refund-detail-number">{selected.refundNumber}</span
+								<span class="ml-2 text-sm font-bold text-sky-900" data-testid="refund-detail-number"
+									>{selected.refundNumber}</span
 								>
 							{/if}
 							{#if refundHoldsReservation(selected.status)}
@@ -1092,7 +1108,7 @@
 										/></span
 									><select
 										id="refund-execute-method-select"
-										class="mt-1 w-full rounded-lg border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										data-testid="refund-execute-method"
 										bind:value={executeForm.method}
 										onchange={() => {
@@ -1116,7 +1132,7 @@
 								<label class="block text-sm">
 									<span class="font-bold">Référence externe (obligatoire)</span>
 									<input
-										class="mt-1 w-full rounded-lg border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										data-testid="refund-execute-ext-ref"
 										bind:value={executeForm.externalReference}
 										maxlength="120"
@@ -1125,7 +1141,7 @@
 								<label class="block text-sm">
 									<span class="font-bold">Compte / numéro bénéficiaire</span>
 									<input
-										class="mt-1 w-full rounded-lg border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										data-testid="refund-execute-rail-ref"
 										bind:value={executeForm.beneficiaryRailRef}
 										maxlength="120"
@@ -1134,7 +1150,7 @@
 								<label class="block text-sm">
 									<span class="font-bold">Référence de preuve (optionnel)</span>
 									<input
-										class="mt-1 w-full rounded-lg border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										data-testid="refund-execute-evidence"
 										bind:value={executeForm.evidenceReference}
 										maxlength="120"
@@ -1225,7 +1241,7 @@
 								>
 								<button
 									type="button"
-									class="rounded-xl bg-indigo-800 px-4 py-2 font-bold text-white disabled:opacity-40"
+									class="rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 									data-testid="refund-decision-submit"
 									disabled={decisionBusy}
 									onclick={submitDecision}
@@ -1245,7 +1261,7 @@
 		{/if}
 
 		<section class="rounded-2xl border bg-white p-5" data-testid="refund-list">
-			<h2 class="text-lg font-black">Demandes</h2>
+			<h2 class="text-lg font-bold">Demandes</h2>
 			<form
 				class="mt-4 grid gap-3 md:grid-cols-6"
 				data-testid="refund-filters"
@@ -1257,7 +1273,7 @@
 				<label class="text-xs font-bold uppercase text-slate-500">
 					Statut
 					<select
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-status"
 						bind:value={filterStatus}
 					>
@@ -1269,7 +1285,7 @@
 				<label class="text-xs font-bold uppercase text-slate-500">
 					Motif
 					<select
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-reason"
 						bind:value={filterReason}
 					>
@@ -1283,7 +1299,7 @@
 					<input
 						type="number"
 						min="0"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-patient"
 						bind:value={filterPatientId}
 					/>
@@ -1293,7 +1309,7 @@
 					<input
 						type="number"
 						min="0"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-holder"
 						bind:value={filterHolderId}
 					/>
@@ -1302,7 +1318,7 @@
 					Du
 					<input
 						type="date"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-date-from"
 						bind:value={filterDateFrom}
 					/>
@@ -1311,7 +1327,7 @@
 					Au
 					<input
 						type="date"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-date-to"
 						bind:value={filterDateTo}
 					/>
@@ -1323,7 +1339,7 @@
 						/></span
 					><input
 						id="refund-filter-number-input"
-						class="mt-1 w-full rounded-lg border p-2 text-sm font-normal"
+						class="min-h-control mt-1 w-full rounded-lg border text-sm font-normal px-3 py-2"
 						data-testid="refund-filter-number"
 						placeholder="RMB-2026-000001"
 						bind:value={filterRefundNumber}
@@ -1332,99 +1348,98 @@
 				<div class="md:col-span-6">
 					<button
 						type="submit"
-						class="rounded-xl bg-blue-700 px-4 py-2 font-bold text-white"
+						class="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover transition-colors"
 						data-testid="refund-filter-submit">Filtrer</button
 					>
 				</div>
 			</form>
 
 			{#if listError}
-				<p
-					class="mt-4 rounded-xl bg-red-50 p-3 text-red-700"
-					role="alert"
-					data-testid="refund-list-error"
-				>
-					{listError}
-				</p>
+				<div class="mt-4" data-testid="refund-list-error">
+					<Alert tone="danger">{listError}</Alert>
+				</div>
 			{/if}
-			{#if loadingList && refunds.length === 0}
-				<p class="mt-4 text-sm text-slate-500" data-testid="refund-list-loading">Chargement…</p>
-			{/if}
-			<div class="mt-4 overflow-x-auto">
-				<table class="w-full min-w-[860px] text-left text-sm">
-					<thead class="bg-slate-50 text-xs uppercase text-slate-500">
-						<tr>
-							<th class="p-2">Id</th>
-							<th>RMB</th>
-							<th>Date</th>
-							<th>Patient</th>
-							<th>Titulaire</th>
-							<th>{REFUND_RESERVED_LABEL}</th>
-							<th>Motif</th>
-							<th
-								><span class="inline-flex items-center gap-1"
-									>Statut <HelpHint helpKey="billing.refund.workflow" /></span
-								></th
+			<Table minWidth="860px" class="mt-4">
+				<thead>
+					<tr>
+						<th>Id</th>
+						<th>RMB</th>
+						<th>Date</th>
+						<th>Patient</th>
+						<th>Titulaire</th>
+						<th class="mc-num">{REFUND_RESERVED_LABEL}</th>
+						<th>Motif</th>
+						<th
+							><span class="inline-flex items-center gap-1"
+								>Statut <HelpHint helpKey="billing.refund.workflow" /></span
+							></th
+						>
+						<th class="mc-actions"></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each refunds as r (r.id)}
+						<tr data-testid={`refund-row-${r.id}`}>
+							<td class="mc-id">{r.id}</td>
+							<td class="mc-id" data-testid={`refund-row-number-${r.id}`}
+								>{r.refundNumber || '—'}</td
 							>
-							<th></th>
+							<td>{fmtDate(r.requestedAt)}</td>
+							<td>#{r.patientId}</td>
+							<td>#{r.holderPartyId}</td>
+							<td class="mc-amount" data-testid={`refund-row-amount-${r.id}`}
+								>{formatXOF(r.amount)}</td
+							>
+							<td>{refundReasonLabel(r.reasonCode)}</td>
+							<td>
+								<StatusBadge
+									status={r.status}
+									label={refundStatusLabel(r.status)}
+									data-testid={`refund-row-status-${r.id}`}
+								/>
+							</td>
+							<td class="mc-actions">
+								<Button
+									size="sm"
+									variant="ghost"
+									data-testid={`refund-open-${r.id}`}
+									onclick={() => openDetail(r.id)}>Détail</Button
+								>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each refunds as r (r.id)}
-							<tr class="border-t" data-testid={`refund-row-${r.id}`}>
-								<td class="p-2 font-bold">{r.id}</td>
-								<td data-testid={`refund-row-number-${r.id}`}>{r.refundNumber || '—'}</td>
-								<td>{fmtDate(r.requestedAt)}</td>
-								<td>#{r.patientId}</td>
-								<td>#{r.holderPartyId}</td>
-								<td data-testid={`refund-row-amount-${r.id}`}>{formatXOF(r.amount)}</td>
-								<td>{refundReasonLabel(r.reasonCode)}</td>
-								<td>
-									<span
-										class={`rounded-full px-2 py-1 text-xs font-black ${refundStatusTone(r.status)}`}
-										data-testid={`refund-row-status-${r.id}`}>{refundStatusLabel(r.status)}</span
-									>
-								</td>
-								<td>
-									<button
-										type="button"
-										class="rounded-lg border px-3 py-1 font-bold"
-										data-testid={`refund-open-${r.id}`}
-										onclick={() => openDetail(r.id)}>Détail</button
-									>
-								</td>
-							</tr>
+					{:else}
+						{#if loadingList}
+							<TableState
+								state="loading"
+								colspan={9}
+								title="Chargement…"
+								data-testid="refund-list-loading"
+							/>
+						{:else if listError}
+							<TableState state="error" colspan={9} />
 						{:else}
-							<tr
-								><td
-									colspan="9"
-									class="p-8 text-center text-slate-500"
-									data-testid="refund-list-empty">Aucune demande.</td
-								></tr
-							>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			<div class="mt-4 flex flex-wrap items-center gap-3">
-				<p class="text-sm text-slate-600" data-testid="refund-list-meta">
-					Page {listPageNum} / {listTotalPages} · {listTotal} demande(s)
-				</p>
-				<button
-					type="button"
-					class="rounded-lg border px-3 py-1 text-sm font-bold disabled:opacity-40"
-					data-testid="refund-list-prev"
-					disabled={listPageNum <= 1 || loadingList}
-					onclick={() => loadList(listPageNum - 1)}>Précédent</button
-				>
-				<button
-					type="button"
-					class="rounded-lg border px-3 py-1 text-sm font-bold disabled:opacity-40"
-					data-testid="refund-list-next"
-					disabled={listPageNum >= listTotalPages || loadingList}
-					onclick={() => loadList(listPageNum + 1)}>Suivant</button
-				>
-			</div>
+							<TableState
+								state="empty"
+								colspan={9}
+								title="Aucune demande."
+								data-testid="refund-list-empty"
+							/>
+						{/if}
+					{/each}
+				</tbody>
+			</Table>
+			<Pagination
+				class="mt-3"
+				page={listPageNum}
+				totalPages={listTotalPages}
+				disabled={loadingList}
+				summaryTestId="refund-list-meta"
+				prevTestId="refund-list-prev"
+				nextTestId="refund-list-next"
+				onpage={(next) => loadList(next)}
+			>
+				{#snippet summary()}Page {listPageNum} / {listTotalPages} · {listTotal} demande(s){/snippet}
+			</Pagination>
 		</section>
 	{/if}
 </div>

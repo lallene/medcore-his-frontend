@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -322,8 +324,8 @@
 <div class="space-y-5 p-6" data-testid="cash-workspace">
 	<header class="flex flex-wrap items-end justify-between gap-3">
 		<div>
-			<p class="text-xs font-black uppercase text-emerald-700">Finance</p>
-			<h1 class="text-3xl font-black">Caisse</h1>
+			<p class="text-xs font-semibold uppercase text-emerald-700">Finance</p>
+			<h1 class="text-3xl font-bold">Caisse</h1>
 		</div>
 		<a
 			class="text-sm font-bold text-blue-700 print:hidden"
@@ -348,7 +350,7 @@
 			class="rounded-2xl border border-emerald-300 bg-emerald-50 p-4"
 			data-testid="cash-close-result"
 		>
-			<h2 class="font-black text-emerald-900">Session clôturée</h2>
+			<h2 class="font-bold text-emerald-900">Session clôturée</h2>
 			<p>
 				Théorique <b data-testid="cash-close-expected"
 					>{formatXOF(closeResult.session.expectedCashAmount ?? closeResult.expectedCash)}</b
@@ -372,7 +374,7 @@
 		<section class="rounded-2xl border bg-white p-5">
 			<div class="flex justify-between">
 				<div>
-					<h2 class="font-black">
+					<h2 class="font-bold">
 						{session.session.register.code} — {session.session.register.name}
 					</h2>
 					<p class="text-sm text-slate-500">
@@ -421,9 +423,9 @@
 				</div>
 			</div>{/if}
 		{#if ownSession}<section class="rounded-2xl border bg-white p-5">
-				<h2 class="font-black">Recherche facture/patient</h2>
+				<h2 class="font-bold">Recherche facture/patient</h2>
 				<input
-					class="mt-3 w-full rounded-xl border p-3"
+					class="min-h-control mt-3 w-full rounded-lg border px-3 py-2"
 					bind:value={search}
 					placeholder="INV-*, P*, nom patient"
 				/>
@@ -439,12 +441,12 @@
 							}}
 							><strong>{x.number}</strong><span>{x.patientCode} — {x.patientName}</span><span
 								>Assurance {formatXOF(x.insuranceAmount)}</span
-							><span class="font-black">Reste patient {formatXOF(x.balanceAmount)}</span></button
+							><span class="font-bold">Reste patient {formatXOF(x.balanceAmount)}</span></button
 						>{/each}
 				</div>
 			</section>
 			{#if selected}<section class="rounded-2xl border-2 border-emerald-300 bg-white p-5">
-					<h2 class="font-black">Encaisser {selected.number}</h2>
+					<h2 class="font-bold">Encaisser {selected.number}</h2>
 					<div class="grid gap-2 md:grid-cols-4">
 						<p>Brut <b>{formatXOF(selected.grossAmount)}</b></p>
 						<p>Assurance <b>{formatXOF(selected.insuranceAmount)}</b></p>
@@ -453,24 +455,26 @@
 					</div>
 					<div class="mt-4 grid gap-3 md:grid-cols-4">
 						<input
-							class="rounded-xl border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 							type="number"
 							min="1"
 							max={selected.balanceAmount}
 							bind:value={payment.amount}
 							data-testid="cash-pay-amount"
-						/><select class="rounded-xl border p-2" bind:value={payment.paymentMethod}
+						/><select
+							class="min-h-control rounded-lg border px-3 py-2"
+							bind:value={payment.paymentMethod}
 							>{#each methods as m (m.value)}<option value={m.value}>{m.label}</option
 								>{/each}</select
 						>{#if needsOperator(payment.paymentMethod)}<select
-								class="rounded-xl border p-2"
+								class="min-h-control rounded-lg border px-3 py-2"
 								bind:value={payment.mobileOperator}
 								><option value="">Opérateur</option
 								>{#each ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money', 'Autre'] as o (o)}<option
 										>{o}</option
 									>{/each}</select
 							>{/if}<input
-							class="rounded-xl border p-2"
+							class="min-h-control rounded-lg border px-3 py-2"
 							bind:value={payment.externalReference}
 							placeholder={needsReference(payment.paymentMethod)
 								? 'Référence obligatoire'
@@ -498,7 +502,7 @@
 							<div class="grid gap-2 md:grid-cols-4">
 								<label class="block text-sm"
 									><span class="font-bold">Type</span><select
-										class="mt-1 w-full rounded-xl border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										bind:value={payerForm.mode}
 										data-testid="cash-payer-mode"
 										><option value="INDIVIDUAL">Personne physique</option><option
@@ -507,19 +511,19 @@
 									></label
 								><label class="block text-sm"
 									><span class="font-bold">Nom</span><input
-										class="mt-1 w-full rounded-xl border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										bind:value={payerForm.displayName}
 										data-testid="cash-payer-name"
 									/></label
 								><label class="block text-sm"
 									><span class="font-bold">Téléphone</span><input
-										class="mt-1 w-full rounded-xl border p-2"
+										class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 										bind:value={payerForm.phone}
 										data-testid="cash-payer-phone"
 									/></label
 								>{#if payerForm.mode === 'INDIVIDUAL'}<label class="block text-sm"
 										><span class="font-bold">Lien</span><input
-											class="mt-1 w-full rounded-xl border p-2"
+											class="min-h-control mt-1 w-full rounded-lg border px-3 py-2"
 											placeholder="Parent, conjoint…"
 											bind:value={payerForm.relationship}
 											data-testid="cash-payer-relationship"
@@ -546,7 +550,7 @@
 				data-testid="cash-movement-panel"
 			>
 				<div class="flex items-center gap-2">
-					<h2 class="font-black">Mouvement de caisse</h2>
+					<h2 class="font-bold">Mouvement de caisse</h2>
 					<HelpHint helpKey="cash.movement.justification" />
 				</div>
 				<p class="text-sm text-slate-600">
@@ -558,7 +562,7 @@
 				</p>
 				<div class="mt-3 grid gap-3 md:grid-cols-3">
 					<select
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						bind:value={movementForm.direction}
 						data-testid="cash-movement-direction"
 					>
@@ -566,7 +570,7 @@
 						<option value="OUT">{MOVEMENT_OUT_LABEL}</option>
 					</select>
 					<input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						type="number"
 						min="1"
 						bind:value={movementForm.amount}
@@ -574,7 +578,7 @@
 						data-testid="cash-movement-amount"
 					/>
 					<textarea
-						class="rounded-xl border p-2 md:col-span-3"
+						class="rounded-lg border p-2 md:col-span-3"
 						bind:value={movementForm.reason}
 						placeholder="Motif obligatoire"
 						data-testid="cash-movement-reason"></textarea>
@@ -587,7 +591,7 @@
 					Je confirme l’enregistrement de ce mouvement de caisse.
 				</label>
 				<button
-					class="mt-3 rounded-xl bg-slate-900 px-4 py-2 font-bold text-white disabled:opacity-40"
+					class="mt-3 rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 					disabled={isSessionSubmitDisabled(moveCmd)}
 					data-testid="cash-movement-submit"
 					onclick={() => submitMovement()}
@@ -598,37 +602,62 @@
 							: MOVEMENT_OUT_LABEL}</button
 				>
 			</section>{/if}
-		<section class="rounded-2xl border bg-white p-5">
-			<h2 class="font-black">Opérations récentes (encaissements)</h2>
-			{#each journal.slice(0, 10) as r (r.id)}<a
-					class="grid gap-2 border-t py-2 md:grid-cols-4"
-					href={resolve(`/cash/receipts/${r.id}`)}
-					><b>{r.receiptNumber}</b><span>{r.invoiceNumber}</span><span>{r.paymentMethod}</span><b
-						>{formatXOF(r.amount)}</b
-					></a
-				>{:else}<p class="text-slate-500">Aucune opération.</p>{/each}
+		<section class="space-y-2">
+			<h2 class="text-base font-semibold text-foreground">Opérations récentes (encaissements)</h2>
+			<Table aria-label="Opérations récentes">
+				<thead>
+					<tr>
+						<th>Reçu</th>
+						<th>Facture</th>
+						<th>Mode</th>
+						<th class="mc-num">Montant</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each journal.slice(0, 10) as r (r.id)}
+						<tr>
+							<td class="mc-id"
+								><a href={resolve(`/cash/receipts/${r.id}`)}>{r.receiptNumber}</a></td
+							>
+							<td>{r.invoiceNumber}</td>
+							<td>{r.paymentMethod}</td>
+							<td class="mc-amount">{formatXOF(r.amount)}</td>
+						</tr>
+					{:else}
+						<TableState state="empty" colspan={4} title="Aucune opération." />
+					{/each}
+				</tbody>
+			</Table>
 		</section>
-		{#if movements.length}<section
-				class="rounded-2xl border bg-white p-5"
-				data-testid="cash-movements-list"
-			>
-				<h2 class="font-black">Mouvements de caisse</h2>
-				{#each movements as m (m.id)}<div
-						class="grid gap-2 border-t py-2 md:grid-cols-4"
-						data-testid="cash-movement-row"
-					>
-						<span>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</span>
-						<span>{m.type}</span>
-						<span class="truncate">{m.reason}</span>
-						<b>{formatXOF(m.amount)}</b>
-					</div>{/each}
+		{#if movements.length}<section class="space-y-2" data-testid="cash-movements-list">
+				<h2 class="text-base font-semibold text-foreground">Mouvements de caisse</h2>
+				<Table aria-label="Mouvements de caisse">
+					<thead>
+						<tr>
+							<th>Sens</th>
+							<th>Type</th>
+							<th>Motif</th>
+							<th class="mc-num">Montant</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each movements as m (m.id)}
+							<tr data-testid="cash-movement-row">
+								<td>{m.direction === 'IN' ? MOVEMENT_IN_LABEL : MOVEMENT_OUT_LABEL}</td>
+								<td>{m.type}</td>
+								<td class="max-w-md truncate">{m.reason}</td>
+								<td class="mc-amount">{formatXOF(m.amount)}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</Table>
 			</section>{/if}
 		{#if canCloseOwn}<section
 				class="rounded-2xl border bg-white p-5"
 				data-testid="cash-close-panel"
 			>
 				<div class="flex items-center gap-2">
-					<h2 class="font-black">Clôture</h2>
+					<h2 class="font-bold">Clôture</h2>
 					<HelpHint helpKey="cash.session.close" />
 				</div>
 				<p>
@@ -637,7 +666,7 @@
 					>
 				</p>
 				<input
-					class="rounded-xl border p-2"
+					class="min-h-control rounded-lg border px-3 py-2"
 					type="number"
 					min="0"
 					bind:value={closing.countedCashAmount}
@@ -647,11 +676,11 @@
 					Écart (saisie) {formatXOF(draftCloseGap(closing.countedCashAmount, session.expectedCash))}
 				</p>
 				{#if closeNoteRequired(session.session, userId, closing.countedCashAmount, session.expectedCash)}<textarea
-						class="w-full rounded-xl border p-2"
+						class="w-full rounded-lg border p-2"
 						bind:value={closing.note}
 						placeholder="Justification obligatoire"
 						data-testid="cash-close-note"></textarea>{/if}<button
-					class="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-40"
+					class="mt-2 rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-40 hover:bg-primary-hover transition-colors"
 					disabled={isSessionSubmitDisabled(closeCmd)}
 					data-testid="cash-close-submit"
 					onclick={() => finish()}
@@ -666,12 +695,12 @@
 	{:else if !summaryLoading}
 		<section class="max-w-3xl rounded-2xl border bg-white p-6" data-testid="cash-open-panel">
 			<div class="flex items-center gap-2">
-				<h2 class="text-xl font-black">Ouvrir la caisse</h2>
+				<h2 class="text-xl font-bold">Ouvrir la caisse</h2>
 				<HelpHint helpKey="cash.session.opening_float" />
 			</div>
 			<div class="mt-4 grid gap-3 md:grid-cols-2">
 				<select
-					class="rounded-xl border p-3"
+					class="min-h-control rounded-lg border px-3 py-2"
 					bind:value={opening.cashRegisterId}
 					data-testid="cash-open-register"
 					><option value={0}>Choisir une caisse</option
@@ -679,14 +708,14 @@
 							>{r.code} — {r.name}</option
 						>{/each}</select
 				><input
-					class="rounded-xl border p-3"
+					class="min-h-control rounded-lg border px-3 py-2"
 					type="number"
 					min="0"
 					bind:value={opening.openingFloat}
 					placeholder="Fond initial"
 					data-testid="cash-open-float"
 				/><textarea
-					class="rounded-xl border p-3 md:col-span-2"
+					class="rounded-lg border p-3 md:col-span-2"
 					bind:value={opening.note}
 					placeholder="Note facultative"
 					data-testid="cash-open-note"></textarea><button
@@ -701,22 +730,23 @@
 		{#if cashCan(permissions, 'cash.register.manage')}<section
 				class="max-w-3xl rounded-2xl border bg-white p-6"
 			>
-				<h2 class="font-black">Créer une caisse</h2>
+				<h2 class="font-bold">Créer une caisse</h2>
 				<div class="mt-3 grid gap-2 md:grid-cols-3">
 					<input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						bind:value={registerForm.code}
 						placeholder="Code unique"
 					/><input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						bind:value={registerForm.name}
 						placeholder="Nom"
 					/><input
-						class="rounded-xl border p-2"
+						class="min-h-control rounded-lg border px-3 py-2"
 						bind:value={registerForm.location}
 						placeholder="Emplacement"
-					/><button class="rounded-xl bg-blue-700 p-2 font-bold text-white" onclick={addRegister}
-						>Créer</button
+					/><button
+						class="rounded-lg bg-primary p-2 font-semibold text-white hover:bg-primary-hover transition-colors"
+						onclick={addRegister}>Créer</button
 					>
 				</div>
 			</section>{/if}
@@ -724,7 +754,7 @@
 				class="max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-6"
 				data-testid="cash-recovery-panel"
 			>
-				<h2 class="font-black text-amber-950">Récupération — sessions ouvertes</h2>
+				<h2 class="font-bold text-amber-950">Récupération — sessions ouvertes</h2>
 				<p class="text-sm text-amber-900">
 					Clôture d’une session ouverte par un autre caissier. Justification obligatoire.
 				</p>
@@ -744,13 +774,13 @@
 							Session #{recoveryTarget.id} — caissier #{recoveryTarget.openedBy}
 						</p>
 						<input
-							class="w-full rounded-xl border p-2"
+							class="min-h-control w-full rounded-lg border px-3 py-2"
 							type="number"
 							min="0"
 							bind:value={closing.countedCashAmount}
 							data-testid="cash-recovery-counted"
 						/><textarea
-							class="w-full rounded-xl border p-2"
+							class="w-full rounded-lg border p-2"
 							bind:value={closing.note}
 							placeholder="Justification obligatoire"
 							data-testid="cash-recovery-note"></textarea><button

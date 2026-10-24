@@ -1,4 +1,6 @@
 <script lang="ts">
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -579,7 +581,7 @@
 	<div class="flex min-h-64 items-center justify-center">
 		<div class="flex flex-col items-center gap-3">
 			<div
-				class="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#0E4C92]"
+				class="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-primary"
 			></div>
 			<p class="text-sm text-slate-500">Chargement du dossier patient...</p>
 		</div>
@@ -594,7 +596,7 @@
 			<div class="flex items-center gap-3">
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E4C92]/40"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
 					onclick={() => goto(resolve(`/patients/${p.id}`))}
 					aria-label="Retour au patient"
 				>
@@ -602,7 +604,7 @@
 				</button>
 
 				<div
-					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0E4C92] to-[#1B6FC9] text-sm font-bold tracking-wide text-white shadow-sm"
+					class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-sm font-semibold tracking-wide text-primary"
 					aria-hidden="true"
 				>
 					{getInitials(p)}
@@ -613,7 +615,7 @@
 						<h1 class="text-lg font-bold leading-tight text-slate-900">Nouvelle consultation</h1>
 
 						<span
-							class="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700"
+							class="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-2xs font-semibold text-amber-700"
 						>
 							<span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
 							Brouillon
@@ -630,10 +632,10 @@
 			<div class="flex flex-wrap items-center gap-2">
 				<a
 					href={resolve(`/patients/${patient.id}/tracker`)}
-					class="group flex h-9 items-center gap-2 rounded-xl border border-[#D8E6F5] bg-[#F4F8FD] px-3 text-xs font-semibold text-[#0E4C92] transition-all hover:-translate-y-0.5 hover:border-[#0E4C92]/30 hover:bg-[#EAF3FC] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E4C92]/40"
+					class="group flex h-9 items-center gap-2 rounded-xl border border-primary-border bg-background px-3 text-xs font-semibold text-primary transition-all hover:border-primary/30 hover:bg-primary-soft hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
 				>
 					<div
-						class="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-[#0E4C92] shadow-sm transition-transform group-hover:rotate-[-12deg]"
+						class="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-primary shadow-sm transition-transform group-hover:rotate-[-12deg]"
 					>
 						<History size={14} />
 					</div>
@@ -642,13 +644,13 @@
 				</a>
 
 				<div class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs">
-					<span class="text-slate-400">Médecin</span>
+					<span class="text-slate-500">Médecin</span>
 					<span class="h-3 w-px bg-slate-200"></span>
 					<span class="font-semibold text-slate-700">{doctorName}</span>
 				</div>
 
 				<div class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs">
-					<span class="text-slate-400">Service</span>
+					<span class="text-slate-500">Service</span>
 					<span class="h-3 w-px bg-slate-200"></span>
 					<div class="min-w-56">
 						<ServiceSelect bind:value={serviceId} capability="consultation" />
@@ -677,51 +679,51 @@
 		>
 			<div class="grid gap-2 text-xs md:grid-cols-3 xl:grid-cols-6">
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Patient</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Patient</p>
 
-					<p class="mt-1 truncate text-sm font-semibold text-[#172033]">
+					<p class="mt-1 truncate text-sm font-semibold text-slate-900">
 						{p.nom}
 						{p.prenoms}
 					</p>
 				</div>
 
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Dossier</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Dossier</p>
 
-					<p class="mt-1 text-sm font-bold text-[#0E4C92]">
+					<p class="mt-1 text-sm font-bold text-primary">
 						{p.numeroDossier}
 					</p>
 				</div>
 
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Sexe</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Sexe</p>
 					<p class="mt-1 font-semibold text-slate-800">{p.sexe || '—'}</p>
 				</div>
 
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Âge</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Âge</p>
 					<p class="mt-1 font-semibold text-slate-800">{p.age ? `${p.age} ans` : '—'}</p>
 				</div>
 
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Téléphone</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Téléphone</p>
 					<p class="mt-1 font-semibold text-slate-800">{p.telephone || '—'}</p>
 				</div>
 
 				<div
-					class="group rounded-xl border border-transparent bg-[#F7F9FC] px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
+					class="group rounded-xl border border-transparent bg-background px-3 py-2.5 transition-all hover:border-blue-100 hover:bg-blue-50/50"
 				>
-					<p class="text-[11px] font-medium tracking-wide text-blue-400 uppercase">Assurance</p>
+					<p class="text-2xs font-medium tracking-wide text-blue-400 uppercase">Assurance</p>
 					<p class="mt-1 font-semibold text-slate-800">
 						{p.isAssure ? `Oui · ${p.tauxCouverture}%` : 'Non'}
 					</p>
@@ -740,18 +742,18 @@
 			<div class="grid gap-4 xl:grid-cols-3">
 				<!-- Traitements antérieurs -->
 				<div class="space-y-3">
-					<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 						Traitements antérieurs / en cours
 					</p>
 
 					<div class="relative">
 						<Search
 							size={15}
-							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 						/>
 
 						<input
-							class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-[#0E4C92]"
+							class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none focus:border-primary"
 							value={previousMedicationSearch}
 							placeholder="Rechercher un médicament..."
 							oninput={(e) => {
@@ -781,7 +783,7 @@
 												{presentation.dosage} · {presentation.form} · {presentation.route}
 											</p>
 										</div>
-										<Plus size={15} class="text-[#0E4C92]" />
+										<Plus size={15} class="text-primary" />
 									</button>
 								{/each}
 							</div>
@@ -791,13 +793,13 @@
 					{#if previousMedicationPresentationId > 0}
 						<div class="space-y-2 rounded-xl border border-emerald-100 bg-emerald-50/50 p-2">
 							<input
-								class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 w-full rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								bind:value={previousMedicationInstructions}
 								placeholder="Posologie / remarque"
 							/>
 
 							<select
-								class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 w-full rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								bind:value={previousMedicationStatus}
 							>
 								<option value="ONGOING">En cours</option>
@@ -806,7 +808,7 @@
 
 							<button
 								type="button"
-								class="h-9 w-full rounded-lg bg-[#0E4C92] text-xs font-semibold text-white"
+								class="h-9 w-full rounded-lg bg-primary text-xs font-semibold text-white hover:bg-primary-hover transition-colors"
 								onclick={() => {
 									previousMedications = [
 										...previousMedications,
@@ -836,14 +838,14 @@
 									<p class="text-sm font-semibold text-slate-800">
 										{presentation?.medication.name || 'Médicament'}
 									</p>
-									<p class="text-[11px] text-slate-400">
+									<p class="text-2xs text-slate-500">
 										{presentation?.dosage} · {presentation?.form} · {presentation?.route}
 									</p>
 								</div>
 
 								<button
 									type="button"
-									class="text-slate-400 hover:text-red-600"
+									class="text-slate-500 hover:text-red-600"
 									onclick={() =>
 										(previousMedications = previousMedications.filter((_, i) => i !== index))}
 								>
@@ -861,34 +863,34 @@
 
 				<!-- Antécédents chirurgicaux -->
 				<div class="space-y-3">
-					<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 						Antécédents chirurgicaux
 					</p>
 
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={surgicalProcedureName}
 						placeholder="Intervention"
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={surgicalProcedureDate}
 						placeholder="Date / année"
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={surgicalIndication}
 						placeholder="Motif / indication"
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={surgicalComplications}
 						placeholder="Complications"
 					/>
 
 					<button
 						type="button"
-						class="h-9 w-full rounded-lg bg-[#0E4C92] text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+						class="h-9 w-full rounded-lg bg-primary text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 hover:bg-primary-hover transition-colors"
 						disabled={surgicalProcedureName.trim() === ''}
 						onclick={() => {
 							surgicalHistories = [
@@ -924,7 +926,7 @@
 
 								<button
 									type="button"
-									class="text-slate-400 hover:text-red-600"
+									class="text-slate-500 hover:text-red-600"
 									onclick={() =>
 										(surgicalHistories = surgicalHistories.filter((_, i) => i !== index))}
 								>
@@ -942,27 +944,27 @@
 
 				<!-- Gynéco-obstétrique -->
 				<div class="space-y-3">
-					<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 						Gynéco-obstétrique
 					</p>
 
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={gynecoEventType}
 						placeholder="Événement : grossesse, accouchement..."
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={gynecoEventDate}
 						placeholder="Date / année"
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={gynecoOutcome}
 						placeholder="Issue / résultat"
 					/>
 					<input
-						class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#0E4C92]"
+						class="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none focus:border-primary"
 						bind:value={antecedent.ddr}
 						placeholder="DDR"
 						type="date"
@@ -970,7 +972,7 @@
 
 					<button
 						type="button"
-						class="h-9 w-full rounded-lg bg-[#0E4C92] text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+						class="h-9 w-full rounded-lg bg-primary text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 hover:bg-primary-hover transition-colors"
 						disabled={gynecoEventType.trim() === ''}
 						onclick={() => {
 							gynecoObstetricHistories = [
@@ -1002,7 +1004,7 @@
 
 								<button
 									type="button"
-									class="text-slate-400 hover:text-red-600"
+									class="text-slate-500 hover:text-red-600"
 									onclick={() =>
 										(gynecoObstetricHistories = gynecoObstetricHistories.filter(
 											(_, i) => i !== index
@@ -1068,13 +1070,13 @@
 				<div class="flex min-w-max gap-2 px-1">
 					{#each vitalFields as field (field.key)}
 						<div
-							class="w-[96px] shrink-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 transition-colors focus-within:border-[#0E4C92] focus-within:bg-blue-50/30"
+							class="w-[96px] shrink-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 transition-colors focus-within:border-primary focus-within:bg-blue-50/30"
 						>
-							<div class="mb-1.5 flex items-center gap-1 text-slate-400">
+							<div class="mb-1.5 flex items-center gap-1 text-slate-500">
 								<field.icon size={12} />
 								<label
 									for={`vital-${field.key}`}
-									class="truncate text-[10px] font-semibold text-slate-500"
+									class="truncate text-2xs font-semibold text-slate-500"
 								>
 									{field.label}
 								</label>
@@ -1089,7 +1091,7 @@
 									value={field.get()}
 									oninput={(e) => field.set(e.currentTarget.value)}
 								/>
-								<span class="shrink-0 text-[9px] font-medium text-slate-400">{field.unit}</span>
+								<span class="shrink-0 text-2xs font-medium text-slate-500">{field.unit}</span>
 							</div>
 						</div>
 					{/each}
@@ -1108,18 +1110,18 @@
 			<div class="grid gap-4 xl:grid-cols-2">
 				<!-- Examen physique -->
 				<div class="space-y-3">
-					<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 						Examen physique par zone
 					</p>
 
 					<div class="relative">
 						<Search
 							size={15}
-							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 						/>
 
 						<input
-							class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none transition focus:border-[#0E4C92]"
+							class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none transition focus:border-primary"
 							value={physicalExamSearch}
 							placeholder="Rechercher une zone : abdomen, cœur, poumons..."
 							oninput={(e) => {
@@ -1139,12 +1141,12 @@
 										onclick={() => selectPhysicalExamArea(area)}
 									>
 										<span class="text-sm font-semibold text-slate-800">{area.name}</span>
-										<span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+										<span class="rounded bg-slate-100 px-2 py-0.5 text-2xs text-slate-500">
 											{area.category}
 										</span>
 									</button>
 								{:else}
-									<p class="px-3 py-3 text-sm text-slate-400">Aucune zone trouvée.</p>
+									<p class="px-3 py-3 text-sm text-slate-500">Aucune zone trouvée.</p>
 								{/each}
 							</div>
 						{/if}
@@ -1153,7 +1155,7 @@
 					{#if physicalExamAreaId > 0}
 						<div class="rounded-xl border border-blue-100 bg-blue-50/50 p-2">
 							<textarea
-								class="min-h-20 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="min-h-20 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus:border-primary"
 								bind:value={physicalExamObservation}
 								placeholder="Observation clinique..."></textarea>
 
@@ -1172,7 +1174,7 @@
 
 								<button
 									type="button"
-									class="h-9 rounded-lg bg-[#0E4C92] px-3 text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+									class="h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 hover:bg-primary-hover transition-colors"
 									disabled={physicalExamObservation.trim() === ''}
 									onclick={addPhysicalExam}
 								>
@@ -1193,12 +1195,12 @@
 											<p class="text-sm font-semibold text-slate-800">
 												{area?.name || 'Zone inconnue'}
 											</p>
-											<p class="text-[11px] text-slate-400">{area?.category || ''}</p>
+											<p class="text-2xs text-slate-500">{area?.category || ''}</p>
 										</div>
 
 										<button
 											type="button"
-											class="text-slate-400 hover:text-red-600"
+											class="text-slate-500 hover:text-red-600"
 											onclick={() => removePhysicalExam(index)}
 										>
 											<X size={14} />
@@ -1211,7 +1213,7 @@
 						</div>
 					{:else}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun examen physique ajouté.
 						</p>
@@ -1220,18 +1222,18 @@
 
 				<!-- Traitement administré -->
 				<div class="space-y-3">
-					<p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
 						Traitement administré sur place
 					</p>
 
 					<div class="relative">
 						<Search
 							size={15}
-							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+							class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 						/>
 
 						<input
-							class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none transition focus:border-[#0E4C92]"
+							class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none transition focus:border-primary"
 							value={administeredTreatmentSearch}
 							placeholder="Rechercher un produit administré..."
 							oninput={(e) => {
@@ -1259,10 +1261,10 @@
 											</p>
 										</div>
 
-										<Plus size={15} class="text-[#0E4C92]" />
+										<Plus size={15} class="text-primary" />
 									</button>
 								{:else}
-									<p class="px-3 py-3 text-sm text-slate-400">Aucun produit trouvé.</p>
+									<p class="px-3 py-3 text-sm text-slate-500">Aucun produit trouvé.</p>
 								{/each}
 							</div>
 						{/if}
@@ -1277,21 +1279,21 @@
 							</div>
 
 							<input
-								class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								bind:value={administeredQuantity}
 								placeholder="Qté"
 								type="number"
 							/>
 
 							<input
-								class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								bind:value={administeredInstructions}
 								placeholder="Observation / consigne"
 							/>
 
 							<button
 								type="button"
-								class="h-9 rounded-lg bg-[#0E4C92] px-3 text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+								class="h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400 hover:bg-primary-hover transition-colors"
 								disabled={Number(administeredQuantity || 0) <= 0}
 								onclick={addAdministeredTreatment}
 							>
@@ -1311,14 +1313,14 @@
 											<p class="text-sm font-semibold text-slate-800">
 												{presentation?.medication.name || 'Produit inconnu'}
 											</p>
-											<p class="text-[11px] text-slate-400">
+											<p class="text-2xs text-slate-500">
 												{presentation?.dosage} · {presentation?.form} · {presentation?.route}
 											</p>
 										</div>
 
 										<button
 											type="button"
-											class="text-slate-400 hover:text-red-600"
+											class="text-slate-500 hover:text-red-600"
 											onclick={() => removeAdministeredTreatment(index)}
 										>
 											<X size={14} />
@@ -1334,7 +1336,7 @@
 						</div>
 					{:else}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun traitement administré.
 						</p>
@@ -1357,12 +1359,12 @@
 						<div class="relative">
 							<Search
 								size={15}
-								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 							/>
 
 							<input
 								id="reason-search"
-								class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none transition focus:border-[#0E4C92] focus:ring-2 focus:ring-[#0E4C92]/10"
+								class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
 								value={reasonSearch}
 								placeholder="Rechercher un motif : fièvre, douleur, fatigue..."
 								oninput={(e) => (reasonSearch = e.currentTarget.value)}
@@ -1384,12 +1386,12 @@
 											{reason.name}
 										</span>
 
-										<span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+										<span class="rounded bg-slate-100 px-2 py-0.5 text-2xs text-slate-500">
 											{reason.category}
 										</span>
 									</button>
 								{:else}
-									<p class="px-3 py-3 text-sm text-slate-400">Aucun motif trouvé.</p>
+									<p class="px-3 py-3 text-sm text-slate-500">Aucun motif trouvé.</p>
 								{/each}
 							</div>
 						{/if}
@@ -1421,7 +1423,7 @@
 						</div>
 					{:else}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun motif ajouté.
 						</p>
@@ -1441,12 +1443,12 @@
 						<div class="relative">
 							<Search
 								size={15}
-								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 							/>
 
 							<input
 								id="medication-search"
-								class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none transition focus:border-[#0E4C92] focus:ring-2 focus:ring-[#0E4C92]/10"
+								class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
 								value={draftSearch}
 								placeholder="Rechercher un médicament, dosage ou forme..."
 								oninput={(e) => {
@@ -1479,10 +1481,10 @@
 											</p>
 										</div>
 
-										<Plus size={16} class="shrink-0 text-[#0E4C92]" />
+										<Plus size={16} class="shrink-0 text-primary" />
 									</button>
 								{:else}
-									<p class="px-3 py-3 text-sm text-slate-400">Aucun médicament trouvé.</p>
+									<p class="px-3 py-3 text-sm text-slate-500">Aucun médicament trouvé.</p>
 								{/each}
 							</div>
 						{/if}
@@ -1500,7 +1502,7 @@
 							</div>
 
 							<input
-								class="h-9 min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 min-w-0 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								value={draftQuantity}
 								placeholder="Qté"
 								type="number"
@@ -1508,14 +1510,14 @@
 							/>
 
 							<input
-								class="h-9 min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 min-w-0 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								value={draftDuration}
 								placeholder="Durée"
 								oninput={(e) => (draftDuration = e.currentTarget.value)}
 							/>
 
 							<input
-								class="h-9 min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="h-9 min-w-0 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								value={draftInstructions}
 								placeholder="Posologie"
 								oninput={(e) => (draftInstructions = e.currentTarget.value)}
@@ -1524,7 +1526,7 @@
 							<div class="flex justify-end gap-1">
 								<button
 									type="button"
-									class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-200 hover:text-red-600"
+									class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:text-red-600"
 									onclick={resetDraft}
 									aria-label="Annuler"
 								>
@@ -1533,7 +1535,7 @@
 
 								<button
 									type="button"
-									class="flex h-9 items-center gap-1 rounded-lg bg-[#0E4C92] px-3 text-xs font-semibold text-white transition hover:bg-[#0b3e78] disabled:bg-slate-200 disabled:text-slate-400 disabled:opacity-100"
+									class="flex h-9 items-center gap-1 rounded-lg bg-primary px-3 text-xs font-semibold text-white transition hover:bg-primary-active disabled:bg-slate-200 disabled:text-slate-400 disabled:opacity-100 hover:bg-primary-hover"
 									disabled={draftPresentationId === 0 ||
 										Number(draftQuantity || 0) <= 0 ||
 										draftDuration.trim() === '' ||
@@ -1548,69 +1550,67 @@
 					{/if}
 
 					{#if prescriptions.length > 0}
-						<div class="overflow-x-auto rounded-lg border border-slate-200">
-							<table class="w-full min-w-[700px] text-left text-xs">
-								<thead class="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+						<Table minWidth="700px">
+							<thead>
+								<tr>
+									<th> Médicament </th>
+									<th class="mc-num"> Qté </th>
+									<th class="mc-num"> Durée </th>
+									<th> Posologie </th>
+									<th class="w-10 mc-actions"></th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{#each prescriptions as prescription, index (index)}
+									{@const presentation = getPresentationById(prescription.presentationId)}
+
 									<tr>
-										<th class="px-3 py-2 font-semibold"> Médicament </th>
-										<th class="px-3 py-2 font-semibold"> Qté </th>
-										<th class="px-3 py-2 font-semibold"> Durée </th>
-										<th class="px-3 py-2 font-semibold"> Posologie </th>
-										<th class="w-10 px-2 py-2"></th>
+										<td>
+											{#if presentation}
+												<p class="font-semibold text-slate-800">
+													{presentation.medication.name}
+												</p>
+
+												<p class="text-2xs text-slate-500">
+													{presentation.dosage}
+													· {presentation.form}
+													· {presentation.route}
+												</p>
+											{:else}
+												<span class="text-slate-500"> Introuvable </span>
+											{/if}
+										</td>
+
+										<td class="mc-num">
+											{prescription.quantity}
+										</td>
+
+										<td class="mc-num">
+											{prescription.duration || '—'}
+										</td>
+
+										<td>
+											{prescription.instructions || '—'}
+										</td>
+
+										<td class="text-right mc-actions">
+											<IconButton
+												size="sm"
+												label="Supprimer la prescription"
+												class="hover:bg-danger-soft hover:text-danger-strong"
+												onclick={() => removePrescription(index)}
+											>
+												<X size={14} aria-hidden="true" />
+											</IconButton>
+										</td>
 									</tr>
-								</thead>
-
-								<tbody class="divide-y divide-slate-100">
-									{#each prescriptions as prescription, index (index)}
-										{@const presentation = getPresentationById(prescription.presentationId)}
-
-										<tr class="transition-colors hover:bg-slate-50/70">
-											<td class="px-3 py-2">
-												{#if presentation}
-													<p class="font-semibold text-slate-800">
-														{presentation.medication.name}
-													</p>
-
-													<p class="text-[10px] text-slate-500">
-														{presentation.dosage}
-														· {presentation.form}
-														· {presentation.route}
-													</p>
-												{:else}
-													<span class="text-slate-400"> Introuvable </span>
-												{/if}
-											</td>
-
-											<td class="px-3 py-2 font-medium text-slate-700">
-												{prescription.quantity}
-											</td>
-
-											<td class="px-3 py-2 text-slate-700">
-												{prescription.duration || '—'}
-											</td>
-
-											<td class="px-3 py-2 text-slate-700">
-												{prescription.instructions || '—'}
-											</td>
-
-											<td class="px-2 py-2 text-right">
-												<button
-													type="button"
-													class="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-													onclick={() => removePrescription(index)}
-													aria-label="Supprimer la prescription"
-												>
-													<X size={14} />
-												</button>
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
+								{/each}
+							</tbody>
+						</Table>
 					{:else}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun médicament ajouté.
 						</p>
@@ -1633,12 +1633,12 @@
 						<div class="relative">
 							<Search
 								size={15}
-								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+								class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
 							/>
 
 							<input
 								id="exam-search"
-								class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none transition focus:border-[#0E4C92] focus:ring-2 focus:ring-[#0E4C92]/10"
+								class="h-10 w-full rounded-lg border border-input pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
 								value={examSearch}
 								placeholder="Rechercher un examen..."
 								oninput={(e) => (examSearch = e.currentTarget.value)}
@@ -1660,12 +1660,12 @@
 											{exam.name}
 										</span>
 
-										<span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+										<span class="rounded bg-slate-100 px-2 py-0.5 text-2xs text-slate-500">
 											{exam.category}
 										</span>
 									</button>
 								{:else}
-									<p class="px-3 py-3 text-sm text-slate-400">Aucun examen trouvé.</p>
+									<p class="px-3 py-3 text-sm text-slate-500">Aucun examen trouvé.</p>
 								{/each}
 							</div>
 						{/if}
@@ -1697,7 +1697,7 @@
 						</div>
 					{:else}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun examen ajouté.
 						</p>
@@ -1717,7 +1717,7 @@
 						{#if !sickLeaveRequired}
 							<button
 								type="button"
-								class="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-100 hover:shadow-sm"
+								class="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 hover:shadow-sm"
 								onclick={() => (sickLeaveRequired = true)}
 							>
 								<Plus size={14} />
@@ -1728,7 +1728,7 @@
 						{#if !hospitalizationRequired}
 							<button
 								type="button"
-								class="flex h-9 items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 text-xs font-semibold text-purple-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-100 hover:shadow-sm"
+								class="flex h-9 items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 text-xs font-semibold text-purple-700 transition hover:border-purple-300 hover:bg-purple-100 hover:shadow-sm"
 								onclick={() => (hospitalizationRequired = true)}
 							>
 								<Plus size={14} />
@@ -1748,7 +1748,7 @@
 								</div>
 
 								<input
-									class="h-9 w-28 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+									class="h-9 w-28 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 									bind:value={sickLeaveDays}
 									placeholder="Jours"
 									type="number"
@@ -1757,7 +1757,7 @@
 
 								<button
 									type="button"
-									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
 									onclick={() => {
 										sickLeaveRequired = false;
 										sickLeaveDays = '';
@@ -1781,13 +1781,13 @@
 								</div>
 
 								<input
-									class="h-9 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+									class="h-9 min-w-0 flex-1 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 									bind:value={hospitalizationType}
 									placeholder="Service / type"
 								/>
 
 								<input
-									class="h-9 w-28 rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+									class="h-9 w-28 rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 									bind:value={hospitalizationDuration}
 									placeholder="Jours"
 									type="number"
@@ -1796,7 +1796,7 @@
 
 								<button
 									type="button"
-									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
 									onclick={() => {
 										hospitalizationRequired = false;
 										hospitalizationType = '';
@@ -1810,7 +1810,7 @@
 							</div>
 
 							<input
-								class="mt-2 h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm outline-none focus:border-[#0E4C92]"
+								class="mt-2 h-9 w-full rounded-lg border border-input bg-white px-2 text-sm outline-none focus:border-primary"
 								bind:value={hospitalizationReason}
 								placeholder="Motif d'hospitalisation"
 							/>
@@ -1819,7 +1819,7 @@
 
 					{#if !sickLeaveRequired && !hospitalizationRequired}
 						<p
-							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-400"
+							class="rounded-lg border border-dashed border-slate-200 px-3 py-2.5 text-center text-xs text-slate-500"
 						>
 							Aucun document médical ajouté.
 						</p>
@@ -1837,16 +1837,16 @@
 			icon={ClipboardCheck}
 		>
 			<textarea
-				class="min-h-24 w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#0E4C92] focus:ring-2 focus:ring-[#0E4C92]/10"
+				class="min-h-24 w-full resize-y rounded-lg border border-input px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10"
 				bind:value={diagnosis}
 				placeholder="Saisir le diagnostic, les observations et la conduite à tenir..."></textarea>
 		</Card>
 
 		<!-- Actions -->
 		<div
-			class="sticky bottom-3 z-30 flex items-center justify-between rounded-2xl border border-[#DCE7F2] bg-white/95 px-3 py-2.5 shadow-[0_10px_35px_rgba(15,23,42,0.10)] backdrop-blur-xl"
+			class="sticky bottom-3 z-30 flex items-center justify-between rounded-2xl border border-primary-border bg-white/95 px-3 py-2.5 shadow-[0_10px_35px_rgba(15,23,42,0.10)] backdrop-blur-xl"
 		>
-			<div class="hidden items-center gap-2 text-xs text-slate-400 md:flex">
+			<div class="hidden items-center gap-2 text-xs text-slate-500 md:flex">
 				<div class="h-2 w-2 animate-pulse rounded-full bg-amber-400"></div>
 
 				<span> Consultation en cours · Brouillon </span>

@@ -261,9 +261,9 @@
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">Contexte clinique</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Contexte clinique</p>
 
-			<h2 class="mt-1 text-2xl font-black text-slate-900">Saisie clinique générale</h2>
+			<h2 class="mt-1 text-2xl font-bold text-slate-900">Saisie clinique générale</h2>
 
 			<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
 				Mettez à jour les constantes, les antécédents, le diagnostic, la prise en charge,
@@ -313,13 +313,13 @@
 	<Card title="Constantes vitales" subtitle="Paramètres cliniques mesurés pendant la consultation">
 		<div class="mb-6 flex items-center gap-3 rounded-2xl bg-blue-50 p-4">
 			<div
-				class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-[#0E4C92] shadow-sm"
+				class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-primary shadow-sm"
 			>
 				<Activity size={20} />
 			</div>
 
 			<div>
-				<p class="font-black text-blue-950">Surveillance clinique</p>
+				<p class="font-bold text-blue-950">Surveillance clinique</p>
 
 				<p class="mt-1 text-sm leading-5 text-blue-700">
 					Laissez un champ vide lorsqu’aucune mesure n’a été prise.
@@ -342,11 +342,11 @@
 						max="50"
 						step="0.1"
 						bind:value={temperature}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						°C
 					</span>
@@ -367,11 +367,11 @@
 						max="300"
 						step="1"
 						bind:value={systolic}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-16 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						mmHg
 					</span>
@@ -393,11 +393,11 @@
 						max="200"
 						step="1"
 						bind:value={diastolic}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-16 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						mmHg
 					</span>
@@ -419,11 +419,11 @@
 						max="300"
 						step="1"
 						bind:value={heartRate}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-14 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-14 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						bpm
 					</span>
@@ -445,11 +445,11 @@
 						max="100"
 						step="1"
 						bind:value={respiratoryRate}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-14 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-14 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						/min
 					</span>
@@ -471,11 +471,11 @@
 						max="100"
 						step="1"
 						bind:value={oxygen}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						%
 					</span>
@@ -493,11 +493,11 @@
 						max="500"
 						step="0.1"
 						bind:value={weight}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						kg
 					</span>
@@ -515,11 +515,11 @@
 						max="300"
 						step="0.1"
 						bind:value={height}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						cm
 					</span>
@@ -540,11 +540,11 @@
 						max="20"
 						step="0.01"
 						bind:value={glucose}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						g/L
 					</span>
@@ -565,11 +565,11 @@
 						max="10"
 						step="1"
 						bind:value={pain}
-						class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					/>
 
 					<span
-						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+						class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 					>
 						/10
 					</span>
@@ -587,9 +587,9 @@
 					</div>
 
 					<div>
-						<p class="text-xs font-black uppercase text-slate-400">Tension</p>
+						<p class="text-xs font-semibold uppercase text-slate-500">Tension</p>
 
-						<p class="mt-1 font-black text-slate-900">
+						<p class="mt-1 font-bold text-slate-900">
 							{systolic || '—'}/{diastolic || '—'} mmHg
 						</p>
 					</div>
@@ -605,9 +605,9 @@
 					</div>
 
 					<div>
-						<p class="text-xs font-black uppercase text-slate-400">Température</p>
+						<p class="text-xs font-semibold uppercase text-slate-500">Température</p>
 
-						<p class="mt-1 font-black text-slate-900">
+						<p class="mt-1 font-bold text-slate-900">
 							{temperature || '—'} °C
 						</p>
 					</div>
@@ -623,9 +623,9 @@
 					</div>
 
 					<div>
-						<p class="text-xs font-black uppercase text-slate-400">Saturation</p>
+						<p class="text-xs font-semibold uppercase text-slate-500">Saturation</p>
 
-						<p class="mt-1 font-black text-slate-900">
+						<p class="mt-1 font-bold text-slate-900">
 							{oxygen || '—'} %
 						</p>
 					</div>
@@ -645,7 +645,7 @@
 				}`}
 			>
 				<div>
-					<p class="font-black text-slate-900">Hypertension</p>
+					<p class="font-bold text-slate-900">Hypertension</p>
 
 					<p class="mt-1 text-xs text-slate-500">Antécédent d’HTA</p>
 				</div>
@@ -665,7 +665,7 @@
 				}`}
 			>
 				<div>
-					<p class="font-black text-slate-900">Diabète</p>
+					<p class="font-bold text-slate-900">Diabète</p>
 
 					<p class="mt-1 text-xs text-slate-500">Diabète connu</p>
 				</div>
@@ -683,7 +683,7 @@
 				}`}
 			>
 				<div>
-					<p class="font-black text-slate-900">Tabac</p>
+					<p class="font-bold text-slate-900">Tabac</p>
 
 					<p class="mt-1 text-xs text-slate-500">Consommation déclarée</p>
 				</div>
@@ -701,7 +701,7 @@
 				}`}
 			>
 				<div>
-					<p class="font-black text-slate-900">Alcool</p>
+					<p class="font-bold text-slate-900">Alcool</p>
 
 					<p class="mt-1 text-xs text-slate-500">Consommation déclarée</p>
 				</div>
@@ -725,7 +725,7 @@
 					bind:value={previousMedication}
 					rows="4"
 					placeholder="Ex. Metformine 500 mg, Amlodipine 10 mg..."
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				></textarea>
 			</div>
 
@@ -739,7 +739,7 @@
 					bind:value={otherMedical}
 					rows="4"
 					placeholder="Maladies chroniques, épisodes antérieurs..."
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				></textarea>
 			</div>
 
@@ -753,7 +753,7 @@
 					bind:value={surgicalHistory}
 					rows="4"
 					placeholder="Interventions, dates et complications éventuelles..."
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				></textarea>
 			</div>
 
@@ -767,7 +767,7 @@
 					bind:value={gynecoHistory}
 					rows="4"
 					placeholder="Gestité, parité, grossesses, accouchements..."
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				></textarea>
 			</div>
 		</div>
@@ -783,7 +783,7 @@
 				<select
 					id="visit-type"
 					bind:value={visitType}
-					class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PREMIERE_VISITE"> Première visite </option>
@@ -802,7 +802,7 @@
 					id="ddr"
 					type="date"
 					bind:value={ddr}
-					class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				/>
 			</div>
 
@@ -812,7 +812,7 @@
 				}`}
 			>
 				<div>
-					<p class="text-sm font-black text-slate-900">Grossesse en cours</p>
+					<p class="text-sm font-bold text-slate-900">Grossesse en cours</p>
 
 					<p class="mt-1 text-xs text-slate-500">Situation déclarée</p>
 				</div>
@@ -838,7 +838,7 @@
 			</div>
 
 			<div>
-				<p class="font-black text-emerald-950">Synthèse de consultation</p>
+				<p class="font-bold text-emerald-950">Synthèse de consultation</p>
 
 				<p class="mt-1 text-sm leading-5 text-emerald-700">
 					Ces informations alimentent le dossier patient et les documents médicaux.
@@ -857,7 +857,7 @@
 					bind:value={diagnosis}
 					rows="4"
 					placeholder="Diagnostic principal ou hypothèse diagnostique..."
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 				></textarea>
 			</div>
 
@@ -872,7 +872,7 @@
 						bind:value={observations}
 						rows="5"
 						placeholder="État du patient, évolution, éléments de surveillance..."
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					></textarea>
 				</div>
 
@@ -886,7 +886,7 @@
 						bind:value={treatment}
 						rows="5"
 						placeholder="Traitement général, surveillance et recommandations..."
-						class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+						class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 					></textarea>
 				</div>
 			</div>
@@ -910,7 +910,7 @@
 					</div>
 
 					<div>
-						<p class="font-black text-slate-900">Hospitalisation nécessaire</p>
+						<p class="font-bold text-slate-900">Hospitalisation nécessaire</p>
 
 						<p class="mt-1 text-xs text-slate-500">Activer si le patient doit être admis</p>
 					</div>
@@ -935,7 +935,7 @@
 							bind:value={hospitalizationReason}
 							rows="4"
 							placeholder="Motif clinique justifiant l’admission..."
-							class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+							class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100"
 						></textarea>
 					</div>
 
@@ -950,7 +950,7 @@
 							<select
 								id="hospitalization-type"
 								bind:value={hospitalizationType}
-								class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100"
+								class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100"
 							>
 								<option value="">Sélectionner</option>
 								<option value="medicale"> Médicale </option>
@@ -975,11 +975,11 @@
 									min="0"
 									step="1"
 									bind:value={hospitalizationDuration}
-									class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100"
+									class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-16 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100"
 								/>
 
 								<span
-									class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+									class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 								>
 									jour(s)
 								</span>
@@ -1015,7 +1015,7 @@
 					</div>
 
 					<div>
-						<p class="font-black text-slate-900">Repos médical requis</p>
+						<p class="font-bold text-slate-900">Repos médical requis</p>
 
 						<p class="mt-1 text-xs text-slate-500">Permet la génération du certificat</p>
 					</div>
@@ -1042,11 +1042,11 @@
 							max="365"
 							step="1"
 							bind:value={sickLeaveDays}
-							class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+							class="h-12 w-full rounded-lg border border-input bg-white px-3 pr-16 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
 						/>
 
 						<span
-							class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+							class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500"
 						>
 							jour(s)
 						</span>
@@ -1073,7 +1073,7 @@
 		class="sticky bottom-4 z-20 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
 	>
 		<div>
-			<p class="font-black text-slate-900">Contexte clinique</p>
+			<p class="font-bold text-slate-900">Contexte clinique</p>
 
 			<p class="mt-1 text-xs text-slate-500">
 				Enregistrez les modifications avant de changer d’onglet.

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -16,8 +18,6 @@
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let tickets = $state<QueueTicketRow[]>([]);
 	let loading = $state(true);
@@ -88,75 +88,73 @@
 		<Alert tone="danger">{error}</Alert>
 	{/if}
 
-	<section class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+	<section class="rounded-2xl border border-border bg-surface shadow-xs">
 		<div class="flex items-center justify-between border-b border-border px-4 py-3">
 			<h2 class="text-sm font-bold text-slate-700">File de triage</h2>
 			<Button variant="secondary" size="sm" onclick={load}>Actualiser</Button>
 		</div>
 
-		{#if loading}
-			<LoadingState />
-		{:else if tickets.length === 0}
-			<div class="p-4"><EmptyState title="Aucun patient en triage" /></div>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm">
-					<thead class="bg-surface-muted text-xs uppercase text-slate-500">
+		<Table>
+			<thead>
+				<tr>
+					{#each triageQueueColumns as column, i (column)}
+						<th class:mc-actions={i === triageQueueColumns.length - 1}
+							><span class="inline-flex items-center gap-1"
+								>{column}{#if triageColumnHelp[column]}<HelpHint
+										helpKey={triageColumnHelp[column]}
+									/>{/if}</span
+							></th
+						>
+					{/each}
+				</tr>
+			</thead>
+			<tbody
+				>{#if loading}<TableState
+						state="loading"
+						colspan={triageQueueColumns.length}
+					/>{:else if tickets.length === 0}<TableState
+						state="empty"
+						colspan={triageQueueColumns.length}
+						title="Aucun patient en triage"
+					/>{:else}
+					{#each tickets as ticket (ticket.id)}
 						<tr>
-							{#each triageQueueColumns as column (column)}
-								<th class="p-3"
-									><span class="inline-flex items-center gap-1"
-										>{column}{#if triageColumnHelp[column]}<HelpHint
-												helpKey={triageColumnHelp[column]}
-											/>{/if}</span
-									></th
-								>
-							{/each}
+							<td>
+								<a href={resolve(`/queue/${ticket.id}`)}>{ticket.reference}</a>
+							</td>
+							<td>{queuePatientLabel(ticket)}</td>
+							<td>{queueServiceLabel(ticket)}</td>
+							<td>
+								<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
+							</td>
+							<td>{formatWaitMinutes(ticket.waitMinutes)}</td>
+							<td>
+								<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
+							</td>
+							<td class="mc-actions">
+								<div class="flex flex-wrap gap-2">
+									{#if ticket.stage === 'WAITING_TRIAGE'}
+										<Button
+											size="sm"
+											data-testid="queue-triage-take"
+											loading={actingId === ticket.id}
+											onclick={() => take(ticket.id)}>Prendre</Button
+										>
+									{:else if ticket.stage === 'TRIAGE_IN_PROGRESS'}
+										<Button
+											size="sm"
+											variant="success"
+											data-testid="queue-triage-complete"
+											loading={actingId === ticket.id}
+											onclick={() => complete(ticket.id)}>Terminer</Button
+										>
+									{/if}
+								</div>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each tickets as ticket (ticket.id)}
-							<tr class="border-t border-border hover:bg-surface-muted/50">
-								<td class="p-3">
-									<a
-										class="font-bold text-primary hover:underline"
-										href={resolve(`/queue/${ticket.id}`)}>{ticket.reference}</a
-									>
-								</td>
-								<td class="p-3">{queuePatientLabel(ticket)}</td>
-								<td class="p-3">{queueServiceLabel(ticket)}</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.priority} label={priorityLabels[ticket.priority]} />
-								</td>
-								<td class="p-3">{formatWaitMinutes(ticket.waitMinutes)}</td>
-								<td class="p-3">
-									<StatusBadge status={ticket.stage} label={stageLabels[ticket.stage]} />
-								</td>
-								<td class="p-3">
-									<div class="flex flex-wrap gap-2">
-										{#if ticket.stage === 'WAITING_TRIAGE'}
-											<Button
-												size="sm"
-												data-testid="queue-triage-take"
-												loading={actingId === ticket.id}
-												onclick={() => take(ticket.id)}>Prendre</Button
-											>
-										{:else if ticket.stage === 'TRIAGE_IN_PROGRESS'}
-											<Button
-												size="sm"
-												variant="success"
-												data-testid="queue-triage-complete"
-												loading={actingId === ticket.id}
-												onclick={() => complete(ticket.id)}>Terminer</Button
-											>
-										{/if}
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				{/if}</tbody
+			>
+		</Table>
 	</section>
 </div>

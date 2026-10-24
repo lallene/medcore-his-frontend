@@ -1,4 +1,6 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -73,8 +75,8 @@
 <div class="space-y-6 p-6">
 	<header class="flex flex-wrap justify-between gap-3">
 		<div>
-			<p class="text-xs font-black uppercase text-indigo-700">Recouvrement assurances</p>
-			<h1 class="text-3xl font-black">Créances assureurs</h1>
+			<p class="text-xs font-semibold uppercase text-indigo-700">Recouvrement assurances</p>
+			<h1 class="text-3xl font-bold">Créances assureurs</h1>
 			<p class="text-sm text-slate-500">
 				Règlements assureurs réels — strictement séparés de la caisse patient.
 			</p>
@@ -94,7 +96,7 @@
 	</header>
 	{#if error}<p class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
 	{#if showSettlement}<section class="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-4">
-			<select bind:value={form.insuranceCompanyId} class="rounded-xl border p-3"
+			<select bind:value={form.insuranceCompanyId} class="min-h-control rounded-lg border px-3 py-2"
 				><option value={0}>Assureur</option>{#each companies as c (c.insuranceCompanyId)}<option
 						value={c.insuranceCompanyId}>{c.companyName}</option
 					>{/each}</select
@@ -102,29 +104,37 @@
 				type="number"
 				bind:value={form.totalAmount}
 				placeholder="Montant reçu"
-				class="rounded-xl border p-3"
-			/><input type="date" bind:value={form.receivedAt} class="rounded-xl border p-3" /><input
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><input
+				type="date"
+				bind:value={form.receivedAt}
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><input
 				bind:value={form.externalReference}
 				placeholder="Référence externe"
-				class="rounded-xl border p-3"
-			/><select bind:value={form.paymentMethod} class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><select bind:value={form.paymentMethod} class="min-h-control rounded-lg border px-3 py-2"
 				><option>BANK_TRANSFER</option><option>CHECK</option><option>OTHER</option></select
 			><input
 				bind:value={form.bankReference}
 				placeholder="Référence bancaire (facultatif)"
-				class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
 			/><input
 				bind:value={form.comment}
 				placeholder="Commentaire"
-				class="rounded-xl border p-3"
-			/><button onclick={create} class="rounded-xl bg-slate-900 text-white">Enregistrer</button>
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><button
+				onclick={create}
+				class="rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+				>Enregistrer</button
+			>
 		</section>{/if}
 	{#if kpis}<section class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
 			{#each [['À recouvrer', kpis.totalReceivables], ['Réglé', kpis.settledAmount], ['En retard', kpis.overdueAmount], ['Non alloué', kpis.unallocatedAmount], ['Factures en attente', kpis.pendingInvoices], ['Assureurs débiteurs', kpis.debtorCompanies]] as x (x[0])}<div
 					class="rounded-2xl border bg-white p-4"
 				>
 					<small class="font-bold uppercase text-slate-500">{x[0]}</small>
-					<p class="mt-2 text-xl font-black">
+					<p class="mt-2 text-xl font-bold">
 						{typeof x[1] === 'number' && String(x[0]).includes('Assureurs')
 							? x[1]
 							: typeof x[1] === 'number' && String(x[0]).includes('Factures')
@@ -138,50 +148,54 @@
 			<input
 				bind:value={search}
 				placeholder="Assureur, patient, facture, PEC"
-				class="rounded-xl border p-3"
-			/><select bind:value={companyId} class="rounded-xl border p-3"
+				class="min-h-control rounded-lg border px-3 py-2"
+			/><select bind:value={companyId} class="min-h-control rounded-lg border px-3 py-2"
 				><option value={0}>Tous assureurs</option
 				>{#each companies as c (c.insuranceCompanyId)}<option value={c.insuranceCompanyId}
 						>{c.companyName}</option
 					>{/each}</select
-			><select bind:value={status} class="rounded-xl border p-3"
+			><select bind:value={status} class="min-h-control rounded-lg border px-3 py-2"
 				><option value="">Tous statuts</option><option>UNPAID</option><option>PARTIALLY_PAID</option
 				><option>OVERDUE</option><option>PAID</option></select
-			><button onclick={load} class="rounded-xl bg-slate-900 text-white">Filtrer</button>
+			><button
+				onclick={load}
+				class="rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+				>Filtrer</button
+			>
 		</div>
-		<div class="overflow-x-auto">
-			<table class="w-full min-w-[1450px] text-left text-sm">
-				<thead
-					><tr class="bg-slate-50"
-						><th class="p-3">Assureur</th><th>Patient</th><th>Facture</th><th>PEC</th><th>Acte</th
-						><th>Brut</th><th>Part assurance</th><th>Réglé</th><th>Reste</th><th>Échéance</th><th
-							>Statut</th
-						><th>Bordereau</th></tr
-					></thead
-				><tbody
-					>{#each rows as r (r.invoiceLineId)}<tr class="border-t"
-							><td class="p-3"
-								><a
-									class="font-bold text-indigo-700"
-									href={resolve(`/insurance-receivables/companies/${r.insuranceCompanyId}`)}
-									>{r.companyName}</a
-								></td
-							><td>{r.patientName}<small class="block">{r.patientCode}</small></td><td
-								><a
-									class="text-blue-700"
-									href={resolve(`/insurance-receivables/${r.invoiceLineId}`)}>{r.invoiceNumber}</a
-								></td
-							><td>{r.authorizationNumber} · {r.coverageResolution}</td><td>{r.description}</td><td
-								>{formatXOF(r.grossAmount)}</td
-							><td>{formatXOF(r.insuranceDue)}</td><td>{formatXOF(r.insurancePaid)}</td><td
-								class="font-black">{formatXOF(r.insuranceBalance)}</td
-							><td>{r.dueDate ? new Date(r.dueDate).toLocaleDateString('fr-FR') : '—'}</td><td
-								>{insuranceReceivableStatusLabel[r.status]}</td
-							><td>{r.batchNumber || '—'}</td></tr
-						>{:else}<tr><td colspan="12" class="p-10 text-center">Aucune créance assureur.</td></tr
-						>{/each}</tbody
-				>
-			</table>
-		</div>
+		<Table minWidth="1450px">
+			<thead
+				><tr
+					><th>Assureur</th><th>Patient</th><th>Facture</th><th>PEC</th><th>Acte</th><th
+						class="mc-num">Brut</th
+					><th class="mc-num">Part assurance</th><th class="mc-num">Réglé</th><th class="mc-num"
+						>Reste</th
+					><th>Échéance</th><th>Statut</th><th>Bordereau</th></tr
+				></thead
+			><tbody
+				>{#each rows as r (r.invoiceLineId)}<tr
+						><td
+							><a href={resolve(`/insurance-receivables/companies/${r.insuranceCompanyId}`)}
+								>{r.companyName}</a
+							></td
+						><td>{r.patientName}<small class="block">{r.patientCode}</small></td><td
+							><a href={resolve(`/insurance-receivables/${r.invoiceLineId}`)}>{r.invoiceNumber}</a
+							></td
+						><td class="mc-id">{r.authorizationNumber} · {r.coverageResolution}</td><td
+							>{r.description}</td
+						><td class="mc-amount">{formatXOF(r.grossAmount)}</td><td class="mc-amount"
+							>{formatXOF(r.insuranceDue)}</td
+						><td class="mc-amount">{formatXOF(r.insurancePaid)}</td><td
+							class="mc-amount font-semibold">{formatXOF(r.insuranceBalance)}</td
+						><td>{r.dueDate ? new Date(r.dueDate).toLocaleDateString('fr-FR') : '—'}</td><td
+							>{insuranceReceivableStatusLabel[r.status]}</td
+						><td>{r.batchNumber || '—'}</td></tr
+					>{:else}<TableState
+						state="empty"
+						colspan={12}
+						title="Aucune créance assureur."
+					/>{/each}</tbody
+			>
+		</Table>
 	</section>
 </div>

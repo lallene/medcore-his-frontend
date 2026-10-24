@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { medcoreColors } from '$lib/design/theme';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -94,26 +95,15 @@
 	<div class="rounded-2xl bg-red-50 p-4 text-red-700">{error}</div>
 {:else if voucher}
 	<div class="space-y-6">
-		<section
-			class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-700 via-[#0E4C92] to-[#18B893] p-8 text-white shadow-xl"
-		>
-			<div
-				class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-			></div>
-			<div
-				class="pointer-events-none absolute bottom-4 right-10 text-[130px] font-black leading-none text-white/5"
-			>
-				PEC
-			</div>
-
-			<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+		<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+			<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 				<div>
-					<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">
+					<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 						Bon de prise en charge
 					</p>
 
-					<div class="mt-3 flex flex-wrap items-center gap-3">
-						<h1 class="text-4xl font-bold leading-tight">
+					<div class="mt-1.5 flex flex-wrap items-center gap-3">
+						<h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
 							{voucher.voucherNumber ?? `Bon #${voucher.id}`}
 						</h1>
 
@@ -122,26 +112,34 @@
 						</Badge>
 					</div>
 
-					<p class="mt-3 max-w-2xl text-lg text-blue-50">
+					<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">
 						{voucher.patientName ?? `Patient #${voucher.patientId}`} ·
 						{voucher.companyName ?? `Compagnie #${voucher.companyId}`}
 					</p>
 
-					<div class="mt-6 flex flex-wrap gap-3">
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							👤 {voucher.patientName ?? `Patient #${voucher.patientId}`}
+					<div class="mt-4 flex flex-wrap gap-2">
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							{voucher.patientName ?? `Patient #${voucher.patientId}`}
 						</span>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							🛡 {voucher.companyName ?? `Compagnie #${voucher.companyId}`}
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							{voucher.companyName ?? `Compagnie #${voucher.companyId}`}
 						</span>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							💰 {Number(voucherAmount(voucher)).toLocaleString('fr-FR')} FCFA
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							{Number(voucherAmount(voucher)).toLocaleString('fr-FR')} FCFA
 						</span>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							📌 {statusLabel(voucher.status)}
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							{statusLabel(voucher.status)}
 						</span>
 					</div>
 				</div>
@@ -160,7 +158,7 @@
 				detail="FCFA"
 				trend="+0%"
 				progress={70}
-				accent="#EA580C"
+				accent={medcoreColors.semantic.warning}
 			/>
 
 			<MetricCard
@@ -170,7 +168,7 @@
 				detail="Part assurance"
 				trend="+0%"
 				progress={80}
-				accent="#22C55E"
+				accent={medcoreColors.semantic.success}
 			/>
 
 			<MetricCard
@@ -180,7 +178,7 @@
 				detail="Reste à charge"
 				trend="+0%"
 				progress={35}
-				accent="#0E4C92"
+				accent={medcoreColors.primary}
 			/>
 
 			<MetricCard
@@ -190,12 +188,12 @@
 				detail="Workflow assurance"
 				trend="+0%"
 				progress={60}
-				accent="#7C3AED"
+				accent={medcoreColors.primary}
 			/>
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-3">
-			<div class="space-y-6 xl:col-span-2">
+			<div class="min-w-0 space-y-6 xl:col-span-2">
 				<Card title="Informations du bon" subtitle="Détails de la demande de prise en charge">
 					<div class="grid gap-4 md:grid-cols-2">
 						<InfoBlock
@@ -228,31 +226,31 @@
 							title="Draft"
 							subtitle="Création"
 							active={voucher.status === 'draft'}
-							color="#64748B"
+							color={medcoreColors.neutral.textMuted}
 						/>
 						<WorkflowStep
 							title="Submitted"
 							subtitle="Soumission"
 							active={voucher.status === 'submitted'}
-							color="#0EA5E9"
+							color={medcoreColors.semantic.info}
 						/>
 						<WorkflowStep
 							title="Controlled"
 							subtitle="Contrôle"
 							active={voucher.status === 'controlled'}
-							color="#F59E0B"
+							color={medcoreColors.semantic.warning}
 						/>
 						<WorkflowStep
 							title="Validated"
 							subtitle="Validation"
 							active={voucher.status === 'validated'}
-							color="#22C55E"
+							color={medcoreColors.semantic.success}
 						/>
 						<WorkflowStep
 							title="Rejected"
 							subtitle="Rejet / Annulation"
 							active={voucher.status === 'rejected' || voucher.status === 'cancelled'}
-							color="#EF4444"
+							color={medcoreColors.semantic.danger}
 						/>
 					</div>
 				</Card>
@@ -263,7 +261,7 @@
 							icon={FileText}
 							title="Bon créé"
 							detail="Création du bon dans MedCore"
-							color="#0E4C92"
+							color={medcoreColors.primary}
 						/>
 
 						{#if voucher.status !== 'draft'}
@@ -271,7 +269,7 @@
 								icon={Clock3}
 								title="Bon soumis"
 								detail="Transmission au service assurance"
-								color="#0EA5E9"
+								color={medcoreColors.semantic.info}
 							/>
 						{/if}
 
@@ -280,7 +278,7 @@
 								icon={Shield}
 								title="Contrôle effectué"
 								detail="Vérification des informations et garanties"
-								color="#F59E0B"
+								color={medcoreColors.semantic.warning}
 							/>
 						{/if}
 
@@ -289,7 +287,7 @@
 								icon={BadgeCheck}
 								title="Bon validé"
 								detail="Prise en charge acceptée"
-								color="#22C55E"
+								color={medcoreColors.semantic.success}
 							/>
 						{/if}
 
@@ -298,7 +296,7 @@
 								icon={XCircle}
 								title="Bon annulé ou rejeté"
 								detail="Le workflow est terminé pour ce bon"
-								color="#EF4444"
+								color={medcoreColors.semantic.danger}
 							/>
 						{/if}
 					</div>
@@ -325,7 +323,7 @@
 					<div
 						class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center"
 					>
-						<Upload class="mx-auto text-slate-400" size={28} />
+						<Upload class="mx-auto text-slate-500" size={28} />
 						<p class="mt-3 font-semibold text-slate-800">Déposer des fichiers</p>
 						<p class="mt-1 text-sm text-slate-500">PDF, ordonnance, compte rendu, scanner...</p>
 					</div>

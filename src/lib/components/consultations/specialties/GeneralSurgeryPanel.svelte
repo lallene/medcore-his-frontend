@@ -344,9 +344,9 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Préopératoire</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Préopératoire</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Diagnostic, indication et niveau d’urgence
 			</h4>
 		</div>
@@ -361,7 +361,7 @@
 					id="surgery-diagnosis"
 					type="text"
 					bind:value={form.primaryDiagnosis}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -374,7 +374,7 @@
 					id="surgical-indication"
 					type="text"
 					bind:value={form.surgicalIndication}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -387,7 +387,7 @@
 					id="planned-procedure"
 					type="text"
 					bind:value={form.plannedProcedure}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -399,7 +399,7 @@
 				<select
 					id="urgency-level"
 					bind:value={form.urgencyLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PLANNED">Programmée</option>
@@ -418,7 +418,7 @@
 					type="text"
 					bind:value={form.anestheticRiskLevel}
 					placeholder="Ex. ASA II"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -432,7 +432,7 @@
 				<select
 					id="consent-status"
 					bind:value={form.consentStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PENDING">En attente</option>
@@ -450,7 +450,7 @@
 					id="consent-date"
 					type="date"
 					bind:value={form.consentDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -465,11 +465,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Antécédents et traitements
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Risques préopératoires</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Risques préopératoires</h4>
 			</div>
 		</div>
 
@@ -477,7 +477,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Antécédents chirurgicaux</p>
+						<p class="font-bold text-slate-900">Antécédents chirurgicaux</p>
 						<p class="mt-1 text-sm text-slate-500">Interventions précédentes et complications.</p>
 					</div>
 
@@ -498,20 +498,20 @@
 								type="text"
 								bind:value={item.procedure}
 								placeholder="Intervention"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="date"
 								bind:value={item.date}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.indication}
 								placeholder="Indication"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -519,7 +519,7 @@
 									type="text"
 									bind:value={item.complications}
 									placeholder="Complications"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -539,7 +539,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Allergies</p>
+						<p class="font-bold text-slate-900">Allergies</p>
 						<p class="mt-1 text-sm text-slate-500">Médicaments, produits et réactions.</p>
 					</div>
 
@@ -560,28 +560,28 @@
 								type="text"
 								bind:value={item.substance}
 								placeholder="Médicament ou produit"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.type}
 								placeholder="Type"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.reaction}
 								placeholder="Réaction"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
 								<select
 									bind:value={item.severity}
 									aria-label={`Gravité de l’allergie ${index + 1}`}
-									class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+									class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 								>
 									<option value="">Gravité</option>
 									<option value="LOW">Faible</option>
@@ -609,7 +609,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Traitements en cours</p>
+						<p class="font-bold text-slate-900">Traitements en cours</p>
 						<p class="mt-1 text-sm text-slate-500">Liste complète des traitements.</p>
 					</div>
 
@@ -630,21 +630,21 @@
 								type="text"
 								bind:value={item.medication}
 								placeholder="Médicament"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.dosage}
 								placeholder="Dosage"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.frequency}
 								placeholder="Fréquence"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -652,7 +652,7 @@
 									type="text"
 									bind:value={item.notes}
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -672,7 +672,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Anticoagulants</p>
+						<p class="font-bold text-slate-900">Anticoagulants</p>
 						<p class="mt-1 text-sm text-slate-500">Médicament et dernière prise.</p>
 					</div>
 
@@ -693,14 +693,14 @@
 								type="text"
 								bind:value={item.medication}
 								placeholder="Anticoagulant"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="datetime-local"
 								bind:value={item.lastDoseDateTime}
 								aria-label={`Dernière prise de l’anticoagulant ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -708,7 +708,7 @@
 									type="text"
 									bind:value={item.notes}
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -729,9 +729,9 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Intervention</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Intervention</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Organisation et déroulement opératoire</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Organisation et déroulement opératoire</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -744,7 +744,7 @@
 					id="intervention-date"
 					type="date"
 					bind:value={form.interventionDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -757,7 +757,7 @@
 					id="start-time"
 					type="time"
 					bind:value={form.startTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -770,7 +770,7 @@
 					id="end-time"
 					type="time"
 					bind:value={form.endTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -782,7 +782,7 @@
 				<select
 					id="anesthesia-type"
 					bind:value={form.anesthesiaType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="LOCAL">Locale</option>
@@ -800,7 +800,7 @@
 					id="lead-surgeon"
 					type="text"
 					bind:value={form.leadSurgeon}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -813,7 +813,7 @@
 					id="anesthesiologist"
 					type="text"
 					bind:value={form.anesthesiologist}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -821,7 +821,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Équipe chirurgicale</p>
+					<p class="font-bold text-slate-900">Équipe chirurgicale</p>
 					<p class="mt-1 text-sm text-slate-500">Assistants et autres professionnels.</p>
 				</div>
 
@@ -844,14 +844,14 @@
 							type="text"
 							bind:value={member.name}
 							placeholder="Nom"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={member.role}
 							placeholder="Rôle"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<button
@@ -872,37 +872,37 @@
 				bind:value={form.operativeTechnique}
 				rows="5"
 				placeholder="Technique opératoire"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.operativeReport}
 				rows="5"
 				placeholder="Compte rendu opératoire détaillé"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.intraoperativeIncidents}
 				rows="4"
 				placeholder="Incidents peropératoires"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.complications}
 				rows="4"
 				placeholder="Complications"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.complicationsManagement}
 				rows="4"
 				placeholder="Prise en charge des complications"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm md:col-span-2"></textarea>
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Implants</p>
+					<p class="font-bold text-slate-900">Implants</p>
 					<p class="mt-1 text-sm text-slate-500">Type, référence et numéro de lot.</p>
 				</div>
 
@@ -925,28 +925,28 @@
 							type="text"
 							bind:value={item.type}
 							placeholder="Type"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.reference}
 							placeholder="Référence"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.batchNumber}
 							placeholder="Numéro de lot"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.manufacturer}
 							placeholder="Fabricant"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<button
@@ -966,11 +966,11 @@
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 					Suivi postopératoire
 				</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">Douleur, constantes et évolution</h4>
+				<h4 class="mt-1 text-lg font-bold text-slate-900">Douleur, constantes et évolution</h4>
 			</div>
 
 			<button
@@ -987,7 +987,7 @@
 			{#each postoperativeFollowUps as item, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Suivi postopératoire #{index + 1}
 						</p>
 
@@ -1006,7 +1006,7 @@
 							type="datetime-local"
 							bind:value={item.dateTime}
 							aria-label={`Date du suivi ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -1015,7 +1015,7 @@
 							max="10"
 							bind:value={item.painScore}
 							placeholder="Douleur /10"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -1023,35 +1023,35 @@
 							step="0.1"
 							bind:value={item.temperature}
 							placeholder="Température"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.bloodPressureSystolic}
 							placeholder="TA systolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.bloodPressureDiastolic}
 							placeholder="TA diastolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.heartRate}
 							placeholder="Fréquence cardiaque"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={item.respiratoryRate}
 							placeholder="Fréquence respiratoire"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -1059,7 +1059,7 @@
 							step="0.1"
 							bind:value={item.oxygenSaturation}
 							placeholder="SpO₂"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 					</div>
 
@@ -1067,7 +1067,7 @@
 						bind:value={item.notes}
 						rows="3"
 						placeholder="Observations"
-						class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					></textarea>
 				</article>
 			{/each}
@@ -1083,7 +1083,7 @@
 					id="wound-condition"
 					bind:value={form.woundCondition}
 					rows="3"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 			</div>
 
 			<div>
@@ -1095,7 +1095,7 @@
 					id="transit-status"
 					type="text"
 					bind:value={form.bowelTransitStatus}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1108,7 +1108,7 @@
 					id="feeding-evolution"
 					type="text"
 					bind:value={form.feedingEvolution}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1121,7 +1121,7 @@
 					id="mobilization-status"
 					type="text"
 					bind:value={form.mobilizationStatus}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1134,7 +1134,7 @@
 					id="suture-removal-date"
 					type="date"
 					bind:value={form.sutureRemovalDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1147,7 +1147,7 @@
 					id="next-follow-up"
 					type="date"
 					bind:value={form.nextFollowUpDate}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -1156,7 +1156,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Pansements</p>
+						<p class="font-bold text-slate-900">Pansements</p>
 						<p class="mt-1 text-sm text-slate-500">Date et état du pansement.</p>
 					</div>
 
@@ -1177,14 +1177,14 @@
 								type="datetime-local"
 								bind:value={item.dateTime}
 								aria-label={`Date du pansement ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.condition}
 								placeholder="État"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -1192,7 +1192,7 @@
 									type="text"
 									bind:value={item.notes}
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button
@@ -1212,7 +1212,7 @@
 			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div>
-						<p class="font-black text-slate-900">Drains</p>
+						<p class="font-bold text-slate-900">Drains</p>
 						<p class="mt-1 text-sm text-slate-500">Type, quantité et date de retrait.</p>
 					</div>
 
@@ -1233,28 +1233,28 @@
 								type="text"
 								bind:value={item.type}
 								placeholder="Type de drain"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="text"
 								bind:value={item.quantity}
 								placeholder="Quantité"
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="date"
 								bind:value={item.insertionDate}
 								aria-label={`Date de pose du drain ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<input
 								type="date"
 								bind:value={item.removalDate}
 								aria-label={`Date de retrait du drain ${index + 1}`}
-								class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 							/>
 
 							<div class="grid grid-cols-[1fr_48px] gap-3">
@@ -1262,7 +1262,7 @@
 									type="text"
 									bind:value={item.notes}
 									placeholder="Notes"
-									class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+									class="rounded-lg border border-input px-3 py-2 text-sm"
 								/>
 
 								<button

@@ -188,10 +188,10 @@
 <div class="space-y-6">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[.2em] text-violet-700">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-violet-700">
 				Parcours diagnostique réel
 			</p>
-			<h2 class="mt-2 text-2xl font-black">Examens du patient</h2>
+			<h2 class="mt-2 text-2xl font-bold">Examens du patient</h2>
 			<p class="text-sm text-slate-500">
 				{consultSubtitle}
 			</p>
@@ -206,31 +206,31 @@
 	</div>
 	<div class="grid gap-4 sm:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-5">
-			<p class="text-xs font-black uppercase text-slate-500">Demandes</p>
-			<p class="text-3xl font-black">
+			<p class="text-xs font-semibold uppercase text-slate-500">Demandes</p>
+			<p class="text-3xl font-bold">
 				{orders.length + imagingOrders.length + nonLaboratoryExams.length}
 			</p>
 		</div>
 		<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-			<p class="text-xs font-black uppercase text-blue-600">En cours</p>
-			<p class="text-3xl font-black text-blue-900">
+			<p class="text-xs font-semibold uppercase text-blue-600">En cours</p>
+			<p class="text-3xl font-bold text-blue-900">
 				{orders.filter((o) => !['VALIDATED', 'CANCELLED', 'REJECTED'].includes(o.status)).length +
 					imagingOrders.filter((o) => !['VALIDATED', 'CANCELLED'].includes(o.status)).length}
 			</p>
 		</div>
 		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-			<p class="text-xs font-black uppercase text-emerald-600">Validés</p>
-			<p class="text-3xl font-black text-emerald-900">
+			<p class="text-xs font-semibold uppercase text-emerald-600">Validés</p>
+			<p class="text-3xl font-bold text-emerald-900">
 				{orders.filter((o) => o.status === 'VALIDATED').length +
 					imagingOrders.filter((o) => o.status === 'VALIDATED').length}
 			</p>
 		</div>
 	</div>
 	<label class="relative block"
-		><Search class="absolute left-3 top-3 text-slate-400" size={18} /><input
+		><Search class="absolute left-3 top-3 text-slate-500" size={18} /><input
 			bind:value={search}
 			placeholder="Rechercher un examen..."
-			class="w-full rounded-xl border bg-white py-3 pl-10 pr-3"
+			class="w-full rounded-lg border bg-white py-2 pl-10 pr-3"
 		/></label
 	>
 	{#if labBranch.denied}
@@ -257,9 +257,9 @@
 			class="rounded-2xl border border-dashed p-12 text-center"
 		>
 			<FlaskConical class="mx-auto text-slate-300" size={40} />
-			<h3 class="mt-4 font-black">Aucun examen</h3>
+			<h3 class="mt-4 font-bold">Aucun examen</h3>
 		</div>{:else if filtered.length}<section class="space-y-3">
-			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">Laboratoire</h3>
+			<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Laboratoire</h3>
 			<div class="space-y-3">
 				{#each filtered as order (order.id)}
 					{@const detail = details[order.id]}
@@ -267,7 +267,7 @@
 						onclick={() => goto(resolve(`/laboratory/${order.id}`))}
 						class="flex w-full flex-col justify-between gap-3 rounded-2xl border bg-white p-5 text-left hover:border-violet-300 md:flex-row"
 						><div>
-							<h3 class="font-black">{order.examName}</h3>
+							<h3 class="font-bold">{order.examName}</h3>
 							<p class="text-sm text-slate-500">
 								{order.requestNumber} · {order.examCode} · {order.category || 'Laboratoire'}
 							</p>
@@ -296,7 +296,7 @@
 		</section>{/if}
 	{#if filteredImaging.length}
 		<section class="space-y-3">
-			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">Imagerie</h3>
+			<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Imagerie</h3>
 			{#each filteredImaging as imagingOrder (imagingOrder.id)}
 				{@const imagingDetail = imagingDetails[imagingOrder.id]}
 				<button
@@ -333,7 +333,7 @@
 	{/if}
 	{#if nonLaboratoryExams.length}
 		<section class="space-y-3">
-			<h3 class="text-sm font-black uppercase tracking-wide text-slate-500">
+			<h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">
 				Autres examens cliniques
 			</h3>
 			{#each nonLaboratoryExams as exam (exam.key)}

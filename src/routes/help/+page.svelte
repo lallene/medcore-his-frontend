@@ -52,7 +52,7 @@
 			<nav aria-label="Modules de l’aide" class="space-y-1">
 				<button
 					type="button"
-					class={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${moduleFilter === '' ? 'bg-[#0E4C92] text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+					class={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${moduleFilter === '' ? 'bg-primary text-white' : 'text-slate-700 hover:bg-slate-100'}`}
 					aria-pressed={moduleFilter === ''}
 					data-testid="help-module-all"
 					onclick={() => (moduleFilter = '')}>Tous les modules ({all.length})</button
@@ -60,7 +60,7 @@
 				{#each modules as m (m.key)}
 					<button
 						type="button"
-						class={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${moduleFilter === m.key ? 'bg-[#0E4C92] text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+						class={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold ${moduleFilter === m.key ? 'bg-primary text-white' : 'text-slate-700 hover:bg-slate-100'}`}
 						aria-pressed={moduleFilter === m.key}
 						data-testid={`help-module-${m.key}`}
 						onclick={() => {
@@ -100,12 +100,12 @@
 								<li>
 									<button
 										type="button"
-										class={`flex w-full items-start gap-2 rounded-xl border p-3 text-left text-sm transition ${selectedKey === entry.helpKey ? 'border-[#0E4C92] bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+										class={`flex w-full items-start gap-2 rounded-xl border p-3 text-left text-sm transition ${selectedKey === entry.helpKey ? 'border-primary bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
 										aria-pressed={selectedKey === entry.helpKey}
 										data-testid={`help-result-${entry.helpKey}`}
 										onclick={() => (selectedKey = entry.helpKey)}
 									>
-										<CircleHelp class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+										<CircleHelp class="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
 										<span>
 											<span class="block font-semibold text-slate-900">{entry.elementLabel}</span>
 											<span class="block text-xs text-slate-500"

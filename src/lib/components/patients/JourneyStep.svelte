@@ -11,7 +11,7 @@
 	let { icon: Icon, title, detail, color }: Props = $props();
 </script>
 
-<div class="rounded-2xl bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+<div class="rounded-2xl bg-slate-50 p-4 transition hover:shadow-md">
 	<div
 		class="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm"
 		style={`background:${color}`}

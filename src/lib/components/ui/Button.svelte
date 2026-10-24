@@ -1,14 +1,19 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
-	import { buttonVariantClasses, type ButtonVariant } from '$lib/design/status';
-
-	type Size = 'sm' | 'md' | 'lg';
+	import {
+		buttonBaseClasses,
+		buttonDisabledClasses,
+		buttonSizeClasses,
+		buttonVariantClasses,
+		type ButtonSize,
+		type ButtonVariant
+	} from '$lib/design/status';
 
 	interface Props {
 		type?: 'button' | 'submit' | 'reset';
 		variant?: ButtonVariant;
-		size?: Size;
+		size?: ButtonSize;
 		disabled?: boolean;
 		loading?: boolean;
 		fullWidth?: boolean;
@@ -32,12 +37,6 @@
 		'aria-label': ariaLabel,
 		'data-testid': testId
 	}: Props = $props();
-
-	const sizes: Record<Size, string> = {
-		sm: 'px-3 py-1.5 text-sm rounded-lg',
-		md: 'px-4 py-2 text-sm rounded-xl',
-		lg: 'px-5 py-3 text-base rounded-xl'
-	};
 </script>
 
 <button
@@ -48,9 +47,10 @@
 	aria-busy={loading || undefined}
 	data-testid={testId}
 	class={cn(
-		'inline-flex items-center justify-center gap-2 font-semibold transition focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60',
+		buttonBaseClasses,
+		buttonDisabledClasses,
 		buttonVariantClasses[variant],
-		sizes[size],
+		buttonSizeClasses[size],
 		fullWidth && 'w-full',
 		className
 	)}

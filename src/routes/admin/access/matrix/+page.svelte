@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { jwtDecode } from 'jwt-decode';
@@ -65,49 +66,47 @@
 	{#if loading || !matrix}
 		<LoadingState label="Chargement matrice…" />
 	{:else}
-		<div class="overflow-auto rounded-xl border border-border">
-			<table class="min-w-full border-collapse text-left text-xs">
-				<thead class="sticky top-0 bg-muted/80">
+		<Table>
+			<thead class="sticky top-0">
+				<tr>
+					<th>Permission</th>
+					{#each matrix.functions as fn (fn)}
+						<th>{fn}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each filteredPerms as perm (perm)}
 					<tr>
-						<th class="border-b border-border px-2 py-2">Permission</th>
+						<td class="font-mono">{perm}</td>
 						{#each matrix.functions as fn (fn)}
-							<th class="border-b border-border px-2 py-2 font-semibold">{fn}</th>
+							<td class="text-center">
+								{#if canManageMatrix(permissions)}
+									<button
+										type="button"
+										class="rounded px-1.5 py-0.5 hover:bg-muted"
+										title="Basculer overlay"
+										onclick={async () => {
+											const on = allowed(fn, perm);
+											matrix = await toggleAccessMatrix({
+												functionCode: fn,
+												permission: perm,
+												effect: on ? 'DENY' : 'GRANT',
+												reason
+											});
+										}}
+									>
+										{allowed(fn, perm) ? '✓' : '—'}
+									</button>
+								{:else}
+									{allowed(fn, perm) ? '✓' : '—'}
+								{/if}
+							</td>
 						{/each}
 					</tr>
-				</thead>
-				<tbody>
-					{#each filteredPerms as perm (perm)}
-						<tr class="border-t border-border">
-							<td class="px-2 py-1 font-mono">{perm}</td>
-							{#each matrix.functions as fn (fn)}
-								<td class="px-2 py-1 text-center">
-									{#if canManageMatrix(permissions)}
-										<button
-											type="button"
-											class="rounded px-1.5 py-0.5 hover:bg-muted"
-											title="Basculer overlay"
-											onclick={async () => {
-												const on = allowed(fn, perm);
-												matrix = await toggleAccessMatrix({
-													functionCode: fn,
-													permission: perm,
-													effect: on ? 'DENY' : 'GRANT',
-													reason
-												});
-											}}
-										>
-											{allowed(fn, perm) ? '✓' : '—'}
-										</button>
-									{:else}
-										{allowed(fn, perm) ? '✓' : '—'}
-									{/if}
-								</td>
-							{/each}
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+				{/each}
+			</tbody>
+		</Table>
 		{#if canManageMatrix(permissions)}
 			<p class="text-xs text-muted-foreground">
 				Clic cellule = overlay GRANT/DENY (audit serveur). Motif : {reason}

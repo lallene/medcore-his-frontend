@@ -326,16 +326,16 @@
 				</div>
 			{:else if consultation}
 				<div>
-					<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+					<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 						Poste de consultation
 					</p>
 
 					<div class="mt-1 flex flex-wrap items-center gap-3">
-						<h2 class="text-xl font-black text-slate-900">
+						<h2 class="text-xl font-bold text-slate-900">
 							{patientName}
 						</h2>
 
-						<span class={`rounded-full border px-3 py-1 text-xs font-black ${statusClasses}`}>
+						<span class={`rounded-full border px-3 py-1 text-xs font-bold ${statusClasses}`}>
 							{statusLabel}
 						</span>
 					</div>
@@ -346,7 +346,7 @@
 						· {consultation.doctorName}
 					</p>
 
-					<p class="mt-1 text-xs text-slate-400">
+					<p class="mt-1 text-xs text-slate-500">
 						Dossier : {consultation.patient.numeroDossier}
 						· Patient : {consultation.patient.codePatient}
 					</p>
@@ -358,7 +358,7 @@
 							<label class="text-xs font-semibold text-slate-500">
 								Décision
 								<select
-									class="mt-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+									class="mt-1 rounded-lg border border-input bg-white px-3 py-2 text-sm"
 									bind:value={disposition}
 									data-testid="consultation-complete-disposition"
 								>
@@ -370,7 +370,7 @@
 							<input
 								type="text"
 								placeholder="Note (optionnelle)"
-								class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+								class="rounded-lg border border-input px-3 py-2 text-sm"
 								bind:value={dispositionNote}
 								data-testid="consultation-complete-note"
 							/>
@@ -416,7 +416,7 @@
 		<section class="rounded-2xl border border-red-200 bg-red-50 p-5">
 			<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<p class="text-xs font-black uppercase tracking-wide text-red-600">
+					<p class="text-xs font-semibold uppercase tracking-wide text-red-600">
 						Hospitalisation recommandée
 					</p>
 					<p class="mt-1 font-bold text-slate-900">
@@ -430,7 +430,7 @@
 					<button
 						type="button"
 						onclick={() => goto(resolve(`/hospitalizations/${hospitalization?.id}`))}
-						class="rounded-xl bg-white px-4 py-2 text-sm font-black text-red-700 shadow-sm"
+						class="rounded-xl bg-white px-4 py-2 text-sm font-bold text-red-700 shadow-sm"
 						>Ouvrir {hospitalization.admissionNumber} · {hospitalization.status}</button
 					>
 				{:else}
@@ -438,7 +438,7 @@
 						type="button"
 						disabled={hospitalizationLoading}
 						onclick={createAdmission}
-						class="rounded-xl bg-red-700 px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+						class="rounded-xl bg-red-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
 						>{hospitalizationLoading ? 'Création...' : 'Créer l’admission'}</button
 					>
 				{/if}
@@ -457,17 +457,17 @@
 				onclick={() => (activeTab = tab.id)}
 				class={`min-w-[190px] flex-none rounded-2xl border p-4 text-left transition ${
 					activeTab === tab.id
-						? 'border-[#0E4C92] bg-[#0E4C92] text-white shadow-sm'
+						? 'border-primary bg-primary text-white shadow-sm'
 						: 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50/40'
 				}`}
 			>
-				<p class="text-sm font-black">
+				<p class="text-sm font-bold">
 					{tab.label}
 				</p>
 
 				<p
 					class={`mt-1 text-xs leading-5 ${
-						activeTab === tab.id ? 'text-blue-100' : 'text-slate-400'
+						activeTab === tab.id ? 'text-blue-100' : 'text-slate-500'
 					}`}
 				>
 					{tab.description}
@@ -529,11 +529,11 @@
 
 	{#if activeTab === 'documents'}
 		<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Documents médicaux
 			</p>
 
-			<h3 class="mt-1 text-xl font-black text-slate-900">Documents générés</h3>
+			<h3 class="mt-1 text-xl font-bold text-slate-900">Documents générés</h3>
 
 			<p class="mt-2 text-sm text-slate-500">
 				Documents disponibles selon les informations enregistrées pendant la consultation.
@@ -548,14 +548,14 @@
 					<div class="flex items-start justify-between gap-4">
 						<div
 							class={`flex h-11 w-11 items-center justify-center rounded-xl ${
-								hasPrescriptions ? 'bg-[#0E4C92] text-white' : 'bg-slate-200 text-slate-400'
+								hasPrescriptions ? 'bg-primary text-white' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
 							<FileText size={20} />
 						</div>
 
 						<span
-							class={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${
+							class={`rounded-full px-3 py-1 text-2xs font-semibold uppercase tracking-wide ${
 								hasPrescriptions ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
@@ -563,7 +563,7 @@
 						</span>
 					</div>
 
-					<h4 class="mt-5 text-base font-black text-slate-900">Ordonnance</h4>
+					<h4 class="mt-5 text-base font-bold text-slate-900">Ordonnance</h4>
 
 					<p class="mt-1 text-sm leading-5 text-slate-500">
 						Ordonnance contenant les médicaments prescrits au patient.
@@ -573,13 +573,13 @@
 						<button
 							type="button"
 							onclick={() => openDocument(`/api/consultations/${consultationId}/prescription/pdf`)}
-							class="mt-5 flex items-center gap-2 text-sm font-black text-[#0E4C92] hover:underline"
+							class="mt-5 flex items-center gap-2 text-sm font-bold text-primary hover:underline"
 						>
 							<Eye size={16} />
 							Visualiser
 						</button>
 					{:else}
-						<p class="mt-5 text-xs font-bold text-slate-400">Aucune prescription enregistrée</p>
+						<p class="mt-5 text-xs font-bold text-slate-500">Aucune prescription enregistrée</p>
 					{/if}
 				</article>
 
@@ -591,14 +591,14 @@
 					<div class="flex items-start justify-between gap-4">
 						<div
 							class={`flex h-11 w-11 items-center justify-center rounded-xl ${
-								hasExams ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-400'
+								hasExams ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
 							<FlaskConical size={20} />
 						</div>
 
 						<span
-							class={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${
+							class={`rounded-full px-3 py-1 text-2xs font-semibold uppercase tracking-wide ${
 								hasExams ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
@@ -606,7 +606,7 @@
 						</span>
 					</div>
 
-					<h4 class="mt-5 text-base font-black text-slate-900">Demande d'examens</h4>
+					<h4 class="mt-5 text-base font-bold text-slate-900">Demande d'examens</h4>
 
 					<p class="mt-1 text-sm leading-5 text-slate-500">
 						Demande officielle des examens complémentaires prescrits.
@@ -616,13 +616,13 @@
 						<button
 							type="button"
 							onclick={() => openDocument(`/api/consultations/${consultationId}/exam-request/pdf`)}
-							class="mt-5 flex items-center gap-2 text-sm font-black text-violet-700 hover:underline"
+							class="mt-5 flex items-center gap-2 text-sm font-bold text-violet-700 hover:underline"
 						>
 							<Eye size={16} />
 							Visualiser
 						</button>
 					{:else}
-						<p class="mt-5 text-xs font-bold text-slate-400">Aucun examen demandé</p>
+						<p class="mt-5 text-xs font-bold text-slate-500">Aucun examen demandé</p>
 					{/if}
 				</article>
 
@@ -634,14 +634,14 @@
 					<div class="flex items-start justify-between gap-4">
 						<div
 							class={`flex h-11 w-11 items-center justify-center rounded-xl ${
-								hasSickLeave ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-400'
+								hasSickLeave ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
 							<Bed size={20} />
 						</div>
 
 						<span
-							class={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${
+							class={`rounded-full px-3 py-1 text-2xs font-semibold uppercase tracking-wide ${
 								hasSickLeave ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
@@ -649,7 +649,7 @@
 						</span>
 					</div>
 
-					<h4 class="mt-5 text-base font-black text-slate-900">Repos maladie</h4>
+					<h4 class="mt-5 text-base font-bold text-slate-900">Repos maladie</h4>
 
 					<p class="mt-1 text-sm leading-5 text-slate-500">
 						Certificat de repos médical prescrit pendant la consultation.
@@ -659,13 +659,13 @@
 						<button
 							type="button"
 							onclick={() => openDocument(`/api/consultations/${consultationId}/sick-leave/pdf`)}
-							class="mt-5 flex items-center gap-2 text-sm font-black text-amber-700 hover:underline"
+							class="mt-5 flex items-center gap-2 text-sm font-bold text-amber-700 hover:underline"
 						>
 							<Eye size={16} />
 							Visualiser
 						</button>
 					{:else}
-						<p class="mt-5 text-xs font-bold text-slate-400">Aucun repos maladie prescrit</p>
+						<p class="mt-5 text-xs font-bold text-slate-500">Aucun repos maladie prescrit</p>
 					{/if}
 				</article>
 
@@ -677,14 +677,14 @@
 					<div class="flex items-start justify-between gap-4">
 						<div
 							class={`flex h-11 w-11 items-center justify-center rounded-xl ${
-								hasSOAP ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'
+								hasSOAP ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
 							<ClipboardList size={20} />
 						</div>
 
 						<span
-							class={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide ${
+							class={`rounded-full px-3 py-1 text-2xs font-semibold uppercase tracking-wide ${
 								hasSOAP ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
 							}`}
 						>
@@ -692,7 +692,7 @@
 						</span>
 					</div>
 
-					<h4 class="mt-5 text-base font-black text-slate-900">Compte rendu</h4>
+					<h4 class="mt-5 text-base font-bold text-slate-900">Compte rendu</h4>
 
 					<p class="mt-1 text-sm leading-5 text-slate-500">
 						Synthèse clinique structurée de la consultation médicale.
@@ -702,13 +702,13 @@
 						<button
 							type="button"
 							onclick={() => openDocument(`/api/consultations/${consultationId}/report/pdf`)}
-							class="mt-5 flex items-center gap-2 text-sm font-black text-emerald-700 hover:underline"
+							class="mt-5 flex items-center gap-2 text-sm font-bold text-emerald-700 hover:underline"
 						>
 							<Eye size={16} />
 							Visualiser
 						</button>
 					{:else}
-						<p class="mt-5 text-xs font-bold text-slate-400">Note SOAP non renseignée</p>
+						<p class="mt-5 text-xs font-bold text-slate-500">Note SOAP non renseignée</p>
 					{/if}
 				</article>
 			</div>

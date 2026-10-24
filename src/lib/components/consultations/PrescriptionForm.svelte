@@ -283,11 +283,11 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Plan thérapeutique
 			</p>
 
-			<h3 class="mt-1 text-xl font-black text-slate-900">Prescriptions médicales</h3>
+			<h3 class="mt-1 text-xl font-bold text-slate-900">Prescriptions médicales</h3>
 
 			<p class="mt-2 text-sm text-slate-500">Ajoutez un ou plusieurs médicaments à l’ordonnance.</p>
 		</div>
@@ -307,7 +307,7 @@
 				type="button"
 				onclick={savePrescriptions}
 				disabled={saving || loading}
-				class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#0b3d75] disabled:cursor-not-allowed disabled:opacity-60"
+				class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
 			>
 				<Save size={18} />
 
@@ -363,15 +363,15 @@
 			<div
 				class="hidden grid-cols-[minmax(320px,2.2fr)_140px_250px_minmax(320px,1.8fr)_70px] gap-4 border-b border-slate-200 bg-slate-50/80 px-5 py-4 xl:grid"
 			>
-				<p class="text-sm font-black text-slate-700">Médicament</p>
+				<p class="text-sm font-bold text-slate-700">Médicament</p>
 
-				<p class="text-sm font-black text-slate-700">Quantité</p>
+				<p class="text-sm font-bold text-slate-700">Quantité</p>
 
-				<p class="text-sm font-black text-slate-700">Durée</p>
+				<p class="text-sm font-bold text-slate-700">Durée</p>
 
-				<p class="text-sm font-black text-slate-700">Instructions / posologie</p>
+				<p class="text-sm font-bold text-slate-700">Instructions / posologie</p>
 
-				<p class="text-center text-sm font-black text-slate-700">Actions</p>
+				<p class="text-center text-sm font-bold text-slate-700">Actions</p>
 			</div>
 
 			{#each prescriptions as prescription, index (index)}
@@ -449,13 +449,13 @@
 								step="1"
 								placeholder="3"
 								bind:value={prescription.durationValue}
-								class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+								class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 							/>
 
 							<select
 								bind:value={prescription.durationUnit}
 								aria-label={`Unité de durée de la prescription ${index + 1}`}
-								class="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+								class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 							>
 								{#each durationUnits as unit (unit.value)}
 									<option value={unit.value}>
@@ -479,7 +479,7 @@
 							type="text"
 							bind:value={prescription.instructions}
 							placeholder="Ex. : 1 comprimé matin et soir après le repas"
-							class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+							class="h-12 w-full rounded-lg border border-input bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
 						/>
 					</div>
 
@@ -510,7 +510,7 @@
 		</div>
 	{/if}
 
-	<div class="mt-5 flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-sm text-[#0E4C92]">
+	<div class="mt-5 flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-sm text-primary">
 		<Info size={18} class="shrink-0" />
 
 		<p>Les médicaments sont sélectionnés depuis le référentiel pharmacie.</p>

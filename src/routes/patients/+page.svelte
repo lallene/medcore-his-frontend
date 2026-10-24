@@ -1,4 +1,10 @@
 <script lang="ts">
+	import FilterChip from '$lib/components/ui/FilterChip.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -6,8 +12,6 @@
 	import {
 		BadgeCheck,
 		BadgeX,
-		ChevronLeft,
-		ChevronRight,
 		FolderOpen,
 		HeartPulse,
 		MapPin,
@@ -24,8 +28,6 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Alert from '$lib/components/ui/Alert.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { medcoreColors } from '$lib/design/theme';
 
 	type InsuranceFilter = 'all' | 'insured' | 'uninsured';
@@ -304,51 +306,47 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<section
-		class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-[#0E4C92] via-[#155DA8] to-[#18B893] p-8 text-white shadow-xl"
-	>
-		<div
-			class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-		></div>
-
-		<div
-			class="pointer-events-none absolute bottom-4 right-10 text-[140px] font-black leading-none text-white/5"
-		>
-			PAT
-		</div>
-
-		<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+	<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+		<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">
-					Patient Center
-				</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Patient Center</p>
 
-				<h1 class="mt-3 text-4xl font-bold leading-tight">Gestion des patients</h1>
+				<h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+					Gestion des patients
+				</h1>
 
-				<p class="mt-3 max-w-2xl text-lg text-blue-50">
+				<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">
 					Suivi des dossiers patients, identités, assurances, contacts et parcours médicaux.
 				</p>
 
-				<div class="mt-6 flex flex-wrap gap-3">
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						👥 {totalPatients} patient(s)
+				<div class="mt-4 flex flex-wrap gap-2">
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{totalPatients} patient(s)
 					</span>
 
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🛡️ {insuredPatientsOnPage} assuré(s) sur cette page
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{insuredPatientsOnPage} assuré(s) sur cette page
 					</span>
 
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						📁 {totalPatients} dossiers actifs
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						{totalPatients} dossiers actifs
 					</span>
 
-					<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-						🩺 Vue Patient 360°
+					<span
+						class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+					>
+						Vue Patient 360°
 					</span>
 				</div>
 			</div>
 
-			<Button variant="secondary" onclick={() => goto(resolve('/patients/create'))}>
+			<Button onclick={() => goto(resolve('/patients/create'))}>
 				<UserPlus size={16} />
 				Nouveau patient
 			</Button>
@@ -402,16 +400,21 @@
 	{/if}
 
 	<Card title="Liste des patients" subtitle="Patients enregistrés dans MedCore HIS">
-		<div class="mb-6 space-y-4">
+		<div class="mb-4 space-y-3">
 			<div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
 				<div class="relative w-full max-w-xl">
-					<Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+					<Search
+						class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle-foreground"
+						size={16}
+						aria-hidden="true"
+					/>
 
 					<input
 						data-testid="qa-patient-search"
 						bind:value={search}
 						placeholder="Nom, code patient, téléphone, quartier, matricule..."
-						class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"
+						aria-label="Rechercher un patient"
+						class="min-h-control w-full rounded-lg border border-input bg-surface py-2 pr-3 pl-9 text-sm shadow-xs outline-none transition-colors placeholder:text-subtle-foreground hover:border-border-strong focus:border-primary focus:ring-3 focus:ring-primary/15"
 					/>
 				</div>
 
@@ -420,7 +423,7 @@
 						bind:value={pageSize}
 						onchange={changePageSize}
 						aria-label="Nombre de patients par page"
-						class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600"
+						class="rounded-lg border border-input bg-white px-3 py-2 text-sm font-semibold text-slate-600"
 					>
 						<option value={10}>10 par page</option>
 						<option value={20}>20 par page</option>
@@ -433,278 +436,154 @@
 			</div>
 
 			<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-				<div class="flex gap-2 overflow-x-auto pb-1">
-					<button
-						type="button"
-						onclick={() => selectInsuranceFilter('all')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							insuranceFilter === 'all'
-								? 'border-[#0E4C92] bg-[#0E4C92] text-white'
-								: 'border-slate-200 bg-white text-slate-600 hover:bg-blue-50'
-						}`}
+				<div class="flex gap-2 overflow-x-auto pb-1" role="group">
+					<FilterChip
+						selected={insuranceFilter === 'all'}
+						onclick={() => selectInsuranceFilter('all')}>Tous</FilterChip
 					>
-						Tous
-					</button>
 
-					<button
-						type="button"
-						onclick={() => selectInsuranceFilter('insured')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							insuranceFilter === 'insured'
-								? 'border-emerald-600 bg-emerald-600 text-white'
-								: 'border-slate-200 bg-white text-slate-600 hover:bg-emerald-50'
-						}`}
+					<FilterChip
+						selected={insuranceFilter === 'insured'}
+						onclick={() => selectInsuranceFilter('insured')}>Assurés</FilterChip
 					>
-						Assurés
-					</button>
 
-					<button
-						type="button"
-						onclick={() => selectInsuranceFilter('uninsured')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							insuranceFilter === 'uninsured'
-								? 'border-amber-600 bg-amber-600 text-white'
-								: 'border-slate-200 bg-white text-slate-600 hover:bg-amber-50'
-						}`}
+					<FilterChip
+						selected={insuranceFilter === 'uninsured'}
+						onclick={() => selectInsuranceFilter('uninsured')}>Non assurés</FilterChip
 					>
-						Non assurés
-					</button>
 				</div>
 
-				<div class="flex gap-2 overflow-x-auto pb-1">
-					<button
-						type="button"
-						onclick={() => selectSexFilter('all')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							sexFilter === 'all'
-								? 'border-slate-700 bg-slate-700 text-white'
-								: 'border-slate-200 bg-white text-slate-600'
-						}`}
+				<div class="flex gap-2 overflow-x-auto pb-1" role="group">
+					<FilterChip selected={sexFilter === 'all'} onclick={() => selectSexFilter('all')}
+						>Tous sexes</FilterChip
 					>
-						Tous sexes
-					</button>
 
-					<button
-						type="button"
-						onclick={() => selectSexFilter('M')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							sexFilter === 'M'
-								? 'border-blue-600 bg-blue-600 text-white'
-								: 'border-slate-200 bg-white text-slate-600'
-						}`}
+					<FilterChip selected={sexFilter === 'M'} onclick={() => selectSexFilter('M')}
+						>Hommes</FilterChip
 					>
-						Hommes
-					</button>
 
-					<button
-						type="button"
-						onclick={() => selectSexFilter('F')}
-						class={`shrink-0 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
-							sexFilter === 'F'
-								? 'border-pink-600 bg-pink-600 text-white'
-								: 'border-slate-200 bg-white text-slate-600'
-						}`}
+					<FilterChip selected={sexFilter === 'F'} onclick={() => selectSexFilter('F')}
+						>Femmes</FilterChip
 					>
-						Femmes
-					</button>
 				</div>
 			</div>
 		</div>
 
-		{#if loading}
-			<LoadingState label="Chargement des patients…" />
-		{:else if filteredPatients.length === 0}
-			<EmptyState
-				title="Aucun patient trouvé"
-				description="Modifiez votre recherche ou réinitialisez les filtres."
-			>
-				{#snippet cta()}
-					<Button onclick={resetFilters}>Réinitialiser</Button>
-				{/snippet}
-			</EmptyState>
-		{:else}
-			<div class="overflow-hidden rounded-2xl border border-slate-200">
-				<div
-					class="hidden items-center gap-4 border-b border-slate-200 bg-slate-50/80 px-5 py-3 xl:grid xl:grid-cols-[minmax(260px,1.35fr)_minmax(175px,1fr)_minmax(170px,0.9fr)_minmax(145px,0.8fr)_minmax(90px,0.55fr)_auto]"
-				>
-					<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Patient</p>
-
-					<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Profil</p>
-
-					<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Téléphone</p>
-
-					<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Quartier</p>
-
-					<p class="text-[11px] font-black uppercase tracking-wide text-slate-400">Couverture</p>
-
-					<p class="text-right text-[11px] font-black uppercase tracking-wide text-slate-400">
-						Actions
-					</p>
-				</div>
-
-				{#each filteredPatients as patient (patient.id)}
-					<article
-						class="border-b border-slate-100 bg-white px-5 py-4 transition last:border-b-0 hover:bg-slate-50"
+		<Table minWidth="900px" aria-label="Liste des patients">
+			<thead>
+				<tr>
+					<th>Patient</th>
+					<th>Profil</th>
+					<th>Téléphone</th>
+					<th>Quartier</th>
+					<th class="mc-num">Couverture</th>
+					<th class="mc-actions">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#if loading}
+					<TableState state="loading" colspan={6} rows={5} title="Chargement des patients…" />
+				{:else if error && patients.length === 0}
+					<TableState state="error" colspan={6} />
+				{:else if filteredPatients.length === 0}
+					<TableState
+						state="empty"
+						colspan={6}
+						title="Aucun patient trouvé"
+						description="Modifiez votre recherche ou réinitialisez les filtres."
 					>
-						<div
-							class="grid gap-5 xl:grid-cols-[minmax(260px,1.35fr)_minmax(175px,1fr)_minmax(170px,0.9fr)_minmax(145px,0.8fr)_minmax(90px,0.55fr)_auto] xl:items-center xl:gap-4"
-						>
-							<div class="flex min-w-0 items-center gap-4">
-								<div
-									class="flex h-12 min-w-[84px] shrink-0 items-center justify-center rounded-2xl bg-blue-50 px-3 text-sm font-black text-[#0E4C92]"
-								>
-									{patientDisplayCode(patient)}
-								</div>
-
-								<div class="min-w-0">
-									<p class="truncate text-base font-black text-slate-900">
-										{fullName(patient)}
-									</p>
-
-									<div class="mt-1.5">
-										{#if patient.isAssure}
-											<span
-												class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-700"
-											>
-												<BadgeCheck size={12} />
-												Assuré
-											</span>
-										{:else}
-											<span
-												class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-700"
-											>
-												<BadgeX size={12} />
-												Non assuré
-											</span>
-										{/if}
+						{#snippet action()}
+							<Button variant="secondary" size="sm" onclick={resetFilters}>Réinitialiser</Button>
+						{/snippet}
+					</TableState>
+				{:else}
+					{#each filteredPatients as patient (patient.id)}
+						<tr>
+							<td>
+								<div class="flex min-w-0 items-center gap-3">
+									<span
+										class="mc-id shrink-0 rounded-md bg-primary-soft px-2 py-1 text-xs text-primary"
+									>
+										{patientDisplayCode(patient)}
+									</span>
+									<div class="min-w-0">
+										<p class="truncate font-semibold text-foreground">{fullName(patient)}</p>
+										<div class="mt-1">
+											{#if patient.isAssure}
+												<Badge variant="success"
+													><BadgeCheck size={12} aria-hidden="true" /> Assuré</Badge
+												>
+											{:else}
+												<Badge variant="warning"
+													><BadgeX size={12} aria-hidden="true" /> Non assuré</Badge
+												>
+											{/if}
+										</div>
 									</div>
 								</div>
-							</div>
-
-							<div>
-								<p class="text-[11px] font-bold uppercase tracking-wide text-slate-400 xl:hidden">
-									Profil
+							</td>
+							<td>
+								<p class="text-foreground">
+									{formatSex(patient.sexe)} · {formatAge(patient.age, patient.dateNaissance)}
 								</p>
-
-								<p class="mt-1 text-sm font-black text-slate-700">
-									{formatSex(patient.sexe)} ·
-									{formatAge(patient.age, patient.dateNaissance)}
+								<p class="text-xs text-muted-foreground">
+									{ageCategory(patient.age)} · {formatBirthDate(patient.dateNaissance)}
 								</p>
-
-								<p class="mt-1 text-xs font-semibold text-slate-500">
-									{ageCategory(patient.age)}
-								</p>
-
-								<p class="mt-0.5 text-xs text-slate-400">
-									{formatBirthDate(patient.dateNaissance)}
-								</p>
-							</div>
-
-							<div>
-								<p class="text-[11px] font-bold uppercase tracking-wide text-slate-400 xl:hidden">
-									Téléphone
-								</p>
-
-								<p class="mt-1 truncate text-sm font-black text-slate-700">
-									{patient.telephone || '—'}
-								</p>
-							</div>
-
-							<div>
-								<p class="text-[11px] font-bold uppercase tracking-wide text-slate-400 xl:hidden">
-									Quartier
-								</p>
-
-								<p class="mt-1 flex items-center gap-1.5 text-sm font-bold text-slate-700">
-									<MapPin size={14} class="shrink-0 text-slate-500" />
-
-									<span class="truncate">
-										{patient.quartier || '—'}
-									</span>
-								</p>
-							</div>
-
-							<div>
-								<p class="text-[11px] font-bold uppercase tracking-wide text-slate-400 xl:hidden">
-									Couverture
-								</p>
-
-								<p class={`mt-1 text-base font-black ${coverageClass(patient)}`}>
-									{normalizedCoverageRate(patient)} %
-								</p>
-							</div>
-
-							<div class="flex shrink-0 items-center gap-2 xl:justify-end">
-								<button
-									type="button"
-									onclick={() => goto(resolve(`/patients/${patient.id}/consultations/create`))}
-									class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-slate-700 transition hover:border-slate-300 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0E4C92]/30"
+							</td>
+							<td class="whitespace-nowrap">{patient.telephone || '—'}</td>
+							<td>
+								<span class="inline-flex items-center gap-1.5">
+									<MapPin size={14} class="shrink-0 text-subtle-foreground" aria-hidden="true" />
+									<span class="truncate">{patient.quartier || '—'}</span>
+								</span>
+							</td>
+							<td class={`mc-num font-semibold ${coverageClass(patient)}`}>
+								{normalizedCoverageRate(patient)} %
+							</td>
+							<td class="mc-actions">
+								<IconButton
+									size="sm"
+									label={`Nouvelle consultation pour ${fullName(patient)}`}
 									title="Nouvelle consultation"
-									aria-label={`Nouvelle consultation pour ${fullName(patient)}`}
+									onclick={() => goto(resolve(`/patients/${patient.id}/consultations/create`))}
 								>
-									<HeartPulse size={16} />
-								</button>
-
-								<button
-									type="button"
-									onclick={() => goto(resolve(`/patients/${patient.id}`))}
-									class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
+									<HeartPulse size={16} aria-hidden="true" />
+								</IconButton>
+								<IconButton
+									size="sm"
+									label={`Voir le dossier de ${fullName(patient)}`}
 									title="Voir le dossier patient"
-									aria-label={`Voir le dossier de ${fullName(patient)}`}
+									class="bg-primary-soft text-primary hover:bg-primary-border/60 hover:text-primary-active"
+									onclick={() => goto(resolve(`/patients/${patient.id}`))}
 								>
-									<FolderOpen size={16} />
-								</button>
-							</div>
-						</div>
-					</article>
-				{/each}
-			</div>
+									<FolderOpen size={16} aria-hidden="true" />
+								</IconButton>
+							</td>
+						</tr>
+					{/each}
+				{/if}
+			</tbody>
+		</Table>
 
-			<div
-				class="mt-5 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between"
+		{#if !loading && filteredPatients.length > 0}
+			<Pagination
+				class="mt-3"
+				page={currentPage}
+				{totalPages}
+				disabled={loading}
+				onpage={(next) => {
+					if (next === currentPage - 1) return void goToPreviousPage();
+					if (next === currentPage + 1) return void goToNextPage();
+					currentPage = next;
+					void loadPatients();
+				}}
 			>
-				<p class="text-sm text-slate-500">
-					Affichage de
-					<span class="font-black text-slate-700">
-						{visibleStart}
-					</span>
-					à
-					<span class="font-black text-slate-700">
-						{visibleEnd}
-					</span>
-					sur
-					<span class="font-black text-slate-700">
-						{totalPatients}
-					</span>
-					patient(s)
-				</p>
-
-				<div class="flex items-center gap-2">
-					<button
-						type="button"
-						onclick={goToPreviousPage}
-						disabled={currentPage <= 1}
-						class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-						aria-label="Page précédente"
-					>
-						<ChevronLeft size={18} />
-					</button>
-
-					<span class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-700">
-						Page {currentPage} / {totalPages}
-					</span>
-
-					<button
-						type="button"
-						onclick={goToNextPage}
-						disabled={currentPage >= totalPages}
-						class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-						aria-label="Page suivante"
-					>
-						<ChevronRight size={18} />
-					</button>
-				</div>
-			</div>
+				{#snippet summary()}
+					Affichage de <span class="font-medium text-foreground">{visibleStart}</span> à
+					<span class="font-medium text-foreground">{visibleEnd}</span> sur
+					<span class="font-medium text-foreground">{totalPatients}</span> patient(s)
+				{/snippet}
+			</Pagination>
 		{/if}
 	</Card>
 </div>

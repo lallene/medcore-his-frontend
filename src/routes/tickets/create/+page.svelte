@@ -53,8 +53,8 @@
 
 <div class="mx-auto max-w-4xl space-y-6 p-6">
 	<header>
-		<p class="text-xs font-black uppercase text-blue-700">Service Desk</p>
-		<h1 class="text-3xl font-black">Signaler un problème</h1>
+		<p class="text-xs font-semibold uppercase text-blue-700">Service Desk</p>
+		<h1 class="text-3xl font-bold">Signaler un problème</h1>
 		<p class="text-sm text-slate-500">
 			Le contexte technique utile est joint sans copier de données médicales.
 		</p>
@@ -62,13 +62,15 @@
 	{#if error}<p role="alert" class="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>{/if}
 	<form onsubmit={submit} class="grid gap-5 rounded-2xl border bg-white p-6 md:grid-cols-2">
 		<label class="font-bold"
-			>Type<select bind:value={type} class="mt-2 w-full rounded-xl border p-3"
+			>Type<select bind:value={type} class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 				>{#each ['INCIDENT', 'REQUEST', 'ACCESS_REQUEST', 'HARDWARE', 'NETWORK', 'APPLICATION', 'OTHER'] as v (v)}<option
 						value={v}>{v}</option
 					>{/each}</select
 			></label
 		><label class="font-bold"
-			>Catégorie<select bind:value={categoryCode} class="mt-2 w-full rounded-xl border p-3"
+			>Catégorie<select
+				bind:value={categoryCode}
+				class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 				>{#each categories as c (c.id)}<option value={c.code}>{c.name}</option>{:else}<option
 						value="APPLICATION">Application MedCore</option
 					><option value="HARDWARE">Matériel</option><option value="NETWORK">Réseau</option
@@ -79,7 +81,7 @@
 				required
 				maxlength="180"
 				bind:value={title}
-				class="mt-2 w-full rounded-xl border p-3"
+				class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 			/></label
 		><label class="font-bold md:col-span-2"
 			>Description<textarea
@@ -87,12 +89,12 @@
 				maxlength="10000"
 				rows="7"
 				bind:value={description}
-				class="mt-2 w-full rounded-xl border p-3"></textarea></label
+				class="mt-2 w-full rounded-lg border p-3"></textarea></label
 		><label class="font-bold"
 			>Sous-catégorie<input
 				bind:value={subcategory}
 				maxlength="80"
-				class="mt-2 w-full rounded-xl border p-3"
+				class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 				placeholder="Ex. Consultation, imprimante"
 			/></label
 		>
@@ -101,7 +103,10 @@
 				><label for="ticket-urgency">Urgence perçue</label><HelpHint
 					helpKey="ticket.create.urgency"
 				/></span
-			><select id="ticket-urgency" bind:value={urgency} class="mt-2 w-full rounded-xl border p-3"
+			><select
+				id="ticket-urgency"
+				bind:value={urgency}
+				class="min-h-control mt-2 w-full rounded-lg border px-3 py-2"
 				><option value="LOW">Faible</option><option value="MEDIUM">Moyenne</option><option
 					value="HIGH">Haute</option
 				><option value="CRITICAL">Critique</option></select
@@ -118,7 +123,7 @@
 		<div class="flex justify-end gap-3 md:col-span-2">
 			<a href={resolve('/tickets')} class="rounded-xl border px-5 py-3">Annuler</a><button
 				disabled={saving}
-				class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-50"
+				class="rounded-lg bg-primary px-5 py-3 font-semibold text-white disabled:opacity-50 hover:bg-primary-hover transition-colors"
 				>{saving ? 'Enregistrement…' : 'Créer le ticket'}</button
 			>
 		</div>

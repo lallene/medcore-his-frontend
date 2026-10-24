@@ -1,8 +1,8 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import type { TableAction, TableColumn, TableRow } from '$lib/types/table';
 
 	interface Props {
@@ -50,10 +50,7 @@
 	}
 </script>
 
-<div
-	class="rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]"
-	data-testid="data-table"
->
+<div class="rounded-2xl border border-border bg-surface shadow-xs" data-testid="data-table">
 	<div class="flex items-center justify-between border-b border-border px-6 py-4">
 		<div>
 			<h2 class="text-lg font-semibold text-slate-900">{title}</h2>
@@ -70,56 +67,50 @@
 		<SearchInput bind:value={search} class="max-w-sm" />
 	</div>
 
-	<div class="overflow-x-auto">
-		<table class="w-full text-left text-sm">
-			<thead class="bg-surface-muted text-xs uppercase tracking-wide text-slate-500">
-				<tr>
-					{#each columns as column (column.key)}
-						<th class="px-6 py-3 font-semibold">{column.label}</th>
-					{/each}
-					{#if actions.length > 0}
-						<th class="px-6 py-3 text-right font-semibold">Actions</th>
-					{/if}
-				</tr>
-			</thead>
-			<tbody>
-				{#if loading}
-					<tr>
-						<td colspan={columns.length + (actions.length > 0 ? 1 : 0)}>
-							<LoadingState />
-						</td>
-					</tr>
-				{:else if filteredRows.length === 0}
-					<tr>
-						<td colspan={columns.length + (actions.length > 0 ? 1 : 0)} class="p-4">
-							<EmptyState title={emptyMessage} description="" />
-						</td>
-					</tr>
-				{:else}
-					{#each filteredRows as row, index (`row-${index}`)}
-						<tr class="border-t border-border hover:bg-surface-muted/60">
-							{#each columns as column (column.key)}
-								<td class="px-6 py-4 text-slate-700">{getValue(row, column)}</td>
-							{/each}
-							{#if actions.length > 0}
-								<td class="px-6 py-4 text-right">
-									<div class="flex justify-end gap-2">
-										{#each actions as action (action.label)}
-											<Button
-												variant={action.variant ?? 'secondary'}
-												size="sm"
-												onclick={() => action.onClick(row)}
-											>
-												{action.label}
-											</Button>
-										{/each}
-									</div>
-								</td>
-							{/if}
-						</tr>
-					{/each}
+	<Table variant="plain">
+		<thead>
+			<tr>
+				{#each columns as column (column.key)}
+					<th>{column.label}</th>
+				{/each}
+				{#if actions.length > 0}
+					<th class="mc-actions">Actions</th>
 				{/if}
-			</tbody>
-		</table>
-	</div>
+			</tr>
+		</thead>
+		<tbody>
+			{#if loading}
+				<TableState state="loading" colspan={columns.length + (actions.length > 0 ? 1 : 0)} />
+			{:else if filteredRows.length === 0}
+				<TableState
+					state="empty"
+					colspan={columns.length + (actions.length > 0 ? 1 : 0)}
+					title={emptyMessage}
+				/>
+			{:else}
+				{#each filteredRows as row, index (`row-${index}`)}
+					<tr>
+						{#each columns as column (column.key)}
+							<td>{getValue(row, column)}</td>
+						{/each}
+						{#if actions.length > 0}
+							<td class="mc-actions">
+								<div class="flex justify-end gap-2">
+									{#each actions as action (action.label)}
+										<Button
+											variant={action.variant ?? 'secondary'}
+											size="sm"
+											onclick={() => action.onClick(row)}
+										>
+											{action.label}
+										</Button>
+									{/each}
+								</div>
+							</td>
+						{/if}
+					</tr>
+				{/each}
+			{/if}
+		</tbody>
+	</Table>
 </div>

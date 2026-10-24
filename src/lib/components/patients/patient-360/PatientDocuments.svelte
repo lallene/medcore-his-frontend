@@ -211,9 +211,9 @@
 
 <div class="space-y-6" data-testid="patient-360-documents">
 	<div>
-		<p class="text-xs font-black uppercase tracking-[0.2em] text-[#0E4C92]">Archives médicales</p>
+		<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Archives médicales</p>
 
-		<h2 class="mt-2 text-2xl font-black text-slate-900">Documents</h2>
+		<h2 class="mt-2 text-2xl font-bold text-slate-900">Documents</h2>
 
 		<p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
 			Ordonnances, demandes d’examens, repos maladie et documents générés depuis le parcours
@@ -234,33 +234,33 @@
 	{:else}
 		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			<div class="rounded-2xl border border-slate-200 bg-white p-5">
-				<p class="text-xs font-black uppercase text-slate-400">Documents générés</p>
+				<p class="text-xs font-semibold uppercase text-slate-500">Documents générés</p>
 
-				<p class="mt-2 text-3xl font-black text-slate-900">
+				<p class="mt-2 text-3xl font-bold text-slate-900">
 					{documents.length}
 				</p>
 			</div>
 
 			<div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
-				<p class="text-xs font-black uppercase text-orange-500">Ordonnances</p>
+				<p class="text-xs font-semibold uppercase text-orange-500">Ordonnances</p>
 
-				<p class="mt-2 text-3xl font-black text-orange-900">
+				<p class="mt-2 text-3xl font-bold text-orange-900">
 					{prescriptionDocumentCount}
 				</p>
 			</div>
 
 			<div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
-				<p class="text-xs font-black uppercase text-violet-500">Demandes d’examens</p>
+				<p class="text-xs font-semibold uppercase text-violet-500">Demandes d’examens</p>
 
-				<p class="mt-2 text-3xl font-black text-violet-900">
+				<p class="mt-2 text-3xl font-bold text-violet-900">
 					{examDocumentCount}
 				</p>
 			</div>
 
 			<div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-				<p class="text-xs font-black uppercase text-blue-500">Repos maladie</p>
+				<p class="text-xs font-semibold uppercase text-blue-500">Repos maladie</p>
 
-				<p class="mt-2 text-3xl font-black text-blue-900">
+				<p class="mt-2 text-3xl font-bold text-blue-900">
 					{sickLeaveDocumentCount}
 				</p>
 			</div>
@@ -272,19 +272,19 @@
 		>
 			<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 				<div class="relative w-full max-w-xl">
-					<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+					<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
 
 					<input
 						bind:value={search}
 						placeholder="Rechercher un document, service, médecin..."
-						class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0E4C92] focus:bg-white"
+						class="w-full rounded-lg border border-input bg-slate-50 py-2 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:bg-white"
 					/>
 				</div>
 
 				<select
 					bind:value={typeFilter}
 					aria-label="Filtrer les documents par type"
-					class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600"
+					class="rounded-lg border border-input bg-white px-3 py-2 text-sm font-bold text-slate-600"
 				>
 					<option value="all">Tous les documents</option>
 					<option value="prescription">Ordonnances</option>
@@ -299,12 +299,12 @@
 					data-testid="patient-360-documents-empty"
 				>
 					<div
-						class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
+						class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-primary"
 					>
 						<FileHeart size={28} />
 					</div>
 
-					<h3 class="mt-5 text-xl font-black text-slate-900">Aucun document trouvé</h3>
+					<h3 class="mt-5 text-xl font-bold text-slate-900">Aucun document trouvé</h3>
 
 					<p class="mt-2 max-w-md text-sm leading-6 text-slate-500">
 						Les documents générés pendant les consultations apparaîtront automatiquement ici.
@@ -333,12 +333,12 @@
 
 								<div class="min-w-0">
 									<div class="flex flex-wrap items-center gap-2">
-										<h3 class="text-lg font-black text-slate-900">
+										<h3 class="text-lg font-bold text-slate-900">
 											{document.title}
 										</h3>
 
 										<span
-											class={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${documentTypeClass(
+											class={`rounded-full px-2.5 py-1 text-2xs font-semibold uppercase tracking-wide ${documentTypeClass(
 												document.type
 											)}`}
 										>

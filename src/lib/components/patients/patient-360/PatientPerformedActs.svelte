@@ -1,4 +1,8 @@
 <script lang="ts">
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/ui/StatusBadge.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -34,7 +38,6 @@
 	} from '$lib/rbac/permissions';
 	import Alert from '$lib/components/ui/Alert.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 
 	interface Props {
@@ -229,7 +232,7 @@
 <div class="space-y-4" data-testid="patient-performed-acts">
 	<header class="flex flex-wrap items-center justify-between gap-3">
 		<div>
-			<h2 class="text-lg font-black text-slate-900">Actes réalisés</h2>
+			<h2 class="text-lg font-bold text-slate-900">Actes réalisés</h2>
 			<p class="text-sm text-slate-500">Registre clinique des actes effectués pour ce patient.</p>
 		</div>
 		{#if canCreate}
@@ -243,73 +246,62 @@
 		<Alert tone="danger">{error}</Alert>
 	{/if}
 
-	{#if loading}
-		<LoadingState label="Chargement des actes réalisés…" />
-	{:else if acts.length === 0}
-		<div
-			class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500"
-			data-testid="performed-acts-empty"
-		>
-			Aucun acte réalisé pour ce patient.
-		</div>
-	{:else}
-		<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-			<table class="min-w-full text-left text-sm" data-testid="performed-acts-table">
-				<thead class="bg-slate-50 text-xs font-bold tracking-wide text-slate-500 uppercase">
-					<tr>
-						<th class="px-4 py-3">Acte</th>
-						<th class="px-4 py-3">Catégorie</th>
-						<th class="px-4 py-3">Qté</th>
-						<th class="px-4 py-3">Réalisé le</th>
-						<th class="px-4 py-3">Statut</th>
-						<th class="px-4 py-3">Origine</th>
-						<th class="px-4 py-3"></th>
+	<Table data-testid="performed-acts-table">
+		<thead>
+			<tr>
+				<th>Acte</th>
+				<th>Catégorie</th>
+				<th class="mc-num">Qté</th>
+				<th>Réalisé le</th>
+				<th>Statut</th>
+				<th>Origine</th>
+				<th class="mc-actions"></th>
+			</tr>
+		</thead>
+		<tbody
+			>{#if loading}<TableState
+					state="loading"
+					colspan={7}
+					title="Chargement des actes réalisés…"
+				/>{:else if acts.length === 0}<TableState
+					state="empty"
+					colspan={7}
+					title="Aucun acte réalisé pour ce patient."
+					data-testid="performed-acts-empty"
+				/>{:else}
+				{#each acts as act (act.id)}
+					{@const origin = originBadgeLabel(act.sourceType)}
+					<tr data-testid={`performed-act-row-${act.id}`}>
+						<td>
+							<div class="font-mono text-xs font-semibold text-violet-800">{act.actCode}</div>
+							<div class="font-medium text-slate-900">{act.actLabel}</div>
+						</td>
+						<td>{actCategoryLabel[act.actCategory] ?? act.actCategory}</td>
+						<td class="mc-num">{act.quantity}</td>
+						<td>{formatDate(act.performedAt)}</td>
+						<td>
+							<StatusBadge status={act.status} label={performedActStatusLabel[act.status]} />
+						</td>
+						<td>
+							{#if origin}
+								<Badge variant="neutral">{origin}</Badge>
+							{:else}
+								<span class="text-slate-500">—</span>
+							{/if}
+						</td>
+						<td class="text-right mc-actions">
+							<Button
+								size="sm"
+								variant="ghost"
+								data-testid={`performed-act-open-${act.id}`}
+								onclick={() => (selected = act)}>Détail</Button
+							>
+						</td>
 					</tr>
-				</thead>
-				<tbody>
-					{#each acts as act (act.id)}
-						{@const origin = originBadgeLabel(act.sourceType)}
-						<tr class="border-t border-slate-100" data-testid={`performed-act-row-${act.id}`}>
-							<td class="px-4 py-3">
-								<div class="font-mono text-xs font-semibold text-violet-800">{act.actCode}</div>
-								<div class="font-medium text-slate-900">{act.actLabel}</div>
-							</td>
-							<td class="px-4 py-3">{actCategoryLabel[act.actCategory] ?? act.actCategory}</td>
-							<td class="px-4 py-3">{act.quantity}</td>
-							<td class="px-4 py-3">{formatDate(act.performedAt)}</td>
-							<td class="px-4 py-3">
-								<span
-									class="rounded-full px-2 py-0.5 text-xs font-bold {act.status === 'VOIDED'
-										? 'bg-rose-50 text-rose-700'
-										: 'bg-emerald-50 text-emerald-700'}"
-								>
-									{performedActStatusLabel[act.status]}
-								</span>
-							</td>
-							<td class="px-4 py-3">
-								{#if origin}
-									<span
-										class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
-										>{origin}</span
-									>
-								{:else}
-									<span class="text-slate-400">—</span>
-								{/if}
-							</td>
-							<td class="px-4 py-3 text-right">
-								<Button
-									size="sm"
-									variant="ghost"
-									data-testid={`performed-act-open-${act.id}`}
-									onclick={() => (selected = act)}>Détail</Button
-								>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	{/if}
+				{/each}
+			{/if}</tbody
+		>
+	</Table>
 </div>
 
 {#if selected}
@@ -336,7 +328,7 @@
 					<p class="text-xs font-bold tracking-wide text-violet-700 uppercase">
 						{selected.actCode}
 					</p>
-					<h3 id="performed-act-drawer-title" class="text-xl font-black text-slate-900">
+					<h3 id="performed-act-drawer-title" class="text-xl font-bold text-slate-900">
 						{selected.actLabel}
 					</h3>
 					<p class="mt-1 text-sm text-slate-500">
@@ -383,7 +375,7 @@
 					data-testid="performed-act-base-price"
 				>
 					<p class="text-xs font-bold tracking-wide text-amber-800 uppercase">{BASE_PRICE_LABEL}</p>
-					<p class="mt-1 text-lg font-black text-amber-950">
+					<p class="mt-1 text-lg font-bold text-amber-950">
 						{formatCatalogPrice(selected.basePrice, selected.currency)}
 					</p>
 					<p class="mt-1 text-xs text-amber-800">{BASE_PRICE_HINT}</p>
@@ -454,7 +446,7 @@
 		<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 			Acte catalogue
 			<select
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={catalogEntryId}
 				data-testid="performed-act-catalog-select"
 			>
@@ -485,7 +477,7 @@
 				type="number"
 				min="0.01"
 				step="0.01"
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={quantity}
 				data-testid="performed-act-quantity"
 			/>
@@ -494,7 +486,7 @@
 			Date de réalisation (optionnel)
 			<input
 				type="datetime-local"
-				class="rounded-xl border border-slate-200 px-3 py-2"
+				class="rounded-lg border border-input px-3 py-2"
 				bind:value={performedAt}
 				data-testid="performed-act-performed-at"
 			/>
@@ -548,7 +540,7 @@
 	<label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
 		Motif d'annulation
 		<textarea
-			class="min-h-[5rem] rounded-xl border border-slate-200 px-3 py-2"
+			class="min-h-[5rem] rounded-lg border border-input px-3 py-2"
 			bind:value={voidReason}
 			maxlength={240}
 			required

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Table from '$lib/components/ui/Table.svelte';
 	import HelpHint from '$lib/components/help/HelpHint.svelte';
 	import { onMount } from 'svelte';
 	import {
@@ -731,64 +732,60 @@
 						description="Aucun créneau récurrent pour ces filtres."
 					/>
 				{:else}
-					<div class="overflow-x-auto rounded-2xl border border-border bg-white">
-						<table class="min-w-full text-left text-sm" data-testid="schedule-admin-table">
-							<thead class="border-b bg-slate-50 text-xs uppercase text-slate-500">
-								<tr>
-									<th class="px-4 py-3">Praticien</th>
-									<th class="px-4 py-3">Service</th>
-									<th class="px-4 py-3">Jour</th>
-									<th class="px-4 py-3">Horaires</th>
-									<th class="px-4 py-3">Validité</th>
-									<th class="px-4 py-3">Statut</th>
-									{#if canManage}<th class="px-4 py-3">Actions</th>{/if}
-								</tr>
-							</thead>
-							<tbody>
-								{#each schedules as row (row.id)}
-									<tr
-										class="border-b last:border-0"
-										data-testid="schedule-row"
-										data-schedule-id={row.id}
-									>
-										<td class="px-4 py-3">{staffLabel(row.practitionerId)}</td>
-										<td class="px-4 py-3">{serviceLabel(row.serviceId)}</td>
-										<td class="px-4 py-3">{weekdayLabel(row.weekday)}</td>
-										<td class="px-4 py-3 font-medium">
-											{formatWallClockDisplay(row.startTime)}–{formatWallClockDisplay(row.endTime)}
-										</td>
-										<td class="px-4 py-3 text-slate-600">
-											{rfc3339DateToInput(row.validFrom)}
-											{#if row.validUntil}
-												→ {rfc3339DateToInput(row.validUntil)}
-											{:else}
-												→ ∞
-											{/if}
-										</td>
-										<td class="px-4 py-3">{row.active ? 'Actif' : 'Inactif'}</td>
-										{#if canManage}
-											<td class="px-4 py-3">
-												<div class="flex flex-wrap gap-2">
-													<Button
-														variant="secondary"
-														data-testid="schedule-row-edit"
-														onclick={() => void openEditSchedule(row)}>Modifier</Button
-													>
-													{#if row.active}
-														<Button
-															variant="ghost"
-															data-testid="schedule-row-disable"
-															onclick={() => askDisableSchedule(row.id)}>Désactiver</Button
-														>
-													{/if}
-												</div>
-											</td>
+					<Table data-testid="schedule-admin-table">
+						<thead>
+							<tr>
+								<th>Praticien</th>
+								<th>Service</th>
+								<th>Jour</th>
+								<th>Horaires</th>
+								<th>Validité</th>
+								<th>Statut</th>
+								{#if canManage}<th class="mc-actions">Actions</th>{/if}
+							</tr>
+						</thead>
+						<tbody>
+							{#each schedules as row (row.id)}
+								<tr data-testid="schedule-row" data-schedule-id={row.id}>
+									<td>{staffLabel(row.practitionerId)}</td>
+									<td>{serviceLabel(row.serviceId)}</td>
+									<td>{weekdayLabel(row.weekday)}</td>
+									<td>
+										{formatWallClockDisplay(row.startTime)}–{formatWallClockDisplay(row.endTime)}
+									</td>
+									<td>
+										{rfc3339DateToInput(row.validFrom)}
+										{#if row.validUntil}
+											→ {rfc3339DateToInput(row.validUntil)}
+										{:else}
+											→ ∞
 										{/if}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+									</td>
+									<td>{row.active ? 'Actif' : 'Inactif'}</td>
+									{#if canManage}
+										<td class="mc-actions">
+											<div class="flex flex-wrap gap-2">
+												<Button
+													size="sm"
+													variant="secondary"
+													data-testid="schedule-row-edit"
+													onclick={() => void openEditSchedule(row)}>Modifier</Button
+												>
+												{#if row.active}
+													<Button
+														size="sm"
+														variant="ghost"
+														data-testid="schedule-row-disable"
+														onclick={() => askDisableSchedule(row.id)}>Désactiver</Button
+													>
+												{/if}
+											</div>
+										</td>
+									{/if}
+								</tr>
+							{/each}
+						</tbody>
+					</Table>
 				{/if}
 			</section>
 		{:else if tabValue === 'exceptions'}
@@ -933,57 +930,58 @@
 						description="Aucun type pour ces filtres."
 					/>
 				{:else}
-					<div class="overflow-x-auto rounded-2xl border border-border bg-white">
-						<table class="min-w-full text-left text-sm" data-testid="schedule-admin-type-table">
-							<thead class="border-b bg-slate-50 text-xs uppercase text-slate-500">
-								<tr>
-									<th class="px-4 py-3">Code</th>
-									<th class="px-4 py-3">Nom</th>
-									<th class="px-4 py-3">Durée</th>
-									<th class="px-4 py-3">Service</th>
-									<th class="px-4 py-3">Actif</th>
-									{#if canManageTypes}<th class="px-4 py-3">Actions</th>{/if}
-								</tr>
-							</thead>
-							<tbody>
-								{#each appointmentTypes as row (row.id)}
-									<tr class="border-b last:border-0" data-testid="type-row" data-type-id={row.id}>
-										<td class="px-4 py-3 font-medium">{row.code}</td>
-										<td class="px-4 py-3">{row.name}</td>
-										<td class="px-4 py-3">{row.defaultDurationMinutes} min</td>
-										<td class="px-4 py-3">
-											{row.serviceId != null ? serviceLabel(row.serviceId) : 'Global'}
-										</td>
-										<td class="px-4 py-3">{row.active ? 'Actif' : 'Inactif'}</td>
-										{#if canManageTypes}
-											<td class="px-4 py-3">
-												<div class="flex flex-wrap gap-2">
+					<Table data-testid="schedule-admin-type-table">
+						<thead>
+							<tr>
+								<th>Code</th>
+								<th>Nom</th>
+								<th class="mc-num">Durée</th>
+								<th>Service</th>
+								<th>Actif</th>
+								{#if canManageTypes}<th class="mc-actions">Actions</th>{/if}
+							</tr>
+						</thead>
+						<tbody>
+							{#each appointmentTypes as row (row.id)}
+								<tr data-testid="type-row" data-type-id={row.id}>
+									<td class="mc-id">{row.code}</td>
+									<td>{row.name}</td>
+									<td class="mc-num">{row.defaultDurationMinutes} min</td>
+									<td>
+										{row.serviceId != null ? serviceLabel(row.serviceId) : 'Global'}
+									</td>
+									<td>{row.active ? 'Actif' : 'Inactif'}</td>
+									{#if canManageTypes}
+										<td class="mc-actions">
+											<div class="flex flex-wrap gap-2">
+												<Button
+													size="sm"
+													variant="secondary"
+													data-testid="type-row-edit"
+													onclick={() => openEditType(row)}>Modifier</Button
+												>
+												{#if row.active}
 													<Button
-														variant="secondary"
-														data-testid="type-row-edit"
-														onclick={() => openEditType(row)}>Modifier</Button
+														size="sm"
+														variant="ghost"
+														data-testid="type-row-disable"
+														onclick={() => askDisableType(row.id)}>Désactiver</Button
 													>
-													{#if row.active}
-														<Button
-															variant="ghost"
-															data-testid="type-row-disable"
-															onclick={() => askDisableType(row.id)}>Désactiver</Button
-														>
-													{:else}
-														<Button
-															variant="ghost"
-															data-testid="type-row-reactivate"
-															onclick={() => void reactivateType(row)}>Réactiver</Button
-														>
-													{/if}
-												</div>
-											</td>
-										{/if}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+												{:else}
+													<Button
+														size="sm"
+														variant="ghost"
+														data-testid="type-row-reactivate"
+														onclick={() => void reactivateType(row)}>Réactiver</Button
+													>
+												{/if}
+											</div>
+										</td>
+									{/if}
+								</tr>
+							{/each}
+						</tbody>
+					</Table>
 				{/if}
 			</section>
 		{:else if tabValue === 'notifications' && canReadNotifications}
@@ -1003,7 +1001,7 @@
 				<span class="font-medium">Praticien</span>
 				{#if formStaffOptions.length > 0}
 					<select
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedPractitioner}
 						disabled={Boolean(editingSchedule)}
 						data-testid="schedule-form-practitioner"
@@ -1017,7 +1015,7 @@
 					<input
 						type="number"
 						min="1"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedPractitioner}
 						disabled={Boolean(editingSchedule)}
 						data-testid="schedule-form-practitioner"
@@ -1028,7 +1026,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Service</span>
 				<select
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={schedService}
 					data-testid="schedule-form-service"
 					onchange={() => void onScheduleServiceChange()}
@@ -1042,7 +1040,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Jour (obligatoire)</span>
 				<select
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={schedWeekday}
 					data-testid="schedule-form-weekday"
 				>
@@ -1060,7 +1058,7 @@
 					<input
 						id="schedule-slot-start"
 						type="time"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedStart}
 						data-testid="schedule-form-start"
 					/>
@@ -1074,7 +1072,7 @@
 					<input
 						id="schedule-slot-end"
 						type="time"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedEnd}
 						data-testid="schedule-form-end"
 					/>
@@ -1085,7 +1083,7 @@
 					<span class="font-medium">Valide depuis</span>
 					<input
 						type="date"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedValidFrom}
 						data-testid="schedule-form-valid-from"
 					/>
@@ -1094,7 +1092,7 @@
 					<span class="font-medium">Valide jusqu’au (optionnel)</span>
 					<input
 						type="date"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={schedValidUntil}
 						data-testid="schedule-form-valid-until"
 					/>
@@ -1124,7 +1122,7 @@
 				<span class="font-medium">Praticien</span>
 				{#if formStaffOptions.length > 0}
 					<select
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={exPractitioner}
 						disabled={Boolean(editingException)}
 						data-testid="exception-form-practitioner"
@@ -1138,7 +1136,7 @@
 					<input
 						type="number"
 						min="1"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={exPractitioner}
 						disabled={Boolean(editingException)}
 						data-testid="exception-form-practitioner"
@@ -1149,7 +1147,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Service</span>
 				<select
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={exService}
 					data-testid="exception-form-service"
 					onchange={() => void onExceptionServiceChange()}
@@ -1163,7 +1161,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Type</span>
 				<select
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={exType}
 					data-testid="exception-form-type"
 				>
@@ -1177,7 +1175,7 @@
 					<span class="font-medium">Début (absolu)</span>
 					<input
 						type="datetime-local"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={exStart}
 						data-testid="exception-form-start"
 					/>
@@ -1186,7 +1184,7 @@
 					<span class="font-medium">Fin (exclusive)</span>
 					<input
 						type="datetime-local"
-						class="mt-1 w-full rounded-xl border px-3 py-2"
+						class="mt-1 w-full rounded-lg border px-3 py-2"
 						bind:value={exEnd}
 						data-testid="exception-form-end"
 					/>
@@ -1195,7 +1193,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Motif</span>
 				<textarea
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					rows="2"
 					bind:value={exReason}
 					data-testid="exception-form-reason"></textarea>
@@ -1224,7 +1222,7 @@
 				<span class="font-medium">Code</span>
 				<input
 					type="text"
-					class="mt-1 w-full rounded-xl border px-3 py-2 {editingType
+					class="mt-1 w-full rounded-lg border px-3 py-2 {editingType
 						? 'bg-slate-50 text-slate-700'
 						: ''}"
 					bind:value={typeCode}
@@ -1236,7 +1234,7 @@
 				<span class="font-medium">Nom</span>
 				<input
 					type="text"
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={typeName}
 					data-testid="type-form-name"
 				/>
@@ -1247,7 +1245,7 @@
 					type="number"
 					min={APPOINTMENT_TYPE_MIN_DURATION_MINUTES}
 					max={APPOINTMENT_TYPE_MAX_DURATION_MINUTES}
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={typeDuration}
 					data-testid="type-form-duration"
 				/>
@@ -1255,7 +1253,7 @@
 			<label class="block text-sm">
 				<span class="font-medium">Service</span>
 				<select
-					class="mt-1 w-full rounded-xl border px-3 py-2"
+					class="mt-1 w-full rounded-lg border px-3 py-2"
 					bind:value={typeService}
 					disabled={typeClearService}
 					data-testid="type-form-service"

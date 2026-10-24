@@ -7,6 +7,9 @@
 		disabled?: boolean;
 		loading?: boolean;
 		label: string;
+		/** Infobulle native ; par défaut le libellé accessible. */
+		title?: string;
+		size?: 'sm' | 'md';
 		class?: string;
 		onclick?: (e: MouseEvent) => void;
 		children?: Snippet;
@@ -17,6 +20,8 @@
 		disabled = false,
 		loading = false,
 		label,
+		title,
+		size = 'md',
 		class: className = '',
 		onclick,
 		children
@@ -28,9 +33,11 @@
 	{onclick}
 	disabled={disabled || loading}
 	aria-label={label}
+	title={title ?? label}
 	aria-busy={loading || undefined}
 	class={cn(
-		'inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50',
+		size === 'sm' ? 'size-control-sm rounded-md' : 'size-control rounded-lg',
+		'inline-flex shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground active:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-50',
 		className
 	)}
 >

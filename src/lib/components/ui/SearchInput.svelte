@@ -23,7 +23,7 @@
 <div class={cn('relative', className)}>
 	<label class="sr-only" for={id}>{label}</label>
 	<Search
-		class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+		class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
 		aria-hidden="true"
 	/>
 	<Input {id} bind:value {placeholder} class="pl-10" />

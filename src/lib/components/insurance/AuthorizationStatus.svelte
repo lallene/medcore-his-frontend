@@ -96,14 +96,14 @@
 >
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<div>
-			<p class="flex items-center gap-2 text-xs font-black uppercase text-violet-700">
+			<p class="flex items-center gap-2 text-xs font-semibold uppercase text-violet-700">
 				<FileCheck2 size={16} /> Assurance / PEC de cet acte
 			</p>
 			{#if coverage}<p class="mt-1 text-sm">
 					{coverage.companyName} · contrat <b>{coverage.coverageRate}%</b> informatif
 				</p>{:else}<p class="mt-1 text-sm text-slate-500">
 					Aucune couverture active
-				</p>{/if}{#if item}<p class="mt-2 font-black" data-testid="authorization-status-number">
+				</p>{/if}{#if item}<p class="mt-2 font-bold" data-testid="authorization-status-number">
 					{item.authorizationNumber} · {authorizationStatusLabel[item.status]}
 				</p>
 				<p class="text-sm" data-testid="authorization-status-split">
@@ -117,7 +117,7 @@
 		</div>
 		{#if showCreateOrView}<button
 				onclick={open}
-				class="rounded-lg bg-violet-700 px-3 py-2 text-sm font-bold text-white"
+				class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
 				data-testid={presentation.canCreate
 					? 'authorization-status-create'
 					: 'authorization-status-view'}

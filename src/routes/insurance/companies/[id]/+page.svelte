@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { medcoreColors } from '$lib/design/theme';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -55,53 +56,50 @@
 	{@const c = company}
 
 	<div class="space-y-6">
-		<section
-			class="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-700 via-[#0E4C92] to-[#18B893] p-8 text-white shadow-xl"
-		>
-			<div
-				class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"
-			></div>
-			<div
-				class="pointer-events-none absolute bottom-4 right-10 text-[150px] font-black leading-none text-white/5"
-			>
-				{c.code}
-			</div>
-
-			<div class="relative flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+		<section class="rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+			<div class="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 				<div>
 					<div class="flex items-center gap-4">
 						<div
-							class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur"
+							class="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"
 						>
 							<Building2 size={28} />
 						</div>
 
 						<div>
-							<p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">
+							<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 								Compagnie partenaire
 							</p>
 
-							<h1 class="mt-2 text-4xl font-bold leading-tight">{c.name}</h1>
+							<h1 class="mt-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+								{c.name}
+							</h1>
 
-							<p class="mt-1 text-blue-50">Code compagnie : {c.code}</p>
+							<p class="mt-1 text-sm text-muted-foreground">Code compagnie : {c.code}</p>
 						</div>
 					</div>
 
-					<div class="mt-6 flex flex-wrap gap-3">
+					<div class="mt-4 flex flex-wrap gap-2">
 						<Badge variant={c.isActive ? 'success' : 'danger'}>
 							{c.isActive ? 'Active' : 'Inactive'}
 						</Badge>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							🛡 Assurance santé
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							Assurance santé
 						</span>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							⏱ Délai moyen 48h
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							Délai moyen 48h
 						</span>
 
-						<span class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur">
-							✅ 78% validation
+						<span
+							class="inline-flex items-center rounded-md border border-border bg-surface-muted px-2.5 py-1 text-small text-foreground-secondary"
+						>
+							78% validation
 						</span>
 					</div>
 				</div>
@@ -118,7 +116,7 @@
 				detail="Patients liés"
 				trend="+12%"
 				progress={74}
-				accent="#0E4C92"
+				accent={medcoreColors.primary}
 			/>
 
 			<MetricCard
@@ -128,7 +126,7 @@
 				detail="À contrôler"
 				trend="+4%"
 				progress={58}
-				accent="#F59E0B"
+				accent={medcoreColors.semantic.warning}
 			/>
 
 			<MetricCard
@@ -138,7 +136,7 @@
 				detail="PEC acceptées"
 				trend="+9%"
 				progress={82}
-				accent="#22C55E"
+				accent={medcoreColors.semantic.success}
 			/>
 
 			<MetricCard
@@ -148,12 +146,12 @@
 				detail="FCFA estimés"
 				trend="+15%"
 				progress={72}
-				accent="#EA580C"
+				accent={medcoreColors.semantic.warning}
 			/>
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-3">
-			<div class="space-y-6 xl:col-span-2">
+			<div class="min-w-0 space-y-6 xl:col-span-2">
 				<Card title="Informations compagnie" subtitle="Coordonnées et identification">
 					<div class="grid gap-4 md:grid-cols-2">
 						<Info label="Code" value={c.code} />
@@ -167,25 +165,35 @@
 
 				<Card title="Workflow compagnie" subtitle="Traitement standard des prises en charge">
 					<div class="grid gap-3 md:grid-cols-5">
-						<WorkflowStep icon={FileText} title="Créé" detail="Bon généré" color="#0E4C92" />
-						<WorkflowStep icon={Clock3} title="Soumis" detail="Envoyé compagnie" color="#0EA5E9" />
+						<WorkflowStep
+							icon={FileText}
+							title="Créé"
+							detail="Bon généré"
+							color={medcoreColors.primary}
+						/>
+						<WorkflowStep
+							icon={Clock3}
+							title="Soumis"
+							detail="Envoyé compagnie"
+							color={medcoreColors.semantic.info}
+						/>
 						<WorkflowStep
 							icon={Shield}
 							title="Contrôle"
 							detail="Pièces vérifiées"
-							color="#F59E0B"
+							color={medcoreColors.semantic.warning}
 						/>
 						<WorkflowStep
 							icon={CheckCircle2}
 							title="Validé"
 							detail="PEC acceptée"
-							color="#22C55E"
+							color={medcoreColors.semantic.success}
 						/>
 						<WorkflowStep
 							icon={AlertTriangle}
 							title="Litige"
 							detail="Dossier bloqué"
-							color="#EF4444"
+							color={medcoreColors.semantic.danger}
 						/>
 					</div>
 				</Card>
@@ -233,7 +241,7 @@
 				<Card title="Indicateurs">
 					<div class="space-y-4">
 						<Indicator label="Taux validation" value="78%" color="text-green-600" />
-						<Indicator label="Délai moyen" value="48h" color="text-[#0E4C92]" />
+						<Indicator label="Délai moyen" value="48h" color="text-primary" />
 						<Indicator label="Litiges" value="8" color="text-red-600" />
 						<Indicator label="Contrats actifs" value="3" color="text-violet-600" />
 					</div>
@@ -241,9 +249,21 @@
 
 				<Card title="Activité récente" subtitle="Historique compagnie">
 					<div class="space-y-5">
-						<TimelineItem title="Bon PEC soumis" detail="Aujourd’hui · MedCore" color="#0E4C92" />
-						<TimelineItem title="Contrôle en cours" detail="Service assurance" color="#F59E0B" />
-						<TimelineItem title="PEC validée" detail="Workflow compagnie" color="#22C55E" />
+						<TimelineItem
+							title="Bon PEC soumis"
+							detail="Aujourd’hui · MedCore"
+							color={medcoreColors.primary}
+						/>
+						<TimelineItem
+							title="Contrôle en cours"
+							detail="Service assurance"
+							color={medcoreColors.semantic.warning}
+						/>
+						<TimelineItem
+							title="PEC validée"
+							detail="Workflow compagnie"
+							color={medcoreColors.semantic.success}
+						/>
 					</div>
 				</Card>
 			</div>

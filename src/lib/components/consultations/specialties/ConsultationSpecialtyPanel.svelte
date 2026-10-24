@@ -210,9 +210,9 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.18em] text-[#0E4C92]">Volet spécialisé</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Volet spécialisé</p>
 
-			<h3 class="mt-1 text-xl font-black text-slate-900">Spécialité médicale</h3>
+			<h3 class="mt-1 text-xl font-bold text-slate-900">Spécialité médicale</h3>
 
 			<p class="mt-2 text-sm text-slate-500">
 				Le formulaire s’adapte automatiquement à la spécialité sélectionnée.
@@ -223,7 +223,7 @@
 			type="button"
 			onclick={save}
 			disabled={saving || loading}
-			class="inline-flex items-center gap-2 rounded-xl bg-[#0E4C92] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0b3d75] disabled:cursor-wait disabled:opacity-60"
+			class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60 transition-colors"
 		>
 			<Save size={18} />
 			{saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -253,13 +253,13 @@
 			<section class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
 				<div class="mb-4 flex items-center gap-3">
 					<div
-						class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#0E4C92]"
+						class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-primary"
 					>
 						<Stethoscope size={19} />
 					</div>
 
 					<div>
-						<p class="text-sm font-black text-slate-900">Spécialité</p>
+						<p class="text-sm font-bold text-slate-900">Spécialité</p>
 
 						<p class="text-xs text-slate-500">
 							Sélectionnez le volet clinique adapté à la consultation.
@@ -279,17 +279,17 @@
 							}}
 							class={`rounded-xl border p-4 text-left transition ${
 								specialtyCode === specialty.code
-									? 'border-[#0E4C92] bg-[#0E4C92] text-white shadow-sm'
+									? 'border-primary bg-primary text-white shadow-sm'
 									: 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50'
 							}`}
 						>
-							<p class="text-sm font-black">
+							<p class="text-sm font-bold">
 								{specialty.label}
 							</p>
 
 							<p
 								class={`mt-1 text-xs leading-5 ${
-									specialtyCode === specialty.code ? 'text-blue-100' : 'text-slate-400'
+									specialtyCode === specialty.code ? 'text-blue-100' : 'text-slate-500'
 								}`}
 							>
 								{specialty.description}
@@ -332,12 +332,12 @@
 					<div class="flex min-h-[260px] items-center justify-center">
 						<div class="max-w-lg text-center">
 							<div
-								class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#0E4C92]"
+								class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-primary"
 							>
 								<Stethoscope size={26} />
 							</div>
 
-							<h4 class="mt-4 text-lg font-black text-slate-900">
+							<h4 class="mt-4 text-lg font-bold text-slate-900">
 								{specialties.find((item) => item.code === specialtyCode)?.label}
 							</h4>
 

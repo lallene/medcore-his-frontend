@@ -329,11 +329,11 @@
 <div class="space-y-8">
 	<section class="space-y-5">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Grossesse actuelle
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Informations générales et niveau de risque
 			</h4>
 		</div>
@@ -349,7 +349,7 @@
 					type="number"
 					min="1"
 					bind:value={form.pregnancyNumber}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -362,7 +362,7 @@
 					id="maternity-lmp"
 					type="date"
 					bind:value={form.lastMenstrualPeriod}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -376,7 +376,7 @@
 					type="date"
 					value={form.expectedDeliveryDate}
 					readonly
-					class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+					class="w-full rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm text-slate-600"
 				/>
 			</div>
 
@@ -392,7 +392,7 @@
 						? `${form.gestationalAgeWeeks} SA + ${form.gestationalAgeDays ?? 0} j`
 						: ''}
 					readonly
-					class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+					class="w-full rounded-lg border border-input bg-slate-100 px-3 py-2 text-sm text-slate-600"
 				/>
 			</div>
 
@@ -404,7 +404,7 @@
 				<select
 					id="pregnancy-type"
 					bind:value={form.pregnancyType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="SINGLE">Simple</option>
@@ -422,7 +422,7 @@
 					type="number"
 					min="1"
 					bind:value={form.fetusCount}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -434,7 +434,7 @@
 				<select
 					id="pregnancy-origin"
 					bind:value={form.pregnancyOrigin}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NATURAL">Naturelle</option>
@@ -450,7 +450,7 @@
 				<select
 					id="risk-level"
 					bind:value={form.obstetricRiskLevel}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="NORMAL">Grossesse normale</option>
@@ -460,7 +460,7 @@
 		</div>
 
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-			<p class="font-black text-slate-900">Motifs de risque</p>
+			<p class="font-bold text-slate-900">Motifs de risque</p>
 
 			<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
@@ -488,17 +488,16 @@
 				bind:value={form.otherRiskFactors}
 				rows="3"
 				placeholder="Autres facteurs de risque"
-				class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
-			></textarea>
+				class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div class="flex items-center justify-between gap-4">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Suivi prénatal</p>
+				<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Suivi prénatal</p>
 
-				<h4 class="mt-1 text-lg font-black text-slate-900">
+				<h4 class="mt-1 text-lg font-bold text-slate-900">
 					Consultations et surveillance materno-fœtale
 				</h4>
 			</div>
@@ -517,7 +516,7 @@
 			{#each prenatalVisits as visit, index (index)}
 				<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 					<div class="flex items-center justify-between gap-4">
-						<p class="font-black text-slate-900">
+						<p class="font-bold text-slate-900">
 							Consultation prénatale #{index + 1}
 						</p>
 
@@ -536,7 +535,7 @@
 							type="date"
 							bind:value={visit.date}
 							aria-label={`Date de la consultation prénatale ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -544,21 +543,21 @@
 							step="0.1"
 							bind:value={visit.weightKg}
 							placeholder="Poids (kg)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={visit.bloodPressureSystolic}
 							placeholder="TA systolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="number"
 							bind:value={visit.bloodPressureDiastolic}
 							placeholder="TA diastolique"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -566,7 +565,7 @@
 							step="0.1"
 							bind:value={visit.temperature}
 							placeholder="Température"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -574,13 +573,13 @@
 							step="0.1"
 							bind:value={visit.uterineHeightCm}
 							placeholder="Hauteur utérine (cm)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={visit.fetalMovements}
 							aria-label={`Mouvements fœtaux de la consultation ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Mouvements fœtaux</option>
 							<option value="PRESENT">Présents</option>
@@ -592,13 +591,13 @@
 							type="number"
 							bind:value={visit.fetalHeartRate}
 							placeholder="RCF (bpm)"
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						/>
 
 						<select
 							bind:value={visit.fetalPresentation}
 							aria-label={`Présentation fœtale de la consultation ${index + 1}`}
-							class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+							class="rounded-lg border border-input bg-white px-3 py-2 text-sm"
 						>
 							<option value="">Présentation fœtale</option>
 							<option value="CEPHALIC">Céphalique</option>
@@ -633,7 +632,7 @@
 						bind:value={visit.notes}
 						rows="3"
 						placeholder="Observations"
-						class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+						class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 					></textarea>
 				</article>
 			{/each}
@@ -642,11 +641,11 @@
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Travail et accouchement
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Admission, évolution du travail et naissance
 			</h4>
 		</div>
@@ -661,7 +660,7 @@
 					id="admission-datetime"
 					type="datetime-local"
 					bind:value={form.admissionDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -674,7 +673,7 @@
 					id="admission-reason"
 					type="text"
 					bind:value={form.admissionReason}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -687,7 +686,7 @@
 					id="labor-start"
 					type="datetime-local"
 					bind:value={form.laborStartDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -699,7 +698,7 @@
 				<select
 					id="membrane-status"
 					bind:value={form.membraneStatus}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="INTACT">Intacte</option>
@@ -717,7 +716,7 @@
 					type="datetime-local"
 					bind:value={form.membraneRuptureDateTime}
 					disabled={form.membraneStatus !== 'RUPTURED'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 		</div>
@@ -725,7 +724,7 @@
 		<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 			<div class="flex items-center justify-between gap-4">
 				<div>
-					<p class="font-black text-slate-900">Évolution de la dilatation</p>
+					<p class="font-bold text-slate-900">Évolution de la dilatation</p>
 
 					<p class="mt-1 text-sm text-slate-500">Surveillance chronologique du travail.</p>
 				</div>
@@ -749,7 +748,7 @@
 							type="datetime-local"
 							bind:value={item.dateTime}
 							aria-label={`Date de dilatation ${index + 1}`}
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
@@ -759,14 +758,14 @@
 							step="0.5"
 							bind:value={item.dilationCm}
 							placeholder="Dilatation (cm)"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<input
 							type="text"
 							bind:value={item.notes}
 							placeholder="Observations"
-							class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+							class="rounded-lg border border-input px-3 py-2 text-sm"
 						/>
 
 						<button
@@ -791,7 +790,7 @@
 				<select
 					id="delivery-mode"
 					bind:value={form.deliveryMode}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="VAGINAL">Voie basse</option>
@@ -809,7 +808,7 @@
 					id="cesarean-type"
 					bind:value={form.cesareanType}
 					disabled={form.deliveryMode !== 'CESAREAN'}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 				>
 					<option value="">Sélectionner</option>
 					<option value="PLANNED">Programmée</option>
@@ -827,7 +826,7 @@
 					type="text"
 					bind:value={form.cesareanIndication}
 					disabled={form.deliveryMode !== 'CESAREAN'}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm disabled:bg-slate-100"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm disabled:bg-slate-100"
 				/>
 			</div>
 
@@ -840,7 +839,7 @@
 					id="anesthesia-type"
 					type="text"
 					bind:value={form.analgesiaAnesthesiaType}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -850,23 +849,23 @@
 				bind:value={form.maternalComplications}
 				rows="4"
 				placeholder="Complications maternelles"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.obstetricComplications}
 				rows="4"
 				placeholder="Complications obstétricales"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">
 				Naissance et nouveau-né
 			</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">Données de naissance</h4>
+			<h4 class="mt-1 text-lg font-bold text-slate-900">Données de naissance</h4>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -879,7 +878,7 @@
 					id="birth-datetime"
 					type="datetime-local"
 					bind:value={form.birthDateTime}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -889,7 +888,7 @@
 				<select
 					id="newborn-sex"
 					bind:value={form.newbornSex}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="F">Féminin</option>
@@ -910,7 +909,7 @@
 					step="0.01"
 					bind:value={form.newbornWeightKg}
 					placeholder="kg"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -926,7 +925,7 @@
 					step="0.1"
 					bind:value={form.newbornHeightCm}
 					placeholder="cm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -942,7 +941,7 @@
 					step="0.1"
 					bind:value={form.newbornHeadCircumferenceCm}
 					placeholder="cm"
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -957,7 +956,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore1Minute}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -972,7 +971,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore5Minutes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -987,7 +986,7 @@
 					min="0"
 					max="10"
 					bind:value={form.apgarScore10Minutes}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -996,7 +995,7 @@
 			<label class="flex items-center gap-3">
 				<input type="checkbox" bind:checked={form.neonatalResuscitationRequired} />
 
-				<span class="text-sm font-black text-slate-800"> Réanimation néonatale nécessaire </span>
+				<span class="text-sm font-bold text-slate-800"> Réanimation néonatale nécessaire </span>
 			</label>
 
 			<textarea
@@ -1004,16 +1003,16 @@
 				disabled={!form.neonatalResuscitationRequired}
 				rows="3"
 				placeholder="Actes réalisés"
-				class="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-100"
+				class="mt-4 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:bg-slate-100"
 			></textarea>
 		</div>
 	</section>
 
 	<section class="space-y-5 border-t border-slate-200 pt-8">
 		<div>
-			<p class="text-xs font-black uppercase tracking-[0.16em] text-[#0E4C92]">Post-partum</p>
+			<p class="text-xs font-semibold uppercase tracking-eyebrow text-primary">Post-partum</p>
 
-			<h4 class="mt-1 text-lg font-black text-slate-900">
+			<h4 class="mt-1 text-lg font-bold text-slate-900">
 				Surveillance maternelle après l’accouchement
 			</h4>
 		</div>
@@ -1028,7 +1027,7 @@
 					id="postpartum-condition"
 					type="text"
 					bind:value={form.postpartumGeneralCondition}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1041,7 +1040,7 @@
 					id="postpartum-bleeding"
 					type="text"
 					bind:value={form.postpartumBleeding}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1055,7 +1054,7 @@
 					type="number"
 					step="0.1"
 					bind:value={form.postpartumTemperature}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 
@@ -1063,14 +1062,14 @@
 				type="number"
 				bind:value={form.postpartumBloodPressureSystolic}
 				placeholder="TA systolique"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
 				type="number"
 				bind:value={form.postpartumBloodPressureDiastolic}
 				placeholder="TA diastolique"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 
 			<input
@@ -1079,7 +1078,7 @@
 				max="10"
 				bind:value={form.postpartumPainScore}
 				placeholder="Douleur /10"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"
+				class="rounded-lg border border-input px-3 py-2 text-sm"
 			/>
 		</div>
 
@@ -1088,13 +1087,13 @@
 				bind:value={form.scarCondition}
 				rows="3"
 				placeholder="État de la cicatrice"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.scarFollowUp}
 				rows="3"
 				placeholder="Suivi de la cicatrice"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
@@ -1106,7 +1105,7 @@
 				<select
 					id="breastfeeding-type"
 					bind:value={form.breastfeedingType}
-					class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
 				>
 					<option value="">Sélectionner</option>
 					<option value="BREASTFEEDING">Maternel</option>
@@ -1124,7 +1123,7 @@
 					id="breastfeeding-difficulties"
 					type="text"
 					bind:value={form.breastfeedingDifficulties}
-					class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+					class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				/>
 			</div>
 		</div>
@@ -1134,13 +1133,13 @@
 				bind:value={form.postpartumComplications}
 				rows="4"
 				placeholder="Complications post-partum"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 
 			<textarea
 				bind:value={form.postpartumComplicationsManagement}
 				rows="4"
 				placeholder="Prise en charge"
-				class="rounded-xl border border-slate-200 px-4 py-3 text-sm"></textarea>
+				class="rounded-lg border border-input px-3 py-2 text-sm"></textarea>
 		</div>
 	</section>
 </div>

@@ -30,9 +30,9 @@
 		{#if eyebrow}
 			<p class={medcoreTypography.eyebrow}>{eyebrow}</p>
 		{/if}
-		<h1 class={cn(medcoreTypography.pageTitle, eyebrow && 'mt-2')}>{title}</h1>
+		<h1 class={cn(medcoreTypography.pageTitle, eyebrow && 'mt-1.5')}>{title}</h1>
 		{#if description}
-			<p class="mt-2 max-w-2xl text-sm text-slate-500">{description}</p>
+			<p class="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description}</p>
 		{/if}
 		{#if meta}
 			<div class="mt-3">{@render meta()}</div>

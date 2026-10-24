@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import TableState from '$lib/components/ui/TableState.svelte';
+	import Table from '$lib/components/ui/Table.svelte';
 	import { onMount } from 'svelte';
 	import {
 		getNotificationIntent,
@@ -213,7 +216,7 @@
 		<label class="block min-w-[10rem] text-sm">
 			<span class="sr-only">Rendez-vous</span>
 			<input
-				class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+				class="w-full rounded-lg border border-input px-3 py-2 text-sm"
 				type="text"
 				inputmode="numeric"
 				placeholder="ID rendez-vous"
@@ -233,55 +236,52 @@
 		</div>
 	{/if}
 
-	{#if listLoading && !hasLoadedOnce}
-		<div data-testid="notification-list-loading">
-			<LoadingState label="Chargement des notifications…" />
-		</div>
-	{:else if !listError && items.length === 0}
-		<div data-testid="notification-list-empty">
-			<EmptyState
-				title={filtersActive ? 'Aucun résultat' : 'Aucune notification'}
-				description={filtersActive
-					? 'Aucun intent ne correspond aux filtres.'
-					: 'Aucun intent de notification pour le moment.'}
-			/>
-		</div>
-	{:else if items.length > 0}
-		<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-			{#if listLoading}
-				<div class="border-b border-slate-100 px-4 py-2 text-xs text-slate-500">Actualisation…</div>
-			{/if}
-			<table class="min-w-full text-left text-sm" data-testid="notification-admin-table">
-				<thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-					<tr>
-						<th class="px-4 py-3 font-semibold">Type</th>
-						<th class="px-4 py-3 font-semibold">Canal</th>
-						<th class="px-4 py-3 font-semibold">Statut</th>
-						<th class="px-4 py-3 font-semibold">Rendez-vous</th>
-						<th class="px-4 py-3 font-semibold">Envoi prévu</th>
-						<th class="px-4 py-3 font-semibold">Tentatives</th>
-						<th class="px-4 py-3 font-semibold">Créée</th>
-						<th class="px-4 py-3 font-semibold"></th>
-					</tr>
-				</thead>
-				<tbody>
+	{#if !(listError && items.length === 0)}
+		{#if listLoading && items.length > 0}
+			<p class="mb-2 text-xs text-muted-foreground" role="status">Actualisation…</p>
+		{/if}
+		<Table data-testid="notification-admin-table">
+			<thead>
+				<tr>
+					<th>Type</th>
+					<th>Canal</th>
+					<th>Statut</th>
+					<th>Rendez-vous</th>
+					<th>Envoi prévu</th>
+					<th class="mc-num">Tentatives</th>
+					<th>Créée</th>
+					<th class="mc-actions"></th>
+				</tr>
+			</thead>
+			<tbody
+				>{#if listLoading && !hasLoadedOnce}<TableState
+						state="loading"
+						colspan={8}
+						title="Chargement des notifications…"
+						data-testid="notification-list-loading"
+					/>{:else if items.length === 0}<TableState
+						state="empty"
+						colspan={8}
+						title={filtersActive ? 'Aucun résultat' : 'Aucune notification'}
+						description={filtersActive
+							? 'Aucun intent ne correspond aux filtres.'
+							: 'Aucun intent de notification pour le moment.'}
+						data-testid="notification-list-empty"
+					/>{:else}
 					{#each items as row (row.id)}
-						<tr
-							class="border-t border-slate-100 hover:bg-slate-50/80"
-							data-testid="notification-row"
-							data-notification-id={row.id}
-						>
-							<td class="px-4 py-3">{notificationKindLabel(row.kind)}</td>
-							<td class="px-4 py-3">{notificationChannelLabel(row.channel)}</td>
-							<td class="px-4 py-3">
+						<tr data-testid="notification-row" data-notification-id={row.id}>
+							<td>{notificationKindLabel(row.kind)}</td>
+							<td>{notificationChannelLabel(row.channel)}</td>
+							<td>
 								<StatusBadge status={row.status} label={notificationStatusLabel(row.status)} />
 							</td>
-							<td class="px-4 py-3 font-mono text-xs">#{row.appointmentId}</td>
-							<td class="px-4 py-3 whitespace-nowrap">{fmt(row.sendAfter)}</td>
-							<td class="px-4 py-3">{row.attemptCount}</td>
-							<td class="px-4 py-3 whitespace-nowrap text-slate-600">{fmt(row.createdAt)}</td>
-							<td class="px-4 py-3 text-right">
+							<td class="font-mono mc-id">#{row.appointmentId}</td>
+							<td class="whitespace-nowrap">{fmt(row.sendAfter)}</td>
+							<td class="mc-num">{row.attemptCount}</td>
+							<td class="whitespace-nowrap">{fmt(row.createdAt)}</td>
+							<td class="text-right mc-actions">
 								<Button
+									size="sm"
 									variant="ghost"
 									data-testid="notification-row-open"
 									onclick={() => void openDetail(row)}>Détail</Button
@@ -289,32 +289,27 @@
 							</td>
 						</tr>
 					{/each}
-				</tbody>
-			</table>
-		</div>
-
-		<div
-			class="flex items-center justify-between gap-3 text-sm text-slate-600"
-			data-testid="notification-pagination"
-		>
-			<span data-testid="notification-pagination-meta"
-				>Page {page} / {totalPages} · {total} intent{total > 1 ? 's' : ''}</span
+				{/if}</tbody
 			>
-			<div class="flex gap-2">
-				<Button
-					variant="secondary"
-					disabled={page <= 1 || listLoading}
-					data-testid="notification-page-prev"
-					onclick={goPrev}>Précédent</Button
-				>
-				<Button
-					variant="secondary"
-					disabled={page >= totalPages || listLoading}
-					data-testid="notification-page-next"
-					onclick={goNext}>Suivant</Button
-				>
-			</div>
-		</div>
+		</Table>
+		{#if items.length > 0}
+			<Pagination
+				class="mt-3"
+				{page}
+				{totalPages}
+				showPages={false}
+				disabled={listLoading}
+				data-testid="notification-pagination"
+				summaryTestId="notification-pagination-meta"
+				prevTestId="notification-page-prev"
+				nextTestId="notification-page-next"
+				onpage={(next) => (next < page ? goPrev() : goNext())}
+			>
+				{#snippet summary()}Page {page} / {totalPages} · {total} intent{total > 1
+						? 's'
+						: ''}{/snippet}
+			</Pagination>
+		{/if}
 	{/if}
 </section>
 

@@ -18,7 +18,7 @@
 	}
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 	<h2 class="text-lg font-semibold text-slate-900">Activité récente</h2>
 	<p class="mt-1 text-sm text-slate-500">Timeline opérationnelle</p>
 
@@ -28,7 +28,7 @@
 
 			<div class="relative border-l-2 border-slate-200 pl-8">
 				<div
-					class="absolute -left-[14px] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-[#E7F3FF] text-[#0E4C92] ring-4 ring-white"
+					class="absolute -left-[14px] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-primary ring-4 ring-white"
 				>
 					<Icon size={15} />
 				</div>

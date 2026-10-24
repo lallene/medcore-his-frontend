@@ -49,122 +49,112 @@
 	<title>Connexion | {clinicBranding.name}</title>
 </svelte:head>
 
-<div class="min-h-screen overflow-hidden bg-[#F5F8FC] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
+<div class="min-h-screen bg-background lg:grid lg:grid-cols-[1.05fr_0.95fr]">
 	<section
-		class="relative hidden min-h-screen overflow-hidden bg-gradient-to-br from-[#083B75] via-[#0E4C92] to-[#18B893] p-10 text-white lg:flex lg:flex-col lg:justify-between"
+		class="hidden min-h-screen flex-col justify-between bg-primary-active p-10 text-white lg:flex xl:p-14"
 	>
-		<div
-			class="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-white/10 blur-3xl"
-		></div>
-		<div
-			class="pointer-events-none absolute bottom-16 right-10 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl"
-		></div>
-		<div
-			class="pointer-events-none absolute bottom-10 right-8 text-[150px] font-black leading-none text-white/5"
-		>
-			HIS
-		</div>
-
-		<div class="relative">
-			<div class="mt-14 max-w-2xl">
+		<div>
+			<div class="mt-10 max-w-2xl">
 				<div
-					class="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur"
+					class="mb-6 inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-1.5 text-small font-medium text-blue-50"
 				>
-					<Sparkles size={16} />
+					<Sparkles size={15} aria-hidden="true" />
 					Plateforme hospitalière intelligente
 				</div>
 
-				<h1 class="text-5xl font-black leading-tight tracking-tight">
+				<h1 class="text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
 					{clinicBranding.slogan}
 				</h1>
 
-				<p class="mt-5 max-w-xl text-lg leading-relaxed text-blue-50">
+				<p class="mt-5 max-w-xl text-base leading-relaxed text-blue-100">
 					Une solution moderne pour piloter les patients, consultations, pharmacie, assurances et
 					workflows médicaux avec sécurité et traçabilité.
 				</p>
 			</div>
 
-			<div class="mt-10 grid max-w-2xl grid-cols-2 gap-3">
-				<div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-					<Stethoscope size={22} class="mb-3 text-emerald-100" />
-					<p class="font-bold">Consultations</p>
-					<p class="mt-1 text-sm text-blue-50">Dossier clinique structuré</p>
-				</div>
+			<ul class="mt-12 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/10">
+				<li class="bg-primary-active p-5">
+					<Stethoscope size={20} class="mb-3 text-brand-accent" aria-hidden="true" />
+					<p class="font-semibold">Consultations</p>
+					<p class="mt-1 text-sm text-blue-100">Dossier clinique structuré</p>
+				</li>
 
-				<div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-					<FileText size={22} class="mb-3 text-emerald-100" />
-					<p class="font-bold">Dossiers patients</p>
-					<p class="mt-1 text-sm text-blue-50">Historique et suivi médical</p>
-				</div>
+				<li class="bg-primary-active p-5">
+					<FileText size={20} class="mb-3 text-brand-accent" aria-hidden="true" />
+					<p class="font-semibold">Dossiers patients</p>
+					<p class="mt-1 text-sm text-blue-100">Historique et suivi médical</p>
+				</li>
 
-				<div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-					<HeartPulse size={22} class="mb-3 text-emerald-100" />
-					<p class="font-bold">Pharmacie</p>
-					<p class="mt-1 text-sm text-blue-50">Ordonnances et délivrances</p>
-				</div>
+				<li class="bg-primary-active p-5">
+					<HeartPulse size={20} class="mb-3 text-brand-accent" aria-hidden="true" />
+					<p class="font-semibold">Pharmacie</p>
+					<p class="mt-1 text-sm text-blue-100">Ordonnances et délivrances</p>
+				</li>
 
-				<div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-					<Activity size={22} class="mb-3 text-emerald-100" />
-					<p class="font-bold">Traçabilité</p>
-					<p class="mt-1 text-sm text-blue-50">Sécurité des actions</p>
-				</div>
-			</div>
+				<li class="bg-primary-active p-5">
+					<Activity size={20} class="mb-3 text-brand-accent" aria-hidden="true" />
+					<p class="font-semibold">Traçabilité</p>
+					<p class="mt-1 text-sm text-blue-100">Sécurité des actions</p>
+				</li>
+			</ul>
 		</div>
 
-		<div class="relative flex items-center justify-between text-sm text-blue-100">
+		<div class="flex items-center justify-between text-small text-blue-100">
 			<span>{clinicBranding.poweredBy}</span>
 			<span>Confidentialité · Sécurité · Performance</span>
 		</div>
 	</section>
 
-	<section class="flex min-h-screen items-center justify-center p-6">
+	<section class="flex min-h-screen items-center justify-center p-4 sm:p-6">
 		<div class="w-full max-w-md">
-			<div class="mb-8 text-center lg:hidden">
-				<img
-					src="/branding/saint-raphael-logo.jpeg"
-					alt={clinicBranding.name}
-					class="mx-auto h-28 w-28 rounded-3xl bg-white object-contain p-2 shadow"
-				/>
-				<h1 class="mt-4 text-2xl font-bold text-slate-900">{clinicBranding.shortName}</h1>
-				<p class="text-sm text-slate-500">{clinicBranding.slogan}</p>
+			<div class="mb-6 text-center lg:hidden">
+				<h1 class="text-xl font-semibold text-foreground">{clinicBranding.shortName}</h1>
+				<p class="mt-1 text-sm text-muted-foreground">{clinicBranding.slogan}</p>
 			</div>
 
-			<div
-				class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-2xl shadow-slate-200/80"
-			>
-				<div class="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5">
-					<ShieldCheck size={14} class="text-[#0E4C92]" />
-					<p class="text-xs font-bold uppercase tracking-wide text-[#0E4C92]">
-						Connexion sécurisée
-					</p>
-				</div>
-				<div class="inline-flex rounded-[2rem] bg-white/95 p-4 shadow-2xl shadow-blue-950/20">
+			<div class="rounded-xl border border-border bg-surface p-6 shadow-md sm:p-8">
+				<div class="flex justify-center">
 					<img
 						src="/branding/saint-raphael-logo.jpeg"
 						alt={clinicBranding.name}
-						class="h-56 w-86 rounded-[1.5rem] object-contain"
+						class="h-36 w-auto max-w-full object-contain"
 					/>
 				</div>
-				<div class="mb-8">
-					<p class="mt-2 text-slate-500">Accédez à votre espace professionnel MedCore HIS.</p>
+
+				<div class="mt-6 mb-6 border-t border-border pt-6">
+					<div
+						class="inline-flex items-center gap-1.5 rounded-md border border-primary-border bg-primary-soft px-2 py-1"
+					>
+						<ShieldCheck size={14} class="text-primary" aria-hidden="true" />
+						<p class="text-2xs font-semibold uppercase tracking-eyebrow text-primary">
+							Connexion sécurisée
+						</p>
+					</div>
+					<p class="mt-3 text-sm text-muted-foreground">
+						Accédez à votre espace professionnel MedCore HIS.
+					</p>
 				</div>
 
 				<form
-					class="space-y-5"
+					class="space-y-4"
 					onsubmit={async (e) => {
 						e.preventDefault();
 						await submit();
 					}}
 				>
 					<div>
-						<label for="email" class="mb-2 block text-sm font-semibold text-slate-700">
+						<label
+							for="email"
+							class="mb-1.5 block text-small font-semibold text-foreground-secondary"
+						>
 							Email professionnel
 						</label>
 
 						<div class="relative">
 							<Mail
-								class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-								size={18}
+								class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle-foreground"
+								size={17}
+								aria-hidden="true"
 							/>
 
 							<input
@@ -174,26 +164,33 @@
 								autocomplete="username"
 								placeholder="prenom.nom@clinique.com"
 								bind:value={email}
-								class="w-full rounded-2xl border border-slate-300 bg-slate-50 py-3.5 pl-11 pr-4 text-sm font-medium text-slate-800 outline-none transition focus:border-[#0E4C92] focus:bg-white focus:ring-4 focus:ring-[#0E4C92]/10"
+								class="min-h-control-lg w-full rounded-lg border border-input bg-surface py-2 text-sm text-foreground shadow-xs outline-none transition-colors placeholder:text-subtle-foreground hover:border-border-strong focus:border-primary focus:ring-3 focus:ring-primary/15 pr-3 pl-10"
 							/>
 						</div>
 					</div>
 
 					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<label for="password" class="block text-sm font-semibold text-slate-700">
+						<div class="mb-1.5 flex items-center justify-between">
+							<label
+								for="password"
+								class="block text-small font-semibold text-foreground-secondary"
+							>
 								Mot de passe
 							</label>
 
-							<button type="button" class="text-xs font-bold text-[#0E4C92] hover:underline">
+							<button
+								type="button"
+								class="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+							>
 								Mot de passe oublié ?
 							</button>
 						</div>
 
 						<div class="relative">
 							<Lock
-								class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-								size={18}
+								class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle-foreground"
+								size={17}
+								aria-hidden="true"
 							/>
 
 							<input
@@ -203,13 +200,13 @@
 								autocomplete="current-password"
 								placeholder="••••••••"
 								bind:value={password}
-								class="w-full rounded-2xl border border-slate-300 bg-slate-50 py-3.5 pl-11 pr-11 text-sm font-medium text-slate-800 outline-none transition focus:border-[#0E4C92] focus:bg-white focus:ring-4 focus:ring-[#0E4C92]/10"
+								class="min-h-control-lg w-full rounded-lg border border-input bg-surface py-2 text-sm text-foreground shadow-xs outline-none transition-colors placeholder:text-subtle-foreground hover:border-border-strong focus:border-primary focus:ring-3 focus:ring-primary/15 pr-11 pl-10"
 							/>
 
 							<button
 								type="button"
 								onclick={() => (showPassword = !showPassword)}
-								class="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+								class="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
 								aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
 							>
 								{#if showPassword}
@@ -225,23 +222,16 @@
 						<Alert tone="danger">{error}</Alert>
 					{/if}
 
-					<Button
-						data-testid="qa-login-submit"
-						type="submit"
-						fullWidth
-						size="lg"
-						{loading}
-						class="rounded-2xl py-3.5 shadow-lg shadow-blue-900/10"
-					>
+					<Button data-testid="qa-login-submit" type="submit" fullWidth size="lg" {loading}>
 						{loading ? 'Connexion en cours...' : 'Se connecter'}
 					</Button>
 				</form>
 
-				<div class="mt-8 rounded-2xl bg-slate-50 p-4">
-					<div class="flex items-center justify-center gap-2 text-xs font-medium text-slate-500">
-						<Lock size={12} />
-						<span>Connexion chiffrée · {clinicBranding.poweredBy}</span>
-					</div>
+				<div
+					class="mt-6 flex items-center justify-center gap-2 border-t border-border pt-4 text-xs text-muted-foreground"
+				>
+					<Lock size={12} aria-hidden="true" />
+					<span>Connexion chiffrée · {clinicBranding.poweredBy}</span>
 				</div>
 			</div>
 		</div>
