@@ -12,7 +12,7 @@ import {
 	normalizeHelpText,
 	searchHelp
 } from './catalog.ts';
-import { filterVisibleNav, workspaceMenu } from '../rbac/navigation.ts';
+import { buildVisibleNavigation } from '../rbac/navigation.ts';
 
 const entry = (over: Partial<HelpEntry>): HelpEntry => ({
 	helpKey: 'billing.demo.x',
@@ -152,8 +152,8 @@ test('catalog loader never throws and retries after a failure', async () => {
 });
 
 test('help center is reachable from navigation for any authenticated user', () => {
-	const visible = filterVisibleNav(workspaceMenu, []);
-	assert.ok(visible.some((item) => item.href === '/help'));
+	const visible = buildVisibleNavigation([]).flatMap((section) => section.entries);
+	assert.ok(visible.some((entry) => entry.kind === 'link' && entry.item.href === '/help'));
 });
 
 test('every helpKey used in the UI is well-formed and maps to a known module namespace', () => {

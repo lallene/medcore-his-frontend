@@ -1,18 +1,21 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { clinicBranding } from '$lib/config/clinic';
 	import {
-		BanknoteArrowDown,
 		BarChart3,
 		BookOpen,
+		Building2,
+		CalendarClock,
 		CalendarDays,
+		ChevronDown,
 		CircleHelp,
-		CreditCard,
 		FileCheck2,
 		FileText,
 		FlaskConical,
+		HandCoins,
+		Headset,
 		HeartPulse,
 		Hospital,
 		Image,
@@ -21,66 +24,56 @@
 		ListOrdered,
 		Pill,
 		ReceiptText,
-		Settings,
 		Shield,
-		Stethoscope,
+		ShieldCheck,
+		UserCog,
 		Users,
-		UsersRound
+		Wallet,
+		Wrench
 	} from 'lucide-svelte';
 	import {
-		adminMenu,
-		filterVisibleNav,
-		type NavHref,
-		type NavItem,
-		workspaceMenu,
-		servicesMenu
+		buildVisibleNavigation,
+		navGroupIdForHref,
+		resolveActiveNavHref,
+		type NavGroupId,
+		type NavHref
 	} from '$lib/rbac/navigation';
 	import { getStoredPermissions } from '$lib/rbac/permissions';
 
-	type MenuHref = NavHref;
+	type Icon = typeof LayoutDashboard;
 
-	type MenuItem = NavItem & { icon: typeof LayoutDashboard };
-
-	const iconByHref: Record<MenuHref, typeof LayoutDashboard> = {
+	// Presentation only: sub-menu children are rendered without icons to stay discreet.
+	const iconByHref: Partial<Record<NavHref, Icon>> = {
 		'/dashboard': LayoutDashboard,
+		'/reports': BarChart3,
 		'/patients': Users,
-		'/consultations': HeartPulse,
+		'/agenda': CalendarDays,
 		'/queue': ListOrdered,
-		'/queue/reception': UsersRound,
-		'/queue/triage': ListOrdered,
-		'/queue/doctor': Stethoscope,
-		'/hospitalizations': Hospital,
-		'/beds': Hospital,
-		'/insurance': Shield,
-		'/insurance/vouchers': FileText,
-		'/insurance/authorizations': FileCheck2,
-		'/billing': CreditCard,
-		'/billing/refunds': BanknoteArrowDown,
-		'/billing/refunds/report': BanknoteArrowDown,
-		'/cash': CreditCard,
-		'/receivables': ReceiptText,
-		'/insurance-receivables': Shield,
-		'/tickets': LifeBuoy,
+		'/consultations': HeartPulse,
 		'/pharmacy': Pill,
 		'/laboratory': FlaskConical,
 		'/imaging': Image,
-		'/agenda': CalendarDays,
-		'/reports': BarChart3,
-		'/administration': Settings,
-		'/admin/staff': Users,
-		'/admin/access': Shield,
-		'/admin/organization': Settings,
+		'/insurance': Shield,
+		'/insurance/vouchers': FileText,
+		'/insurance/authorizations': FileCheck2,
+		'/cash': Wallet,
+		'/tickets': LifeBuoy,
+		'/help': CircleHelp,
+		'/admin/staff': UserCog,
+		'/admin/access': ShieldCheck,
+		'/admin/organization': Building2,
 		'/admin/act-catalog': BookOpen,
-		'/admin/scheduling': CalendarDays,
-		'/admin/qa': BarChart3,
-		'/admin/design-system': LayoutDashboard,
-		'/support/tickets': LifeBuoy,
-		'/help': CircleHelp
+		'/admin/scheduling': CalendarClock,
+		'/support/tickets': Headset
 	};
 
-	function withIcons(items: NavItem[]): MenuItem[] {
-		return items.map((item) => ({ ...item, icon: iconByHref[item.href] }));
-	}
+	const iconByGroup: Record<NavGroupId, Icon> = {
+		queue: ListOrdered,
+		hospitalization: Hospital,
+		billing: ReceiptText,
+		recovery: HandCoins,
+		'tech-tools': Wrench
+	};
 
 	interface Props {
 		/** Ouverture du tiroir sous le breakpoint `lg` (toujours visible au-delà). */
@@ -92,18 +85,43 @@
 
 	let navElement = $state<HTMLElement | null>(null);
 
-	// Tiroir mobile : place le focus sur le premier lien à l'ouverture.
+	// Tiroir mobile : place le focus sur le premier élément de navigation à l'ouverture.
 	$effect(() => {
-		if (open) navElement?.querySelector<HTMLElement>('a[href]')?.focus();
+		if (open) navElement?.querySelector<HTMLElement>('a[href], button')?.focus();
 	});
 
 	let permissions = $state<string[]>([]);
 	let staffName = $state('Utilisateur');
 	let staffRole = $state('MedCore HIS');
 
-	const visibleWorkspace = $derived(filterVisibleNav(workspaceMenu, permissions));
-	const visibleServices = $derived(filterVisibleNav(servicesMenu, permissions));
-	const visibleAdmin = $derived(filterVisibleNav(adminMenu, permissions));
+	const sections = $derived(buildVisibleNavigation(permissions));
+	const activeHref = $derived(resolveActiveNavHref(page.url.pathname));
+	const activeGroup = $derived(navGroupIdForHref(activeHref));
+
+	// Manual open/close choices; groups without a choice follow the current route.
+	let expandedOverrides = $state<Partial<Record<NavGroupId, boolean>>>({});
+
+	// Entering a destination of a group re-opens it, so the active link is never hidden by navigation.
+	$effect(() => {
+		const href = activeHref;
+		const group = activeGroup;
+		if (!href || !group) return;
+		untrack(() => {
+			if (expandedOverrides[group] === false) {
+				const next = { ...expandedOverrides };
+				delete next[group];
+				expandedOverrides = next;
+			}
+		});
+	});
+
+	function isExpanded(id: NavGroupId) {
+		return expandedOverrides[id] ?? id === activeGroup;
+	}
+
+	function toggleGroup(id: NavGroupId) {
+		expandedOverrides = { ...expandedOverrides, [id]: !isExpanded(id) };
+	}
 
 	onMount(() => {
 		permissions = getStoredPermissions();
@@ -123,16 +141,6 @@
 			}
 	});
 
-	function isActive(href: string) {
-		const pathname = page.url.pathname;
-
-		if (href === '/insurance') {
-			return pathname === '/insurance' || pathname.startsWith('/insurance/companies');
-		}
-
-		return pathname === href || pathname.startsWith(`${href}/`);
-	}
-
 	const initials = $derived(
 		staffName
 			.split(/\s+/)
@@ -143,14 +151,29 @@
 			.toUpperCase() || 'MC'
 	);
 
-	const sections = $derived(
-		[
-			{ id: 'workspace', label: 'Workspace', items: withIcons(visibleWorkspace) },
-			{ id: 'services', label: 'Services', items: withIcons(visibleServices) },
-			{ id: 'admin', label: 'Administration', items: withIcons(visibleAdmin) }
-		].filter((section) => section.items.length > 0)
-	);
+	const rowClass =
+		'relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-small font-medium transition-colors focus-visible:outline-sidebar-ring';
+
+	/** `emphasized`: inactive group label whose child is the current page. */
+	function linkClass(active: boolean, emphasized = false) {
+		return `${rowClass} ${
+			active
+				? 'bg-sidebar-primary text-sidebar-primary-foreground'
+				: `${emphasized ? 'text-white' : 'text-slate-300'} hover:bg-sidebar-accent hover:text-white`
+		}`;
+	}
 </script>
+
+{#snippet activeMarker()}
+	<span class="absolute inset-y-1.5 left-0 w-0.5 rounded-r-sm bg-brand-accent" aria-hidden="true"
+	></span>
+{/snippet}
+
+{#snippet soonBadge()}
+	<span class="rounded-sm border border-white/15 px-1.5 text-2xs font-medium text-slate-300">
+		v2
+	</span>
+{/snippet}
 
 <aside
 	id="medcore-sidebar"
@@ -159,19 +182,17 @@
 		open ? 'translate-x-0' : 'max-lg:invisible max-lg:-translate-x-full'
 	}`}
 >
-	<div class="border-b border-sidebar-border p-4">
-		<div class="rounded-lg bg-white px-3 py-2.5">
-			<img
-				src="/branding/saint-raphael-logo.jpeg"
-				alt={clinicBranding.name}
-				class="mx-auto h-auto max-h-20 w-full object-contain"
-			/>
-		</div>
+	<div class="shrink-0 border-b border-sidebar-border bg-white px-3 py-2">
+		<img
+			src="/branding/saint-raphael-logo.jpeg"
+			alt={clinicBranding.name}
+			class="mx-auto block h-auto max-h-36 w-full object-contain [@media(min-height:860px)]:max-h-44"
+		/>
 	</div>
 
 	<nav
 		bind:this={navElement}
-		class="flex-1 space-y-6 overflow-y-auto px-3 py-5"
+		class="flex-1 space-y-5 overflow-y-auto px-3 py-4"
 		aria-label="Modules"
 	>
 		{#each sections as section (section.id)}
@@ -184,40 +205,108 @@
 				</p>
 
 				<ul class="space-y-0.5" aria-labelledby={`nav-${section.id}`}>
-					{#each section.items as item (item.href)}
-						{@const Icon = item.icon}
-						{@const active = isActive(item.href)}
-
-						<li>
-							<a
-								href={resolve(item.href as '/dashboard')}
-								aria-current={active ? 'page' : undefined}
-								onclick={() => onnavigate?.()}
-								class={`relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-small font-medium transition-colors focus-visible:outline-sidebar-ring ${
-									active
-										? 'bg-sidebar-primary text-sidebar-primary-foreground'
-										: 'text-slate-300 hover:bg-sidebar-accent hover:text-white'
-								}`}
-							>
-								{#if active}
-									<span
-										class="absolute inset-y-1.5 left-0 w-0.5 rounded-r-sm bg-brand-accent"
-										aria-hidden="true"
-									></span>
-								{/if}
-
-								<Icon size={18} aria-hidden="true" class="shrink-0 opacity-90" />
-								<span class="min-w-0 flex-1 truncate">{item.title}</span>
-
-								{#if item.soon}
-									<span
-										class="rounded-sm border border-white/15 px-1.5 text-2xs font-medium text-slate-300"
+					{#each section.entries as entry (entry.kind === 'link' ? entry.item.href : entry.id)}
+						{#if entry.kind === 'link'}
+							{@const Icon = iconByHref[entry.item.href] ?? LayoutDashboard}
+							{@const active = activeHref === entry.item.href}
+							<li>
+								<a
+									href={resolve(entry.item.href as '/dashboard')}
+									aria-current={active ? 'page' : undefined}
+									onclick={() => onnavigate?.()}
+									class={linkClass(active)}
+								>
+									{#if active}{@render activeMarker()}{/if}
+									<Icon size={18} aria-hidden="true" class="shrink-0 opacity-90" />
+									<span class="min-w-0 flex-1 truncate">{entry.item.title}</span>
+									{#if entry.item.soon}{@render soonBadge()}{/if}
+								</a>
+							</li>
+						{:else}
+							{@const Icon = iconByGroup[entry.id]}
+							{@const expanded = isExpanded(entry.id)}
+							{@const ownActive = !!entry.item && activeHref === entry.item.href}
+							{@const childActive = entry.children.some((child) => child.href === activeHref)}
+							{@const listId = `nav-group-${entry.id}`}
+							<li>
+								{#if entry.item}
+									<!-- Group label is a real page: the label navigates, the chevron toggles. -->
+									<div class="flex items-center gap-0.5">
+										<a
+											href={resolve(entry.item.href as '/dashboard')}
+											aria-current={ownActive ? 'page' : undefined}
+											onclick={() => onnavigate?.()}
+											class={`${linkClass(ownActive, childActive)} min-w-0 flex-1`}
+										>
+											{#if ownActive}{@render activeMarker()}{/if}
+											<Icon size={18} aria-hidden="true" class="shrink-0 opacity-90" />
+											<span class="min-w-0 flex-1 truncate">{entry.title}</span>
+										</a>
+										<button
+											type="button"
+											aria-expanded={expanded}
+											aria-controls={listId}
+											aria-label={`Sous-menu ${entry.title}`}
+											onclick={() => toggleGroup(entry.id)}
+											class="flex size-9 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:outline-sidebar-ring"
+										>
+											<ChevronDown
+												size={16}
+												aria-hidden="true"
+												class={`transition-transform duration-150 ${expanded ? '' : '-rotate-90'}`}
+											/>
+										</button>
+									</div>
+								{:else}
+									<!-- Structural group: the whole row is a disclosure button. -->
+									<button
+										type="button"
+										aria-expanded={expanded}
+										aria-controls={listId}
+										onclick={() => toggleGroup(entry.id)}
+										class={`${rowClass} w-full text-left ${
+											childActive ? 'text-white' : 'text-slate-300'
+										} hover:bg-sidebar-accent hover:text-white`}
 									>
-										v2
-									</span>
+										<Icon size={18} aria-hidden="true" class="shrink-0 opacity-90" />
+										<span class="min-w-0 flex-1 truncate">{entry.title}</span>
+										<ChevronDown
+											size={16}
+											aria-hidden="true"
+											class={`shrink-0 text-slate-400 transition-transform duration-150 ${
+												expanded ? '' : '-rotate-90'
+											}`}
+										/>
+									</button>
 								{/if}
-							</a>
-						</li>
+
+								<ul
+									id={listId}
+									hidden={!expanded}
+									class="mt-0.5 ml-5 space-y-0.5 border-l border-sidebar-border pl-2"
+								>
+									{#each entry.children as child (child.href)}
+										{@const active = activeHref === child.href}
+										<li>
+											<a
+												href={resolve(child.href as '/dashboard')}
+												aria-current={active ? 'page' : undefined}
+												onclick={() => onnavigate?.()}
+												class={`relative flex min-h-8 items-center rounded-md px-3 py-1.5 text-small transition-colors focus-visible:outline-sidebar-ring ${
+													active
+														? 'bg-sidebar-primary font-medium text-sidebar-primary-foreground'
+														: 'text-slate-400 hover:bg-sidebar-accent hover:text-white'
+												}`}
+											>
+												{#if active}{@render activeMarker()}{/if}
+												<span class="min-w-0 flex-1 truncate">{child.title}</span>
+												{#if child.soon}{@render soonBadge()}{/if}
+											</a>
+										</li>
+									{/each}
+								</ul>
+							</li>
+						{/if}
 					{/each}
 				</ul>
 			</div>

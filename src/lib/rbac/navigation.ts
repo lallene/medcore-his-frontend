@@ -20,7 +20,6 @@ export type NavHref =
 	| '/imaging'
 	| '/agenda'
 	| '/reports'
-	| '/administration'
 	| '/admin/staff'
 	| '/admin/access'
 	| '/admin/organization'
@@ -36,6 +35,7 @@ export type NavHref =
 	| '/queue/doctor'
 	| '/help';
 
+/** One sidebar destination: the single source of truth for its title and required permissions. */
 export type NavItem = {
 	title: string;
 	href: NavHref;
@@ -43,100 +43,117 @@ export type NavItem = {
 	permissions: string[];
 };
 
-export const workspaceMenu: NavItem[] = [
-	{ title: 'Dashboard', href: '/dashboard', permissions: ['dashboard.read'] },
-	{ title: 'Patients', href: '/patients', permissions: ['patients:read'] },
-	{
+const QUEUE_ANY_READ = [
+	'queue.reception.read',
+	'queue.triage.read',
+	'queue.doctor.read',
+	'queue.read.service',
+	'queue.read.all'
+];
+
+const SCHEDULE_READ = ['schedule.read.own', 'schedule.read.service', 'schedule.read.all'];
+
+export const navDestinations: Record<NavHref, NavItem> = {
+	'/dashboard': { title: 'Dashboard', href: '/dashboard', permissions: ['dashboard.read'] },
+	'/reports': { title: 'Rapports', href: '/reports', permissions: ['dashboard.read'] },
+	'/patients': { title: 'Patients', href: '/patients', permissions: ['patients:read'] },
+	'/agenda': { title: 'Agenda', href: '/agenda', permissions: SCHEDULE_READ },
+	'/queue': { title: 'File patients', href: '/queue', permissions: QUEUE_ANY_READ },
+	'/queue/reception': {
+		title: 'Accueil',
+		href: '/queue/reception',
+		permissions: ['queue.reception.read']
+	},
+	'/queue/triage': {
+		title: 'Pré-triage',
+		href: '/queue/triage',
+		permissions: ['queue.triage.read']
+	},
+	'/queue/doctor': {
+		title: 'File médecin',
+		href: '/queue/doctor',
+		permissions: ['queue.doctor.read']
+	},
+	'/consultations': {
 		title: 'Consultations',
 		href: '/consultations',
 		soon: true,
 		permissions: ['consultations.read']
 	},
-	{
-		title: 'File patients',
-		href: '/queue',
-		permissions: [
-			'queue.reception.read',
-			'queue.triage.read',
-			'queue.doctor.read',
-			'queue.read.service',
-			'queue.read.all'
-		]
+	'/hospitalizations': {
+		title: 'Hospitalisations',
+		href: '/hospitalizations',
+		permissions: ['hospitalizations.read']
 	},
-	{ title: 'Accueil', href: '/queue/reception', permissions: ['queue.reception.read'] },
-	{ title: 'Pré-triage', href: '/queue/triage', permissions: ['queue.triage.read'] },
-	{ title: 'File médecin', href: '/queue/doctor', permissions: ['queue.doctor.read'] },
-	{ title: 'Hospitalisations', href: '/hospitalizations', permissions: ['hospitalizations.read'] },
-	{ title: 'Chambres & lits', href: '/beds', permissions: ['beds.read'] },
-	{
-		title: 'Assurances',
-		href: '/insurance',
-		permissions: ['insurance.company.read', 'insurance.coverage.read']
-	},
-	{ title: 'Bons PEC', href: '/insurance/vouchers', permissions: ['insurance.voucher.read'] },
-	{
-		title: 'Autorisations PEC',
-		href: '/insurance/authorizations',
-		permissions: ['insurance.authorization.read']
-	},
-	{ title: 'Facturation', href: '/billing', permissions: ['billing.read'] },
-	{
-		title: 'Remboursements',
-		href: '/billing/refunds',
-		permissions: ['billing.refund.read', 'billing.refund.request']
-	},
-	{
-		title: 'Rapport remboursements',
-		href: '/billing/refunds/report',
-		permissions: ['billing.refund.report']
-	},
-	{
-		title: 'Caisse',
-		href: '/cash',
-		permissions: ['cash.session.read', 'cash.payment.create']
-	},
-	{ title: 'Créances patients', href: '/receivables', permissions: ['receivables.read'] },
-	{
-		title: 'Créances assureurs',
-		href: '/insurance-receivables',
-		permissions: ['insurance_receivables.read']
-	},
-	{ title: 'Mes tickets', href: '/tickets', permissions: ['ticket.read.own'] },
-	// LOT AIDE: every authenticated user; entries are filtered by the backend.
-	{ title: 'Aide', href: '/help', permissions: [] }
-];
-
-export const servicesMenu: NavItem[] = [
-	{
+	'/beds': { title: 'Chambres & lits', href: '/beds', permissions: ['beds.read'] },
+	'/pharmacy': {
 		title: 'Pharmacie',
 		href: '/pharmacy',
 		permissions: ['pharmacy.stock.read', 'pharmacy.dispensation.read']
 	},
-	{ title: 'Laboratoire', href: '/laboratory', permissions: ['laboratory.read'] },
-	{ title: 'Imagerie', href: '/imaging', permissions: ['imaging.read'] },
-	{
-		title: 'Agenda',
-		href: '/agenda',
-		permissions: ['schedule.read.own', 'schedule.read.service', 'schedule.read.all']
-	}
-];
-
-export const adminMenu: NavItem[] = [
-	{ title: 'Rapports', href: '/reports', permissions: ['dashboard.read'] },
-	{ title: 'Administration', href: '/administration', permissions: ['*'] },
-	{ title: 'Personnel', href: '/admin/staff', permissions: ['staff.read'] },
-	{
+	'/laboratory': { title: 'Laboratoire', href: '/laboratory', permissions: ['laboratory.read'] },
+	'/imaging': { title: 'Imagerie', href: '/imaging', permissions: ['imaging.read'] },
+	'/insurance': {
+		title: 'Assureurs & couvertures',
+		href: '/insurance',
+		permissions: ['insurance.company.read', 'insurance.coverage.read']
+	},
+	'/insurance/vouchers': {
+		title: 'Bons PEC',
+		href: '/insurance/vouchers',
+		permissions: ['insurance.voucher.read']
+	},
+	'/insurance/authorizations': {
+		title: 'Autorisations PEC',
+		href: '/insurance/authorizations',
+		permissions: ['insurance.authorization.read']
+	},
+	'/billing': { title: 'Factures', href: '/billing', permissions: ['billing.read'] },
+	'/billing/refunds': {
+		title: 'Remboursements',
+		href: '/billing/refunds',
+		permissions: ['billing.refund.read', 'billing.refund.request']
+	},
+	'/billing/refunds/report': {
+		title: 'Rapport remboursements',
+		href: '/billing/refunds/report',
+		permissions: ['billing.refund.report']
+	},
+	'/cash': {
+		title: 'Caisse',
+		href: '/cash',
+		permissions: ['cash.session.read', 'cash.payment.create']
+	},
+	'/receivables': {
+		title: 'Créances patients',
+		href: '/receivables',
+		permissions: ['receivables.read']
+	},
+	'/insurance-receivables': {
+		title: 'Créances assureurs',
+		href: '/insurance-receivables',
+		permissions: ['insurance_receivables.read']
+	},
+	'/tickets': { title: 'Mes tickets', href: '/tickets', permissions: ['ticket.read.own'] },
+	// LOT AIDE: every authenticated user; entries are filtered by the backend.
+	'/help': { title: 'Aide', href: '/help', permissions: [] },
+	'/admin/staff': { title: 'Personnel', href: '/admin/staff', permissions: ['staff.read'] },
+	'/admin/access': {
 		title: "Centre d'accès",
 		href: '/admin/access',
 		permissions: ['rbac.read', 'staff.read', 'staff.manage']
 	},
-	{ title: 'Organisation', href: '/admin/organization', permissions: ['organization.manage'] },
-	{
+	'/admin/organization': {
+		title: 'Organisation',
+		href: '/admin/organization',
+		permissions: ['organization.manage']
+	},
+	'/admin/act-catalog': {
 		title: 'Référentiel des actes',
 		href: '/admin/act-catalog',
 		permissions: ['act_catalog.read', 'act_catalog.manage']
 	},
-	{
+	'/admin/scheduling': {
 		title: 'Plannings',
 		href: '/admin/scheduling',
 		permissions: [
@@ -147,14 +164,210 @@ export const adminMenu: NavItem[] = [
 			'appointment_type.manage'
 		]
 	},
-	{ title: 'Automated QA', href: '/admin/qa', permissions: ['qa.read'] },
-	{ title: 'Design System', href: '/admin/design-system', permissions: ['qa.read'] },
-	{
+	'/support/tickets': {
 		title: 'Service Desk',
 		href: '/support/tickets',
 		permissions: ['ticket.read.service', 'ticket.read.all']
+	},
+	'/admin/qa': { title: 'Automated QA', href: '/admin/qa', permissions: ['qa.read'] },
+	'/admin/design-system': {
+		title: 'Design System',
+		href: '/admin/design-system',
+		permissions: ['qa.read']
+	}
+};
+
+export type NavSectionId =
+	'pilotage' | 'patient-journey' | 'medtech' | 'insurance' | 'finance' | 'support' | 'admin';
+
+export type NavGroupId = 'queue' | 'hospitalization' | 'billing' | 'recovery' | 'tech-tools';
+
+/** Direct link to one destination. */
+export type NavLinkEntry = { kind: 'link'; href: NavHref };
+
+/**
+ * Collapsible group (one sub-level max). `href` is the group's own destination when the
+ * group label is itself a page (File patients → /queue); otherwise the group is structural.
+ * A group never grants access to its children: each child keeps its own permissions.
+ */
+export type NavGroupEntry = {
+	kind: 'group';
+	id: NavGroupId;
+	title: string;
+	href?: NavHref;
+	children: NavHref[];
+};
+
+export type NavEntry = NavLinkEntry | NavGroupEntry;
+
+export type NavSection = { id: NavSectionId; label: string; entries: NavEntry[] };
+
+const link = (href: NavHref): NavLinkEntry => ({ kind: 'link', href });
+
+/** Validated sidebar architecture (presentation order only — permissions live in navDestinations). */
+export const sidebarNavigation: NavSection[] = [
+	{ id: 'pilotage', label: 'Pilotage', entries: [link('/dashboard'), link('/reports')] },
+	{
+		id: 'patient-journey',
+		label: 'Parcours patient',
+		entries: [
+			link('/patients'),
+			link('/agenda'),
+			{
+				kind: 'group',
+				id: 'queue',
+				title: 'File patients',
+				href: '/queue',
+				children: ['/queue/reception', '/queue/triage', '/queue/doctor']
+			},
+			link('/consultations'),
+			{
+				kind: 'group',
+				id: 'hospitalization',
+				title: 'Hospitalisation',
+				children: ['/hospitalizations', '/beds']
+			}
+		]
+	},
+	{
+		id: 'medtech',
+		label: 'Médico-technique',
+		entries: [link('/pharmacy'), link('/laboratory'), link('/imaging')]
+	},
+	{
+		id: 'insurance',
+		label: 'Assurance & PEC',
+		entries: [link('/insurance'), link('/insurance/vouchers'), link('/insurance/authorizations')]
+	},
+	{
+		id: 'finance',
+		label: 'Finances',
+		entries: [
+			{
+				kind: 'group',
+				id: 'billing',
+				title: 'Facturation',
+				children: ['/billing', '/billing/refunds', '/billing/refunds/report']
+			},
+			link('/cash'),
+			{
+				kind: 'group',
+				id: 'recovery',
+				title: 'Recouvrement',
+				children: ['/receivables', '/insurance-receivables']
+			}
+		]
+	},
+	{ id: 'support', label: 'Support', entries: [link('/tickets'), link('/help')] },
+	{
+		id: 'admin',
+		label: 'Administration',
+		entries: [
+			link('/admin/staff'),
+			link('/admin/access'),
+			link('/admin/organization'),
+			link('/admin/act-catalog'),
+			link('/admin/scheduling'),
+			link('/support/tickets'),
+			{
+				kind: 'group',
+				id: 'tech-tools',
+				title: 'Outils techniques',
+				children: ['/admin/qa', '/admin/design-system']
+			}
+		]
 	}
 ];
+
+/** Every destination reachable from the sidebar, in display order. */
+export function flattenNavigation(sections: NavSection[] = sidebarNavigation): NavItem[] {
+	return sections.flatMap((section) =>
+		section.entries.flatMap((entry) => {
+			const hrefs =
+				entry.kind === 'link'
+					? [entry.href]
+					: [...(entry.href ? [entry.href] : []), ...entry.children];
+			return hrefs.map((href) => navDestinations[href]);
+		})
+	);
+}
+
+export type VisibleNavLink = { kind: 'link'; item: NavItem };
+
+export type VisibleNavGroup = {
+	kind: 'group';
+	id: NavGroupId;
+	title: string;
+	/** Group's own destination, present only when the user may reach it. */
+	item?: NavItem;
+	children: NavItem[];
+};
+
+export type VisibleNavEntry = VisibleNavLink | VisibleNavGroup;
+
+export type VisibleNavSection = { id: NavSectionId; label: string; entries: VisibleNavEntry[] };
+
+/**
+ * Sidebar filtered for the given permissions. Each destination is checked individually;
+ * a group is kept only when at least one of its destinations is visible, and a group whose
+ * only visible destination is its own page collapses to a plain link.
+ */
+export function buildVisibleNavigation(
+	permissions: string[],
+	sections: NavSection[] = sidebarNavigation
+): VisibleNavSection[] {
+	const visible = (href: NavHref) => {
+		const item = navDestinations[href];
+		return isNavItemVisible(item, permissions) ? item : undefined;
+	};
+	return sections
+		.map((section) => ({
+			id: section.id,
+			label: section.label,
+			entries: section.entries.flatMap((entry): VisibleNavEntry[] => {
+				if (entry.kind === 'link') {
+					const item = visible(entry.href);
+					return item ? [{ kind: 'link', item }] : [];
+				}
+				const item = entry.href ? visible(entry.href) : undefined;
+				const children = entry.children.map(visible).filter((child): child is NavItem => !!child);
+				if (!children.length) return item ? [{ kind: 'link', item }] : [];
+				return [{ kind: 'group', id: entry.id, title: entry.title, item, children }];
+			})
+		}))
+		.filter((section) => section.entries.length > 0);
+}
+
+/**
+ * Sidebar destination matching the current path (most specific prefix wins), so that
+ * /billing/refunds highlights Remboursements and not Factures.
+ */
+export function resolveActiveNavHref(pathname: string): NavHref | undefined {
+	const path = pathname.split('?')[0];
+	let best: NavHref | undefined;
+	for (const href of Object.keys(navDestinations) as NavHref[]) {
+		if (path !== href && !path.startsWith(`${href}/`)) continue;
+		if (!best || href.length > best.length) best = href;
+	}
+	// Insurer catalogue: only the list and company pages, not unrelated /insurance/* screens.
+	if (best === '/insurance' && path !== '/insurance' && !path.startsWith('/insurance/companies')) {
+		return undefined;
+	}
+	return best;
+}
+
+/** Group owning the destination (own page or child), used to auto-expand the active group. */
+export function navGroupIdForHref(
+	href: NavHref | undefined,
+	sections: NavSection[] = sidebarNavigation
+): NavGroupId | undefined {
+	if (!href) return undefined;
+	for (const section of sections)
+		for (const entry of section.entries)
+			if (entry.kind === 'group' && (entry.href === href || entry.children.includes(href)))
+				return entry.id;
+	return undefined;
+}
 
 /** Route → permissions for direct URL guards (prefix match for nested routes). */
 export const routePermissionRules: Array<{ prefix: string; permissions: string[] }> = [
