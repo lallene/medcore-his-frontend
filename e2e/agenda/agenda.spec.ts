@@ -706,7 +706,7 @@ test('QA-AGENDA-DASHBOARD-001 @smoke dashboard has no fake planning rows', async
 	await page.goto('/dashboard');
 	await expect(page.getByText('Ouverture admissions')).toHaveCount(0);
 	await expect(page.getByText('Consultations externes')).toHaveCount(0);
-	await expect(page.getByTestId('dashboard-agenda-cta')).toBeVisible();
+	await expect(page.getByTestId('dashboard-open-agenda')).toBeVisible();
 });
 
 test('QA-AGENDA-DEEPLINK-001 @critical Patient 360 deep-link preselects patient when booking', async ({
