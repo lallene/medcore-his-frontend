@@ -33,7 +33,18 @@ export type NavHref =
 	| '/queue/reception'
 	| '/queue/triage'
 	| '/queue/doctor'
-	| '/help';
+	| '/help'
+	| '/grc/dashboard'
+	| '/grc/reporting'
+	| '/grc/assets'
+	| '/grc/risks'
+	| '/grc/compliance'
+	| '/grc/controls'
+	| '/grc/evidence'
+	| '/grc/actions'
+	| '/grc/audits'
+	| '/grc/incidents'
+	| '/grc/policies';
 
 /** One sidebar destination: the single source of truth for its title and required permissions. */
 export type NavItem = {
@@ -134,6 +145,61 @@ export const navDestinations: Record<NavHref, NavItem> = {
 		href: '/insurance-receivables',
 		permissions: ['insurance_receivables.read']
 	},
+	'/grc/dashboard': {
+		title: 'Tableau de bord GRC',
+		href: '/grc/dashboard',
+		permissions: ['grc.dashboard.read']
+	},
+	'/grc/reporting': {
+		title: 'Reporting',
+		href: '/grc/reporting',
+		permissions: ['grc.reporting.read']
+	},
+	'/grc/assets': {
+		title: 'Registre des actifs',
+		href: '/grc/assets',
+		permissions: ['grc.asset.read']
+	},
+	'/grc/risks': {
+		title: 'Registre des risques',
+		href: '/grc/risks',
+		permissions: ['grc.risk.read']
+	},
+	'/grc/compliance': {
+		title: 'Conformité',
+		href: '/grc/compliance',
+		permissions: ['grc.framework.read']
+	},
+	'/grc/controls': {
+		title: 'Contrôles',
+		href: '/grc/controls',
+		permissions: ['grc.control.read']
+	},
+	'/grc/evidence': {
+		title: 'Preuves & documents',
+		href: '/grc/evidence',
+		permissions: ['grc.evidence.read']
+	},
+	'/grc/actions': {
+		title: 'Plans d’actions',
+		href: '/grc/actions',
+		permissions: ['grc.action.read']
+	},
+	'/grc/audits': {
+		title: 'Audits',
+		href: '/grc/audits',
+		permissions: ['grc.audit.read']
+	},
+	'/grc/incidents': {
+		title: 'Incidents de sécurité',
+		href: '/grc/incidents',
+		permissions: ['grc.incident.read']
+	},
+	'/grc/policies': {
+		title: 'Politiques',
+		href: '/grc/policies',
+		permissions: ['grc.policy.read']
+	},
 	'/tickets': { title: 'Mes tickets', href: '/tickets', permissions: ['ticket.read.own'] },
 	// LOT AIDE: every authenticated user; entries are filtered by the backend.
 	'/help': { title: 'Aide', href: '/help', permissions: [] },
@@ -178,7 +244,14 @@ export const navDestinations: Record<NavHref, NavItem> = {
 };
 
 export type NavSectionId =
-	'pilotage' | 'patient-journey' | 'medtech' | 'insurance' | 'finance' | 'support' | 'admin';
+	| 'pilotage'
+	| 'patient-journey'
+	| 'medtech'
+	| 'insurance'
+	| 'finance'
+	| 'grc'
+	| 'support'
+	| 'admin';
 
 export type NavGroupId = 'queue' | 'hospitalization' | 'billing' | 'recovery' | 'tech-tools';
 
@@ -256,6 +329,23 @@ export const sidebarNavigation: NavSection[] = [
 				title: 'Recouvrement',
 				children: ['/receivables', '/insurance-receivables']
 			}
+		]
+	},
+	{
+		id: 'grc',
+		label: 'Sécurité & Conformité',
+		entries: [
+			link('/grc/dashboard'),
+			link('/grc/reporting'),
+			link('/grc/assets'),
+			link('/grc/risks'),
+			link('/grc/compliance'),
+			link('/grc/controls'),
+			link('/grc/evidence'),
+			link('/grc/actions'),
+			link('/grc/audits'),
+			link('/grc/incidents'),
+			link('/grc/policies')
 		]
 	},
 	{ id: 'support', label: 'Support', entries: [link('/tickets'), link('/help')] },
@@ -389,6 +479,21 @@ export const routePermissionRules: Array<{ prefix: string; permissions: string[]
 	{ prefix: '/admin/qa', permissions: ['qa.read'] },
 	{ prefix: '/admin/design-system', permissions: ['qa.read'] },
 	{ prefix: '/dashboard', permissions: ['dashboard.read'] },
+	{ prefix: '/grc/dashboard', permissions: ['grc.dashboard.read'] },
+	{ prefix: '/grc/reporting', permissions: ['grc.reporting.read'] },
+	{ prefix: '/grc/assets', permissions: ['grc.asset.read'] },
+	{ prefix: '/grc/risks', permissions: ['grc.risk.read'] },
+	// Overview and frameworks need grc.framework.read, requirement pages grc.requirement.read.
+	{ prefix: '/grc/compliance', permissions: ['grc.framework.read', 'grc.requirement.read'] },
+	// Control pages need grc.control.read, implementation pages grc.control.implementation.read.
+	{ prefix: '/grc/controls', permissions: ['grc.control.read', 'grc.control.implementation.read'] },
+	{ prefix: '/grc/evidence', permissions: ['grc.evidence.read'] },
+	{ prefix: '/grc/actions', permissions: ['grc.action.read'] },
+	{ prefix: '/grc/audits', permissions: ['grc.audit.read'] },
+	{ prefix: '/grc/incidents', permissions: ['grc.incident.read'] },
+	{ prefix: '/grc/policies', permissions: ['grc.policy.read'] },
+	// Finding detail (no finding registry: findings are reached from audits, risks and actions).
+	{ prefix: '/grc/findings', permissions: ['grc.finding.read'] },
 	// LOT28E-A: Patient360 shell is /patients/:numericId — require patients.360.read.
 	// Ordinary list /patients stays patients:read (matched after the exact-id check in canAccessPath).
 	{ prefix: '/patients', permissions: ['patients:read'] },
