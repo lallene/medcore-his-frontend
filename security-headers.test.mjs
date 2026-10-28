@@ -36,6 +36,30 @@ test('frontend CSP matches the static SvelteKit app', () => {
 	);
 });
 
+test('SPA navigations are uncached documents and hashed assets stay cacheable', () => {
+	for (const path of ['/', '/index.html', '/login', '/dashboard', '/grc/risks']) {
+		const headers = frontendHeaders('', path);
+		assert.equal(headers['Cache-Control'], 'no-cache', path);
+		assert.match(headers['Content-Security-Policy'], /connect-src 'self'/);
+		assert.doesNotMatch(headers['Content-Security-Policy'], /onrender/);
+		assert.equal(headers['Strict-Transport-Security'], 'max-age=31536000');
+		assert.equal(headers['X-Content-Type-Options'], 'nosniff');
+		assert.equal(headers['X-Frame-Options'], 'DENY');
+		assert.equal(headers['Referrer-Policy'], 'strict-origin-when-cross-origin');
+		assert.match(headers['Permissions-Policy'], /camera=\(\)/);
+	}
+	for (const path of [
+		'/_app/immutable/app.js',
+		'/_app/immutable/app.css',
+		'/favicon.ico',
+		'/login?source=r05'
+	]) {
+		const headers = frontendHeaders('', path);
+		const expected = path.startsWith('/login') ? 'no-cache' : undefined;
+		assert.equal(headers['Cache-Control'], expected, path);
+	}
+});
+
 test('frontend CSP does not hardcode an environment host', () => {
 	const local = frontendHeaders('http://127.0.0.1:8080', '/');
 	assert.match(local['Content-Security-Policy'], /http:\/\/127\.0\.0\.1:8080/);

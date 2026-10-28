@@ -12,9 +12,6 @@ jobs:
   docker:
     runs-on: ubuntu-latest
 
-    env:
-      PUBLIC_API_URL: https://medcore-his-api-latest.onrender.com
-
     permissions:
       contents: read
       packages: write
@@ -34,8 +31,12 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64
           build-args: |
-            PUBLIC_API_URL=https://medcore-his-api-latest.onrender.com
+            PUBLIC_API_URL=
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/lallene/medcore-his-frontend
           tags: |
             ghcr.io/${{ github.repository_owner }}/medcore-his-frontend:latest
             ghcr.io/${{ github.repository_owner }}/medcore-his-frontend:${{ github.sha }}

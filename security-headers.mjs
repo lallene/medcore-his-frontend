@@ -21,10 +21,16 @@ export function originOf(apiURL) {
 }
 
 export function isDocument(pathname) {
-	if (!pathname || pathname === '/' || pathname.endsWith('/')) {
+	if (!pathname) {
 		return true;
 	}
-	return pathname.endsWith('.html');
+	const path = pathname.split(/[?#]/, 1)[0];
+	if (path === '/' || path.endsWith('/') || path.endsWith('.html')) {
+		return true;
+	}
+	const base = path.slice(path.lastIndexOf('/') + 1);
+	// Extensionless paths are SPA navigations. Fingerprinted assets keep an extension.
+	return base.length > 0 && !base.includes('.');
 }
 
 export function inlineScriptSources(html) {

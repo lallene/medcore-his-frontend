@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Create env file
-        run: echo "PUBLIC_API_URL=https://medcore-his-api-latest.onrender.com" > .env
+        run: echo "PUBLIC_API_URL=" > .env
 
       - name: Format and lint
         run: npm run lint
